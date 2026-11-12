@@ -1370,6 +1370,60 @@ module.exports = async function tailleSmoke() {
   verifier('chaque écran charge la feuille commune des filtres',
     sansFiltres.length === 0, sansFiltres.join(' · '));
 
+  // ── Un nom du socle appelé sur une page qui ne charge pas son fichier ──
+  //
+  // Mesuré le 12 novembre 2026 : trois fichiers de SURV appelaient
+  // `oasisTelecharger`, et l'écran ne chargeait pas `oasis-utils.js`, seul à le
+  // poser alors. **Cinq téléchargements du module levaient « oasisTelecharger
+  // is not defined »** — l'export d'une checklist, celui de ses sous-thèmes,
+  // celui d'une checklist renseignée, et les deux pièces d'une constatation.
+  //
+  // Rien ne pouvait le dire. Un nom absent ne se manifeste qu'au **clic**, et
+  // aucune suite ne cliquait ces boutons ; les trois commentaires qui les
+  // surmontent décrivaient par le menu un patron qui ne pouvait pas s'exécuter.
+  // La surface du socle était bien relevée (`surface-socle.json`), et son
+  // contrôle dit qu'aucun nom n'a disparu — il ne disait pas qu'une page qui
+  // s'en sert le charge. *Une surface publiée ne vaut que pour qui la charge.*
+  //
+  // La règle se lit dans les deux sens : un nom non chargé est un défaut, et un
+  // fichier chargé pour rien est du poids. Seul le premier est gardé ici — le
+  // second ne casse personne.
+  //
+  // Un écran qui **déclare lui-même** le nom est hors de cause : SURV définit
+  // son propre `api`, qui traduit ses routes.
+  const SURFACE = JSON.parse(fs.readFileSync(path.join(__dirname, 'surface-socle.json'), 'utf8'));
+  const poseParLeSocle = new Map();
+  Object.entries(SURFACE).forEach(([fichier, noms]) => {
+    noms.forEach((n) => poseParLeSocle.set(n.split(':')[0], fichier));
+  });
+  const nonCharges = [];
+  PAGES.forEach((rel) => {
+    const page = path.join(RACINE, rel);
+    const dossierJs = path.join(path.dirname(page), 'js');
+    if (!fs.existsSync(page) || !fs.existsSync(dossierJs)) return;
+    const charges = new Set([...fs.readFileSync(page, 'utf8')
+      .matchAll(/\/shared\/(?:app|js)\/([\w-]+)\.js/g)].map((m) => m[1]));
+    const scripts = fs.readdirSync(dossierJs).filter((f) => f.endsWith('.js'));
+    const sources = scripts.map((f) => fs.readFileSync(path.join(dossierJs, f), 'utf8'));
+    poseParLeSocle.forEach((fichier, nom) => {
+      if (charges.has(fichier)) return;
+      // Déclaré par l'écran lui-même : le nom lui appartient.
+      const sien = new RegExp(`(?:function\\s+${nom}\\b|window\\.${nom}\\s*=`
+        + `|(?:const|let|var)\\s+${nom}\\b)`);
+      if (sources.some((s) => sien.test(s))) return;
+      // Les commentaires ne comptent pas : ils citent souvent le nom.
+      const appel = new RegExp(`(?<![\\w$.])${nom}\\s*[([.]`);
+      const coupables = scripts.filter((f, i) => appel.test(sources[i]
+        .replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '')));
+      if (coupables.length) {
+        nonCharges.push(`${path.basename(path.dirname(rel))} : ${nom} `
+          + `(${fichier}.js) ← ${coupables.join(', ')}`);
+      }
+    });
+  });
+  verifier('aucun écran n’appelle un nom du socle sans charger le fichier qui le pose',
+    nonCharges.length === 0, nonCharges.join(' · '));
+
   // ── Le registre des traitements suit les modules ──
   // Un registre est un document du responsable de traitement, et un document
   // prend du retard en silence. Celui-ci ne le peut pas : un module monté qui
@@ -1500,7 +1554,13 @@ module.exports = async function tailleSmoke() {
   // où l'affectation à `window` *est* la déclaration de la surface publiée,
   // écrite à la main, et rien d'autre. C'est exactement le cas qu'il fallait
   // couvrir, et c'est le seul où cette forme ne soit pas ambiguë.
-  const DECLARATION = /^(?:function\s+([A-Za-z_$][\w$]*)|(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=)/gm;
+  // `async function` compte autant que `function` : une déclaration au premier
+  // niveau d'un script classique pose le nom sur `window` dans les deux cas.
+  // Le motif ne la voyait pas, et la contre-épreuve du 12 novembre 2026 l'a dit
+  // — SURV chargé avec `oasis-utils.js` fait **deux** collisions, `api` et
+  // `_pesSearchInput`, et ce contrôle n'en nommait qu'une. L'élargir ne rougit
+  // sur rien aujourd'hui : mesuré avant de l'écrire.
+  const DECLARATION = /^(?:(?:async\s+)?function\s+([A-Za-z_$][\w$]*)|(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=)/gm;
   const POSE_SUR_WINDOW = /^window\.([A-Za-z_$][\w$]*)\s*=[^=]/gm;
   const collisions = [];
   PAGES.forEach((rel) => {
@@ -2364,7 +2424,10 @@ module.exports = async function tailleSmoke() {
     'parcours.smoke.js': 3211,
     'planification.navigateur.smoke.js': 2720,
     'mesures.navigateur.smoke.js': 2652,
-    'taille.smoke.js': 2377,
+    // 2 377 → 2 468 : le garde qui vérifie qu'un écran charge le fichier du
+    // socle dont il appelle les noms. Il est né d'un défaut que rien d'autre
+    // ne pouvait voir — cinq téléchargements de SURV levaient une exception.
+    'taille.smoke.js': 2468,
     'unitaires.smoke.js': 1802,
     'ramp.smoke.js': 1447,
     // Franchi le 11 novembre 2026, au tour suivant la pose de ce garde : la

@@ -2,7 +2,7 @@
  "releve": "2026-11-12",
  "gestesNommes": 311,
  "occurrences": 506,
- "exerces": 241,
+ "exerces": 253,
  "indecidables": 3,
  "gestes": [
   {
@@ -919,7 +919,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-boot.js",
-   "ligne": 121,
+   "ligne": 165,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal()",
@@ -928,7 +928,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-boot.js",
-   "ligne": 126,
+   "ligne": 170,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "div:click",
@@ -1897,7 +1897,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 243,
+   "ligne": 256,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1906,7 +1906,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 259,
+   "ligne": 272,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFermerFncTiroir()",
@@ -1915,7 +1915,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 352,
+   "ligne": 364,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execValidateDateOuverture()",
@@ -1924,7 +1924,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 375,
+   "ligne": 387,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execFncOnSecteurChange()",
@@ -1933,7 +1933,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 387,
+   "ligne": 399,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('fnc_ref_input').focus()",
@@ -1942,7 +1942,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 390,
+   "ligne": 402,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1951,7 +1951,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 395,
+   "ligne": 407,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execFncAddRef(this.value);this.value='';",
@@ -1960,7 +1960,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 396,
+   "ligne": 408,
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "if(event.key==='Enter'){event.preventDefault();execFncAddRef(this.value);this.value='';}",
@@ -1969,7 +1969,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 413,
+   "ligne": 425,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execApplyCriticiteDelai('fnc_gravite','fnc_delai','execCalcDateDue')",
@@ -1978,7 +1978,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 425,
+   "ligne": 437,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCalcDateDue()",
@@ -1987,7 +1987,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 425,
+   "ligne": 437,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execCalcDateDue()",
@@ -1996,7 +1996,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 448,
+   "ligne": 460,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -2005,7 +2005,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 451,
+   "ligne": 463,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('fnc_proof_input').click()",
@@ -2014,7 +2014,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 453,
+   "ligne": 465,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execUploadFNCProof(this.files)",
@@ -2023,7 +2023,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 460,
+   "ligne": 472,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFermerFncTiroir()",
@@ -2032,7 +2032,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 461,
+   "ligne": 473,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveFNC('${dossierId}', '${fnc.id || ''}')",
@@ -2041,7 +2041,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 562,
+   "ligne": 574,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenDossierSlider('${dossierId}','constatations')",
@@ -2050,7 +2050,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 602,
+   "ligne": 614,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -3429,7 +3429,7 @@
    "evenement": "input",
    "source": "execClRechercher(this.value)",
    "nom": "execClRechercher",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3456,7 +3456,7 @@
    "evenement": "click",
    "source": "_clCocherPortee('${classe}',true,'${suite}');return false;",
    "nom": "_clCocherPortee",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3465,7 +3465,7 @@
    "evenement": "click",
    "source": "_clCocherPortee('${classe}',false,'${suite}');return false;",
    "nom": "_clCocherPortee",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3483,7 +3483,7 @@
    "evenement": "change",
    "source": "_clRefreshSousActivites()",
    "nom": "_clRefreshSousActivites",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3582,7 +3582,7 @@
    "evenement": "click",
    "source": "execChecklistExportXlsx('${clId}')",
    "nom": "execChecklistExportXlsx",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3600,7 +3600,7 @@
    "evenement": "change",
    "source": "execChecklistImportXlsx('${clId}', event)",
    "nom": "execChecklistImportXlsx",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3627,7 +3627,7 @@
    "evenement": "change",
    "source": "_execCliAutosave('${it.id}','ordre',parseInt(this.value)||0)",
    "nom": "_execCliAutosave",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3636,7 +3636,7 @@
    "evenement": "change",
    "source": "_execCliAutosave('${it.id}','ref_item',this.value)",
    "nom": "_execCliAutosave",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3645,7 +3645,7 @@
    "evenement": "change",
    "source": "_execCliAutosave('${it.id}','theme_id',this.value);_execCliRowThemeChanged('${clId}','${it.id}')",
    "nom": "_execCliAutosave",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3654,7 +3654,7 @@
    "evenement": "change",
    "source": "_execCliAutosave('${it.id}','sous_theme_id',this.value)",
    "nom": "_execCliAutosave",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3663,7 +3663,7 @@
    "evenement": "change",
    "source": "_execCliAutosave('${it.id}','description',this.value)",
    "nom": "_execCliAutosave",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3672,7 +3672,7 @@
    "evenement": "change",
    "source": "_execCliAutosave('${it.id}','directives',this.value)",
    "nom": "_execCliAutosave",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
@@ -3681,29 +3681,29 @@
    "evenement": "click",
    "source": "execDeleteChecklistItemInline('${it.id}','${clId}')",
    "nom": "execDeleteChecklistItemInline",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 932,
+   "ligne": 939,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenRefReglementPicker('${it.id}','${clId}')",
    "nom": "execOpenRefReglementPicker",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 957,
+   "ligne": 964,
    "forme": "en ligne",
    "evenement": "input",
    "source": "_execCliRefRegFilter()",
    "nom": "_execCliRefRegFilter",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 968,
+   "ligne": 975,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal()",
@@ -3712,16 +3712,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 969,
+   "ligne": 976,
    "forme": "en ligne",
    "evenement": "click",
    "source": "_execCliRefRegSave('${itId}','${clId}')",
    "nom": "_execCliRefRegSave",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1079,
+   "ligne": 1086,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenSousThemeModal('${clId}','${s.id}')",
@@ -3730,7 +3730,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1080,
+   "ligne": 1087,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execDeleteSousTheme('${s.id}','${clId}')",
@@ -3739,16 +3739,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1086,
+   "ligne": 1093,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSousThemesExportXlsx('${clId}')",
    "nom": "execSousThemesExportXlsx",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1087,
+   "ligne": 1094,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('execSousThemesImportFile').click()",
@@ -3757,16 +3757,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1088,
+   "ligne": 1095,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execSousThemesImportXlsx('${clId}',event)",
    "nom": "execSousThemesImportXlsx",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1089,
+   "ligne": 1096,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenSousThemeModal('${clId}')",
@@ -3775,7 +3775,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1095,
+   "ligne": 1102,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal();execOpenChecklistEditor('${clId}')",
@@ -3784,7 +3784,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1151,
+   "ligne": 1158,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenSousThemesManager('${clId}')",
@@ -3793,7 +3793,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1152,
+   "ligne": 1159,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveSousTheme('${clId}','${stId || ''}')",
@@ -3802,7 +3802,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1253,
+   "ligne": 1260,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal()",
@@ -3811,7 +3811,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1254,
+   "ligne": 1261,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveCriticite('${critId || ''}')",
@@ -3820,7 +3820,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1315,
+   "ligne": 1322,
    "forme": "en ligne",
    "evenement": "click",
    "source": "shellCloseModal()",
@@ -3829,7 +3829,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-parametres.js",
-   "ligne": 1316,
+   "ligne": 1323,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveTypeCas('${tcId || ''}')",

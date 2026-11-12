@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **311 gestes nommés, 241 exercés** (77 %), 3 indécidables — mesuré par **deux** suites depuis le 12 novembre 2026, `surv` et `surv-pieces`, dont le relevé réunit les journaux (n° 5.f.81 et 5.f.82) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme et le **plan d'actions correctives** sont exercés en entier — 10 sur 10 et 47 sur 47 —, celui des constatations à 57 occurrences sur 61, et celui des activités à 65 sur 68 : des trois qui restent, deux sont l'angle mort du relevé — un gestionnaire composé au rendu se nomme ailleurs qu'où il est posé — et le troisième n'est offert qu'à un compte qui ne gouverne pas le module |
+           | SURV (`execution`) | 24 162 | **311 gestes nommés, 253 occurrences exercées** (81 %), 3 indécidables — mesuré par **trois** suites depuis le 12 novembre 2026, `surv`, `surv-pieces` et `surv-parametres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82 et 5.f.84) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, le **paramétrage des checklists** à 60 occurrences sur 61, dont le seul reste est indécidable, celui des constatations à 57 sur 61, et celui des activités à 65 sur 67. Le gisement qui vient est `exec-app.js`, 15 sur 30 |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -11620,3 +11620,165 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            le module, et les suites se connectent en SUPERADMIN, qui garde le
            crayon. L'exercer demande une session dans un autre contexte de
            navigateur.
+
+       5.f.84 [x] **Cinq téléchargements qui ne partaient pas, et une liste de
+           dispositions toujours vide** — fait le 12 novembre 2026.
+           `exec-parametres.js` était le plus gros gisement de gestes non
+           exercés de SURV — **42 occurrences sur 61**, treize noms. Une ronde
+           devait les couvrir. Elle a trouvé deux défauts avant qu'une seule
+           assertion soit écrite, et ni l'un ni l'autre n'était dans le
+           paramétrage.
+
+           ── Le premier : `oasisTelecharger is not defined` ──
+
+           Trois fichiers de SURV appellent `oasisTelecharger`, et l'écran ne
+           chargeait pas `oasis-utils.js`, seul à le poser. **Cinq
+           téléchargements du module levaient une exception** : l'export d'une
+           checklist, celui de ses sous-thèmes, celui d'une checklist
+           renseignée, et les deux pièces d'une constatation. Au-dessus de trois
+           d'entre eux, un commentaire de vingt lignes explique par le menu
+           pourquoi une navigation vaut mieux qu'une ancre fabriquée — *un
+           patron juste, posé sur un appel qui ne pouvait pas s'exécuter*.
+
+           Et c'est le n° 5.f.71 qui les y avait mis, le **5 novembre 2026** :
+           l'entrée qui fermait « sept chemins de téléchargement qui échouaient
+           sans bruit ». Elle a bien remplacé les sept ; elle n'a pas vérifié
+           que le nom de remplacement existait sur la page. Quatre des sept
+           n'ont donc **pas fonctionné une seule fois depuis**, et le registre
+           les comptait faits. *Une correction qu'aucune suite n'exerce est une
+           affirmation.*
+
+           Rien ne pouvait le dire. Un nom absent ne se manifeste qu'au clic, et
+           aucune suite ne cliquait ces boutons. La surface du socle était
+           relevée, et son contrôle dit qu'aucun nom n'a disparu — il ne disait
+           pas qu'une page qui s'en sert le charge. *Une surface publiée ne vaut
+           que pour qui la charge.*
+
+           Charger `oasis-utils.js` dans SURV aurait réglé le symptôme en y
+           posant `api` et `_pesSearchInput`, que le module redéfinit : un nom
+           global déclaré deux fois sur le même écran, que le garde-fou de
+           taille refuse à bon droit. `oasisTelecharger` rejoint donc
+           `oasis-commun`, que **les six écrans chargent déjà** — et son nom
+           porte le préfixe du socle, quand les six qui restent dans
+           `oasis-utils` sont la surface héritée de PESSCO. *Un outil du socle
+           vit dans le fichier que ses appelants chargent, non dans celui où
+           l'histoire l'avait laissé.*
+
+           Un garde-fou neuf le tient : **un écran qui appelle un nom du socle
+           charge le fichier qui le pose**. Il lit `surface-socle.json`, écarte
+           ce que l'écran déclare lui-même — SURV a son propre `api`, qui
+           traduit ses routes — et ne compte pas les commentaires, qui citent
+           souvent le nom.
+
+           Il le faut, car **trois des cinq restent sans contrôle qui les
+           clique** : la ronde en exerce deux — l'export des items et celui des
+           sous-thèmes —, et le relevé dit que `execExporterConstatationsXlsx`,
+           `execChkFillExportXlsx` et le téléchargement d'une pièce de
+           constatation ne sont atteints par aucune suite. Le garde tient la
+           classe du défaut ; il ne remplace pas une ronde, et ces deux fichiers
+           sont nommés plus bas comme gisements.
+
+           ── Le second : une portée qui ne pouvait jamais correspondre ──
+
+           Une exigence réglementaire nomme son domaine et son secteur par leur
+           **code** — `OPS`, `OPS-TAC` ; les écrans les choisissent par leur
+           **identifiant**. Trois endroits comparaient les deux chaînes telles
+           quelles :
+
+             · le sélecteur de dispositions d'un item de checklist : dès qu'une
+               checklist avait une portée, il annonçait « 0 disposition
+               disponible » sur un référentiel qui en porte — mesuré, et il
+               n'avait jamais rien proposé d'autre ;
+             · la liste des références réglementaires du formulaire de
+               constatation, **à son ouverture** — le secteur y est pré-rempli
+               depuis l'organisme du dossier, donc toujours renseigné ;
+             · la même liste à chaque changement de secteur.
+
+           C'est le cœur du module qui s'en trouvait vidé : un écart se rattache
+           à un texte, et l'inspecteur n'avait plus qu'à le saisir de mémoire.
+
+           L'écran savait pourtant que les deux formes circulent — une ligne,
+           une seule, dans la fiche d'une constatation, cherche son domaine par
+           `d.id === … || d.code === …`. *Une règle qui ne vit qu'à un endroit
+           garde cet endroit, et rien d'autre.* `execClesDePortee` la porte
+           désormais, dans `exec-boot.js`, à côté d'`api()` et du dépôt de
+           pièce ; les trois lectures l'appellent, et les deux du formulaire
+           n'en font plus qu'une.
+
+           Normaliser le référentiel était l'autre voie : c'est une migration de
+           données, et elle casserait l'import d'un classeur où une AAC écrit
+           naturellement des codes. La tolérance à la comparaison est le plus
+           petit changement qui ferme le défaut.
+
+           **Ce que cela ne règle pas, et qu'il ne faut pas taire.** Sur le
+           référentiel servi aujourd'hui, les deux exigences nomment les
+           secteurs `OPS-TAC` et `AIR-OMA`, qui **n'existent plus** parmi les
+           huit — `AMO, CAMO, CAT, STA, ATO, MED, ANP, ADM`. La liste du
+           formulaire de constatation reste donc vide, pour une seconde raison,
+           de données celle-là ; et le détecteur d'orphelins ne regarde que
+           `secteurs`, `sous_activites` et `themes_supervision`, jamais
+           `exigences`. Le contrôle relève le compte par secteur et le montre
+           **sans l'affirmer nul** : un référentiel corrigé le fera monter sans
+           rougir. C'est une question de maîtrise d'ouvrage, non de code.
+
+           ── La ronde, et pourquoi une troisième suite ──
+
+           `surv-parametres.smoke.js`, **30 contrôles**, détachée pour la raison
+           du tour précédent : elle bâtit sa chaîne par l'API — une checklist,
+           trois items, deux sous-thèmes — et l'efface en partant. Elle ne lit
+           rien de ce que les autres laissent, et rien ne lit le sien. Le
+           découpage ne coûte plus que ses déclarations, et c'était tout
+           l'objet du n° 5.f.82.
+
+           Ce qu'elle mesure, et qui ne tenait à rien :
+
+             · la recherche ne redessine que le corps du tableau, **et le
+               curseur reste dans le champ** — c'est la raison que son
+               commentaire donne, et qu'aucun contrôle ne gardait ;
+             · la portée se resserre de gauche à droite, une coche posée à la
+               main survit au rafraîchissement du niveau, et des secteurs sans
+               sous-activité **le disent** au lieu de proposer la liste
+               entière ;
+             · les six champs d'une ligne s'enregistrent d'eux-mêmes, le cache
+               local suit, et changer de thème **écrit** la perte du sous-thème
+               au lieu de seulement vider la liste ;
+             · **« Ajouter » n'annule pas l'import : c'est l'autre mode.** Le
+               bouton d'annulation de la question porte ce libellé, et les deux
+               réponses écrivent. Qui croit annuler ajoute ;
+             · ré-importer un sous-thème met son ordre à jour au lieu de le
+               dupliquer — la propriété qui décide si un classeur se rejoue.
+
+           ── Et deux fautes de ma propre écriture ──
+
+           `Ctrl+A` n'a rien sélectionné sur ce poste : la frappe s'est
+           **ajoutée** à la valeur en place — `IT-1IT-1b` —, et le contrôle l'a
+           dit, parce qu'il comparait la valeur en base et non le fait d'avoir
+           tapé. *Un contrôle qui regarde le geste au lieu de son effet ne voit
+           pas ce genre de chose.*
+
+           Le premier passage a rougi six contrôles, dont deux par ricochet : le
+           sélecteur vide faisait lever la ligne qui cochait sa case. Un
+           contrôle qui s'effondre sur l'absence de ce qu'il mesure reste utile
+           ; ce sont ses voisins qu'il ne faut pas lire.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 241 / 311 (77 %) | **253 / 311 (81 %)** |
+           | `exec-parametres.js` | 42 / 61, 13 noms non exercés | **60 / 61, aucun** |
+           | Suites de SURV | 2 | **3** |
+           | `taille` | 75 contrôles | **76** |
+           | Campagne | 1 681 | **1 717** |
+
+           Le seul geste qui reste au paramétrage est l'occurrence
+           **indécidable** de la ligne 198 : un gestionnaire reçu en argument,
+           `onclick="${onclick}"`, que la source ne nomme pas. Le relevé le dit
+           plutôt que d'inventer — c'est la règle posée la veille (n° 5.f.83).
+
+           Le gisement suivant de SURV est `exec-app.js` — 15 occurrences sur
+           30, quatorze noms : le thème, la langue, la barre mobile et le
+           panneau des notifications. Puis `exec-processus.js` (18 sur 32), et
+           les deux fichiers qui portent les trois téléchargements encore sans
+           ronde — `exec-checklists-saisie.js` (12 sur 16) et les deux gestes
+           qui restent à `exec-constatations.js`.

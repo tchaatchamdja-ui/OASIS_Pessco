@@ -48,7 +48,8 @@
   "oasisLangue:function",
   "oasisMessageErreur:function",
   "oasisPoserLangue:function",
-  "oasisSaisieDifferee:function"
+  "oasisSaisieDifferee:function",
+  "oasisTelecharger:function"
  ],
  "oasis-utils": [
   "ICONS:object",
@@ -56,7 +57,6 @@
   "api:function",
   "escapeHtml:function",
   "formatDate:function",
-  "oasisTelecharger:function",
   "showToast:function"
  ],
  "oasis-kpi": [

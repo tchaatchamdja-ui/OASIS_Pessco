@@ -70,15 +70,19 @@ const SUITES = [
   // distingue des suites HTTP du même module — le relevé lance la suite par son
   // nom, et deux noms dont l'un contient l'autre lui en feraient lancer deux.
   { nom: 'surv', port: 4800, fichier: './surv.smoke' },
-  // ── SURV en porte deux, et c'est le début de son découpage ──
+  // ── SURV en porte trois, et c'est son découpage ──
   //
   // « Un écran, une suite » tenait tant qu'une suite restait lisible. Celle de
   // SURV a atteint 8 726 lignes, et le garde-fou de taille l'a dit deux tours
-  // de suite. Les deux partagent leur mise en place (`surv-socle.js`), et le
-  // relevé des gestes lance **les deux** — `relever-gestes.js` accepte une
+  // de suite. Les trois partagent leur mise en place (`surv-socle.js`), et le
+  // relevé des gestes les lance **toutes** — `relever-gestes.js` accepte une
   // liste depuis le 12 novembre 2026, faute de quoi la couverture de l'écran
-  // aurait chuté de moitié sans qu'un geste cesse d'être exercé.
+  // aurait chuté d'autant sans qu'un geste cesse d'être exercé.
   { nom: 'surv-pieces', port: 4806, fichier: './surv-pieces.smoke' },
+  // La troisième : le paramétrage des checklists, détaché pour la même raison
+  // que les pièces — il bâtit sa chaîne et l'efface, sans rien lire de ce que
+  // les autres laissent.
+  { nom: 'surv-parametres', port: 4807, fichier: './surv-parametres.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

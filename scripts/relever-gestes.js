@@ -156,9 +156,13 @@ const ecranDeModule = (nom) => ({
 // journal, et les journaux sont réunis : ce que la **campagne** exerce, et non
 // ce qu'une suite exerce.
 //
-// SURV, le plus lourd des six (ADR-003, suite n° 5.f.0), en porte deux depuis le
-// 12 novembre 2026 : le cycle de surveillance, et les pièces du dossier.
-ECRANS.execution = { ...ecranDeModule('execution'), suite: ['surv', 'surv-pieces'] };
+// SURV, le plus lourd des six (ADR-003, suite n° 5.f.0), en porte **trois**
+// depuis le 12 novembre 2026 : le cycle de surveillance, les pièces du dossier,
+// et le paramétrage des checklists.
+ECRANS.execution = {
+  ...ecranDeModule('execution'),
+  suite: ['surv', 'surv-pieces', 'surv-parametres'],
+};
 
 // ── Les cinq autres, et pourquoi `suite: null` et non rien du tout ──
 //

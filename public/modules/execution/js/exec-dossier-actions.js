@@ -214,11 +214,30 @@ function execFncOnSecteurChange() {
     execFncUpdateExigences(secteurId);
 }
 
-function execFncUpdateExigences(secteurId) {
+// Les exigences d'un secteur — la liste proposée à l'inspecteur pour nommer ce
+// qu'il oppose.
+//
+// La règle vit ici une seule fois : elle était écrite deux fois, à l'ouverture
+// du formulaire et à chaque changement de secteur, et les deux comparaient
+// l'identifiant choisi dans la liste déroulante au **code** que l'exigence
+// porte — deux chaînes qui ne pouvaient jamais correspondre.
+//
+// Ce que cela ne règle pas, et qu'il faut dire : sur le référentiel servi
+// aujourd'hui, les deux exigences nomment les secteurs `OPS-TAC` et `AIR-OMA`,
+// qui **n'existent plus** parmi les huit (`AMO, CAMO, CAT, STA, ATO, MED, ANP,
+// ADM`). La liste reste donc vide ici, pour une seconde raison, de données
+// celle-là — et le détecteur d'orphelins ne regarde pas les exigences. Mesuré
+// le 12 novembre 2026.
+function _execExigencesDuSecteur(secteurId) {
     const all = EXEC_STATE.data.exigences || [];
-    const filtered = secteurId
-        ? all.filter(e => e.secteur_id === secteurId && (e.statut || 'actif') !== 'inactif')
-        : all.filter(e => (e.statut || 'actif') !== 'inactif');
+    const actives = all.filter(e => (e.statut || 'actif') !== 'inactif');
+    if (!secteurId) return actives;
+    const cles = execClesDePortee([secteurId], EXEC_STATE.data.secteurs);
+    return actives.filter(e => cles.has(String(e.secteur_id)));
+}
+
+function execFncUpdateExigences(secteurId) {
+    const filtered = _execExigencesDuSecteur(secteurId);
     const list = document.getElementById('fnc_exig_list');
     if (!list) return;
     list.innerHTML = filtered.map(e =>
@@ -318,10 +337,9 @@ function execOpenFNCForm(dossierId, existingFnc) {
     const defSecteur = secteurs.find(s => s.id === defaultSecteurId);
     const defaultDomaineId = fnc.domaine_id || fnc.domaine || defSecteur?.domaine_id || '';
 
-    // Initial exigences
-    const initExig = defaultSecteurId
-        ? allExig.filter(e => e.secteur_id === defaultSecteurId && (e.statut || 'actif') !== 'inactif')
-        : allExig.filter(e => (e.statut || 'actif') !== 'inactif');
+    // Initial exigences — même règle qu'au changement de secteur, et un seul
+    // endroit qui la porte.
+    const initExig = _execExigencesDuSecteur(defaultSecteurId);
     const exigOptions = initExig.map(e =>
         `<option value="${_escAttr(e.reference)}" title="${_escAttr(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
     ).join('');

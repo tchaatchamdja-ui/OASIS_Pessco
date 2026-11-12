@@ -902,12 +902,19 @@ function _execCliExigencesForChecklist(clId) {
     const saIds = _parse(cl?.sous_activites_ids);
     const secIds = _parse(cl?.secteurs_ids);
     const domIds = _parse(cl?.domaines_ids);
-    const allExigences = (window.PESSCO?.sharedData?.exigences) || [];
-    // Une exigence s'applique si elle correspond à une SA, à défaut un secteur, à défaut un domaine de la checklist.
+    const shared = window.PESSCO?.sharedData || {};
+    const allExigences = shared.exigences || [];
+    // Une exigence s'applique si elle correspond à une SA, à défaut un secteur,
+    // à défaut un domaine de la checklist. Elle nomme ce niveau par son code ou
+    // par son identifiant, indifféremment : `execClesDePortee` porte la règle
+    // (exec-boot.js), et sans elle cette liste était toujours vide.
+    const clesSa = execClesDePortee(saIds, shared.sousActivites);
+    const clesSec = execClesDePortee(secIds, shared.secteurs);
+    const clesDom = execClesDePortee(domIds, shared.domaines);
     return allExigences.filter(e => {
-        if (saIds.length && e.sous_activite_id) return saIds.includes(e.sous_activite_id);
-        if (secIds.length && e.secteur_id) return secIds.includes(e.secteur_id);
-        if (domIds.length && e.domaine_id) return domIds.includes(e.domaine_id);
+        if (saIds.length && e.sous_activite_id) return clesSa.has(String(e.sous_activite_id));
+        if (secIds.length && e.secteur_id) return clesSec.has(String(e.secteur_id));
+        if (domIds.length && e.domaine_id) return clesDom.has(String(e.domaine_id));
         return true; // pas de restriction
     });
 }

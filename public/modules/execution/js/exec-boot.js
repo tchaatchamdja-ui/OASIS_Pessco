@@ -106,6 +106,50 @@ async function execDeposerPiece(fichier, intitule) {
     return api(`${EXEC_MODULE_API}/upload`, { method: 'POST', body: fd });
 }
 
+// ── Un niveau de portée se nomme par son identifiant, ou par son code ──
+//
+// Les exigences réglementaires du référentiel nomment leur domaine et leur
+// secteur par leur **code** — `OPS`, `OPS-TAC` — ; les écrans, eux, les
+// choisissent par leur **identifiant** : une checklist range ses domaines sous
+// forme d'ids, et la liste déroulante d'un formulaire porte `value="${s.id}"`.
+//
+// Trois endroits comparaient les deux chaînes telles quelles, et la comparaison
+// ne pouvait **jamais** correspondre :
+//
+//   1. le sélecteur de dispositions d'un item de checklist : dès qu'une
+//      checklist avait une portée, il annonçait « 0 disposition disponible »
+//      sur un référentiel qui en porte — mesuré le 12 novembre 2026, et il
+//      n'avait jamais rien proposé d'autre ;
+//   2. la liste des références réglementaires du formulaire de constatation,
+//      **à son ouverture** — le secteur y est pré-rempli depuis l'organisme du
+//      dossier, donc toujours renseigné ;
+//   3. la même liste à chaque changement de secteur.
+//
+// L'écran savait déjà que les deux formes circulent : une seule ligne, dans la
+// fiche d'une constatation, cherche son domaine par `d.id === … || d.code === …`.
+// La règle existait donc, dans un coin, et n'avait jamais été appliquée là où
+// elle décide de ce que l'inspecteur voit. *Une règle qui ne vit qu'à un endroit
+// garde cet endroit, et rien d'autre.*
+//
+// Elle est ici, et elle rend les **clés** d'un niveau : identifiants et codes
+// mêlés, de sorte que la comparaison tienne quelle que soit la forme écrite de
+// part et d'autre. Normaliser le référentiel aurait été l'autre voie — c'est
+// une migration de données, et elle casserait l'import d'un classeur où une AAC
+// écrit naturellement des codes.
+function execClesDePortee(ids, source) {
+    const cles = new Set();
+    (Array.isArray(ids) ? ids : [ids]).filter(Boolean).forEach((brut) => {
+        const cle = String(brut);
+        cles.add(cle);
+        const x = (source || []).find((s) => String(s.id) === cle || String(s.code) === cle);
+        if (x) {
+            if (x.id) cles.add(String(x.id));
+            if (x.code) cles.add(String(x.code));
+        }
+    });
+    return cles;
+}
+
 // ── Modale et toasts de la coquille ──
 const SHELL_ICONS = {
     close: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',

@@ -161,7 +161,7 @@ const ecranDeModule = (nom) => ({
 // et le paramétrage des checklists.
 ECRANS.execution = {
   ...ecranDeModule('execution'),
-  suite: ['surv', 'surv-pieces', 'surv-parametres'],
+  suite: ['surv', 'surv-pieces', 'surv-parametres', 'surv-coquille'],
 };
 
 // ── Les cinq autres, et pourquoi `suite: null` et non rien du tout ──

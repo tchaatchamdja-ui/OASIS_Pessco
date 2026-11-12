@@ -2,7 +2,7 @@
  "releve": "2026-11-12",
  "gestesNommes": 311,
  "occurrences": 506,
- "exerces": 253,
+ "exerces": 266,
  "indecidables": 3,
  "gestes": [
   {
@@ -671,7 +671,7 @@
    "evenement": "click",
    "source": "execSetTheme('${th}')",
    "nom": "execSetTheme",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -680,7 +680,7 @@
    "evenement": "click",
    "source": "execSetLang('${l.toLowerCase()}')",
    "nom": "execSetLang",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -698,7 +698,7 @@
    "evenement": "click",
    "source": "execToggleMobileSidebar()",
    "nom": "execToggleMobileSidebar",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -707,7 +707,7 @@
    "evenement": "click",
    "source": "execToggleMobileSidebar()",
    "nom": "execToggleMobileSidebar",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -716,7 +716,7 @@
    "evenement": "click",
    "source": "execToggleNotifPanel()",
    "nom": "execToggleNotifPanel",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -779,7 +779,7 @@
    "evenement": "change",
    "source": "EXEC_STATE.filters.domaine=this.value;EXEC_STATE.filters.secteur='';${onchangeFunc}",
    "nom": "EXEC_STATE.filters.domaine",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -788,7 +788,7 @@
    "evenement": "change",
    "source": "EXEC_STATE.filters.secteur=this.value;${onchangeFunc}",
    "nom": "EXEC_STATE.filters.secteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -797,7 +797,7 @@
    "evenement": "change",
    "source": "EXEC_STATE.filters.prestataire=this.value;${onchangeFunc}",
    "nom": "EXEC_STATE.filters.prestataire",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -806,7 +806,7 @@
    "evenement": "change",
    "source": "EXEC_STATE.filters.annee=this.value;${onchangeFunc}",
    "nom": "EXEC_STATE.filters.annee",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -824,7 +824,7 @@
    "evenement": "change",
    "source": "EXEC_STATE.filters.criticite=this.value;${onchangeFunc}",
    "nom": "EXEC_STATE.filters.criticite",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -833,7 +833,7 @@
    "evenement": "change",
    "source": "EXEC_STATE.filters.type_supervision=this.value;${onchangeFunc}",
    "nom": "EXEC_STATE.filters.type_supervision",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -842,7 +842,7 @@
    "evenement": "change",
    "source": "EXEC_STATE.filters.mode_supervision=this.value;${onchangeFunc}",
    "nom": "EXEC_STATE.filters.mode_supervision",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -851,7 +851,7 @@
    "evenement": "change",
    "source": "EXEC_STATE.filters.avancement=this.value;${onchangeFunc}",
    "nom": "EXEC_STATE.filters.avancement",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -915,7 +915,7 @@
    "nom": "document:click",
    "source": "document.addEventListener('click', handler);",
    "id": null,
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-boot.js",
@@ -1897,7 +1897,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 256,
+   "ligne": 262,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1906,7 +1906,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 272,
+   "ligne": 278,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFermerFncTiroir()",
@@ -1915,7 +1915,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 364,
+   "ligne": 370,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execValidateDateOuverture()",
@@ -1924,7 +1924,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 387,
+   "ligne": 393,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execFncOnSecteurChange()",
@@ -1933,7 +1933,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 399,
+   "ligne": 405,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('fnc_ref_input').focus()",
@@ -1942,7 +1942,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 402,
+   "ligne": 408,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -1951,7 +1951,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 407,
+   "ligne": 413,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execFncAddRef(this.value);this.value='';",
@@ -1960,7 +1960,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 408,
+   "ligne": 414,
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "if(event.key==='Enter'){event.preventDefault();execFncAddRef(this.value);this.value='';}",
@@ -1969,7 +1969,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 425,
+   "ligne": 431,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execApplyCriticiteDelai('fnc_gravite','fnc_delai','execCalcDateDue')",
@@ -1978,7 +1978,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 437,
+   "ligne": 443,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execCalcDateDue()",
@@ -1987,7 +1987,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 437,
+   "ligne": 443,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execCalcDateDue()",
@@ -1996,7 +1996,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 460,
+   "ligne": 466,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -2005,7 +2005,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 463,
+   "ligne": 469,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('fnc_proof_input').click()",
@@ -2014,7 +2014,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 465,
+   "ligne": 471,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execUploadFNCProof(this.files)",
@@ -2023,7 +2023,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 472,
+   "ligne": 478,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execFermerFncTiroir()",
@@ -2032,7 +2032,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 473,
+   "ligne": 479,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execSaveFNC('${dossierId}', '${fnc.id || ''}')",
@@ -2041,7 +2041,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 574,
+   "ligne": 580,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execOpenDossierSlider('${dossierId}','constatations')",
@@ -2050,7 +2050,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
-   "ligne": 614,
+   "ligne": 620,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.remove()",
@@ -3861,7 +3861,7 @@
    "evenement": "click",
    "source": "EXEC_STATE.filters.annee='';execRenderPage();",
    "nom": "EXEC_STATE.filters.annee",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
@@ -3870,7 +3870,7 @@
    "evenement": "click",
    "source": "EXEC_STATE.filters.annee='${a}';execRenderPage();",
    "nom": "EXEC_STATE.filters.annee",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",

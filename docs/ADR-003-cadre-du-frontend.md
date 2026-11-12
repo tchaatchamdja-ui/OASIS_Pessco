@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **311 gestes nommés, 253 occurrences exercées** (81 %), 3 indécidables — mesuré par **trois** suites depuis le 12 novembre 2026, `surv`, `surv-pieces` et `surv-parametres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82 et 5.f.84) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, le **paramétrage des checklists** à 60 occurrences sur 61, dont le seul reste est indécidable, celui des constatations à 57 sur 61, et celui des activités à 65 sur 67. Le gisement qui vient est `exec-app.js`, 15 sur 30 |
+           | SURV (`execution`) | 24 162 | **311 gestes nommés, 266 occurrences exercées** (85 %), 3 indécidables — mesuré par **quatre** suites depuis le 12 novembre 2026, `surv`, `surv-pieces`, `surv-parametres` et `surv-coquille`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 et 5.f.85) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, les constatations à 57 sur 61, les activités à 65 sur 67. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Le gisement qui vient est `exec-processus.js`, 18 sur 32 |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -11782,3 +11782,103 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            les deux fichiers qui portent les trois téléchargements encore sans
            ronde — `exec-checklists-saisie.js` (12 sur 16) et les deux gestes
            qui restent à `exec-constatations.js`.
+
+       5.f.85 [x] **La coquille et sa barre de filtres — et une liste que
+           personne n'avait regardée** — fait le 12 novembre 2026.
+           `exec-app.js` était devenu à son tour le plus gros gisement de SURV —
+           **15 occurrences sur 30**, quatorze noms. Ils se rangent en deux
+           familles qui n'ont rien à voir avec un cycle de surveillance : la
+           coquille — thème, langue, barre mobile, panneau des notifications — et
+           la barre de filtres, dont huit listes sur dix restaient dehors.
+
+           ── La quatrième suite de l'écran, et pourquoi ──
+
+           `surv-coquille.smoke.js`, **15 contrôles**. C'était la ronde la plus
+           indépendante du dépôt : elle ne voulait bâtir aucune chaîne. Elle en
+           bâtit la plus courte possible — deux constatations directes —, et la
+           raison est la mesure qui suit.
+
+           ── Ce que la mesure a trouvé, et qui n'est pas de ce tour ──
+
+           **`GET /constatations` rend une liste vide** à la session
+           super-administrateur, quand le magasin du module en porte **quatre**,
+           lu directement hors serveur. Trois causes plausibles sont écartées,
+           mesurées une à une : la vue Prestataire (le compte est en vue AAC),
+           le resserrement par instance (le choix enregistré est la vue
+           régionale, qui laisse tout passer) et une route qui en masquerait une
+           autre (il n'y en a qu'une). La cause demande d'instrumenter le
+           serveur ; c'est un tour à part, et le nommer ici vaut mieux que de
+           lui inventer une explication.
+
+           Ce qui compte autant : **aucune suite ne l'avait jamais regardé.**
+           Les trois rondes de SURV et la suite HTTP créent chacune leurs
+           propres constatations — c'est la bonne pratique, et c'est elle qui
+           avait rendu cette liste invisible. *Un jeu d'essai que rien ne lit
+           n'est pas un jeu d'essai, c'est un décor.*
+
+           ── Ce que la ronde mesure ──
+
+             · **le thème** s'applique au document entier et se retient — non
+               la seule pastille ;
+             · **la langue** charge son volet *avant* de rendre : les deux
+               volets non français pèsent 131 Ko et ne se chargent qu'à la
+               demande, de sorte que rendre d'abord donnerait un écran resté en
+               français, sans erreur ni trace. Les libellés de la barre changent
+               tous, et reviennent un pour un ;
+             · **le voile de la barre mobile porte le même geste que le bouton**
+               — c'est lui qui rend la fermeture possible au doigt, hors de la
+               barre ;
+             · **le panneau des notifications** annonce le compte que l'écran a
+               calculé, la cloche le bascule, un clic au dehors le referme et un
+               clic dedans **ne** le referme pas. L'écouteur est posé sur le
+               document, en différé, et se retire lui-même ;
+             · **la barre de filtres** : les huit listes écrivent chacune son
+               filtre ; la criticité **partitionne** la table — la somme des
+               trois niveaux vaut le total, sans qu'aucun chiffre soit écrit
+               dans le contrôle ; la liste des années n'offre que les années
+               présentes ; et les deux règles que son commentaire énonce sont
+               tenues — une sélection que rien ne porte **reste proposée**
+               plutôt qu'orpheline, et la liste voisine **se vide sans retomber
+               sur le référentiel**.
+
+           Ces deux dernières ne se produisent pas en cliquant : l'instance ne
+           porte que deux organismes, du même secteur. L'état est donc posé, et
+           c'est la règle de rendu qui est lue — les gestes, eux, sont exercés
+           juste au-dessus. *Mieux vaut mesurer la règle en le disant que ne pas
+           la mesurer du tout.*
+
+           ── Trois fautes de mon écriture, et ce que chacune enseigne ──
+
+           1. **Un `<select>` posé sur une valeur qu'il n'offre pas** reste vide,
+              sans lever. J'avais choisi l'année « 1970 » pour vider la table ;
+              le filtre n'a jamais été écrit. *L'absence de l'option **est** la
+              propriété* — la liste des années ne porte que celles qui existent,
+              et c'est cela qu'il fallait vérifier.
+           2. **Un compteur qui compte le message « aucune donnée ».** Les trois
+              criticités rendaient « une ligne » chacune : deux fois le même
+              rang d'absence. Le compteur écarte désormais les rangs à
+              `colspan` et les rangs de détail. *Un compteur qui compte « rien à
+              voir » ne mesure plus rien.*
+           3. **Une assertion que le jeu d'essai ne peut pas montrer.** J'ai
+              affirmé le resserrement d'une liste par une autre là où les plans
+              ne couvrent qu'un domaine. Le contrôle avait raison de rougir ; la
+              propriété a été reportée là où les données la portent.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 253 / 311 (81 %) | **266 / 311 (85 %)** |
+           | `exec-app.js` | 15 / 30, quatorze noms | **29 / 30**, un seul |
+           | `exec-plans.js` | 3 / 10 | **5 / 10** (la barre du plan) |
+           | Suites de SURV | 3 | **4** |
+           | Campagne | 1 717 | **1 732** |
+
+           Il ne reste **deux** noms hors de portée des suites, et les deux pour
+           la même raison : `execViewFNC` et `execAccuserReception` ne sont
+           offerts qu'à un compte qui **ne gouverne pas** le module. La bascule
+           « Vue Prestataire » les met à portée — en vue simulée, `req.user`
+           *est* le prestataire —, et c'est la ronde suivante : une seule
+           bascule pour les deux derniers gestes de l'écran.
+
+           Le gisement qui vient ensuite est `exec-processus.js`, 18 sur 32.

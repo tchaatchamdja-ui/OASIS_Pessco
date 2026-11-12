@@ -83,6 +83,10 @@ const SUITES = [
   // que les pièces — il bâtit sa chaîne et l'efface, sans rien lire de ce que
   // les autres laissent.
   { nom: 'surv-parametres', port: 4807, fichier: './surv-parametres.smoke' },
+  // La quatrième : la coquille de l'écran — thème, langue, panneaux — et sa
+  // barre de filtres. La plus indépendante de toutes : elle ne bâtit aucune
+  // chaîne, et rend l'écran dans l'état où elle l'a trouvé.
+  { nom: 'surv-coquille', port: 4808, fichier: './surv-coquille.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

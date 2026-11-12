@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **315 gestes nommés, 241 exercés** (77 %), 3 indécidables — idem, 11 novembre 2026 (n° 5.f.81) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme et le **plan d'actions correctives** sont exercés en entier — 10 sur 10 et 47 sur 47 —, celui des constatations à 57 occurrences sur 61, et celui des activités à 65 sur 68 : des trois qui restent, deux sont l'angle mort du relevé — un gestionnaire composé au rendu se nomme ailleurs qu'où il est posé — et le troisième n'est offert qu'à un compte qui ne gouverne pas le module |
+           | SURV (`execution`) | 24 162 | **315 gestes nommés, 241 exercés** (77 %), 3 indécidables — mesuré par **deux** suites depuis le 12 novembre 2026, `surv` et `surv-pieces`, dont le relevé réunit les journaux (n° 5.f.81 et 5.f.82) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme et le **plan d'actions correctives** sont exercés en entier — 10 sur 10 et 47 sur 47 —, celui des constatations à 57 occurrences sur 61, et celui des activités à 65 sur 68 : des trois qui restent, deux sont l'angle mort du relevé — un gestionnaire composé au rendu se nomme ailleurs qu'où il est posé — et le troisième n'est offert qu'à un compte qui ne gouverne pas le module |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -11412,3 +11412,106 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            suite, et un écran découpé en deux suites ne serait plus mesuré qu'à
            moitié. C'est cette table qui doit changer d'abord, et la même passe
            peut corriger le nommage d'un gestionnaire composé au rendu.
+
+       5.f.82 [x] **Un fichier qu'on n'arrivait pas à couper n'était pas trop
+           long : il était trop lié** — fait le 12 novembre 2026.
+           `surv.smoke.js` portait 8 726 lignes. Son découpage était nommé dans
+           l'ADR depuis trois tours, et son budget de taille avait été relevé
+           **deux fois** — la seconde en écrivant que l'étape suivante serait
+           celle-ci. Elle l'est.
+
+           ── Les deux obstacles, et aucun n'était la longueur ──
+
+           **1. Toute ronde a besoin de la même mise en place** : un sas de
+           messagerie, un serveur, un navigateur au délai de protocole relevé, le
+           mouchard des gestes, le relevé des incidents de console avec ses refus
+           déclarés, et une session ouverte sur l'écran. Couper le fichier en
+           deux sans extraire cela aurait fait **deux copies de cent dix
+           lignes** — et ce dépôt venait justement de refermer, au tour
+           précédent, le défaut de huit copies d'un même appel qui avaient
+           divergé (n° 5.f.81). *On ne répare pas une divergence le lundi pour en
+           fabriquer une le mardi.*
+
+           La mise en place vit donc dans `surv-socle.js`, et chaque suite n'est
+           plus que ses rondes et ses **déclarations** — les refus HTTP, les
+           messages de console et les abandons de navigation que *ses* rondes
+           provoquent exprès. Le socle les reçoit et vérifie qu'elles sont toutes
+           venues : une déclaration portée pour le compte d'une autre suite
+           deviendrait une déclaration muette, c'est-à-dire un filtre qui cache
+           au lieu de dispenser.
+
+           Les trois contrôles de fin — console propre, déclarations venues,
+           abandons venus — appartiennent à **chaque** suite et non à la
+           première : une suite qui salirait la console sans porter le contrôle
+           qui la regarde ne serait pas éprouvée du tout. Et ils ne sont posés
+           que s'il y a quelque chose à vérifier — un contrôle vrai sans rien
+           regarder gonfle un compte sans rien garder.
+
+           **2. Le relevé des gestes associait un écran à une seule suite.** Un
+           écran coupé en deux n'aurait plus été mesuré qu'à **moitié** : sa
+           couverture aurait chuté de 241 à une centaine sans qu'un seul geste
+           cesse d'être exercé. *Un dénominateur qui baisse en silence* est le
+           défaut que cet outil existe pour empêcher — il l'a commis deux fois
+           sur le portail, et une fois à chaque conversion.
+
+           Ce n'est pas une crainte : c'est mesuré. Une seule des deux suites
+           déclarée, le relevé rend **25 gestes exercés sur 315 — 8 %** au lieu
+           de 241 et 77 %. Et il le rend sans se plaindre : un rapport complet,
+           cohérent, et faux de soixante-neuf points.
+
+           `suite` accepte donc un nom **ou une liste**. Chaque suite reçoit son
+           propre journal — un chemin partagé aurait fait écraser le premier par
+           le second, et la couverture rendue aurait été celle de la dernière
+           suite, plausible et fausse de moitié — et les journaux se réunissent.
+           Le refus d'une suite rouge est, lui, **par suite** : une seule suffit
+           à rendre l'ensemble partiel.
+
+           ── Un troisième obstacle, trouvé en coupant ──
+
+           Le lanceur choisit ses suites par **inclusion** du nom. Cela tenait
+           tant qu'aucun nom n'était contenu dans un autre de façon gênante :
+           `-- ramp` joue les deux suites du module, et c'est commode. Mais
+           `surv` est contenu dans `surv-pieces`, et `npm run smoke -- surv` en
+           aurait lancé **deux** — pour le relevé, le journal de la première
+           écrasé par celui de la seconde.
+
+           Un nom exact désigne désormais sa seule suite ; à défaut, l'inclusion
+           reste, qui sert à lancer une famille. Et le garde-fou qui vérifie
+           qu'un nom lancé par le relevé ne désigne qu'une suite **appelle la
+           fonction du lanceur** au lieu de refaire la règle de son côté : il
+           décidait par « le nom est contenu dans un seul », et il aurait rougi
+           sur un lanceur juste. C'est la troisième fois que ce contrôle-là est
+           corrigé, et toujours pour la même raison — *un contrôle qui réécrit la
+           règle qu'il garde éprouve sa propre version de la règle.*
+
+           Il lit aussi la table de l'outil plutôt que sa source : un motif
+           cherchant `suite: '…'` n'aurait plus rien trouvé le jour où `suite`
+           est devenu une liste, et le dénominateur se serait tu — précisément le
+           mode de défaillance qu'on venait de corriger ailleurs.
+
+           ── Ce qui a été coupé, et pourquoi celui-là ──
+
+           `surv-pieces.smoke.js` : les pièces du dossier, l'intitulé du rapport
+           et la transmission par courriel. Ce morceau a été choisi parce qu'il
+           **bâtit sa propre chaîne** par l'API et l'efface en partant, sans lire
+           aucun état qu'une autre ronde aurait laissé. Les rondes qui restent
+           s'enchaînent — le dossier, son plan d'actions, son rapport —, et les
+           séparer demandera de donner à chacune la sienne. *On ne coupe pas un
+           fichier là où c'est commode, mais là où il n'est pas lié.*
+
+           Ce que cela change pour qui travaille : la ronde des pièces se rejoue
+           **seule en cinq minutes** là où il fallait seize, et les deux suites
+           peuvent tourner ensemble, chacune ayant son port (4800 et 4806).
+
+           ── La vérification, en trois temps ──
+
+           Le socle a été extrait **d'abord**, et la suite rejouée sans rien
+           déplacer d'autre : **248 contrôles sur 248**, identiques. C'était le
+           seul moyen de savoir que la mise en place avait voyagé sans perdre un
+           écouteur. La ronde n'a été détachée qu'ensuite — `surv` 228/228,
+           `surv-pieces` 21/21 — et le relevé des gestes rejoué en dernier, pour
+           que la couverture de l'écran soit relue après la coupe et non avant.
+
+           Le budget de taille **baisse** pour la première fois depuis qu'il
+           existe : 8 726 → 7 739. *Un budget qui ne fait que monter n'est pas un
+           budget, c'est une chronique.*

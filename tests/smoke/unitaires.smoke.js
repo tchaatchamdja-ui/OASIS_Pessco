@@ -1518,10 +1518,10 @@ function verrouDeCampagne() {
 // table était dans le lanceur, construite avec des `require` : la lire chargeait
 // les vingt suites, puppeteer compris, et aucun contrôle ne pouvait l'éprouver.
 function tableDesSuites() {
-  const { SUITES } = require('./suites');
+  const { SUITES, choisir } = require('./suites');
 
-  verifier('suites : la table en porte vingt, et chacune dit son nom, son port et son fichier',
-    SUITES.length === 20
+  verifier('suites : la table en porte vingt et une, et chacune dit son nom, son port et son fichier',
+    SUITES.length === 21
     && SUITES.every((s) => typeof s.nom === 'string' && s.nom.length > 2
       && Number.isInteger(s.port) && typeof s.fichier === 'string'),
     `${SUITES.length} suites`);
@@ -1553,25 +1553,54 @@ function tableDesSuites() {
   // non depuis la règle.
   //
   // La règle est plus étroite : `scripts/relever-gestes.js` lance la suite d'un
-  // écran **par son nom**, et attend d'en jouer une seule. Ce sont donc les six
+  // écran **par son nom**, et attend d'en jouer une seule. Ce sont donc les
   // noms qu'il nomme qui doivent être sans équivoque — chacun ne doit
   // sélectionner que lui-même. *Un contrôle écrit par analogie éprouve
   // l'analogie, non la règle.*
+  //
+  // ── Et le même contrôle avait failli se tromper une seconde fois ──
+  //
+  // Il décidait de l'équivoque par **sa propre** règle — « le nom est contenu
+  // dans un seul » —, quand le lanceur a la sienne. Le découpage de SURV a
+  // séparé les deux : `surv` est contenu dans `surv-pieces`, et le lanceur
+  // donne pourtant la priorité au nom exact, de sorte que `-- surv` ne désigne
+  // qu'une suite. Le contrôle aurait rougi sur un lanceur juste.
+  //
+  // Il appelle donc `choisir`, **la** fonction du lanceur. Une règle, un
+  // endroit.
   const noms = SUITES.map((s) => s.nom);
   verifier('suites : les noms sont uniques',
     new Set(noms).size === noms.length, noms.join(','));
   // Les noms que le relevé emploie, lus dans l'outil plutôt que recopiés : une
-  // liste recopiée se tairait le jour où l'outil en nommerait un autre.
-  const outil = fs.readFileSync(
-    path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'), 'utf-8');
-  const lances = [...outil.matchAll(/suite:\s*'([^']+)'/g)].map((m) => m[1]);
-  verifier('suites : les six noms que le relevé lance sont tous dans la table',
-    lances.length >= 6 && lances.every((n) => noms.includes(n)),
+  // liste recopiée se tairait le jour où l'outil en nommerait un autre. Lus
+  // dans sa **table**, et non par un motif sur sa source : `suite` accepte
+  // désormais une liste, et une expression régulière cherchant `suite: '…'`
+  // n'aurait plus rien trouvé — le dénominateur se serait tu.
+  // eslint-disable-next-line global-require
+  const { ECRANS } = require(path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'));
+  const lances = [...new Set(Object.values(ECRANS)
+    .flatMap((e) => (Array.isArray(e.suite) ? e.suite : [e.suite]))
+    .filter(Boolean))];
+  verifier('suites : tous les noms que le relevé lance sont dans la table',
+    lances.length >= 7 && lances.every((n) => noms.includes(n)),
     `${lances.length} : ${lances.join(', ')}`);
-  const equivoques = lances.filter((n) => noms.filter((x) => x.includes(n)).length !== 1);
+  const equivoques = lances.filter((n) => choisir(SUITES, n).length !== 1);
   verifier('suites : chaque nom que le relevé lance ne sélectionne que sa propre suite',
     equivoques.length === 0,
-    equivoques.map((n) => `${n} → ${noms.filter((x) => x.includes(n)).join('+')}`).join(' · '));
+    equivoques.map((n) => `${n} → ${choisir(SUITES, n).map((s) => s.nom).join('+')}`).join(' · '));
+  // ── Et la règle du lanceur elle-même : l'exact l'emporte ──
+  //
+  // Sans elle, `-- surv` lancerait les deux suites de SURV et le relevé des
+  // gestes écraserait le journal de la première. Avec elle, une famille se
+  // lance toujours par un fragment commun.
+  verifier('suites : un nom exact désigne sa seule suite, un fragment désigne la famille',
+    choisir(SUITES, 'surv').length === 1
+    && choisir(SUITES, 'surv')[0].nom === 'surv'
+    && choisir(SUITES, 'surv-pieces').length === 1
+    && choisir(SUITES, 'navigateur').length >= 5
+    && choisir(SUITES, '').length === SUITES.length,
+    `surv → ${choisir(SUITES, 'surv').map((s) => s.nom).join('+')}`
+    + ` · navigateur → ${choisir(SUITES, 'navigateur').length}`);
 
   // ── Les ports restent hors de ce qui est déjà pris ──
   //

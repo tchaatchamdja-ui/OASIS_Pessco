@@ -11,6 +11,34 @@
 // la suite de l'écran qu'il mesure** : `scripts/relever-gestes.js` lit le nom de
 // la suite dans la table des écrans, et l'instrumentation voyage avec elle.
 //
+// ── Un écran, **deux** suites depuis le 12 novembre 2026 ──
+//
+// « Un écran, une suite » tenait tant qu'une suite restait lisible. Celle-ci a
+// atteint 8 726 lignes, et le garde-fou de taille l'a dit deux tours de suite —
+// la seconde fois en écrivant que le découpage devenait l'étape suivante.
+//
+// Il a fallu lever deux obstacles avant de couper, et ni l'un ni l'autre n'était
+// la longueur :
+//
+//   · **toute ronde a besoin de la même mise en place** — sas de messagerie,
+//     serveur, navigateur, mouchard, relevé des incidents, session. Couper sans
+//     l'extraire aurait fait deux copies de cent dix lignes, qui auraient
+//     divergé. Elle vit dans `surv-socle.js`, et chaque suite n'est plus que ses
+//     rondes et ses **déclarations** — les refus, les messages de console et les
+//     abandons que *ses* rondes provoquent exprès ;
+//   · **le relevé des gestes associait un écran à une seule suite.** Un écran
+//     coupé en deux n'aurait plus été mesuré qu'à moitié, et sa couverture
+//     aurait chuté sans qu'un seul geste cesse d'être exercé — *un dénominateur
+//     qui baisse en silence*, le défaut que cet outil existe pour empêcher.
+//     `suite` accepte désormais une liste, chaque suite reçoit son journal, et
+//     les journaux se réunissent.
+//
+// Premier morceau détaché : `surv-pieces.smoke.js`, les pièces du dossier et la
+// transmission. Il a été choisi parce qu'il **bâtit sa propre chaîne** et
+// l'efface en partant ; les rondes qui restent ici s'enchaînent, et les séparer
+// demandera de donner à chacune la sienne. *On ne coupe pas un fichier là où
+// c'est commode, mais là où il n'est pas lié.*
+//
 // ── Ce que cette suite éprouve, et ce qu'elle n'éprouve pas encore ──
 //
 // Elle monte l'écran, parcourt ses sept pages **par de vrais clics**, et vérifie
@@ -31,17 +59,13 @@
 // console**. Les seuils ci-dessous viennent de là, et non d'une supposition.
 const fs = require('fs');
 const path = require('path');
-const puppeteer = require('puppeteer');
-const { demarrer, verifier, bilan, abandonsAttendus } = require('./harness');
-// Un serveur de messagerie d'essai : sans lui, la transmission d'un rapport
-// n'était mesurable que par son refus (voir `messagerie-essai.js`).
-const messagerie = require('./messagerie-essai');
+const { verifier } = require('./harness');
+// La mise en place — sas de messagerie, serveur, navigateur, mouchard, relevé
+// des incidents, session — vit dans le socle, que les deux suites de SURV
+// partagent (voir `surv-socle.js`).
+const { surSURV, M, MOT_DE_PASSE, RACINE } = require('./surv-socle');
 
-const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'execution', 'js', 'exec-app.js');
-
-const IDENTIFIANT = 'superadmin@anac.bj';
-const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
 
 // ── Les pages que l'aiguillage sait rendre, et celles qu'un menu offre ──
 //
@@ -135,134 +159,17 @@ function aiguillageEtMenus() {
 }
 
 module.exports = async function survSmoke(port) {
-  console.log('\n── SURV : l’écran « Exécution de la Surveillance » dans un navigateur ──');
-
-  // ── Le sas de messagerie se lève **avant** le serveur ──
-  //
-  // Le serveur lit l'adresse de sa messagerie au démarrage, et le sas reçoit
-  // son port du système : il faut donc le connaître avant de lancer le serveur.
-  // `sas.env` porte les deux variables qui l'y dirigent.
-  const sas = await messagerie.demarrer();
-  const srv = await demarrer({ port, env: sas.env });
-  let navigateur = null;
-  const incidents = [];
-  try {
-    // ── Le délai de protocole, et une campagne rougie par la charge ──
-    //
-    // Le 20 octobre 2026, `planification-navigateur` a rendu
-    // « Runtime.callFunctionOn timed out » au terme d'une campagne de huit
-    // suites de navigateur — et la même suite, rejouée seule, a passé. Ce
-    // n'était pas un défaut de l'écran : c'était le **délai de protocole par
-    // défaut** de Puppeteer, atteint sous la charge.
-    //
-    // Un aléa qui fait rougir une campagne coûte autant qu'un vrai défaut :
-    // il faut le lire, le rejouer, l'écarter. Le délai est donc posé — cinq
-    // minutes, bien au-delà de toute évaluation que ces rondes demandent, et
-    // bien en dessous d'un blocage réel, qui doit toujours finir par rendre.
-    navigateur = await puppeteer.launch({
-      headless: 'new',
-      args: ['--no-sandbox', '--disable-dev-shm-usage'],
-      protocolTimeout: 300000,
-    });
-    // Le mouchard des gestes, posé seulement si `OASIS_MOUCHARD` l'est — même
-    // règle que la suite « parcours », et pour la même raison : l'outil
-    // instrumente la vraie suite au lieu d'en rejouer une imitation.
-    const mouchard = process.env.OASIS_MOUCHARD
-      ? require(path.join(RACINE, 'scripts', 'relever-gestes.js')).MOUCHARD : null;
-    const page = await navigateur.newPage();
-    if (mouchard) await page.evaluateOnNewDocument(mouchard);
-    await page.setViewport({ width: 1280, height: 900 });
-
-    // La console est relevée **dès la première page**, et les incidents de la
-    // connexion sont écartés : une erreur de la page de connexion passerait
-    // sinon pour une erreur de SURV.
-    let surv = false;
-    let etape = 'montage';
-    // Les refus déclarés (voir `REFUS_ATTENDUS` plus bas) laissent aussi une
-    // trace en console : « Failed to load resource: … 409 », **sans l'adresse**
-    // — c'est la cécité du message que 5.f.6 avait déjà relevée. On tient donc
-    // le compte des refus déclarés rencontrés, et l'on dispense le message de
-    // console qui porte **le même code**. Rien de plus large : un 409 non
-    // déclaré garde son message, et un message dont le code n'a pas été déclaré
-    // reste un incident.
-    const codesAttendus = new Set();
-    // ── Et les traces que l'écran écrit **lui-même** ──
-    //
-    // Un refus déclaré dispense le message qui porte son code. Il ne dispense
-    // pas la trace que l'écran écrit de son côté — `console.error('Upload PJ
-    // error:', e)` — et cette trace est **voulue** : un téléversement qui échoue
-    // doit laisser de quoi diagnostiquer, refus propre ou panne de réseau,
-    // l'écran ne sachant pas d'avance lequel.
-    //
-    // Elle se déclare donc comme un refus, et de la même façon : un motif, sa
-    // raison, et le compte de ses venues. *Déclarer n'est pas taire* — le
-    // contrôle plus bas exige que chaque déclaration ait servi, faute de quoi
-    // elle est devenue un filtre muet.
-    const MESSAGES_ATTENDUS = [
-      {
-        motif: /Upload PJ error: Error: Type de fichier non autoris/,
-        vus: 0,
-        pourquoi: 'la ronde des pièces verse un fichier d’un type que la route'
-          + ' refuse, pour éprouver que le refus **se dit** au lieu d’être avalé.'
-          + ' Éprouvé par « un type de fichier que la route refuse ne paraît pas'
-          + ' dans la liste, et le refus est dit » (n° 5.f.81).',
-      },
-    ];
-    page.on('console', (m) => {
-      if (!surv || m.type() !== 'error') return;
-      const texte = m.text();
-      const code = (/status of (\d{3})/.exec(texte) || [])[1];
-      if (code && codesAttendus.has(Number(code))) return;
-      const declare = MESSAGES_ATTENDUS.find((x) => x.motif.test(texte));
-      if (declare) { declare.vus += 1; return; }
-      incidents.push(`[${etape}] console : ${texte.slice(0, 160)}`);
-    });
-    page.on('pageerror', (e) => {
-      if (surv) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
-    });
-    // ── L'abandon que la réinitialisation d'un mot de passe provoque ──
-    //
-    // `execResetMesUserPw` pose `window.location.href = 'mailto:…'` pour que
-    // l'administrateur transmette le nouveau mot de passe. Le navigateur mène
-    // la fenêtre à l'adresse, n'a pas de protocole pour la servir, et
-    // **abandonne la navigation** — `net::ERR_ABORTED`, sans code de réponse.
-    //
-    // Déclarer n'est pas taire : le contrôle d'`abandons` exige que l'abandon
-    // soit venu. S'il cessait de venir — parce que le geste aurait cessé de
-    // composer le courriel —, la déclaration deviendrait un filtre muet.
-    const abandons = abandonsAttendus([
-      {
-        motif: /ERR_ABORTED/, chemin: /^mailto:/,
-        pourquoi: 'la réinitialisation d’un mot de passe compose le courriel qui'
-          + ' le transmet. Contrôle « le mot de passe réinitialisé est annoncé'
-          + ' dans la langue du module, et le courriel composé » (n° 5.f.76).',
-      },
-    ]);
-    page.on('requestfailed', (r) => {
-      if (!surv) return;
-      const chemin = r.url().replace(srv.base, '');
-      const motif = String(((r.failure() || {}).errorText) || '');
-      if (abandons.attendu(motif, chemin)) return;
-      incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
-    });
-    // ── La réponse, et non le seul message de console ──
-    //
-    // Un 404 se présente en console comme « Failed to load resource », **sans
-    // l'adresse**. Le premier passage de la ronde du dossier en a signalé un, et
-    // il a fallu réinstrumenter pour savoir lequel. On relève donc la réponse :
-    // son code et son adresse, ce qui rend l'incident actionnable au lieu
-    // d'énigmatique.
-    // ── Les refus que la ronde **provoque exprès** ──
+  return surSURV({
+    port,
+    nom: 'SURV',
+    titre: 'SURV : l’écran « Exécution de la Surveillance » dans un navigateur',
+    // ── Les refus que ces rondes **provoquent exprès** ──
     //
     // Certains contrôles éprouvent un refus : une notification envoyée qui
     // refuse d'être effacée (409), par exemple. Ce refus est la propriété
     // mesurée — le relever comme un incident ferait rougir le contrôle de la
     // console sur un comportement correct, et le premier passage l'a fait.
-    //
-    // Ils sont donc **déclarés**, un par un, avec leur code, leur adresse et
-    // leur raison. Pas de filtre large : un 409 ailleurs reste un incident, et
-    // une déclaration qui cesserait de correspondre cesserait de dispenser.
-    const REFUS_ATTENDUS = [
+    refus: [
       {
         code: 409, methode: 'DELETE', chemin: /\/notifications\/[\w-]+$/,
         pourquoi: 'une notification envoyée refuse d’être effacée : elle s’annule.'
@@ -284,50 +191,22 @@ module.exports = async function survSmoke(port) {
           + ' sans mot de passe, et sur un mot de passe faux » (n° 5.f.78).',
       },
       {
-        code: 400, methode: 'POST', chemin: /\/upload$/,
-        pourquoi: 'la ronde des pièces verse un fichier d’un type que la route'
-          + ' refuse : le 400 est la propriété mesurée, non l’incident. Éprouvé'
-          + ' par « un type de fichier que la route refuse ne paraît pas dans la'
-          + ' liste, et le refus est dit » (n° 5.f.81).',
-      },
-      {
         code: 403, methode: 'POST', chemin: /\/mes-utilisateurs\/[^/]+\/reveal-password$/,
         pourquoi: 'lire un mot de passe temporaire exige que le demandeur prouve'
           + ' son identité : la ronde présente d’abord un mauvais mot de passe,'
           + ' et le refus est la propriété mesurée. Éprouvé par « l’œil refuse'
           + ' un mauvais mot de passe » (n° 5.f.76).',
       },
-    ];
-    page.on('response', (r) => {
-      if (!surv || r.status() < 400) return;
-      const chemin = r.url().replace(srv.base, '');
-      const attendu = REFUS_ATTENDUS.some((x) => x.code === r.status()
-        && x.methode === r.request().method() && x.chemin.test(chemin));
-      if (attendu) { codesAttendus.add(r.status()); return; }
-      incidents.push(`[${etape}] ${r.status()} ${chemin.slice(0, 120)}`);
-    });
-
-    // ── La session, puis l'écran ──
-    await page.goto(`${srv.base}/login.html`, { waitUntil: 'networkidle2' });
-    await page.type('#username', IDENTIFIANT);
-    await page.type('#password', MOT_DE_PASSE);
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'networkidle2' }),
-      page.click('#loginForm button[type="submit"]'),
-    ]);
-    surv = true;
-    await page.goto(`${srv.base}/modules/execution/index.html`, { waitUntil: 'networkidle2' });
-    // Le module monte sa coquille puis charge ses données : on attend la barre,
-    // et non un délai fixe.
-    await page.waitForSelector('.nav-btn[data-page]', { timeout: 20000 }).catch(() => {});
-    await page.waitForFunction(
-      () => {
-        const el = document.getElementById('exec-content');
-        return el && el.textContent.trim().length > 200;
+    ],
+    abandons: [
+      {
+        motif: /ERR_ABORTED/, chemin: /^mailto:/,
+        pourquoi: 'la réinitialisation d’un mot de passe compose le courriel qui'
+          + ' le transmet. Contrôle « le mot de passe réinitialisé est annoncé'
+          + ' dans la langue du module, et le courriel composé » (n° 5.f.76).',
       },
-      { timeout: 20000 },
-    ).catch(() => { /* le contrôle qui suit le dira */ });
-
+    ],
+    rondes: async ({ page, sas, jalon, abandons }) => {
     const monte = await page.evaluate(() => ({
       pages: [...document.querySelectorAll('.nav-btn[data-page]')].map((b) => b.dataset.page),
       contenu: (document.getElementById('exec-content') || { textContent: '' }).textContent.trim().length,
@@ -513,7 +392,7 @@ module.exports = async function survSmoke(port) {
     // Un plan validé, deux activités dans la fenêtre des 31 jours, aucune
     // notification. Le circuit se parcourt donc de bout en bout sur l'une, en
     // laissant l'autre intacte.
-    etape = 'circuit de la notification';
+    jalon('circuit de la notification');
     // Le préfixe passe **en argument** de chaque évaluation, comme le reste de
     // cette suite le fait. `EXEC_MODULE_API` est un `const` de premier niveau :
     // une liaison du périmètre lexical, **absente de `window`** — à la
@@ -1236,7 +1115,7 @@ module.exports = async function survSmoke(port) {
       const S = notifSoumission || {};
       const X = notifCircuit || {};
       const E = notifEnvoyes || {};
-      const M = notifMenage || {};
+      const G = notifMenage || {};
 
       verifier('la page du Déclenchement porte ses quatre onglets, chacun se rend, et « à notifier » offre ses deux gestes par ligne',
         O.onglets === 4
@@ -1365,13 +1244,13 @@ module.exports = async function survSmoke(port) {
           motif: E.motifAnnulation }));
 
       verifier('ramenée au brouillon, la notification s’efface sur confirmation — son refus ne l’efface pas —, et l’activité du plan redevient « à notifier »',
-        M.bouton === true && M.confirmation === true
-        && M.resteApresRefus === true
-        && M.partie === true
+        G.bouton === true && G.confirmation === true
+        && G.resteApresRefus === true
+        && G.partie === true
         // L'activité redevient notifiable : c'est `plans-valides` qui l'exclut
         // tant qu'une notification la porte.
-        && M.activiteRendue === true,
-        JSON.stringify(M));
+        && G.activiteRendue === true,
+        JSON.stringify(G));
     }
 
     // ── Pourquoi ce bloc vient **avant** la ronde du dossier ──
@@ -1387,8 +1266,7 @@ module.exports = async function survSmoke(port) {
     // l'activité redevienne notifiable. *Une ronde qui ne rend pas ce qu'elle a
     // pris fait rougir celles qui la suivent, et c'est la leçon que son
     // emplacement a coûtée.*
-    etape = 'ronde du dossier';
-    const M = '/api/m/execution';
+    jalon('ronde du dossier');
     const chaine = await page.evaluate(async (api) => {
       const env = async (url, methode, corps) => {
         const r = await fetch(url, {
@@ -1904,7 +1782,7 @@ module.exports = async function survSmoke(port) {
       // impression. Le geste la suit désormais, et ce bloc mesure **le produit**
       // — comme celui du rapport, et pour la même raison : un relais mesure le
       // geste jusqu'à la porte, jamais au-delà.
-      etape = 'document de la fiche';
+      jalon('document de la fiche');
       const ficheDoc = await page.evaluate(async () => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -2546,7 +2424,7 @@ module.exports = async function survSmoke(port) {
       //
       // Le dossier est désarchivé en partant : les blocs qui suivent le
       // trouvent clôturé, comme ils l'ont toujours trouvé.
-      etape = 'écran Dossiers';
+      jalon('écran Dossiers');
       const suivi = await page.evaluate(async (ctx) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -2771,7 +2649,7 @@ module.exports = async function survSmoke(port) {
       // naître : c'est l'organisme inspecté qui propose son plan, et l'AAC qui
       // l'arbitre. Les couvrir demande de basculer de vue, et c'est une ronde à
       // part.
-      etape = 'plan d’actions correctives';
+      jalon('plan d’actions correctives');
       const pac = await page.evaluate(async (ctx) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -2913,7 +2791,7 @@ module.exports = async function survSmoke(port) {
       // laisserait sur « Prestataire » livrerait à la suivante un compte qui ne
       // voit plus que cinq pages. La suite HTTP du module s'en protège déjà par
       // un `PUT /vue` en tête ; celle-ci se protège en rétablissant.
-      etape = 'vue prestataire';
+      jalon('vue prestataire');
       const basculer = async (libelle) => {
         await page.evaluate((mot) => {
           const b = [...document.querySelectorAll('.oasis-module-actions button')]
@@ -3039,7 +2917,7 @@ module.exports = async function survSmoke(port) {
       //     écrans n'offrait et qui n'avait rien de la cérémonie du portail.
       //
       // La ronde ci-dessous exerce les sept gestes, et asserte en base.
-      etape = 'comptes de l’organisme';
+      jalon('comptes de l’organisme');
       const COMPTE = 'ronde.surv@test.int';
       const comptes = await page.evaluate(async (ctx) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -3256,7 +3134,7 @@ module.exports = async function survSmoke(port) {
       // Le retour n'est pas une politesse : la vue est **persistée chez le
       // serveur**, et la laisser sur « Prestataire » livrerait à la campagne
       // suivante un compte qui ne voit plus que cinq pages.
-      etape = 'arbitrage du plan';
+      jalon('arbitrage du plan');
       await basculer('Vue AAC');
       const arbitrage = await page.evaluate(async (ctx) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -3326,7 +3204,7 @@ module.exports = async function survSmoke(port) {
       //
       // C'est le dernier palier du suivi d'une constatation, et le terme du
       // circuit qu'ouvre une inspection.
-      etape = 'mise en œuvre du plan';
+      jalon('mise en œuvre du plan');
       await basculer('Vue Prestataire');
       const miseEnOeuvre = await page.evaluate(async (ctx) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -3387,7 +3265,7 @@ module.exports = async function survSmoke(port) {
         JSON.stringify({ mode: miseEnOeuvre.boutonMode,
           soumission: miseEnOeuvre.boutonMiseEnOeuvre, enBase: miseEnOeuvre.enBase }));
 
-      etape = 'solde de la fiche';
+      jalon('solde de la fiche');
       await basculer('Vue AAC');
       const solde = await page.evaluate(async (ctx) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -3877,7 +3755,7 @@ module.exports = async function survSmoke(port) {
       // envoi. Mesuré : une constatation posée après la validation reste
       // `brouillon` au travers de `/send`, dont le commentaire prétendait le
       // contraire (corrigé, n° 5.f.78).
-      etape = 'plan d’actions : la matière';
+      jalon('plan d’actions : la matière');
       const planFix = await page.evaluate(async (api, fncDuCycle) => {
         const J = async (u, m, b) => {
           const r = await fetch(u, {
@@ -4011,7 +3889,7 @@ module.exports = async function survSmoke(port) {
           apres: planFix.tardiveApres }));
 
       // ── Vue AAC : l'ajustement, puis les trois refus ──
-      etape = 'plan d’actions : l’ajustement et les refus';
+      jalon('plan d’actions : l’ajustement et les refus');
       const refusPac = await page.evaluate(async (ctx) => {
         const { api, fncId, mdp } = ctx;
         const at = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -4355,7 +4233,7 @@ module.exports = async function survSmoke(port) {
       // dire pourquoi**. Comparé à la dernière version acceptée du plan, tout
       // écart lève un drapeau, réclame son motif, et la soumission ne part pas
       // sans. C'est ce que la ronde du cycle avait nommé et laissé.
-      etape = 'plan d’actions : l’amendement';
+      jalon('plan d’actions : l’amendement');
       await basculer('Vue Prestataire');
       const amendement = await page.evaluate(async (ctx) => {
         const { api, fncId } = ctx;
@@ -4648,7 +4526,7 @@ module.exports = async function survSmoke(port) {
         JSON.stringify(amendement.versions));
 
       // ── Le ménage : la seconde chaîne ne survit pas à la ronde ──
-      etape = 'plan d’actions : le ménage';
+      jalon('plan d’actions : le ménage');
       await basculer('Vue AAC');
       const menagePac = await page.evaluate(async (ctx) => {
         const { api, fncId, dossierId, notifId } = ctx;
@@ -4717,7 +4595,7 @@ module.exports = async function survSmoke(port) {
       // une distinction qui se mesure à deux faces : son second argument
       // `autoPrint` ajoute — ou n'ajoute pas — l'écouteur qui ouvre la boîte
       // d'impression.
-      etape = 'aperçu du rapport';
+      jalon('aperçu du rapport');
       const apercuRapport = await page.evaluate(async () => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -4824,7 +4702,7 @@ module.exports = async function survSmoke(port) {
       // Le contrôle ci-dessous **l'aurait pris**, et c'est pour cela qu'il
       // vérifie les deux : la table **et** le serveur. *Une écriture qui ne se
       // voit pas est une écriture dont l'opérateur doute.*
-      etape = 'référentiels';
+      jalon('référentiels');
       const referentiels = await page.evaluate(async (api) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -5007,7 +4885,7 @@ module.exports = async function survSmoke(port) {
       // et celui des sous-thèmes s'ouvre **depuis l'éditeur de checklist**, non
       // depuis le sous-menu. Un contrôle qui l'aurait cherché sur la page aurait
       // rendu « gestionnaire introuvable » sur un geste qui marche.
-      etape = 'checklists et délais';
+      jalon('checklists et délais');
       const suite2 = await page.evaluate(async (api) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -5277,7 +5155,7 @@ module.exports = async function survSmoke(port) {
       // l'emportera donc pas. Elle part par son propre geste, et le contrôle le
       // vérifie — sans quoi la campagne suivante hériterait d'une constatation
       // que personne n'a créée.
-      etape = 'constatation directe';
+      jalon('constatation directe');
       const directe = await page.evaluate(async (api) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -5579,7 +5457,7 @@ module.exports = async function survSmoke(port) {
       // La ronde parcourt le circuit entier, chaque palier relu **chez le
       // serveur** : commenter, renvoyer, corriger, resoumettre, rejeter. Puis
       // la remise à l'organisme sur une seconde constatation, validée.
-      etape = 'prononcé d’une constatation';
+      jalon('prononcé d’une constatation');
       const prononce = await page.evaluate(async (api) => {
         const at = (ms) => new Promise((r) => setTimeout(r, ms));
         const J = async (u, m, b) => {
@@ -6074,7 +5952,7 @@ module.exports = async function survSmoke(port) {
       //
       // *Un gisement qu'on croit inaccessible l'est parfois seulement derrière
       // une étape qu'on n'avait pas cherchée.*
-      etape = 'configuration du processus';
+      jalon('configuration du processus');
       const processus = await page.evaluate(async (api) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -6260,7 +6138,7 @@ module.exports = async function survSmoke(port) {
       // Chaque geste est rendu à son état par son inverse, et le dernier —
       // la suppression définitive — emporte ce que ce bloc a créé. Rien ne
       // reste pour les blocs qui suivent.
-      etape = 'états des activités';
+      jalon('états des activités');
       const etats = await page.evaluate(async (ctx) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -6664,7 +6542,7 @@ module.exports = async function survSmoke(port) {
           JSON.stringify({ statut: S2.statutApres, listee: S2.encoreListee }));
       }
 
-      etape = 'circuit guidé';
+      jalon('circuit guidé');
       const circuit = await page.evaluate(async (api) => {
         const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
         const r = {};
@@ -7075,828 +6953,6 @@ module.exports = async function survSmoke(port) {
     }
 
     // ══════════════════════════════════════════════════════════════════
-    //  Le versement des pièces, l'intitulé du rapport, et le courriel
-    //  qui part — `exec-activites.js` (ADR-003, 5.f.81)
-    // ══════════════════════════════════════════════════════════════════
-    //
-    // Le relevé donnait `exec-activites.js` à **52 gestes exercés sur 70**, et
-    // les dix-huit restants n'étaient pas du décor : les quatre dépôts de
-    // pièces du volet, les deux bornes de dates de la réalisation, l'intitulé
-    // du rapport, les gestes de la table des constatations, l'amendement, et la
-    // transmission du rapport par courriel.
-    //
-    // ── Ce que la mesure a trouvé avant qu'une assertion soit écrite ──
-    //
-    //   1. **Toute pièce versée s'appelait `piece-jointe`.** La route nomme ce
-    //      qu'elle reçoit d'après le champ `nom` du formulaire — « le nom
-    //      d'origine ne ressort pas : c'est l'intitulé qui nomme la pièce » — et
-    //      quatre des huit dépôts du module ne l'envoyaient pas. Trois PDF
-    //      versés dans les annexes d'un rapport donnaient trois
-    //      `piece-jointe.pdf`, indiscernables dans le rapport **et dans le
-    //      courriel qui les annonce à l'organisme** ;
-    //   2. **un type de fichier refusé ne disait rien.** Hors de ses huit
-    //      extensions la route répond 400 « Type de fichier non autorisé », et
-    //      le socle traduit déjà cette phrase. Cinq dépôts lisaient
-    //      `data.status === 'ok'` et se taisaient sinon : rien ne paraissait, et
-    //      rien n'était dit ;
-    //   3. **l'onglet « Rapports » du volet n'était affichable par rien**, et le
-    //      bouton qu'il portait envoyait le rapport à l'organisme **sans
-    //      confirmation ni message** — jumeau sans cérémonie de
-    //      `execSendRapportValidated`. Retirés tous les deux, et un garde de
-    //      forme tient la porte fermée ;
-    //   4. **une constatation déjà opposable se « modifiait » sans rien
-    //      changer.** Huit champs engagent l'organisme dès la notification et ne
-    //      se touchent plus que par l'ajustement ; la route les écartait **en
-    //      silence** et répondait « ok ». Le cas ne se présente qu'au compte
-    //      d'administration, seul à garder le crayon sur une telle
-    //      constatation : il changeait la description, lisait « Constatation
-    //      modifiée », et rien n'avait bougé.
-    //
-    // ── Et la pièce qui manquait pour mesurer la transmission ──
-    //
-    // Transmettre un rapport **envoie un courriel**. Le jeu d'essai pointe la
-    // messagerie sur le Mailpit d'un poste de développement, où rien n'écoute :
-    // la route rendait 502, et deux rondes portaient une note expliquant
-    // pourquoi elles n'allaient pas plus loin. Un sas SMTP de cent lignes
-    // (`messagerie-essai.js`) lève la limite, et rend mesurable ce qu'aucun
-    // contrôle ne tenait : **le message ne porte aucune pièce jointe**, il
-    // annonce des liens — ce que l'écran promet en toutes lettres.
-    etape = 'pièces, intitulé, transmission';
-    {
-      // 1. La chaîne, par l'API. Ce tour n'éprouve pas le circuit — il est
-      //    éprouvé deux fois plus haut : il éprouve ce que le volet d'un dossier
-      //    fait des pièces, de l'intitulé et du rapport.
-      const socle = await page.evaluate(async (api) => {
-        const J = async (u, m, b) => {
-          const rep = await fetch(u, {
-            method: m || 'GET',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
-            ...(b ? { body: JSON.stringify(b) } : {}),
-          });
-          let c = null; try { c = await rep.json(); } catch { c = null; }
-          return { statut: rep.status, corps: c };
-        };
-        const r = {};
-        // L'activité se choisit dans `plans-valides/:id/activites`, qui les rend
-        // toutes : `plans-valides` écarte celles qu'une notification porte déjà,
-        // et les deux rondes précédentes en ont porté. Une seconde notification
-        // sur une activité déjà notifiée est permise, et c'est mesuré.
-        // `GET …/plans` **n'existe pas** : un premier passage l'appelait en
-        // secours, et son 404 salissait le relevé d'incidents — un incident
-        // fabriqué par la ronde, sur une route imaginaire.
-        const candidats = (await J(`${api}/plans-valides`)).corps || [];
-        let plan = null; let act = null;
-        for (const p of candidats) {
-          /* eslint-disable no-await-in-loop */
-          const toutes = (await J(`${api}/plans-valides/${p.id}/activites`)).corps || [];
-          if (toutes.length) { plan = p; [act] = toutes; break; }
-        }
-        if (!act) return { activite: false, plans: candidats.length };
-        r.activite = true;
-        const n = await J(`${api}/notifications`, 'POST', {
-          activite_id: act.id, plan_id: plan.id, prestataire_id: act.prestataire_id,
-          objet: 'SURV 0.d — ronde des pièces et de la transmission',
-          type_supervision: 'Audit',
-          date_debut_prevue: '2026-09-01', date_fin_prevue: '2026-09-03',
-          lieu: 'Siège', perimetre: 'Ensemble des processus',
-          interlocuteur_email: 'interlocuteur@organisme.test',
-          interlocuteur_nom: 'Point focal de l’organisme',
-        });
-        r.notif = n.statut;
-        r.notifId = (n.corps || {}).id;
-        r.planId = plan.id;
-        r.activiteId = act.id;
-        if (!r.notifId) return r;
-        for (const e of ['submit', 'validate', 'send']) {
-          await J(`${api}/notifications/${r.notifId}/${e}`, 'PUT');
-        }
-        const accord = await J(`${api}/notifications/${r.notifId}/validate-accord`, 'PUT',
-          { date_debut_effective: '2026-09-01', date_fin_effective: '2026-09-03' });
-        r.dossierId = (accord.corps || {}).dossier_id;
-        if (!r.dossierId) return r;
-        const c = await J(`${api}/constatations`, 'POST', {
-          dossier_id: r.dossierId, domaine_id: 'AIR', criticite: 'majeur',
-          titre: 'SURV 0.d — écart de la ronde des pièces',
-          description: 'SURV 0.d — écart porté par la ronde des pièces.',
-          delai_solde: '30', date_due_cloture: '2026-12-20',
-        });
-        r.fncId = (c.corps || {}).id;
-        // Le client doit voir ce que l'API vient d'écrire : sans cela la page
-        // des constatations ne porte pas la ligne que la ronde va cliquer.
-        await execRefreshDynamic();
-        return r;
-      }, M);
-      verifier('la chaîne de la ronde des pièces se bâtit, dossier et constatation compris',
-        socle.activite === true && socle.notif === 201
-        && !!socle.notifId && !!socle.dossierId && !!socle.fncId,
-        JSON.stringify(socle));
-
-      if (socle.fncId && socle.dossierId) {
-        // 2. Le volet, à l'étape Réalisation : les dates, puis les pièces.
-        const realisation = await page.evaluate(async (ctx) => {
-          const { api, fncId } = ctx;
-          const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
-          const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a]);
-          const verser = async (entree, nom, type) => {
-            if (!entree) return false;
-            const dt = new DataTransfer();
-            dt.items.add(new File([pdf], nom, { type }));
-            entree.files = dt.files;
-            entree.dispatchEvent(new Event('change', { bubbles: true }));
-            await attendre(3000);
-            return true;
-          };
-          // ── Les annonces se **recueillent**, elles ne se relisent pas ──
-          //
-          // Un bandeau se retire de lui-même au bout de quatre secondes, et
-          // cette ronde attend parfois quatorze secondes qu'un PDF se rende.
-          // Lire le DOM après coup mesurerait la durée d'affichage, non ce qui a
-          // été dit. On enveloppe donc l'annonceur du socle, et l'on garde ce
-          // qui passe.
-          const dits = [];
-          const vraiToast = window.oasisToast;
-          window.oasisToast = (m, t) => { dits.push(String(m == null ? '' : m)); return vraiToast(m, t); };
-          const dernierDit = () => (dits.length ? dits[dits.length - 1] : '');
-          const poser = (id, v) => {
-            const e = document.getElementById(id);
-            if (!e) return false;
-            e.value = v;
-            e.dispatchEvent(new Event('change', { bubbles: true }));
-            return true;
-          };
-          const r = {};
-
-          // La porte du volet : la ligne de la constatation, sous
-          // « En Préparation » de la page Constatations.
-          document.querySelector('.nav-btn[data-page="constatations"]')?.click();
-          await attendre(2400);
-          const prep = [...document.querySelectorAll('.exec-tab')]
-            .find((b) => /currentConstSub='list'/.test(b.getAttribute('onclick') || ''));
-          if (prep) { prep.click(); await attendre(2000); }
-          // ── La ligne se désigne par l'identifiant, non par un texte ──
-          //
-          // Premier passage : cherchée par « SURV 0.d » dans le texte de la
-          // ligne, elle n'a pas été trouvée. La colonne de la table affiche la
-          // **description** de la constatation, non son titre — et le marqueur
-          // était dans le titre. Le geste, lui, porte l'identifiant du dossier :
-          // c'est la seule désignation qui ne dépende pas de ce qu'une colonne
-          // choisit de montrer.
-          const vers = document.querySelector(
-            `[onclick^="execOpenDossierSlider"][onclick*="${ctx.dossierId}"]`,
-          );
-          r.porte = !!vers;
-          if (!vers) return r;
-          vers.click();
-          await attendre(3600);
-          r.etapeOuverte = !!document.getElementById('realisation_date_debut');
-          if (!r.etapeOuverte) return r;
-
-          // ── Les deux bornes de dates ──
-          //
-          // `oasisDatesBorner` est posé sur les deux champs. Son effet visible
-          // est la borne basse de la date de fin : le calendrier de la fin ne
-          // remonte pas avant le début saisi.
-          const avantDates = await (await fetch(`${api}/dossiers/${ctx.dossierId}`,
-            { credentials: 'same-origin' })).json();
-          r.finAvant = String(avantDates.realisation_date_fin || '');
-          poser('realisation_date_debut', '2026-09-02');
-          await attendre(500);
-          r.borneFin = (document.getElementById('realisation_date_fin') || {}).min || '';
-          // Au clavier, la borne se franchit : c'est l'enregistrement qui
-          // refuse, et il doit le dire.
-          poser('realisation_date_fin', '2026-08-30');
-          await attendre(500);
-          r.borneApresFin = (document.getElementById('realisation_date_fin') || {}).min || '';
-          document.querySelector('#execSlider [onclick^="execSaveRealisation"]')?.click();
-          await attendre(1800);
-          r.refusDesDates = dernierDit();
-          r.champsMarques = document.querySelectorAll(
-            '#realisation_date_debut.oasis-champ-invalide, #realisation_date_fin.oasis-champ-invalide',
-          ).length;
-          const apresRefus = await (await fetch(`${api}/dossiers/${ctx.dossierId}`,
-            { credentials: 'same-origin' })).json();
-          r.finApresRefus = String(apresRefus.realisation_date_fin || '');
-          // Non écrite, c'est-à-dire **inchangée** : le dossier peut déjà porter
-          // une date de fin, et comparer à « vide » éprouverait les fixtures.
-          r.finNonEcrite = r.finApresRefus === r.finAvant;
-
-          // Corrigée, elle passe.
-          poser('realisation_date_fin', '2026-09-04');
-          await attendre(500);
-
-          // ── Le dépôt d'une pièce : son nom, puis son refus ──
-          document.querySelector('#execSlider [onclick*="realisation_pj_input"]')?.click();
-          await attendre(400);
-          r.entreePj = await verser(document.getElementById('realisation_pj_input'),
-            'piece-de-la-realisation.pdf', 'application/pdf');
-          r.piecesNommees = [...document.querySelectorAll('#realisation_pj_list .realisation-pj-item')]
-            .map((e) => e.dataset.orig || '');
-          // Un type que la route n'accepte pas : rien ne paraît, et le refus
-          // **se dit**. C'est le contre-essai du défaut n° 2.
-          const avantRefus = document.querySelectorAll('#realisation_pj_list .realisation-pj-item').length;
-          await verser(document.getElementById('realisation_pj_input'),
-            'notes-de-terrain.txt', 'text/plain');
-          r.apresTypeRefuse = document.querySelectorAll('#realisation_pj_list .realisation-pj-item').length;
-          r.piecesInchangees = r.apresTypeRefuse === avantRefus;
-          r.refusDuType = dernierDit();
-
-          document.querySelector('#execSlider [onclick^="execSaveRealisation"]')?.click();
-          await attendre(3000);
-          const enregistre = await (await fetch(`${api}/dossiers/${ctx.dossierId}`,
-            { credentials: 'same-origin' })).json();
-          r.datesEcrites = [String(enregistre.realisation_date_debut || '').slice(0, 10),
-            String(enregistre.realisation_date_fin || '').slice(0, 10)];
-          const lire = (v) => {
-            if (Array.isArray(v)) return v;
-            try { return JSON.parse(v || '[]'); } catch { return []; }
-          };
-          r.pjEnBase = lire(enregistre.realisation_pieces_jointes)
-            .map((p) => `${p.filename || ''}|${(p.path || '').slice(0, 32)}`);
-          r.fnc = fncId;
-          window.oasisToast = vraiToast;
-          return r;
-        }, { api: M, dossierId: socle.dossierId, fncId: socle.fncId });
-
-        verifier('la date de fin de la réalisation est bornée par celle de début, et les deux bornes tiennent',
-          realisation.porte === true && realisation.etapeOuverte === true
-          && realisation.borneFin === '2026-09-02' && realisation.borneApresFin === '2026-09-02',
-          JSON.stringify({ porte: realisation.porte, ouverte: realisation.etapeOuverte,
-            borne: realisation.borneFin, apres: realisation.borneApresFin }));
-
-        verifier('une fin antérieure au début, saisie au clavier, est refusée à l’enregistrement — dite, marquée, et non écrite',
-          /post[ée]rieure|after|posterior/i.test(realisation.refusDesDates || '')
-          && realisation.champsMarques === 2
-          && realisation.finNonEcrite === true
-          && realisation.finApresRefus !== '2026-08-30',
-          JSON.stringify({ dit: realisation.refusDesDates, marques: realisation.champsMarques,
-            avant: realisation.finAvant, apres: realisation.finApresRefus }));
-
-        verifier('la pièce versée dans la réalisation garde le nom du fichier choisi, et le serveur le porte',
-          realisation.entreePj === true
-          && (realisation.piecesNommees || []).includes('piece-de-la-realisation.pdf')
-          && (realisation.pjEnBase || []).some((x) => x.startsWith('piece-de-la-realisation.pdf|/api/m/execution/uploads/'))
-          && (realisation.datesEcrites || []).join('→') === '2026-09-02→2026-09-04',
-          JSON.stringify({ pieces: realisation.piecesNommees, enBase: realisation.pjEnBase,
-            dates: realisation.datesEcrites }));
-
-        verifier('un type de fichier que la route refuse ne paraît pas dans la liste, et le refus est dit',
-          realisation.piecesInchangees === true
-          && /non autoris|not allowed|não autorizado/i.test(realisation.refusDuType || ''),
-          JSON.stringify({ inchangees: realisation.piecesInchangees, dit: realisation.refusDuType }));
-
-        // 3. L'étape Rédaction : l'intitulé, les deux autres dépôts, la table
-        //    des constatations, et les annexes.
-        const redaction = await page.evaluate(async (ctx) => {
-          const { api, dossierId, fncId } = ctx;
-          const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
-          const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a]);
-          const verser = async (entree, nom) => {
-            if (!entree) return false;
-            const dt = new DataTransfer();
-            dt.items.add(new File([pdf], nom, { type: 'application/pdf' }));
-            entree.files = dt.files;
-            entree.dispatchEvent(new Event('change', { bubbles: true }));
-            await attendre(3000);
-            return true;
-          };
-          const env = async (u, m, b) => {
-            const rep = await fetch(u, {
-              method: m, credentials: 'same-origin',
-              headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
-              ...(b ? { body: JSON.stringify(b) } : {}),
-            });
-            return rep.status;
-          };
-          const r = {};
-
-          // Le terrain clos par l'API — son geste est éprouvé dans la ronde du
-          // cycle —, et le volet rouvert à la rédaction.
-          r.cloture = await env(`${api}/dossiers/${dossierId}/close-realisation`, 'PUT');
-          document.querySelector('[onclick^="execCloseSlider"]')?.click();
-          await attendre(1200);
-          await execRefreshDynamic();
-          await attendre(800);
-          const vers = document.querySelector(
-            `[onclick^="execOpenDossierSlider"][onclick*="${dossierId}"]`,
-          );
-          r.rouvert = !!vers;
-          if (vers) { vers.click(); await attendre(3600); }
-          r.surRedaction = !!document.getElementById('dossier_type_rapport');
-          if (!r.surRedaction) return r;
-
-          // ── L'intitulé du rapport ──
-          //
-          // « AUTRE » ouvre le champ libre ; le choix nomme le document produit,
-          // et c'est lui que l'objet du courriel de transmission reprend.
-          const sel = document.getElementById('dossier_type_rapport');
-          r.libreCacheAvant = (document.getElementById('dossier_type_rapport_autre_group') || {})
-            .style.display === 'none';
-          sel.value = 'AUTRE';
-          sel.dispatchEvent(new Event('change', { bubbles: true }));
-          await attendre(600);
-          r.libreOuvert = (document.getElementById('dossier_type_rapport_autre_group') || {})
-            .style.display === '';
-          const libre = document.getElementById('dossier_type_rapport_autre');
-          r.intitule = 'RAPPORT DE LA RONDE DES PIÈCES';
-          if (libre) { libre.value = r.intitule; libre.dispatchEvent(new Event('input', { bubbles: true })); }
-
-          // ── Section C : la pièce de l'activité enregistrée depuis la
-          //    rédaction, et la zone de dépôt des autres documents ──
-          document.querySelector('#execSlider [onclick*="realisation_pj_input"]')?.click();
-          await attendre(400);
-          r.entreeRedac = await verser(document.getElementById('realisation_pj_input'),
-            'piece-de-la-redaction.pdf');
-          document.querySelector('#execSlider [onclick^="execSaveRedactionPj"]')?.click();
-          await attendre(3200);
-          r.entreeAutres = await verser(document.getElementById('dossier_checklist_input'),
-            'autre-document.pdf');
-          r.autresNommes = [...document.querySelectorAll('#dossier_checklists_list div[data-path]')]
-            .map((e) => (e.querySelector('span') || {}).textContent || '');
-
-          // ── Section D : les gestes de la table des constatations ──
-          const replier = document.querySelector(`#fiches_btn_${fncId}`);
-          r.gesteFiches = !!replier;
-          r.fichesAvant = (document.getElementById(`fiches_row_${fncId}`) || {}).style?.display || '';
-          if (replier) { replier.click(); await attendre(700); }
-          r.fichesApres = (document.getElementById(`fiches_row_${fncId}`) || {}).style?.display || '';
-          if (replier) { replier.click(); await attendre(500); }
-
-          const modifier = document.querySelector(`#execSlider [onclick^="execEditFNC"][onclick*="${fncId}"]`);
-          r.gesteModifier = !!modifier;
-          if (modifier) {
-            modifier.click();
-            await attendre(3000);
-            r.tiroirModifie = {
-              ouvert: !!document.getElementById('execFncTiroir'),
-              description: (document.getElementById('fnc_description') || {}).value || '',
-            };
-            window.execFermerFncTiroir?.();
-            await attendre(700);
-          }
-          const ajouter = document.querySelector('#execSlider [onclick^="execOpenFNCForm"]');
-          r.gesteAjouter = !!ajouter;
-          if (ajouter) {
-            ajouter.click();
-            await attendre(2600);
-            r.tiroirNeuf = {
-              ouvert: !!document.getElementById('execFncTiroir'),
-              description: (document.getElementById('fnc_description') || {}).value || '',
-            };
-            window.execFermerFncTiroir?.();
-            await attendre(700);
-          }
-
-          // ── Section F : l'annexe, sur un bloc neuf puis sur un bloc rendu ──
-          document.querySelector('#execSlider [onclick^="execAddAnnexeBlock"]')?.click();
-          await attendre(800);
-          const bloc = [...document.querySelectorAll('.dossier-annexe-item')].pop();
-          const titre = bloc && bloc.querySelector('.annexe-intitule');
-          if (titre) {
-            titre.value = 'Annexe de la ronde des pièces';
-            titre.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-          r.entreeAnnexeNeuve = await verser(bloc && bloc.querySelector('input[type="file"]'),
-            'annexe-du-bloc-neuf.pdf');
-          r.annexeNeuveNommee = bloc
-            ? [...bloc.querySelectorAll('.annexe-files [data-filename]')].map((e) => e.dataset.filename)
-            : [];
-          document.querySelector('#execSlider [onclick^="execSaveDossier"]')?.click();
-          await attendre(3200);
-
-          // ── La seconde occurrence du geste, et pourquoi il faut redessiner ──
-          //
-          // `execSaveDossier` ne redessine pas le volet : le bloc d'annexe resté
-          // au DOM est **celui qu'`execAddAnnexeBlock` a fabriqué**, avec son
-          // sélecteur. Verser une seconde pièce dessus exercerait deux fois la
-          // même ligne. Le volet est donc rouvert, et c'est le serveur qui rend
-          // l'annexe — avec son propre sélecteur, à l'autre ligne du fichier.
-          await execOpenDossierSlider(dossierId, 'annexes');
-          await attendre(3600);
-          const rendu = [...document.querySelectorAll('.dossier-annexe-item')]
-            .find((b) => (b.querySelector('.annexe-intitule') || {}).value === 'Annexe de la ronde des pièces');
-          r.annexeRendue = !!rendu;
-          r.entreeAnnexeRendue = await verser(rendu && rendu.querySelector('input[type="file"]'),
-            'annexe-du-bloc-rendu.pdf');
-          r.annexeRendueNommee = rendu
-            ? [...rendu.querySelectorAll('.annexe-files [data-filename]')].map((e) => e.dataset.filename)
-            : [];
-          document.querySelector('#execSlider [onclick^="execSaveDossier"]')?.click();
-          await attendre(3200);
-
-          const d = await (await fetch(`${api}/dossiers/${dossierId}`, { credentials: 'same-origin' })).json();
-          const lire = (v) => {
-            if (Array.isArray(v)) return v;
-            try { return JSON.parse(v || '[]'); } catch { return []; }
-          };
-          r.enBase = {
-            type: d.type_rapport || '', libre: d.type_rapport_autre || '',
-            pieces: lire(d.realisation_pieces_jointes).map((p) => p.filename || ''),
-            autres: (d.checklists || []).map((c) => c.filename || c),
-            annexes: (d.annexes || []).map((a) => ({
-              intitule: (a && a.intitule) || '',
-              fichiers: ((a && a.files) || []).map((f) => f.filename || f),
-            })),
-          };
-          return r;
-        }, { api: M, dossierId: socle.dossierId, fncId: socle.fncId });
-
-        verifier('« AUTRE » ouvre le champ de l’intitulé du rapport, et le serveur porte les deux',
-          redaction.cloture === 200 && redaction.rouvert === true && redaction.surRedaction === true
-          && redaction.libreCacheAvant === true && redaction.libreOuvert === true
-          && !!redaction.enBase && redaction.enBase.type === 'AUTRE'
-          && redaction.enBase.libre === redaction.intitule,
-          JSON.stringify({ cacheAvant: redaction.libreCacheAvant, ouvert: redaction.libreOuvert,
-            surRedaction: redaction.surRedaction, enBase: redaction.enBase }));
-
-        verifier('la pièce de l’activité s’enregistre depuis la rédaction, et la zone « autres documents » verse sous le nom du fichier',
-          redaction.entreeRedac === true && redaction.entreeAutres === true
-          && (redaction.autresNommes || []).includes('autre-document.pdf')
-          && !!redaction.enBase
-          && (redaction.enBase.pieces || []).includes('piece-de-la-redaction.pdf')
-          && (redaction.enBase.pieces || []).includes('piece-de-la-realisation.pdf')
-          && (redaction.enBase.autres || []).includes('autre-document.pdf'),
-          JSON.stringify({ affiches: redaction.autresNommes, enBase: redaction.enBase }));
-
-        verifier('la table des constatations déplie ses fiches, ouvre celle qui existe et le formulaire d’une neuve',
-          redaction.gesteFiches === true
-          // Replié c'est `none` ; déplié, c'est ce que le geste y pose — mesuré
-          // `table-row`, et l'on éprouve l'effet, non la forme.
-          && redaction.fichesAvant === 'none' && redaction.fichesApres !== 'none'
-          && redaction.fichesApres !== ''
-          && redaction.gesteModifier === true && !!redaction.tiroirModifie
-          && redaction.tiroirModifie.ouvert === true
-          && /ronde des pièces/.test(redaction.tiroirModifie.description || '')
-          && redaction.gesteAjouter === true && !!redaction.tiroirNeuf
-          && redaction.tiroirNeuf.ouvert === true && redaction.tiroirNeuf.description === '',
-          JSON.stringify({ fiches: [redaction.fichesAvant, redaction.fichesApres],
-            modifie: redaction.tiroirModifie, neuf: redaction.tiroirNeuf }));
-
-        verifier('une pièce se verse sur une annexe neuve comme sur une annexe rendue par le serveur, sous son propre nom',
-          redaction.entreeAnnexeNeuve === true && redaction.annexeRendue === true
-          && redaction.entreeAnnexeRendue === true
-          && (redaction.annexeNeuveNommee || []).includes('annexe-du-bloc-neuf.pdf')
-          && (redaction.annexeRendueNommee || []).includes('annexe-du-bloc-rendu.pdf')
-          && !!redaction.enBase
-          && (redaction.enBase.annexes || []).some((a) => /ronde des pièces/.test(a.intitule)
-            && a.fichiers.includes('annexe-du-bloc-neuf.pdf')
-            && a.fichiers.includes('annexe-du-bloc-rendu.pdf')),
-          JSON.stringify({ neuve: redaction.annexeNeuveNommee, rendue: redaction.annexeRendueNommee,
-            enBase: redaction.enBase && redaction.enBase.annexes }));
-
-        // 4. La constatation devenue opposable, et ce qu'« enregistrer » dit
-        //    alors. C'est le contre-essai du défaut n° 4.
-        const opposable = await page.evaluate(async (ctx) => {
-          const { api, dossierId, fncId } = ctx;
-          const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
-          const env = async (u, m, b) => {
-            const rep = await fetch(u, {
-              method: m, credentials: 'same-origin',
-              headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
-              ...(b ? { body: JSON.stringify(b) } : {}),
-            });
-            let c = null; try { c = await rep.json(); } catch { c = null; }
-            return { statut: rep.status, corps: c };
-          };
-          // L'annonceur enveloppé : voir « Les annonces se recueillent » plus haut.
-          const dits = [];
-          const vraiToast = window.oasisToast;
-          window.oasisToast = (m, t) => { dits.push(String(m == null ? '' : m)); return vraiToast(m, t); };
-          const r = {};
-          const sou = await env(`${api}/dossiers/${dossierId}/submit`, 'PUT',
-            { introduction: 'Rapport de la ronde des pièces.' });
-          r.rapportId = (sou.corps || {}).rapport_id;
-          r.validation = (await env(`${api}/rapports/${r.rapportId}/validate`, 'PUT', {})).statut;
-          const avant = (await env(`${api}/constatations/${fncId}`)).corps || {};
-          r.statutOpposable = avant.statut;
-          r.descriptionAvant = avant.description || '';
-          await execRefreshDynamic();
-          await attendre(1000);
-
-          // ── Le volet rouvert sur sa section D, par appel et non par clic ──
-          //
-          // `execOpenDossierSlider` est exercé par trois clics ailleurs dans
-          // cette suite ; ici il n'est pas la cible, et sa porte naturelle s'est
-          // fermée — la constatation devenue opposable a quitté
-          // « En Préparation », d'où la ronde l'ouvrait. Ce qu'on mesure est le
-          // crayon et ce que l'enregistrement **dit** ensuite.
-          document.querySelector('[onclick^="execCloseSlider"]')?.click();
-          await attendre(1000);
-          r.porte = typeof execOpenDossierSlider === 'function';
-          if (!r.porte) return r;
-          await execOpenDossierSlider(dossierId, 'constatations');
-          await attendre(3600);
-          const modifier = document.querySelector(`#execSlider [onclick^="execEditFNC"][onclick*="${fncId}"]`);
-          r.crayonEncoreLa = !!modifier;
-          r.oeilAussi = !!document.querySelector(`#execSlider [onclick^="execViewFNC"][onclick*="${fncId}"]`);
-          if (!modifier) return r;
-          modifier.click();
-          await attendre(3000);
-          const desc = document.getElementById('fnc_description');
-          r.tiroir = !!desc;
-          if (!desc) return r;
-          r.descriptionTentee = 'Description réécrite après la validation du rapport.';
-          desc.value = r.descriptionTentee;
-          desc.dispatchEvent(new Event('input', { bubbles: true }));
-          const grav = document.getElementById('fnc_gravite');
-          if (grav) {
-            const autre = [...grav.options].find((o) => o.value && o.value !== avant.criticite);
-            if (autre) { grav.value = autre.value; grav.dispatchEvent(new Event('change', { bubbles: true })); }
-            r.criticiteTentee = grav.value;
-          }
-          document.querySelector('#execFncTiroir [onclick^="execSaveFNC"]')?.click();
-          await attendre(3400);
-          r.dit = dits.length ? dits[dits.length - 1] : '';
-          const apres = (await env(`${api}/constatations/${fncId}`)).corps || {};
-          r.descriptionApres = apres.description || '';
-          r.criticiteApres = apres.criticite || '';
-          r.criticiteAvant = avant.criticite || '';
-          window.execFermerFncTiroir?.();
-          await attendre(800);
-          window.oasisToast = vraiToast;
-          return r;
-        }, { api: M, dossierId: socle.dossierId, fncId: socle.fncId });
-
-        verifier('le rapport validé rend la constatation opposable, et le crayon reste offert au compte qui gouverne le module',
-          opposable.validation === 200 && opposable.statutOpposable === 'ouvert'
-          && opposable.porte === true
-          && opposable.crayonEncoreLa === true && opposable.oeilAussi === false,
-          JSON.stringify({ validation: opposable.validation, statut: opposable.statutOpposable,
-            crayon: opposable.crayonEncoreLa, oeil: opposable.oeilAussi }));
-
-        verifier('enregistrer une constatation opposable ne dit plus « modifiée » : les champs engagés sont nommés, et rien n’a changé',
-          opposable.tiroir === true
-          && /ajustement|adjustment|ajustamento/i.test(opposable.dit || '')
-          && /Description|Criticit/i.test(opposable.dit || '')
-          && opposable.descriptionApres === opposable.descriptionAvant
-          && opposable.criticiteApres === opposable.criticiteAvant,
-          JSON.stringify({ dit: opposable.dit,
-            description: [opposable.descriptionAvant, opposable.descriptionApres],
-            criticite: [opposable.criticiteAvant, opposable.criticiteApres] }));
-
-        // 5. L'amendement, puis la transmission par le circuit.
-        const transmission = await page.evaluate(async (ctx) => {
-          const { api, dossierId, fncId, planId, activiteId, rapportId } = ctx;
-          const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
-          const env = async (u, m, b) => {
-            const rep = await fetch(u, {
-              method: m, credentials: 'same-origin',
-              headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
-              ...(b ? { body: JSON.stringify(b) } : {}),
-            });
-            let c = null; try { c = await rep.json(); } catch { c = null; }
-            return { statut: rep.status, corps: c };
-          };
-          // L'annonceur enveloppé : la transmission attend quatorze secondes
-          // qu'un PDF se rende, et le bandeau ne vit que quatre.
-          const dits = [];
-          const vraiToast = window.oasisToast;
-          window.oasisToast = (m, t) => { dits.push(String(m == null ? '' : m)); return vraiToast(m, t); };
-          const r = {};
-
-          // ── L'amendement : un rapport validé repart en rédaction ──
-          //
-          // Le geste est au pied de l'étape « Validation » ; le volet est resté
-          // ouvert sur la rédaction, et c'est le fil d'avancement qui l'y mène.
-          document.querySelector('[onclick*="execSwitchDossierStep"][onclick*="validation"]')?.click();
-          await attendre(2600);
-          const amender = document.querySelector('#execSlider [onclick^="execAmendRapport"]');
-          r.gesteAmender = !!amender;
-          if (amender) {
-            amender.click();
-            await attendre(1000);
-            const champ = document.querySelector('.oasis-saisie-champ');
-            r.saisieDemandee = !!champ;
-            if (champ) {
-              champ.value = 'Reprendre la section Synthèse.';
-              champ.dispatchEvent(new Event('input', { bubbles: true }));
-              document.querySelector('.oasis-confirm-oui')?.click();
-              await attendre(3800);
-            }
-          }
-          const rapAmende = (await env(`${api}/rapports/${rapportId}`)).corps || {};
-          r.apresAmendement = rapAmende.statut;
-          r.observations = rapAmende.observations_validation || '';
-          r.fncRedevenue = ((await env(`${api}/constatations/${fncId}`)).corps || {}).statut;
-
-          // Resoumis et revalidé par l'API : ces deux gestes sont éprouvés
-          // ailleurs, et ce bloc vise la transmission.
-          const sou = await env(`${api}/dossiers/${dossierId}/submit`, 'PUT',
-            { introduction: 'Rapport de la ronde des pièces, amendé.' });
-          r.rapportFinal = (sou.corps || {}).rapport_id;
-          r.revalidation = (await env(`${api}/rapports/${r.rapportFinal}/validate`, 'PUT', {})).statut;
-          await execRefreshDynamic();
-          await attendre(1200);
-
-          // ── Le circuit, ouvert sur l'étape Transmission ──
-          //
-          // Le formulaire de courriel ne paraît que là : le volet du dossier ne
-          // connaît que « Validation », et c'est le fil du processus qui
-          // distingue les deux (`_execSurTransmission`). Sa porte est la ligne de
-          // l'activité, sur la page des plans ; elle est cliquée par la ronde du
-          // circuit hors plan, et appelée ici — ce bloc vise le formulaire de
-          // courriel, non la façon d'y entrer.
-          document.querySelector('[onclick^="execCloseSlider"]')?.click();
-          await attendre(1000);
-          if (typeof execOpenActiviteProcessus === 'function') {
-            await execOpenActiviteProcessus(planId, activiteId);
-            await attendre(4000);
-          }
-          // ── `EXEC_PROC` se lit par son nom, **jamais** par `window` ──
-          //
-          // C'est un `let` de premier niveau dans un script classique : il vit
-          // dans la portée lexicale globale, et n'est **pas** une propriété de
-          // `window`. Seul `EXEC_STATE` y est publié (`exec-adapters.js`).
-          // `window.EXEC_PROC` rend donc `undefined` à tout instant — et la
-          // ronde du circuit hors plan, plus haut, en avait tiré la conclusion
-          // qu'« il n'est pas encore peuplé à cet instant ». La note était
-          // fausse : il l'était, et c'est la lecture qui ne le voyait pas.
-          r.etapeCircuit = (typeof EXEC_PROC !== 'undefined' && EXEC_PROC) ? EXEC_PROC.etape : null;
-          r.courriel = !!document.getElementById('exec_courriel_transmission');
-          if (!r.courriel) return r;
-          const val = (id) => (document.getElementById(id) || {}).value || '';
-          r.destinataire = val('courriel_destinataire');
-          r.objet = val('courriel_objet');
-
-          // ── L'aperçu du document, par le lien de la pièce ──
-          //
-          // Tant que le rapport n'est pas parti, son document n'existe pas au
-          // serveur : le lien porte un `href="#"` et un
-          // `event.preventDefault()`. Sans ce dernier le clic emporterait la
-          // page sur l'ancre — c'est la propriété qu'on mesure, avec le
-          // document que le repli compose.
-          const lien = document.querySelector('#courriel_pieces .exec-piece-rapport a.exec-piece-nom');
-          r.lienApercu = lien ? lien.getAttribute('href') : null;
-          if (lien) {
-            const recus = [];
-            const vraiOpen = window.open;
-            const avant = window.location.href;
-            window.open = () => {
-              const doc = { html: '' };
-              recus.push(doc);
-              return {
-                document: { write: (h) => { doc.html += String(h || ''); }, close: () => {} },
-                focus: () => {}, print: () => {}, close: () => {},
-              };
-            };
-            try {
-              lien.click();
-              await attendre(3000);
-            } finally { window.open = vraiOpen; }
-            r.pageNonQuittee = window.location.href === avant;
-            r.documents = recus.length;
-            r.document = recus[0] ? {
-              complet: /<!DOCTYPE html>/.test(recus[0].html) && /<\/html>/.test(recus[0].html),
-              intitule: /RAPPORT DE LA RONDE DES PI/.test(recus[0].html),
-              taille: recus[0].html.length,
-            } : null;
-          }
-
-          // ── L'envoi ──
-          const poser = (id, v) => {
-            const e = document.getElementById(id);
-            if (!e) return;
-            e.value = v;
-            e.dispatchEvent(new Event('input', { bubbles: true }));
-          };
-          poser('courriel_copie', 'copie@organisme.test');
-          poser('courriel_copie_cachee', 'archives@anac.bj');
-          document.querySelector('#courriel_envoyer')?.click();
-          await attendre(14000);
-          r.ditApresEnvoi = dits.length ? dits[dits.length - 1] : '';
-          r.toutCeQuiFutDit = dits.slice(-4);
-          const rap = (await env(`${api}/rapports/${r.rapportFinal}`)).corps || {};
-          r.statutFinal = rap.statut;
-          r.transmisA = rap.transmis_a || '';
-          r.documentDepose = ((rap.document || {}).path || '');
-          r.nomDepose = ((rap.document || {}).filename || '');
-          window.oasisToast = vraiToast;
-          return r;
-        }, {
-          api: M,
-          dossierId: socle.dossierId,
-          fncId: socle.fncId,
-          planId: socle.planId,
-          activiteId: socle.activiteId,
-          rapportId: opposable.rapportId,
-        });
-
-        verifier('un rapport validé s’amende : il repart en rédaction avec le motif saisi, et sa constatation redevient inopposable',
-          transmission.gesteAmender === true && transmission.saisieDemandee === true
-          && transmission.apresAmendement === 'brouillon'
-          && /Synthèse/.test(transmission.observations || '')
-          && transmission.fncRedevenue === 'brouillon'
-          && transmission.revalidation === 200,
-          JSON.stringify({ geste: transmission.gesteAmender, saisie: transmission.saisieDemandee,
-            rapport: transmission.apresAmendement, motif: transmission.observations,
-            fnc: transmission.fncRedevenue }));
-
-        verifier('le circuit s’ouvre à la Transmission, et le courriel y est composé d’avance — destinataire de la notification, objet portant l’intitulé choisi',
-          transmission.etapeCircuit === 'transmission' && transmission.courriel === true
-          && transmission.destinataire === 'interlocuteur@organisme.test'
-          && /^RAPPORT DE LA RONDE DES PIÈCES /.test(transmission.objet || ''),
-          JSON.stringify({ etape: transmission.etapeCircuit, courriel: transmission.courriel,
-            destinataire: transmission.destinataire, objet: transmission.objet }));
-
-        verifier('le lien de la pièce compose l’aperçu du rapport sans quitter la page',
-          transmission.lienApercu === '#' && transmission.pageNonQuittee === true
-          && transmission.documents === 1 && !!transmission.document
-          && transmission.document.complet === true
-          && transmission.document.intitule === true
-          && transmission.document.taille > 2000,
-          JSON.stringify({ href: transmission.lienApercu, restee: transmission.pageNonQuittee,
-            documents: transmission.documents, doc: transmission.document }));
-
-        verifier('le rapport part par son geste : le serveur le dit transmis, et retient à qui',
-          /transmis|sent|transmitido/i.test(transmission.ditApresEnvoi || '')
-          && transmission.statutFinal === 'transmis'
-          && /interlocuteur@organisme\.test/.test(transmission.transmisA || '')
-          && /^\/api\/m\/execution\/uploads\/.+\.pdf$/.test(transmission.documentDepose || '')
-          && transmission.nomDepose.endsWith('.pdf'),
-          JSON.stringify({ dit: transmission.ditApresEnvoi, tout: transmission.toutCeQuiFutDit,
-            statut: transmission.statutFinal,
-            a: transmission.transmisA, document: transmission.documentDepose,
-            nom: transmission.nomDepose }));
-
-        // ── Ce qui est parti, lu dans le sas ──
-        //
-        // Le relevé se fait **hors du navigateur** : le sas vit dans le
-        // processus de la suite, et c'est là que les messages s'accumulent. Le
-        // dernier est celui de la transmission ; les précédents sont les avis
-        // que le circuit a envoyés en chemin.
-        const partis = sas.recus;
-        const remise = partis[partis.length - 1] || null;
-        verifier('le courriel de transmission ne porte aucune pièce jointe : il annonce des liens, comme l’écran le promet',
-          !!remise
-          && /^text\/plain/.test(remise.entetes['content-type'] || '')
-          && !/multipart/i.test(remise.entetes['content-type'] || '')
-          && !/Content-Disposition:\s*attachment/i.test(remise.brut || '')
-          // Et le corps est bien le message rédigé, non une enveloppe vide.
-          && /Madame, Monsieur|Point focal/.test(remise.texte || ''),
-          JSON.stringify({ messages: partis.length,
-            type: remise && remise.entetes['content-type'],
-            piece: !!remise && /attachment/i.test(remise.brut || '') }));
-
-        verifier('et il annonce le document déposé, par un lien vers la route qui le sert, avec l’adresse de connexion',
-          !!remise
-          && remise.texte.includes('/api/m/execution/uploads/')
-          && /Accès à l’application|Accès à l'application/.test(remise.texte)
-          && /login\.html/.test(remise.texte),
-          JSON.stringify({ texte: remise ? remise.texte.slice(-240) : null }));
-
-        verifier('la copie cachée ne figure dans aucun en-tête du message, et pourtant elle est servie',
-          !!remise
-          && (remise.pour || []).includes('interlocuteur@organisme.test')
-          && (remise.pour || []).includes('copie@organisme.test')
-          && (remise.pour || []).includes('archives@anac.bj')
-          && !/archives@anac\.bj/.test(JSON.stringify(remise.entetes)),
-          JSON.stringify({ servis: remise && remise.pour,
-            entetes: remise && { to: remise.entetes.to, cc: remise.entetes.cc, bcc: remise.entetes.bcc } }));
-
-        // ── Le ménage : la troisième chaîne ne survit pas à la ronde ──
-        const menage3 = await page.evaluate(async (ctx) => {
-          const { api, fncId, dossierId, notifId } = ctx;
-          const J = async (u, m) => {
-            const rep = await fetch(u, {
-              method: m || 'GET', credentials: 'same-origin',
-              headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
-            });
-            let c = null; try { c = await rep.json(); } catch { c = null; }
-            return { statut: rep.status, corps: c };
-          };
-          const r = {};
-          document.querySelector('[onclick^="execCloseSlider"], [onclick^="execProcRetour"]')?.click();
-          await new Promise((x) => setTimeout(x, 1200));
-          r.constatation = (await J(`${api}/constatations/${fncId}`, 'DELETE')).statut;
-          r.dossier = (await J(`${api}/dossiers/${dossierId}`, 'DELETE')).statut;
-          const notifs = (await J(`${api}/notifications`)).corps || [];
-          if (notifs.some((n) => n.id === notifId)) {
-            await J(`${api}/notifications/${notifId}/cancel`, 'PUT');
-            r.notif = (await J(`${api}/notifications/${notifId}`, 'DELETE')).statut;
-          }
-          r.resteDossier = ((await J(`${api}/dossiers`)).corps || [])
-            .filter((d) => d.id === dossierId).length;
-          r.resteConstatation = ((await J(`${api}/constatations`)).corps || [])
-            .filter((c) => c.id === fncId).length;
-          r.resteNotif = ((await J(`${api}/notifications`)).corps || [])
-            .filter((n) => n.id === notifId).length;
-          // L'état du client suit le serveur : un ménage par l'API laisserait
-          // sinon les blocs suivants cliquer des lignes mortes.
-          await execRefreshDynamic();
-          r.rapportsRendus = (EXEC_STATE.data.rapports || [])
-            .filter((x) => x.dossier_id === dossierId).length;
-          return r;
-        }, { api: M, fncId: socle.fncId, dossierId: socle.dossierId, notifId: socle.notifId });
-
-        verifier('la troisième chaîne ne survit pas à la ronde, rapport transmis compris',
-          menage3.constatation === 200 && menage3.dossier === 200
-          && menage3.resteDossier === 0 && menage3.resteConstatation === 0
-          && menage3.resteNotif === 0 && menage3.rapportsRendus === 0,
-          JSON.stringify(menage3));
-      }
-    }
-
-    // ══════════════════════════════════════════════════════════════════
     //  La composition des références — Paramètres → Autres paramètres
     // ══════════════════════════════════════════════════════════════════
     //
@@ -7914,7 +6970,7 @@ module.exports = async function survSmoke(port) {
     // La ronde ajoute **un** segment, l'exerce de bout en bout, puis le retire ;
     // elle rend enfin le serveur à ses modèles par défaut par le geste prévu
     // pour cela.
-    etape = 'composition des références';
+    jalon('composition des références');
     const refsA = await page.evaluate(async (api) => {
       const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
       const r = {};
@@ -8216,7 +7272,7 @@ module.exports = async function survSmoke(port) {
     // non l'écran.* Le régime est désormais **fabriqué** — une notification en
     // brouillon pour qu'une activité se distingue de l'autre, une constatation
     // directe pour qu'une année existe — et rendu à la fin.
-    etape = 'régime du tableau de bord';
+    jalon('régime du tableau de bord');
     const regime = await page.evaluate(async (api) => {
       const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
       const env = async (url, methode, corps) => {
@@ -8270,7 +7326,7 @@ module.exports = async function survSmoke(port) {
       && regime.notifsEnCache >= 1 && regime.fncsEnCache >= 1,
       JSON.stringify(regime));
 
-    etape = 'piste des activités';
+    jalon('piste des activités');
     await page.evaluate(async () => {
       const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
       document.querySelector('.nav-btn[data-page="dashboard"]')?.click();
@@ -8384,7 +7440,7 @@ module.exports = async function survSmoke(port) {
     // `EXEC_STATE` : onglet, indicateur, filtres et période. On l'exerce donc
     // par ses gestes, et l'on relève à chaque fois ce que l'écran rend — non ce
     // que l'état porte, qui ne prouverait que l'affectation.
-    etape = 'formulaire de statistiques';
+    jalon('formulaire de statistiques');
     const stats = await page.evaluate(async () => {
       const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
       const r = {};
@@ -8650,7 +7706,7 @@ module.exports = async function survSmoke(port) {
     //
     // Dernier geste de la ronde, et il porte son propre contrôle : la suite n'a
     // qu'un jeu d'essai, et ce qu'on y laisse, la campagne suivante le trouve.
-    etape = 'restitution du régime';
+    jalon('restitution du régime');
     const rendu = await page.evaluate(async (ctx) => {
       const env = async (url, methode) => {
         const rep = await fetch(url, {
@@ -8678,49 +7734,6 @@ module.exports = async function survSmoke(port) {
       && rendu.notifRestante === false && rendu.fncRestante === false
       && rendu.activitesRendues >= 2,
       JSON.stringify(rendu));
-
-    verifier('aucune erreur de console ni requête échouée sur SURV',
-      incidents.length === 0, incidents.slice(0, 4).join(' · '));
-    // Une déclaration qui ne correspond plus ne dispense plus rien : elle
-    // **cache**. Celle du dépôt refusé doit donc être venue.
-    const muettes = MESSAGES_ATTENDUS.filter((x) => x.vus === 0);
-    verifier('chaque message de console déclaré est bien venu : aucune déclaration muette',
-      muettes.length === 0,
-      muettes.length ? muettes.map((x) => String(x.motif)).join(' · ')
-        : MESSAGES_ATTENDUS.map((x) => `${x.motif.source.slice(0, 28)} ×${x.vus}`).join(' · '));
-    abandons.verifier('SURV');
-  } finally {
-    // Le journal du mouchard, relevé avant de fermer : une page fermée n'a plus
-    // de `window`, et le relevé rendrait zéro geste — la mesure de rien,
-    // présentée comme une couverture nulle.
-    if (process.env.OASIS_MOUCHARD && navigateur) {
-      const vu = {
-        enLigne: [], ecouteurs: [], propriete: [], jsx: [], barre: [], poses: 0, pages: 0,
-      };
-      for (const p of await navigateur.pages()) {
-        try {
-          /* eslint-disable no-await-in-loop */
-          const j = await p.evaluate(() => {
-            const d = JSON.parse(localStorage.getItem('__oasis_gestes') || 'null');
-            return { durable: d, vivante: !!window.__gestes, poses: window.__gestes ? window.__gestes.poses : 0 };
-          });
-          if (j.vivante) { vu.pages += 1; vu.poses += j.poses; }
-          if (j.durable && !vu.enLigne.length) {
-            vu.enLigne.push(...j.durable.enLigne);
-            vu.ecouteurs.push(...j.durable.ecouteurs);
-            vu.propriete.push(...(j.durable.propriete || []));
-            vu.jsx.push(...(j.durable.jsx || []));
-            // Les actions remises au socle : quatrième canal du
-            // mouchard (ADR-003, 5.f.43).
-            vu.barre.push(...(j.durable.barre || []));
-          }
-        } catch { /* page déjà partie : le registre durable l'a gardée */ }
-      }
-      fs.writeFileSync(process.env.OASIS_MOUCHARD, JSON.stringify(vu));
-    }
-    if (navigateur) await navigateur.close();
-    await srv.arreter();
-    await sas.arreter();
-  }
-  return bilan('SURV');
+    },
+  });
 };

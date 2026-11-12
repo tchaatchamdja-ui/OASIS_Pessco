@@ -23,7 +23,7 @@ const bac = require('./bac');
 // suites. `suites.js` ne porte que des chaînes — nom, port, fichier — et c'est
 // le lanceur qui en tire les modules. Un contrôle peut donc vérifier qu'aucun
 // port n'est partagé sans monter un navigateur (`unitaires`).
-const { SUITES } = require('./suites');
+const { SUITES, choisir } = require('./suites');
 // Le verrou de la campagne : il refuse d'en jouer deux à la fois (voir plus bas).
 const verrouCampagne = require('./verrou-campagne');
 // eslint-disable-next-line global-require, import/no-dynamic-require
@@ -31,7 +31,7 @@ const suites = SUITES.map((s) => ({ ...s, run: require(s.fichier) }));
 
 (async () => {
   const filtre = process.argv[2];
-  const choisies = filtre ? suites.filter((s) => s.nom.includes(filtre)) : suites;
+  const choisies = choisir(suites, filtre);
   if (!choisies.length) {
     console.error(`Aucune suite ne correspond à « ${filtre} ». Disponibles : ${suites.map((s) => s.nom).join(', ')}`);
     process.exit(2);

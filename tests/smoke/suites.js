@@ -25,7 +25,7 @@
 // et un contrôle refuse qu'il s'en partage à nouveau.
 //
 // Les dix premiers gardent celui qu'ils avaient — les documents et les notes qui
-// les nomment restent vrais. Les six suites de navigateur reçoivent 4800 à 4805.
+// les nomment restent vrais. Les suites de navigateur reçoivent 4800 à 4806.
 //
 // `port: 0` : la suite ne démarre aucun serveur. Elle lit des sources, ou
 // éprouve des règles en processus.
@@ -70,6 +70,15 @@ const SUITES = [
   // distingue des suites HTTP du même module — le relevé lance la suite par son
   // nom, et deux noms dont l'un contient l'autre lui en feraient lancer deux.
   { nom: 'surv', port: 4800, fichier: './surv.smoke' },
+  // ── SURV en porte deux, et c'est le début de son découpage ──
+  //
+  // « Un écran, une suite » tenait tant qu'une suite restait lisible. Celle de
+  // SURV a atteint 8 726 lignes, et le garde-fou de taille l'a dit deux tours
+  // de suite. Les deux partagent leur mise en place (`surv-socle.js`), et le
+  // relevé des gestes lance **les deux** — `relever-gestes.js` accepte une
+  // liste depuis le 12 novembre 2026, faute de quoi la couverture de l'écran
+  // aurait chuté de moitié sans qu'un geste cesse d'être exercé.
+  { nom: 'surv-pieces', port: 4806, fichier: './surv-pieces.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },
@@ -77,4 +86,25 @@ const SUITES = [
   { nom: 'profil-risque-navigateur', port: 4805, fichier: './profil-risque.navigateur.smoke' },
 ];
 
-module.exports = { SUITES };
+// ── Choisir une suite par son nom : l'exact l'emporte ──
+//
+// Le lanceur choisissait par **inclusion**, et cela a tenu tant qu'aucun nom
+// n'était contenu dans un autre. Le découpage de SURV y a mis fin : `surv` est
+// contenu dans `surv-pieces`, et `npm run smoke -- surv` en lançait **deux** —
+// ce qui, pour le relevé des gestes, faisait écraser le journal de la première
+// par celui de la seconde. Une couverture plausible, et fausse de moitié.
+//
+// Un nom exact désigne donc sa suite, et rien d'autre ; à défaut, l'inclusion
+// reste, qui sert à lancer une famille (`-- navigateur`).
+//
+// Cette fonction est **la** règle : le lanceur l'appelle, et le garde-fou qui
+// vérifie qu'un nom lancé par le relevé ne désigne qu'une suite l'appelle
+// aussi. Deux endroits qui décideraient séparément finiraient par décider
+// différemment — c'est la faute que ce dépôt a payée le plus souvent.
+const choisir = (suites, filtre) => {
+  if (!filtre) return suites;
+  const exact = suites.filter((s) => s.nom === filtre);
+  return exact.length ? exact : suites.filter((s) => s.nom.includes(filtre));
+};
+
+module.exports = { SUITES, choisir };

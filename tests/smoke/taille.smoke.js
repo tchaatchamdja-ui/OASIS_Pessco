@@ -2333,24 +2333,25 @@ module.exports = async function tailleSmoke() {
   //
   // *Un seuil qu'on ne regarde pas n'est pas un seuil.*
   const SUITES_TOLEREES = {
-    // ── 7 846 → 8 726, et ce que ce relèvement engage ──
+    // ── 8 726 → 7 739, et un budget qui **baisse** pour la première fois ──
     //
-    // La ronde des pièces et de la transmission (n° 5.f.81) a ajouté 880 lignes
-    // à la plus grosse suite du dépôt. Relever le chiffre est ce que ce garde
-    // demande — le voir plutôt que le subir —, mais ce n'est pas une
-    // autorisation : **le découpage devient la prochaine étape**, et son
-    // obstacle est nommé dans l'ADR (`relever-gestes.js` associe un écran à une
-    // seule suite, et un écran découpé ne serait plus mesuré qu'à moitié).
+    // Deux tours de suite, ce budget a été relevé — et la seconde fois en
+    // écrivant que « le découpage devient la prochaine étape ». Il l'a été : la
+    // mise en place commune est partie dans `surv-socle.js`, et la ronde des
+    // pièces dans `surv-pieces.smoke.js`, qui a son port et son entrée dans la
+    // table. Son obstacle est levé — `relever-gestes.js` accepte une liste de
+    // suites, et les journaux se réunissent.
     //
-    // *Un budget qu'on relève deux fois de suite n'est plus un budget.*
-    'surv.smoke.js': 8726,
+    // Le chiffre baisse donc, et c'est ce que ce garde attendait : *un budget
+    // qui ne fait que monter n'est pas un budget, c'est une chronique.*
+    'surv.smoke.js': 7739,
     'ramp.navigateur.smoke.js': 6526,
     'profil-risque.navigateur.smoke.js': 3432,
     'parcours.smoke.js': 3211,
     'planification.navigateur.smoke.js': 2720,
     'mesures.navigateur.smoke.js': 2652,
     'taille.smoke.js': 2377,
-    'unitaires.smoke.js': 1773,
+    'unitaires.smoke.js': 1802,
     'ramp.smoke.js': 1447,
     // Franchi le 11 novembre 2026, au tour suivant la pose de ce garde : la
     // ronde de portée des notifications l'a mené de 995 à 1 174 lignes, et le

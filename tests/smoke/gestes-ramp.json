@@ -1,5 +1,5 @@
 {
- "releve": "2026-11-03",
+ "releve": "2026-11-12",
  "gestesNommes": 209,
  "occurrences": 366,
  "exerces": 193,
@@ -1344,7 +1344,7 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();${ouvrir || 'rampOuvrirParam'}('${p.id}')",
-   "nom": "event.stopPropagation",
+   "nom": "rampOuvrirParam",
    "interpole": true,
    "exerce": true
   },

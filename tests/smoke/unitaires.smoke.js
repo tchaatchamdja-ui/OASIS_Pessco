@@ -878,6 +878,92 @@ async function courrielsSansSecret() {
   fs.rmSync(bacConfig, { recursive: true, force: true });
 }
 
+// ── Nommer un gestionnaire posé dans le balisage ──
+//
+// Le relevé des gestes compte la couverture d'un écran, et il la compte **par
+// nom**. Mal nommer un gestionnaire ne fait pas tomber une campagne : cela
+// déplace un chiffre, dans un rapport que personne ne recoupe. C'est le mode de
+// défaillance le plus coûteux de cet outil, et il s'est produit trois fois.
+//
+// Le dernier en date, mesuré le 11 novembre 2026 : le lien d'aperçu du courriel
+// de transmission porte `onclick="event.preventDefault();${_escAttr(repli)}"`.
+// Son contrôle est **vert** — le document est composé, la page n'est pas
+// quittée —, et le relevé comptait pourtant deux gestes « non exercés » :
+// `event.preventDefault`, qui est une garde, et `_escAttr`, qui est une fonction
+// de rendu. Le nom que le navigateur porte, lui, est `execDownloadRapport`.
+//
+// Ces contrôles éprouvent `classer`, **la** fonction que `relever` appelle. Un
+// garde-fou qui réécrirait la règle éprouverait sa propre version de la règle —
+// faute déjà payée trois fois sur le contrôle des noms de suites.
+function nommageDesGestes() {
+  // eslint-disable-next-line global-require
+  const { classer } = require(path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'));
+  const noms = (corps) => classer(corps).map((g) => g.nom);
+  const seul = (corps) => classer(corps)[0];
+
+  verifier('nommage : un gestionnaire ordinaire se nomme par son appel, valeur interpolée comprise',
+    noms("execFoo('${d.id}')").join() === 'execFoo'
+    && classer("execFoo('${d.id}')")[0].indecidable === undefined,
+    JSON.stringify(classer("execFoo('${d.id}')")));
+
+  verifier('nommage : une garde en tête ne nomme pas le geste — c\'est ce qu\'elle protège',
+    noms('event.preventDefault();execFoo()').join() === 'execFoo'
+    && noms('event.stopPropagation();event.preventDefault();execFoo()').join() === 'execFoo'
+    && noms("if(!event.target.closest('button'))execFoo('x')").join() === 'execFoo',
+    JSON.stringify([noms('event.preventDefault();execFoo()'),
+      noms("if(!event.target.closest('button'))execFoo('x')")]));
+
+  // Le cas qui a fait naître la branche interpolée : un ternaire qui **écrit**
+  // ses deux gestes. Les deux sont des gestes de l'écran, et les deux comptent.
+  const ternaire = "${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}";
+  verifier('nommage : un ternaire qui écrit ses deux gestes les nomme tous les deux',
+    noms(ternaire).join() === 'planUpdateActivity,planCreateActivity'
+    && classer(ternaire).every((g) => g.interpole === true),
+    JSON.stringify(noms(ternaire)));
+
+  // ── Le défaut du 11 novembre, et sa forme derrière une garde ──
+  const compose = 'event.preventDefault();${_escAttr(repli)}';
+  const composeGarde = "if(!event.target.closest('button'))${execEtatsOuvrir(l)}";
+  verifier('nommage : un gestionnaire composé au rendu est indécidable, et non « non exercé »',
+    seul(compose).indecidable === true && seul(compose).raison === 'composé au rendu'
+    && seul(composeGarde).indecidable === true
+    && seul(composeGarde).raison === 'composé au rendu'
+    // Et surtout : aucun des noms que la source donne n'est retenu. Ni la
+    // garde, ni la fonction qui assemble.
+    && !noms(compose).includes('_escAttr')
+    && !noms(compose).includes('event.preventDefault')
+    && !noms(composeGarde).includes('execEtatsOuvrir')
+    && !noms(composeGarde).includes('event.target.closest'),
+    JSON.stringify([classer(compose), classer(composeGarde)]));
+
+  // ── Ce qu'un littéral **écrit**, en revanche, se pose ──
+  const defaut = "${ouvrir || 'rampOuvrirParam'}('${p.id}')";
+  verifier('nommage : un littéral seul dans l’interpolation tient sa place, et le texte qui suit complète l’appel',
+    noms(defaut).join() === 'rampOuvrirParam',
+    JSON.stringify(classer(defaut)));
+
+  // ── Et deux littéraux ne se collent pas ──
+  //
+  // `execAexecB` n'existe pas. *Une mesure qui invente un nom est pire qu'une
+  // mesure qui se tait* : le nom inventé compte « non exercé » pour toujours, et
+  // rien ne le rattache à un défaut réel.
+  const deux = "${c ? 'execA' : 'execB'}('${id}')";
+  verifier('nommage : deux littéraux ne se collent pas en un nom qui n’existe pas',
+    seul(deux).indecidable === true
+    && !noms(deux).some((n) => /execAexecB/.test(n)),
+    JSON.stringify(classer(deux)));
+
+  // ── Les deux silences se distinguent ──
+  //
+  // Ils ne se corrigent pas de la même façon : l'un demande de nommer le
+  // gestionnaire, l'autre de le poser sans l'assembler.
+  verifier('nommage : un gestionnaire venu d’ailleurs se dit « sans nom », un gestionnaire assemblé « composé au rendu »',
+    seul('${geste}').raison === 'sans nom'
+    && seul('${geste(a)}').raison === 'composé au rendu'
+    && seul('${geste}').indecidable === true,
+    JSON.stringify([seul('${geste}'), seul('${geste(a)}')]));
+}
+
 // ── 6 ter. L'adresse par laquelle un destinataire revient ──
 //
 // Un courriel d'OASIS ne porte jamais de pièce jointe : il annonce des liens, et
@@ -1770,6 +1856,7 @@ module.exports = async function unitairesSmoke() {
     traces();
     await courrielsSansSecret();
     racinePubliqueDesCourriels();
+    nommageDesGestes();
     verrouDuRepertoire();
     await vecteursDeMigration();
     conservation();

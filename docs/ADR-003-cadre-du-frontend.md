@@ -865,11 +865,11 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 67 exercés — le plafond atteignable —, 9 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **94 gestes nommés, 77 exercés**, 4 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026 |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 77 exercés**, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **315 gestes nommés, 241 exercés** (77 %), 3 indécidables — mesuré par **deux** suites depuis le 12 novembre 2026, `surv` et `surv-pieces`, dont le relevé réunit les journaux (n° 5.f.81 et 5.f.82) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme et le **plan d'actions correctives** sont exercés en entier — 10 sur 10 et 47 sur 47 —, celui des constatations à 57 occurrences sur 61, et celui des activités à 65 sur 68 : des trois qui restent, deux sont l'angle mort du relevé — un gestionnaire composé au rendu se nomme ailleurs qu'où il est posé — et le troisième n'est offert qu'à un compte qui ne gouverne pas le module |
+           | SURV (`execution`) | 24 162 | **311 gestes nommés, 241 exercés** (77 %), 3 indécidables — mesuré par **deux** suites depuis le 12 novembre 2026, `surv` et `surv-pieces`, dont le relevé réunit les journaux (n° 5.f.81 et 5.f.82) ; le plus gros écran, et le moins couvert. Plus aucune de ses pages n'est sans chemin ; l'écran des comptes de l'organisme et le **plan d'actions correctives** sont exercés en entier — 10 sur 10 et 47 sur 47 —, celui des constatations à 57 occurrences sur 61, et celui des activités à 65 sur 68 : des trois qui restent, deux sont l'angle mort du relevé — un gestionnaire composé au rendu se nomme ailleurs qu'où il est posé — et le troisième n'est offert qu'à un compte qui ne gouverne pas le module |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -11515,3 +11515,108 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            Le budget de taille **baisse** pour la première fois depuis qu'il
            existe : 8 726 → 7 739. *Un budget qui ne fait que monter n'est pas un
            budget, c'est une chronique.*
+
+       5.f.83 [x] **Nommer ce qui est posé, et non ce qui l'assemble** — fait le
+           12 novembre 2026.
+           Le relevé des gestes comptait quatre gestes de SURV « non exercés »
+           qui n'existent pas. Mal nommer un gestionnaire ne fait pas tomber une
+           campagne : cela déplace un chiffre, dans un rapport que personne ne
+           recoupe. C'est le mode de défaillance le plus coûteux de cet outil, et
+           c'est la quatrième fois qu'il se produit.
+
+           ── Ce que la mesure avait établi la veille ──
+
+           Le lien d'aperçu du courriel de transmission porte
+           `onclick="event.preventDefault();${_escAttr(repli)}"`, et son contrôle
+           est **vert** : le document est composé, la page n'est pas quittée. Le
+           relevé comptait pourtant deux gestes non exercés — `preventDefault`,
+           qui est une garde, et `_escAttr`, qui est une fonction de rendu.
+
+           Le nom que le mouchard tire de l'attribut **tel qu'il existe dans le
+           navigateur** est `execDownloadRapport` : mesuré, en rejouant la
+           fonction de nommage sur les deux textes. Aucun des noms que la source
+           donne ne peut donc correspondre à un geste.
+
+           ── La règle, et ce qui la décide ──
+
+           La différence n'est pas le ternaire — l'outil savait déjà qu'un
+           `onclick="${actId ? `planUpdateActivity(…)` : `planCreateActivity(…)`}"`
+           porte **deux** gestes, et les nommait tous deux à bon droit. La
+           différence est **où le nom est écrit** :
+
+             · dans un **littéral**, c'est le texte que l'attribut portera — le
+               nom est posé sur l'élément ;
+             · **à l'air libre** dans l'interpolation, c'est un appel qui
+               *fabrique* ce texte — et le texte qu'il fabrique n'est pas ici.
+
+           Le relevé ne retient donc que ce qui sera posé : le code hors
+           interpolation, et les littéraux qu'une interpolation contient. *Nommer
+           ce qui assemble un geste, c'est nommer le menuisier et non la porte.*
+
+           Deux raffinements, l'un et l'autre trouvés en mesurant :
+
+             · **un littéral seul tient la place de l'interpolation**, et le texte
+               qui suit complète l'appel.
+               `${ouvrir || 'rampOuvrirParam'}('${p.id}')` pose donc
+               `rampOuvrirParam` — le geste par défaut que l'écran y met, écrit
+               noir sur blanc. Sans ce raffinement il devenait indécidable, et
+               l'on perdait un nom réel ; avec lui, RAMP garde son compte exact.
+               Au passage, cette occurrence était nommée `event.stopPropagation`
+               — une garde, créditée « exercée » par agrégation avec les dizaines
+               d'autres gardes de l'écran. *Un faux vert, et le plus discret qui
+               soit* ;
+             · **plusieurs littéraux ne se collent pas**. `${c ? 'execA' :
+               'execB'}('${id}')` donnerait `execAexecB`, un nom qui n'existe
+               pas et qui compterait « non exercé » pour toujours. Chacun reste
+               une alternative complète, et faute d'appel l'occurrence est
+               indécidable. *Une mesure qui invente un nom est pire qu'une mesure
+               qui se tait.*
+
+           ── Et la faute que la première écriture a refaite ──
+
+           Elle nommait encore `event.target.closest` sur les attributs gardés
+           par `if(!event.target.closest('button'))…` : l'appel **de la garde**,
+           que `sansCondition` existe depuis le 8 novembre pour ne plus nommer,
+           et que son propre commentaire juge « plus trompeur que *if*, qui au
+           moins s'avouait ». Les deux retraits — gardes de tête et condition —
+           s'appliquent maintenant ici comme ailleurs.
+
+           C'est la comparaison **entrée par entrée** des relevés, avant et
+           après, qui l'a dit : les compteurs, eux, n'y voyaient rien. Elle a
+           aussi montré que `gestes-profil_risque.json`, figé le 5 novembre,
+           portait des lignes que `pr-parametres.js` avait déplacées le 7 — sans
+           qu'aucun geste bouge. Le garde-fou de l'inventaire a raison de ne
+           comparer que les noms et le nombre d'occurrences ; les numéros de
+           ligne du relevé figé sont une **commodité de lecture**, non une
+           mesure, et son commentaire le dit désormais. Les sept inventaires ont
+           été refaits.
+
+           ── La décision vit en un seul endroit ──
+
+           Elle était écrite **dans** `relever`, et un garde-fou qui aurait voulu
+           l'éprouver aurait dû la réécrire — c'est-à-dire éprouver sa propre
+           version de la règle. Ce dépôt a payé cette faute trois fois sur le
+           seul contrôle des noms de suites, dont une fois la veille. `classer`
+           porte la règle ; `relever` l'appelle, et les sept contrôles
+           d'`unitaires` aussi.
+
+           ── Ce que cela change aux chiffres ──
+
+           | Écran | noms | non exercés | exercés |
+           |---|---|---|---|
+           | SURV | 315 → **311** | 71 → **67** | 241 → **241** |
+           | PLAN | 95 → **93** | 13 → **11** | 77 → **77** |
+           | RAMP | 209 → 209 | 16 → 16 | 193 → 193 |
+
+           Quatre noms quittent SURV — `preventDefault`, `_escAttr`,
+           `event.target.closest`, `execEtatsOuvrir` —, deux quittent PLAN —
+           `_escAttr` et `geste` —, et **tous étaient comptés non exercés**.
+           Aucun exercé n'est gagné : *une correction du dénominateur ne doit
+           rien ajouter au numérateur*, et celle-ci n'ajoute rien. Elle retire
+           six fantômes.
+
+           Il reste à SURV **un** geste hors de portée de ses suites,
+           `execViewFNC` : la table ne l'offre qu'à un compte qui ne gouverne pas
+           le module, et les suites se connectent en SUPERADMIN, qui garde le
+           crayon. L'exercer demande une session dans un autre contexte de
+           navigateur.

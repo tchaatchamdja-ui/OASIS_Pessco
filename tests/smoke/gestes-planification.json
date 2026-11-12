@@ -1,9 +1,9 @@
 {
- "releve": "2026-11-04",
- "gestesNommes": 94,
+ "releve": "2026-11-12",
+ "gestesNommes": 93,
  "occurrences": 138,
  "exerces": 77,
- "indecidables": 4,
+ "indecidables": 5,
  "gestes": [
   {
    "fichier": "public/modules/planification/js/pl-actions.js",
@@ -102,9 +102,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "${_escAttr(o.clic(l))}",
-   "nom": "_escAttr",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
@@ -1077,9 +1078,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "${geste('')}",
-   "nom": "geste",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",
@@ -1087,9 +1089,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "${geste(a)}",
-   "nom": "geste",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/planification/js/pl-shell.js",

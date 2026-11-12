@@ -865,6 +865,20 @@ module.exports = async function tailleSmoke() {
   // Le relevé est donc figé, et comparé à chaque campagne. Un geste ajouté sans
   // que le relevé soit refait fait tomber ce contrôle, et la conduite à tenir est
   // dans son message.
+  //
+  // ── Ce qu'il compare, et ce qu'il laisse passer **exprès** ──
+  //
+  // Les **noms** et le **nombre d'occurrences** : ce dont la couverture est
+  // faite. Pas les numéros de ligne. Mesuré le 12 novembre 2026 en comparant les
+  // relevés entrée par entrée : `gestes-profil_risque.json`, figé le 5 novembre,
+  // porte des lignes que `pr-parametres.js` a déplacées le 7 — et ce contrôle
+  // est resté vert, à juste titre, puisque aucun geste n'avait bougé.
+  //
+  // Les faire entrer dans la comparaison ferait rougir une campagne pour un
+  // commentaire ajouté au-dessus d'un bouton, et coûterait un relevé de quinze
+  // minutes à chaque fois. Les numéros de ligne du relevé figé sont donc une
+  // **commodité de lecture**, non une mesure : qui s'y fie doit refaire le
+  // relevé.
   const releves = fs.readdirSync(path.join(RACINE, 'tests', 'smoke'))
     .filter((f) => /^gestes-[a-z_]+\.json$/.test(f));
   if (!releves.length) {

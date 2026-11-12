@@ -1,5 +1,5 @@
 {
- "releve": "2026-11-05",
+ "releve": "2026-11-12",
  "gestesNommes": 88,
  "occurrences": 167,
  "exerces": 78,
@@ -953,7 +953,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 494,
+   "ligne": 497,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentNode.remove()",
@@ -962,7 +962,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 592,
+   "ligne": 595,
    "forme": "en ligne",
    "evenement": "click",
    "source": "closeModal()",
@@ -971,7 +971,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 593,
+   "ligne": 596,
    "forme": "en ligne",
    "evenement": "click",
    "source": "deleteEntity('${collection}','${itemId}')",
@@ -980,7 +980,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 594,
+   "ligne": 597,
    "forme": "en ligne",
    "evenement": "click",
    "source": "saveEntity('${collection}','${itemId||''}')",
@@ -989,7 +989,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 687,
+   "ligne": 690,
    "forme": "en ligne",
    "evenement": "click",
    "source": "saveIndices()",
@@ -998,7 +998,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 785,
+   "ligne": 788,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('prNotifPanel')?.remove()",
@@ -1007,7 +1007,7 @@
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 817,
+   "ligne": 820,
    "forme": "écouteur",
    "evenement": "click",
    "nom": "document:click",

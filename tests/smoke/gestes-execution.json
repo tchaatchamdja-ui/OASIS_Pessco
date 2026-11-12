@@ -1,7 +1,7 @@
 {
  "releve": "2026-11-12",
- "gestesNommes": 315,
- "occurrences": 511,
+ "gestesNommes": 311,
+ "occurrences": 506,
  "exerces": 241,
  "indecidables": 3,
  "gestes": [
@@ -227,19 +227,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.preventDefault();${_escAttr(repli)}",
-   "nom": "event.preventDefault",
-   "interpole": true,
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-activites.js",
-   "ligne": 1017,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.preventDefault();${_escAttr(repli)}",
-   "nom": "_escAttr",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -1125,6 +1116,7 @@
    "source": "${actionLigne}",
    "nom": "${}",
    "indecidable": true,
+   "raison": "sans nom",
    "exerce": null
   },
   {
@@ -2071,19 +2063,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "event.target.closest",
-   "interpole": true,
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 447,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "execEtatsOuvrir",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2100,19 +2083,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "event.target.closest",
-   "interpole": true,
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 496,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "execEtatsOuvrir",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2129,19 +2103,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "event.target.closest",
-   "interpole": true,
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 554,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "execEtatsOuvrir",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2149,9 +2114,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "${execEtatsOuvrir(l)}",
-   "nom": "execEtatsOuvrir",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2204,19 +2170,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "event.target.closest",
-   "interpole": true,
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-etats.js",
-   "ligne": 610,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "execEtatsOuvrir",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2224,9 +2181,10 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "${execEtatsOuvrir(l)}",
-   "nom": "execEtatsOuvrir",
-   "interpole": true,
-   "exerce": false
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -3398,6 +3356,7 @@
    "source": "${onclick}",
    "nom": "${}",
    "indecidable": true,
+   "raison": "sans nom",
    "exerce": null
   },
   {
@@ -4200,6 +4159,7 @@
    "source": "${e.onClick}",
    "nom": "${}",
    "indecidable": true,
+   "raison": "sans nom",
    "exerce": null
   },
   {

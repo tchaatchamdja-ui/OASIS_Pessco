@@ -461,6 +461,127 @@ const nomDuGeste = (corps) => {
   return nomme;
 };
 
+// ── Ce qu'une interpolation **écrit**, et ce qui l'assemble ──
+//
+// `appelsDuGestionnaire` lit tous les appels du gestionnaire, où qu'ils soient.
+// C'était juste pour le cas qui l'a fait naître — un ternaire qui choisit entre
+// deux gestes, tous deux écrits dans la source :
+//
+//   onclick="${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}"
+//
+// Ce ne l'est pas pour celui-ci, et la mesure l'a établi le 11 novembre 2026 :
+//
+//   onclick="event.preventDefault();${_escAttr(repli)}"
+//
+// Le nom tiré de l'attribut **tel qu'il existe dans le navigateur** est
+// `execDownloadRapport` — mesuré. Les deux que la source donne, `preventDefault`
+// qui est une garde et `_escAttr` qui est une fonction de rendu, ne peuvent
+// correspondre à aucun geste : ils comptaient donc « non exercés » pour
+// toujours, alors que le contrôle qui clique ce lien est **vert**.
+//
+// La différence n'est pas le ternaire : c'est **où le nom est écrit**. Dans le
+// premier cas il est dans un littéral — le texte que l'attribut portera. Dans
+// le second il est à l'air libre dans l'interpolation : c'est un appel qui
+// **fabrique** le texte, et le texte qu'il fabrique n'est pas ici.
+//
+// On ne retient donc que ce qui sera **posé** : le code hors interpolation, et
+// les littéraux qu'une interpolation contient. Ce qui assemble reste dehors.
+//
+// *Nommer ce qui assemble un geste, c'est nommer le menuisier et non la porte.*
+//
+// Les gardes de tête se retirent au passage, par la même règle qu'ailleurs :
+// une garde n'est pas un geste, et `appelsDuGestionnaire` ne le savait pas —
+// `event.preventDefault` y figurait comme un appel ordinaire.
+const nomsPosables = (corps) => {
+  let t = String(corps).trim();
+  for (let m = GARDE_EN_TETE.exec(t); m; m = GARDE_EN_TETE.exec(t)) t = t.slice(m[0].length);
+  // ── Et la condition, par la même règle qu'ailleurs ──
+  //
+  // `onclick="if(!event.target.closest('button'))${execEtatsOuvrir(l)}"` : sans
+  // ce retrait, le seul nom qui se pose est `event.target.closest` — l'appel
+  // **de la garde**, que `sansCondition` existe depuis le 8 novembre pour ne
+  // plus nommer, et que son commentaire juge « plus trompeur que *if*, qui au
+  // moins s'avouait ». La première écriture de cette fonction l'avait réintroduit
+  // sur deux attributs, et c'est le relevé comparé entrée par entrée qui l'a dit.
+  const protege = sansCondition(t);
+  if (protege !== null) t = protege;
+  let pose = '';
+  let i = 0;
+  while (i < t.length) {
+    if (t[i] === '$' && t[i + 1] === '{') {
+      // Le corps de l'interpolation, pris par comptage d'accolades — la même
+      // raison qu'en normalisant : une expression régulière s'arrête au premier
+      // `}` et coupe au milieu d'un ternaire paramétré.
+      let profondeur = 0;
+      let j = i + 1;
+      for (; j < t.length; j += 1) {
+        if (t[j] === '{') profondeur += 1;
+        else if (t[j] === '}') {
+          profondeur -= 1;
+          if (profondeur === 0) break;
+        }
+      }
+      const dedans = t.slice(i + 2, j);
+      // Ce que l'interpolation **écrit** : ses littéraux. Le reste l'assemble.
+      //
+      // Un seul littéral tient la place de l'interpolation, et le texte qui
+      // suit complète l'appel — `${ouvrir || 'rampOuvrirParam'}('${p.id}')`
+      // pose `rampOuvrirParam('')`, et c'est bien le geste par défaut que
+      // l'écran y met. Plusieurs littéraux sont des **alternatives**, chacune
+      // complète par elle-même : le ternaire qui choisit entre deux gestes les
+      // écrit tous deux en entier. Les coller bout à bout fabriquerait un nom
+      // qui n'existe pas — `execAexecB` —, et *une mesure qui invente un nom
+      // est pire qu'une mesure qui se tait.*
+      const litteraux = [...dedans.matchAll(
+        /`((?:\\.|[^`\\])*)`|'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)"/g,
+      )].map((l) => l[1] ?? l[2] ?? l[3] ?? '');
+      if (litteraux.length === 1) pose += litteraux[0];
+      else litteraux.forEach((l) => { pose += `${l};`; });
+      i = j < t.length ? j + 1 : t.length;
+    } else {
+      pose += t[i];
+      i += 1;
+    }
+  }
+  return appelsDuGestionnaire(pose);
+};
+
+// ── Classer un gestionnaire en ligne : la décision, en un seul endroit ──
+//
+// Elle était écrite **dans** `relever`, et un garde-fou qui aurait voulu
+// l'éprouver aurait dû la réécrire — c'est-à-dire éprouver sa propre version de
+// la règle. Ce dépôt a payé cette faute trois fois sur le seul contrôle des noms
+// de suites. La règle vit donc ici, `relever` l'appelle, et `unitaires` aussi.
+//
+// ── Un attribut dont le nom se dérobe ──
+//
+// Quand la valeur est une interpolation, il n'y a pas **un** nom : le code
+// choisit à l'exécution. `onclick="${actId ? `planUpdateActivity(…)` :
+// `planCreateActivity(…)`}"` peut appeler l'une ou l'autre, et les deux sont des
+// gestes de l'écran. On en rend donc **un par nom** : c'est l'attribut qui est
+// unique, non le geste qu'il porte.
+//
+// Et quand aucun nom ne s'en tire — `onclick="${}"`, dont le gestionnaire entier
+// vient d'ailleurs, ou `${_escAttr(repli)}`, dont l'appel **fabrique** le texte
+// au lieu de l'écrire —, l'occurrence est **indécidable**. La compter « non
+// exercée » serait affirmer qu'un geste qu'on ne sait pas nommer n'est pas
+// couvert : *une mesure ne doit pas conclure de ce qu'elle ne voit pas.*
+//
+// `raison` distingue les deux silences, parce qu'ils ne se corrigent pas de la
+// même façon : l'un demande de nommer le gestionnaire, l'autre de le poser sans
+// l'assembler.
+const classer = (corps) => {
+  const nom = nomDuGeste(corps);
+  if (!nom.includes('${}')) return [{ nom }];
+  const noms = nomsPosables(corps);
+  if (noms.length) return noms.map((n) => ({ nom: n, interpole: true }));
+  return [{
+    nom,
+    indecidable: true,
+    raison: /\$\{[^}]*[A-Za-z_$][\w$.]*\s*\(/.test(corps) ? 'composé au rendu' : 'sans nom',
+  }];
+};
+
 function relever(fichiers) {
   const gestes = [];
   for (const rel of fichiers) {
@@ -478,30 +599,7 @@ function relever(fichiers) {
         evenement: m[1],
         source: corps.slice(0, 120),
       };
-      const nom = nomDuGeste(corps);
-      // ── Un attribut dont le nom se dérobe ──
-      //
-      // Quand la valeur est une interpolation, il n'y a pas **un** nom : le code
-      // choisit à l'exécution. `onclick="${actId ? `planUpdateActivity(…)` :
-      // `planCreateActivity(…)`}"` peut appeler l'une ou l'autre, et les deux
-      // sont des gestes de l'écran. On en pousse donc **un par nom** : c'est
-      // l'attribut qui est unique, non le geste qu'il porte.
-      //
-      // Et quand aucun nom ne s'en tire — `onclick="${}"`, dont le gestionnaire
-      // entier vient d'ailleurs —, l'occurrence est **indécidable**. La compter
-      // « non exercée » serait affirmer qu'un geste qu'on ne sait pas nommer
-      // n'est pas couvert : *une mesure ne doit pas conclure de ce qu'elle ne
-      // voit pas.*
-      if (nom.includes('${}')) {
-        const noms = appelsDuGestionnaire(corps);
-        if (noms.length) {
-          noms.forEach((n) => gestes.push({ ...commun, nom: n, interpole: true }));
-        } else {
-          gestes.push({ ...commun, nom, indecidable: true });
-        }
-      } else {
-        gestes.push({ ...commun, nom });
-      }
+      classer(corps).forEach((g) => gestes.push({ ...commun, ...g }));
     }
     // ── Troisième forme : le gestionnaire posé en **propriété** ──
     //
@@ -1188,7 +1286,7 @@ if (require.main === module) {
 const MOUCHARD = `(${MOUCHARD_FN.toString()})(${JSON.stringify(EVENEMENTS)})`;
 
 module.exports = {
-  MOUCHARD, MOUCHARD_FN, EVENEMENTS, relever, ECRANS,
+  MOUCHARD, MOUCHARD_FN, EVENEMENTS, relever, ECRANS, classer, nomsPosables,
   // Le nommeur est exporté pour être éprouvé seul : c’est lui qui décide ce
   // qu’un geste **est**, et plusieurs de ses règles sont nées d’un relevé faux.
   // `nomDuGeste` est l’entrée : les deux côtés — la source et le mouchard — ne

@@ -1660,7 +1660,7 @@ function verrouDeCampagne() {
   verifier('campagne : un tenant vivant refuse la seconde, en nommant son numéro et le remède',
     !!refuse.refus
     && refuse.refus.includes(String(process.pid))
-    && /npm run smoke -- /.test(refuse.refus)
+    && /attendre sa fin/.test(refuse.refus) && !/suite seule/.test(refuse.refus)
     && /OASIS_SMOKE_VERROU=0/.test(refuse.refus),
     (refuse.refus || '').slice(0, 120));
 
@@ -1689,6 +1689,25 @@ function verrouDeCampagne() {
   else process.env.OASIS_SMOKE_VERROU = avant;
   verifier('campagne : OASIS_SMOKE_VERROU=0 le lève, et ne touche pas au fichier en place',
     !leve.refus && leve.leve === true, JSON.stringify({ leve: leve.leve }));
+
+  // ── 6. Une suite seule consulte, sans prendre (n° 5.f.91) ──
+  //
+  // Le tenant vivant est le parent de ce processus — `npm`, qui vit tant que
+  // ce contrôle tourne. Un mort ne refuse rien ; et consulter n'écrit jamais.
+  fs.writeFileSync(chemin, JSON.stringify({ pid: process.ppid, machine: os.hostname(), depuis: 'maintenant' }));
+  const empreinteAvant = fs.readFileSync(chemin, 'utf-8');
+  const vue = V.consulter({ chemin });
+  const intacte = fs.readFileSync(chemin, 'utf-8') === empreinteAvant;
+  fs.writeFileSync(chemin, JSON.stringify({ pid: 999999, machine: os.hostname(), depuis: 'hier' }));
+  const morte = V.consulter({ chemin });
+  const restee = JSON.parse(fs.readFileSync(chemin, 'utf-8')).pid === 999999;
+  fs.rmSync(chemin, { force: true });
+  const libre = V.consulter({ chemin });
+  verifier('campagne : une suite seule refuse de partir sur une campagne vivante, et ne touche jamais au verrou',
+    !!vue.refus && vue.refus.includes(String(process.ppid)) && /tous les ports/.test(vue.refus)
+    && intacte && !morte.refus && restee && !libre.refus && !fs.existsSync(chemin),
+    JSON.stringify({ vue: (vue.refus || '').slice(0, 60), intacte, morte: morte.refus || null,
+      restee, libre: libre.refus || null }));
   fs.rmSync(chemin, { force: true });
 }
 
@@ -1712,8 +1731,8 @@ function verrouDeCampagne() {
 function tableDesSuites() {
   const { SUITES, choisir } = require('./suites');
 
-  verifier('suites : la table en porte vingt-cinq, et chacune dit son nom, son port et son fichier',
-    SUITES.length === 25
+  verifier('suites : la table en porte vingt-six, et chacune dit son nom, son port et son fichier',
+    SUITES.length === 26
     && SUITES.every((s) => typeof s.nom === 'string' && s.nom.length > 2
       && Number.isInteger(s.port) && typeof s.fichier === 'string'),
     `${SUITES.length} suites`);

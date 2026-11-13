@@ -2,7 +2,7 @@
  "releve": "2026-11-13",
  "gestesNommes": 310,
  "occurrences": 505,
- "exerces": 291,
+ "exerces": 294,
  "indecidables": 3,
  "gestes": [
   {
@@ -4044,7 +4044,7 @@
    "evenement": "change",
    "source": "EXEC_PROC_CFG.filtre.type=this.value;execRenderPage()",
    "nom": "EXEC_PROC_CFG.filtre.type",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4053,7 +4053,7 @@
    "evenement": "change",
    "source": "EXEC_PROC_CFG.filtre.secteur=this.value;execRenderPage()",
    "nom": "EXEC_PROC_CFG.filtre.secteur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",
@@ -4125,7 +4125,7 @@
    "evenement": "click",
    "source": "execProcCfgRetirerActeur(this)",
    "nom": "execProcCfgRetirerActeur",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus-config.js",

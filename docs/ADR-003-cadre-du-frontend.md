@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **310 gestes nommés, 291 exercés** (94 %), 481 occurrences sur 505 dont 6 indécidables — mesuré par **six** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit` et `surv-plans`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.90) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les seize noms non exercés sont dispersés sur neuf fichiers, aucun au-delà de trois occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). Le gisement qui vient est `exec-processus-config.js`, trois restes sur un même écran |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 294 exercés** (95 %), 484 occurrences sur 505 dont 6 indécidables — mesuré par **sept** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans` et `surv-processus`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.91) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les treize noms non exercés sont dispersés sur huit fichiers, aucun au-delà de trois occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Le gisement qui vient est celui des **documents imprimables**, la barre de la fiche et du rapport : cinq occurrences de même nature sur `exec-fiche.js` et `exec-rapports.js` |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -12551,3 +12551,102 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            au-delà de trois. Le gisement qui vient est `exec-processus-config.js`,
            **3 restes sur un même écran** : les deux filtres de la liste des
            processus, et le retrait d'un acteur dans l'éditeur.
+
+       5.f.91 [x] **La configuration des processus sort de `surv.smoke.js`, et
+           une suite seule cesse de se jeter sur la campagne d'un autre** —
+           fait le 13 novembre 2026. `exec-processus-config.js` était le
+           gisement annoncé par le n° 5.f.90 : trois restes sur un même écran,
+           les deux filtres de la liste des processus et le retrait d'un acteur
+           dans l'éditeur.
+
+           ── Une coupe, pas un ajout ──
+
+           La ronde qui parcourait cet écran vivait dans `surv.smoke.js`, à son
+           plafond. Elle bâtissait déjà son propre processus, le dupliquait et
+           retirait tout ce qu'elle avait posé ; elle n'était liée à rien
+           d'autre. Elle en sort sans rien changer — 175 lignes —, dans une
+           septième suite, `surv-processus` (port 4811), et y reçoit ce qui lui
+           manquait. Le budget de `surv.smoke.js` **baisse une troisième fois**,
+           7 890 → 7 736.
+
+           ── Ce que la suite tient : neuf contrôles ──
+
+           Les quatre de la ronde d'origine, et cinq de plus :
+
+           - **les deux filtres** : filtrée sur l'autre type ou sur un autre
+             secteur, la liste perd le processus de la ronde ; sur les siens,
+             elle le rend ; filtres levés, elle se rend entière ; et le choix
+             affiché tient à chaque pas ;
+           - **le retrait d'un acteur** : deux acteurs à la première étape, le
+             second marqué d'un rôle libre, le **premier** retiré. C'est bien
+             lui qui part, et la saisie du second survit à la recomposition du
+             formulaire ; enregistré, le serveur ne garde que lui ; le dernier
+             retiré, l'étape redit qu'elle est vide, et refermer sans
+             enregistrer ne change rien au serveur.
+
+           ── Contre-tests : sept, et l'un mal visé ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | G — le filtre de type ignoré au rendu | le filtre de type |
+           | H — le filtre de secteur ignoré | le filtre de secteur |
+           | I — le retrait sans relecture du formulaire | le retrait (+ ce que le serveur garde) |
+           | J — le retrait ôte la dernière ligne, non celle du bouton | le retrait (+ ce que le serveur garde) |
+           | K — le type choisi perd son « selected » | le filtre de type |
+           | L — le secteur choisi perd son « selected » | le filtre de secteur |
+           | M — une suite seule ne refuse jamais | le verrou consulté |
+
+           K n'a pas rougi du premier coup. Le processus de la ronde est de
+           type « constatation » ; le contrôle ne relisait le choix affiché
+           qu'au pas où le filtre portait l'autre type, et le contre-test
+           ôtait le « selected » de l'option que le contrôle ne regardait pas.
+           Le choix se relit désormais aux deux pas, de type comme de secteur
+           — d'où L, ajouté pour l'éprouver.
+
+           ── Le relevé jeté sur la campagne d'un autre ──
+
+           La tâche des accents — signalée au n° 5.f.90 et lancée depuis
+           une autre session — jouait sa campagne dans son
+           propre worktree pendant que je lançais le relevé. Le relevé a rendu
+           « le port 4800 répond déjà : un autre serveur le tient » : le message
+           même que le verrou de campagne existe pour remplacer (n° 5.f.80).
+
+           Le verrou aurait pu le dire : il vit dans le répertoire temporaire du
+           système, que les worktrees partagent, et la campagne de l'autre le
+           tenait. Mais **une suite jouée seule ne le consultait pas** — le
+           lanceur ne le prenait que pour une campagne entière — et le relevé
+           lance ses suites par leur nom. Pire : le refus de la campagne
+           conseillait précisément ce geste, « jouer une suite seule, qui a son
+           propre port ». C'était faux. Une campagne joue **tous** les ports,
+           celui de la suite seule compris, et les deux finissent par se
+           croiser.
+
+           Une suite seule qui démarre un serveur **consulte** désormais le
+           verrou, sans le prendre — deux suites seules différentes tournent
+           toujours ensemble —, et refuse si une campagne vivante le tient, en
+           nommant son processus. Le conseil faux est retiré du refus de la
+           campagne. Éprouvé en vrai, sur la campagne de l'autre session :
+           `npm run smoke -- surv-plans` a refusé, code 2, en nommant le
+           processus 75345. Un contrôle unitaire de plus, contre-testé (M).
+
+           Ce qui reste nommé sans être fait : deux worktrees jouent toujours
+           les mêmes ports. Le verrou les fait attendre l'un l'autre au lieu de
+           se croiser ; il ne les fait pas tourner ensemble.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-processus-config.js` | 14 / 17 | **17 / 17** |
+           | SURV, occurrences exercées | 481 / 505 (95 %) | **484 / 505 (96 %)** |
+           | SURV, noms exercés | 291 / 310 (94 %) | **294 / 310 (95 %)** |
+           | `surv.smoke.js` | 7 890 lignes | **7 736** |
+           | `unitaires.smoke.js` | 168 contrôles | **169** |
+           | Campagne | 1 776, 25 suites | **1 782**, 26 suites, 0 rouge |
+
+           Il reste treize noms non exercés sur huit fichiers, aucun au-delà de
+           trois. Le gisement qui vient est celui des **documents
+           imprimables** : la barre que portent la fiche de notification et le
+           rapport dans leur fenêtre — imprimer, fermer, et, au rapport,
+           écarter l'astuce d'impression —, cinq occurrences de même nature sur
+           `exec-fiche.js` et `exec-rapports.js`.

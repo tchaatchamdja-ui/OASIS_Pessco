@@ -45,11 +45,16 @@ const suites = SUITES.map((s) => ({ ...s, run: require(s.fichier) }));
   // a que le passage en cours. Fait deux jours de suite, et cherché dans le
   // code avant de le trouver dans ma propre impatience (n° 5.f.80).
   //
-  // Une **suite seule** n'est pas concernée : chacune a son port depuis le
-  // 10 novembre 2026, et deux suites différentes tournent ensemble.
+  // Une **suite seule** ne le prend pas — deux suites différentes tournent
+  // ensemble, chacune sur son port —, mais elle le **consulte** : une campagne
+  // joue tous les ports, le sien compris. Elle ne le consultait pas, et le
+  // relevé des gestes s'est jeté sur la campagne d'un autre worktree (n° 5.f.91).
   const verrou = filtre ? null : verrouCampagne.prendre();
-  if (verrou && verrou.refus) {
-    console.error(`\n✗ ${verrou.refus}\n`);
+  const regard = filtre && choisies.some((s) => s.port !== 0)
+    ? verrouCampagne.consulter() : null;
+  const refus = (verrou && verrou.refus) || (regard && regard.refus);
+  if (refus) {
+    console.error(`\n✗ ${refus}\n`);
     process.exit(2);
   }
   if (verrou && verrou.repris) console.log(`  ◌ ${verrou.repris}`);

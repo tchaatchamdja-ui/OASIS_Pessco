@@ -2442,7 +2442,13 @@ module.exports = async function tailleSmoke() {
     // seize gestes, qui n'a besoin que d'un dossier et d'une checklist — un
     // `surv-checklist.smoke.js` les lui donnerait, et emporterait du même coup
     // les douze occurrences que la ronde du volet exerce aujourd'hui.
-    'surv.smoke.js': 7890,
+    //
+    // ── 7 890 → 7 736 : la configuration des processus s'en va ──
+    //
+    // Elle bâtissait déjà son propre processus et le retirait ; elle n'était
+    // liée à rien d'autre ici. Partie dans surv-processus.smoke.js, elle y a
+    // reçu les trois gestes qui lui manquaient (n° 5.f.91).
+    'surv.smoke.js': 7736,
     'ramp.navigateur.smoke.js': 6526,
     'profil-risque.navigateur.smoke.js': 3432,
     'parcours.smoke.js': 3211,

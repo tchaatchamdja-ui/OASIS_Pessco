@@ -94,6 +94,9 @@ const SUITES = [
   // archivage. Elle bâtit sa notification, l'efface par le geste qu'elle
   // éprouve, et rend le plan désarchivé.
   { nom: 'surv-plans', port: 4810, fichier: './surv-plans.smoke' },
+  // La septième : la configuration des processus, sortie de `surv.smoke.js`
+  // sans rien changer — elle y bâtissait déjà son processus et le retirait.
+  { nom: 'surv-processus', port: 4811, fichier: './surv-processus.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

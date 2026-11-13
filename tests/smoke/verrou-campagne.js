@@ -57,8 +57,7 @@ function prendre({ chemin = CHEMIN, pid = process.pid, poserLesSignaux = true } 
       refus: `une campagne tourne déjà — processus ${tenant.pid}, depuis ${tenant.depuis}.\n`
         + '  Deux campagnes jouent les mêmes seize ports : la seconde rougirait sur un port\n'
         + '  « déjà tenu », en décrivant un orphelin là où il n’y a que le passage en cours.\n'
-        + `  Remède : attendre sa fin, la retrouver par \`ps -p ${tenant.pid}\`, ou\n`
-        + '  jouer une suite seule — `npm run smoke -- <nom>` — qui a son propre port.\n'
+        + `  Remède : attendre sa fin — la retrouver par \`ps -p ${tenant.pid}\`.\n`
         + '  Pour passer outre en connaissance de cause : OASIS_SMOKE_VERROU=0',
     };
   }
@@ -84,4 +83,36 @@ function prendre({ chemin = CHEMIN, pid = process.pid, poserLesSignaux = true } 
   return { repris, relacher };
 }
 
-module.exports = { prendre, lire, CHEMIN };
+// ── Une suite seule consulte le verrou, sans le prendre ──
+//
+// Le refus ci-dessus conseillait, jusqu'au 13 novembre 2026, de « jouer une
+// suite seule, qui a son propre port ». C'était faux, et mesuré : une campagne
+// joue **tous** les ports, celui de la suite seule compris. Le relevé des gestes
+// — qui lance ses suites par leur nom — est parti sur le port 4800 pendant
+// qu'une campagne d'un autre worktree le tenait, et a rendu « le port 4800
+// répond déjà : un autre serveur le tient », le message même que ce verrou
+// existe pour remplacer (n° 5.f.91).
+//
+// Deux suites seules différentes tournent toujours ensemble : elles ne prennent
+// rien, elles regardent seulement si une campagne vit. Le fichier est dans le
+// répertoire temporaire du système, que les worktrees d'un même dépôt
+// partagent : c'est ce qui permet à l'un de voir la campagne de l'autre.
+function consulter({ chemin = CHEMIN } = {}) {
+  if (process.env.OASIS_SMOKE_VERROU === '0') return { leve: true };
+  const tenant = lire(chemin);
+  if (tenant && tenant.machine === os.hostname() && tenant.pid !== process.pid
+    && vivant(tenant.pid)) {
+    return {
+      refus: `une campagne tourne — processus ${tenant.pid}, depuis ${tenant.depuis}.\n`
+        + '  Elle joue tous les ports, celui de cette suite compris : les deux se\n'
+        + '  croiseraient, et la seconde rougirait sur un port « déjà tenu ».\n'
+        + `  Remède : attendre sa fin — la retrouver par \`ps -p ${tenant.pid}\`.\n`
+        + '  Pour passer outre en connaissance de cause : OASIS_SMOKE_VERROU=0',
+    };
+  }
+  return {};
+}
+
+module.exports = {
+  prendre, consulter, lire, CHEMIN,
+};

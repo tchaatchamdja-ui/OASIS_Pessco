@@ -90,6 +90,10 @@ const SUITES = [
   // La cinquième : le circuit guidé d'une activité, sortie de `surv.smoke.js`
   // sans rien changer — elle y bâtissait déjà sa propre chaîne.
   { nom: 'surv-circuit', port: 4809, fichier: './surv-circuit.smoke' },
+  // La sixième : la page des plans — export, historique, réinitialisation,
+  // archivage. Elle bâtit sa notification, l'efface par le geste qu'elle
+  // éprouve, et rend le plan désarchivé.
+  { nom: 'surv-plans', port: 4810, fichier: './surv-plans.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

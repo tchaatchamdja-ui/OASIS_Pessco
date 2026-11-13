@@ -2,7 +2,7 @@
  "releve": "2026-11-13",
  "gestesNommes": 310,
  "occurrences": 505,
- "exerces": 287,
+ "exerces": 291,
  "indecidables": 3,
  "gestes": [
   {
@@ -3846,11 +3846,11 @@
    "evenement": "click",
    "source": "execExportPlansPdf()",
    "nom": "execExportPlansPdf",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
-   "ligne": 144,
+   "ligne": 150,
    "forme": "en ligne",
    "evenement": "click",
    "source": "EXEC_STATE.filters.annee='';execRenderPage();",
@@ -3859,7 +3859,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
-   "ligne": 146,
+   "ligne": 152,
    "forme": "en ligne",
    "evenement": "click",
    "source": "EXEC_STATE.filters.annee='${a}';execRenderPage();",
@@ -3868,7 +3868,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
-   "ligne": 286,
+   "ligne": 292,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.classList.toggle('expanded')",
@@ -3877,7 +3877,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
-   "ligne": 290,
+   "ligne": 296,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();",
@@ -3886,16 +3886,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
-   "ligne": 292,
+   "ligne": 298,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execArchiverPlan('${plan.id}')",
    "nom": "execArchiverPlan",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
-   "ligne": 375,
+   "ligne": 381,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))execOpenActiviteProcessus('${plan.id}','${a.id}')",
@@ -3904,21 +3904,21 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
-   "ligne": 393,
+   "ligne": 399,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execReinitialiserActivite('${a.id}')",
    "nom": "execReinitialiserActivite",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
-   "ligne": 396,
+   "ligne": 402,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execShowActiviteHistorique('${a.id}','${plan.id}')",
    "nom": "execShowActiviteHistorique",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-prestataires.js",

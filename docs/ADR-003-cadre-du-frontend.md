@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **310 gestes nommés, 287 exercés** (93 %), 477 occurrences sur 505 dont 6 indécidables — mesuré par **cinq** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille` et `surv-circuit`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.89) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les vingt noms non exercés sont dispersés sur dix fichiers. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). Le gisement qui vient est `exec-plans.js`, 6 sur 10 |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 291 exercés** (94 %), 481 occurrences sur 505 dont 6 indécidables — mesuré par **six** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit` et `surv-plans`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.90) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les seize noms non exercés sont dispersés sur neuf fichiers, aucun au-delà de trois occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). Le gisement qui vient est `exec-processus-config.js`, trois restes sur un même écran |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -12439,3 +12439,115 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            muettes, et un fichier cesse d'annoncer un reste qu'il n'a pas.
 
            Le gisement qui vient est toujours `exec-plans.js`, **6 sur 10**.
+
+
+       5.f.90 [x] **La page des plans : quatre commandes, une impression qui
+           partait deux fois, et cent lignes que rien n'appelait** — fait le
+           13 novembre 2026. `exec-plans.js` était le gisement annoncé par le
+           n° 5.f.89, **6 occurrences sur 10** ; les quatre qui restaient sont
+           les quatre commandes de la page : exporter les plans en PDF, ouvrir
+           l'historique d'une activité, réinitialiser une activité déclenchée,
+           archiver un plan entier.
+
+           ── Où les loger ──
+
+           `surv.smoke.js` est à son plafond. Une sixième suite, `surv-plans`
+           (port 4810), qui bâtit sa propre chaîne — une notification posée sur
+           une activité du plan validé de l'amorce, menée jusqu'au dossier, et
+           une constatation dessus —, l'efface par le geste même qu'elle
+           éprouve, et rend le plan désarchivé en partant. Elle ne lit rien de
+           ce que les autres suites laissent. Le relevé réunit désormais
+           **six** journaux.
+
+           ── Ce que la suite tient : onze contrôles ──
+
+           - **L'export** écrit les plans dépliés, sans la colonne des actions
+             — autant de tables qu'à l'écran, une colonne de moins par table,
+             aucun geste resté dans le document —, et sans plans à rendre il
+             n'ouvre rien et le dit.
+           - **L'historique** d'une activité du plan ouvre l'écran du circuit
+             sur cette activité, et se referme.
+           - **La réinitialisation** n'est offerte qu'à une activité
+             déclenchée ; son refus ne retire rien ; une constatation qui en
+             dépend la fait refuser par le serveur, et l'écran le dit ; la
+             constatation retirée, elle emporte notification et dossier, et le
+             bouton part. Le 400 est un refus **déclaré** : c'est la propriété
+             mesurée.
+           - **L'archivage** demande confirmation en nommant le plan et le
+             nombre de ses activités ; son refus ne range rien ; accepté, il
+             range le plan au serveur et le retire de la page.
+
+           ── Une impression qui partait deux fois ──
+
+           Le premier passage a rendu **dix sur onze**, et le rouge était un
+           défaut du produit, non de la ronde : « Exporter PDF » appelait
+           `print()` **deux fois**. Deux chemins y menaient — le chargement de
+           la fenêtre, et un secours à 600 ms « au cas où le chargement serait
+           déjà passé » —, et les deux passaient : le secours ne vérifiait que
+           l'état du document, toujours `complete` à ce moment-là. Dans un vrai
+           navigateur, la boîte d'impression s'ouvrait, et se rouvrait dès
+           qu'on l'avait fermée.
+
+           Personne ne l'avait vu parce qu'on ne regarde pas combien de fois une
+           boîte s'ouvre : on la ferme, et on ferme la seconde en croyant
+           fermer la première. La ronde **compte** les appels, dans la vraie
+           fenêtre ouverte par l'écran. Le remède est une porte : le premier
+           chemin arrivé imprime, l'autre trouve la porte fermée.
+
+           ── Cent lignes que rien n'appelait ──
+
+           `execShowActiviteHistorique` était défini **deux fois** : un écran
+           hérité de PESSCO dans `exec-plans.js`, et un renvoi vers l'écran du
+           circuit dans `exec-processus.js`, chargé après, qui l'écrasait. Le
+           premier ne s'exécutait donc jamais. Le contrôle de l'historique le
+           prouve en exigeant ce que seul l'écran du circuit produit — sa fin de
+           fil, `.exec-histo-fin`. Les cent lignes sont retirées ; un
+           commentaire dit où l'historique vit et pourquoi il n'est plus ici.
+           C'est le danger ordinaire du code mort dans un espace global
+           partagé : on l'aurait lu, corrigé, traduit, pour un effet nul.
+
+           ── Contre-tests ──
+
+           Six défauts réintroduits, un par un. Chacun rougit son contrôle ;
+           deux en rougissent un second, par conséquence et non par
+           recouvrement — le geste a eu lieu au « non », il n'y a plus rien à
+           faire au « oui ».
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+                      | A — la porte de l'impression ôtée | l'export, `impressions: 2` |
+           | B — le renvoi de l'historique ôté | l'historique, et la console : `execShowActiviteHistorique is not defined` |
+           | C — le « non » de la réinitialisation ignoré | son refus de confirmation (+ la réinitialisation acceptée) |
+           | D — l'archivage sans rechargement | l'archivage accepté : le plan reste à la page |
+           | E — la colonne des actions gardée à l'export | l'export |
+           | F — le « non » de l'archivage ignoré | son refus de confirmation (+ l'archivage accepté) |
+
+           C n'a pas rougi du premier coup, et c'était la ronde qui avait tort.
+           Elle éprouvait le « non » pendant qu'une constatation retenait encore
+           l'activité : un « non » ignoré partait au serveur, qui refusait pour
+           une autre raison, et l'activité restait — le contrôle voyait ce qu'il
+           attendait, sans que la garde y soit pour rien. Le « non » s'éprouve
+           désormais quand plus rien ne retient l'activité. *Un refus ne se
+           mesure que là où, sans lui, le geste passerait.*
+
+           ── En passant ──
+
+           Le titre du PDF est sorti « Activites de Supervision » : le
+           dictionnaire français du module en porte des dizaines sans leurs
+           accents — « Etats », « Delai », « Creer Constatation »,
+           « Echeance »… Ce n'est pas l'objet de ce point ; c'est signalé à part,
+           avec un contrôle à poser pour qu'ils ne reviennent pas.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-plans.js` | 6 / 10 | **10 / 10** |
+           | SURV, occurrences exercées | 477 / 505 (94 %) | **481 / 505 (95 %)** |
+           | SURV, noms exercés | 287 / 310 (93 %) | **291 / 310 (94 %)** |
+           | Campagne | 1 765, 24 suites | **1 776**, 25 suites, 0 rouge |
+
+           Il reste dix-huit occurrences non exercées sur neuf fichiers, aucune
+           au-delà de trois. Le gisement qui vient est `exec-processus-config.js`,
+           **3 restes sur un même écran** : les deux filtres de la liste des
+           processus, et le retrait d'un acteur dans l'éditeur.

@@ -2407,27 +2407,32 @@ module.exports = async function tailleSmoke() {
   //
   // *Un seuil qu'on ne regarde pas n'est pas un seuil.*
   const SUITES_TOLEREES = {
-    // ── 8 726 → 7 739, et un budget qui **baisse** pour la première fois ──
+    // ── 8 726 → 7 739 → 7 513, et un budget qui baisse deux fois ──
     //
     // Deux tours de suite, ce budget a été relevé — et la seconde fois en
-    // écrivant que « le découpage devient la prochaine étape ». Il l'a été : la
-    // mise en place commune est partie dans `surv-socle.js`, et la ronde des
-    // pièces dans `surv-pieces.smoke.js`, qui a son port et son entrée dans la
-    // table. Son obstacle est levé — `relever-gestes.js` accepte une liste de
-    // suites, et les journaux se réunissent.
+    // écrivant que « le découpage devient la prochaine étape ». Il l'a été :
+    // la mise en place commune est partie dans surv-socle.js, la ronde des
+    // pièces dans surv-pieces.smoke.js, et celle du circuit guidé dans
+    // surv-circuit.smoke.js — chacune avec son port et son entrée dans la
+    // table, et le relevé des gestes réunit leurs journaux.
     //
-    // Le chiffre baisse donc, et c'est ce que ce garde attendait : *un budget
-    // qui ne fait que monter n'est pas un budget, c'est une chronique.*
-    'surv.smoke.js': 7739,
+    // La seconde coupe a d'abord été faite **au mauvais endroit** : la ronde
+    // du circuit se terminait par le ménage du dossier d'une autre chaîne, et
+    // l'extraction a rendu « chaine is not defined ». On ne coupe pas un
+    // fichier là où c'est commode, mais là où il n'est pas lié.
+    //
+    // Le chiffre baisse donc deux fois : *un budget qui ne fait que monter
+    // n'est pas un budget, c'est une chronique.*
+    'surv.smoke.js': 7513,
     'ramp.navigateur.smoke.js': 6526,
     'profil-risque.navigateur.smoke.js': 3432,
     'parcours.smoke.js': 3211,
     'planification.navigateur.smoke.js': 2720,
     'mesures.navigateur.smoke.js': 2652,
-    // 2 377 → 2 468 : le garde qui vérifie qu'un écran charge le fichier du
+    // 2 377 → 2 473 : le garde qui vérifie qu'un écran charge le fichier du
     // socle dont il appelle les noms. Il est né d'un défaut que rien d'autre
     // ne pouvait voir — cinq téléchargements de SURV levaient une exception.
-    'taille.smoke.js': 2468,
+    'taille.smoke.js': 2473,
     'unitaires.smoke.js': 1802,
     'ramp.smoke.js': 1447,
     // Franchi le 11 novembre 2026, au tour suivant la pose de ce garde : la

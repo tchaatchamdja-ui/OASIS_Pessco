@@ -161,7 +161,7 @@ const ecranDeModule = (nom) => ({
 // et le paramétrage des checklists.
 ECRANS.execution = {
   ...ecranDeModule('execution'),
-  suite: ['surv', 'surv-pieces', 'surv-parametres', 'surv-coquille'],
+  suite: ['surv', 'surv-pieces', 'surv-parametres', 'surv-coquille', 'surv-circuit'],
 };
 
 // ── Les cinq autres, et pourquoi `suite: null` et non rien du tout ──
@@ -661,6 +661,18 @@ function relever(fichiers) {
 
     const motifPropriete = new RegExp(`\\b([\\w$.[\\]'"]+)\\.on(${EVENEMENTS.join('|')})\\s*=\\s*([A-Za-z_$][\\w$.]*)`, 'g');
     for (const m of texte.matchAll(motifPropriete)) {
+      // ── Une propriété mise à `null` **retire** un gestionnaire ──
+      //
+      // `voile.onclick = null` n'en pose aucun : c'est l'inverse d'un geste. Le
+      // motif, qui cherche un identifiant, acceptait `null` comme un nom — et
+      // le relevé portait un geste **nommé « null »**, compté non exercé pour
+      // toujours, qu'aucune suite ne pourrait jamais couvrir.
+      //
+      // Un seul dans tout le dépôt, mesuré avant d'écrire cette ligne. La
+      // correction est de la même famille que celle du 12 novembre
+      // (n° 5.f.83) : *retirer du dénominateur ce qui n'y a jamais eu sa
+      // place, sans rien ajouter au numérateur.*
+      if (m[3] === 'null' || m[3] === 'undefined') continue;
       gestes.push({
         fichier: rel, ligne: texte.slice(0, m.index).split('\n').length,
         forme: 'propriété', evenement: m[2], nom: m[3],

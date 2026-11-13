@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-12",
- "gestesNommes": 311,
- "occurrences": 506,
- "exerces": 266,
+ "releve": "2026-11-13",
+ "gestesNommes": 310,
+ "occurrences": 505,
+ "exerces": 276,
  "indecidables": 3,
  "gestes": [
   {
@@ -3906,7 +3906,7 @@
    "evenement": "click",
    "source": "if(!event.target.closest('button'))execOpenActiviteProcessus('${plan.id}','${a.id}')",
    "nom": "execOpenActiviteProcessus",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-plans.js",
@@ -4187,7 +4187,7 @@
    "evenement": "click",
    "source": "execProcEnregistrerAccord()",
    "nom": "execProcEnregistrerAccord",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4205,7 +4205,7 @@
    "evenement": "click",
    "source": "execProcBasculerEdition()",
    "nom": "execProcBasculerEdition",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4214,7 +4214,7 @@
    "evenement": "click",
    "source": "execProcDeclencher()",
    "nom": "execProcDeclencher",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4223,7 +4223,7 @@
    "evenement": "click",
    "source": "execProcDeclencher()",
    "nom": "execProcDeclencher",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4250,7 +4250,7 @@
    "evenement": "click",
    "source": "execProcRejeter()",
    "nom": "execProcRejeter",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4268,7 +4268,7 @@
    "evenement": "click",
    "source": "execProcRenvoyerSoumission()",
    "nom": "execProcRenvoyerSoumission",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
@@ -4277,11 +4277,11 @@
    "evenement": "click",
    "source": "execProcValiderAccord()",
    "nom": "execProcValiderAccord",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1262,
+   "ligne": 1276,
    "forme": "en ligne",
    "evenement": "input",
    "source": "execProcHpBornerDates()",
@@ -4290,7 +4290,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1266,
+   "ligne": 1280,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execProcHpSecteurs()",
@@ -4299,7 +4299,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1273,
+   "ligne": 1287,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execProcHpPrestataires()",
@@ -4308,7 +4308,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1305,
+   "ligne": 1319,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execProcHpBornerDates()",
@@ -4317,7 +4317,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1309,
+   "ligne": 1323,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execProcHpBornerDates()",
@@ -4326,7 +4326,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1342,
+   "ligne": 1356,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -4335,7 +4335,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1343,
+   "ligne": 1357,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execProcCreerHorsPlan(${n ? `'${n.id}'` : ''})",
@@ -4344,7 +4344,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1349,
+   "ligne": 1363,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execCloseSlider()",
@@ -4353,25 +4353,25 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1450,
+   "ligne": 1464,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execProcHpCocherSousActivite(this)",
    "nom": "execProcHpCocherSousActivite",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1457,
+   "ligne": 1471,
    "forme": "en ligne",
    "evenement": "change",
    "source": "execProcHpCocherTheme(this)",
    "nom": "execProcHpCocherTheme",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1795,
+   "ligne": 1809,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execProcNouvelleActivite('${n.id}')",
@@ -4380,16 +4380,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1828,
+   "ligne": 1842,
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))execOpenActiviteProcessus('hors-plan','${n.id}')",
    "nom": "execOpenActiviteProcessus",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1839,
+   "ligne": 1853,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execProcHistorique('hors-plan','${n.id}')",
@@ -4398,7 +4398,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1854,
+   "ligne": 1868,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.parentElement.classList.toggle('expanded')",
@@ -4407,7 +4407,7 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1858,
+   "ligne": 1872,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();",
@@ -4416,22 +4416,12 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 1860,
+   "ligne": 1874,
    "forme": "en ligne",
    "evenement": "click",
    "source": "execArchiverHorsPlan()",
    "nom": "execArchiverHorsPlan",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-processus.js",
-   "ligne": 427,
-   "forme": "propriété",
-   "evenement": "click",
-   "nom": "null",
-   "source": "voile.onclick = null",
-   "id": null,
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-processus.js",

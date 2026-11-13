@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **311 gestes nommés, 266 occurrences exercées** (85 %), 3 indécidables — mesuré par **quatre** suites depuis le 12 novembre 2026, `surv`, `surv-pieces`, `surv-parametres` et `surv-coquille`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 et 5.f.85) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, les constatations à 57 sur 61, les activités à 65 sur 67. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Le gisement qui vient est `exec-processus.js`, 18 sur 32 |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 276 occurrences exercées** (89 %) — mesuré par **cinq** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille` et `surv-circuit`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84, 5.f.85 et 5.f.86) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, les constatations à 57 sur 61, les activités à 65 sur 67. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Le gisement qui vient est `exec-processus.js`, 18 sur 32 |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -11882,3 +11882,118 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            bascule pour les deux derniers gestes de l'écran.
 
            Le gisement qui vient ensuite est `exec-processus.js`, 18 sur 32.
+
+       5.f.86 [x] **Le circuit guidé, retours compris — et une coupe faite
+           d'abord au mauvais endroit** — fait le 13 novembre 2026.
+           `exec-processus.js` était le dernier gros gisement de SURV — **18
+           occurrences sur 32**, treize noms —, et tous se tiennent sur un même
+           écran : le promeneur du circuit d'une activité.
+
+           ── La ronde existait : elle était au mauvais endroit ──
+
+           Elle vivait dans `surv.smoke.js`, au milieu d'un bloc de cinq mille
+           lignes, et elle y **bâtissait déjà sa propre chaîne** — une activité
+           hors plan, créée par le formulaire de l'écran, effacée en partant.
+           Elle ne lisait rien de ce que les autres laissaient. Elle sort donc
+           dans `surv-circuit.smoke.js`, et le budget de `surv.smoke.js` baisse
+           une seconde fois : **7 739 → 7 513**.
+
+           **La coupe a d'abord été faite au mauvais endroit.** La ronde se
+           terminait par le ménage du dossier d'une **autre** chaîne — celle que
+           `surv.smoke.js` bâtit plus haut —, et ce ménage lisait une variable
+           du bloc englobant. L'extraction a rendu « chaine is not defined », et
+           fait rougir un contrôle de `surv` qui comptait sur ce nettoyage.
+           J'avais vérifié que le bloc ne **déclarait** rien d'extérieur ; je
+           n'avais pas vérifié qu'il n'en **lisait** rien. *On ne coupe pas un
+           fichier là où c'est commode, mais là où il n'est pas lié* — et la
+           frontière était trois contrôles plus haut.
+
+           Après correction, la somme est exacte : `surv` 223, `surv-circuit`
+           6 — les 228 d'avant, plus le contrôle de console que chaque suite
+           porte en propre.
+
+           ── Le motif d'un renvoi passait par la boîte du navigateur ──
+
+           `execProcRenvoyerSoumission` demandait son motif par `window.prompt` :
+           ni traduit, ni aux couleurs de l'application, et **hors de portée
+           d'une suite**, qui ne peut pas écrire dans une boîte que le navigateur
+           ouvre hors de la page. C'était la seule du module — `exec-notifications.js`
+           demande le motif d'un **rejet** par `oasisSaisir` depuis toujours, et
+           c'est le même geste à une étape près.
+
+           Elle passe par la boîte du socle, et c'est ce qui rend son contrôle
+           possible. Deux autres subsistent dans le dépôt, hors de ce module : un
+           `window.confirm` dans RAMP (`ramp-pac.js`) et un `window.prompt` au
+           portail (`instances.ts`). Elles sont **nommées ici plutôt que
+           corrigées au passage** : chacune appartient à l'écran qui la porte.
+
+           **La contre-épreuve dit mieux que la correction.** Remise à
+           `window.prompt`, la ronde ne rougit pas sur une assertion : elle
+           **meurt** — « Runtime.callFunctionOn timed out », cinq minutes
+           d'attente, aucun contrôle rendu. La boîte native ne fait pas échouer
+           la mesure, elle l'empêche : le navigateur l'ouvre hors de la page, et
+           le script qui l'a appelée reste suspendu là. *Un geste qui bloque la
+           page ne se mesure pas « mal » — il ne se mesure pas.*
+
+           ── Ce que la ronde mesure ──
+
+           Le contrôle du parcours ne disait que la ligne droite — « soumise,
+           validée, transmise ». Le circuit en a deux paliers de plus, et ce sont
+           les **retours** : soumis → *rejet* → brouillon → soumis → valide →
+           *renvoi* → brouillon → soumis → valide → envoyé → **acté**. Il les dit
+           tous, dans l'ordre, et chaque palier est celui que le **serveur**
+           porte, non celui que l'écran affiche.
+
+           Et les contrats, un par geste :
+
+             · `execProcDeclencher` pose la sous-étape et autorise l'édition,
+               **et rien d'autre** — chercher un champ du formulaire mesurerait
+               le formulaire, non le geste ;
+             · la bascule d'édition n'existe qu'à la validation ; l'état **et**
+               le libellé basculent, et se rendent ;
+             · le rejet emporte le motif saisi dans les observations ;
+             · **« Enregistrer » l'accord écrit les dates et le périmètre sans
+               franchir l'étape** — la notification reste envoyée —, et
+               « Confirmer » les écrit *et* franchit. La différence est la
+               propriété, et elle est écrite dans la route elle-même ;
+             · les deux cases de la portée hors plan se mesurent **l'une contre
+               l'autre** : cocher une sous-activité entraîne tous ses thèmes, et
+               un thème coché la tient tant qu'il en reste un — décocher le
+               dernier la décoche ;
+             · la ligne du lot hors plan rouvre le circuit **sur son activité** :
+               c'est le seul chemin vers une activité qui n'est dans aucun plan ;
+             · l'archivage range le lot **entier** d'un seul geste. La ronde le
+               défait ensuite par la route, le geste inverse n'existant pas.
+
+           ── Un fantôme retiré du dénominateur ──
+
+           `voile.onclick = null` **retire** un gestionnaire : il n'en pose
+           aucun. Le motif du relevé, qui cherche un identifiant, acceptait
+           `null` comme un nom — et l'écran portait un geste **nommé « null »**,
+           compté non exercé pour toujours, qu'aucune suite n'aurait jamais pu
+           couvrir. Un seul dans tout le dépôt, mesuré avant d'écrire la
+           correction. Même famille que le n° 5.f.83 : *retirer du dénominateur
+           ce qui n'y a jamais eu sa place, sans rien ajouter au numérateur.*
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 266 / 311 (85 %) | **276 / 310 (89 %)** |
+           | `exec-processus.js` | 18 / 32 | **29 / 31** |
+           | `surv.smoke.js` | 7 739 lignes | **7 513** |
+           | Suites de SURV | 4 | **5** |
+           | Campagne | 1 732 | **1 741** |
+
+           Les deux occurrences qui restent à `exec-processus.js` sont
+           **indécidables**, et l'outil le dit plutôt que de crier au loup : un
+           gestionnaire composé au rendu, et un écouteur dont la cible est une
+           variable locale. L'écran est donc couvert pour tout ce qui est
+           décidable.
+
+           Le gisement qui vient est `exec-dossier-actions.js`, 9 sur 18 : le
+           **formulaire de constatation**, et parmi ses six noms
+           `execFncOnSecteurChange` — le geste dont la liste des exigences a été
+           corrigée la veille (n° 5.f.84) **sans qu'aucune ronde l'atteigne**.
+           Une correction non exercée est une affirmation ; celle-là attend
+           depuis un jour.

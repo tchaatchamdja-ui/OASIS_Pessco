@@ -87,6 +87,9 @@ const SUITES = [
   // barre de filtres. La plus indépendante de toutes : elle ne bâtit aucune
   // chaîne, et rend l'écran dans l'état où elle l'a trouvé.
   { nom: 'surv-coquille', port: 4808, fichier: './surv-coquille.smoke' },
+  // La cinquième : le circuit guidé d'une activité, sortie de `surv.smoke.js`
+  // sans rien changer — elle y bâtissait déjà sa propre chaîne.
+  { nom: 'surv-circuit', port: 4809, fichier: './surv-circuit.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

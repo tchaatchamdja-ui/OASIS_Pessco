@@ -34,7 +34,22 @@ module.exports = async function survCoquilleSmoke(port) {
     port,
     nom: 'SURV (coquille)',
     titre: 'SURV : le thème, la langue, les panneaux et la barre de filtres',
-    rondes: async ({ page, jalon }) => {
+    // ── L'abandon que cette ronde provoque exprès ──
+    //
+    // Le classeur des constatations est servi en pièce jointe : la fenêtre est
+    // menée à son adresse, le navigateur l'enregistre et **abandonne la
+    // navigation**. C'est ainsi qu'un téléchargement se présente à un moniteur
+    // de requêtes, et non une panne. Déclarer n'est pas taire : un contrôle
+    // exige que chaque abandon déclaré soit venu.
+    abandons: [
+      {
+        motif: /ERR_ABORTED/, chemin: /\/constatations\/export-xlsx/,
+        pourquoi: 'l’export de la liste des constatations mène la fenêtre au'
+          + ' classeur préparé par la route. Contrôle « le classeur des'
+          + ' constatations emporte la liste affichée dans son adresse ».',
+      },
+    ],
+    rondes: async ({ page, jalon, abandons }) => {
       // ══════════════════════════════════════════════════════════════════
       //  1. Le thème : choisi, appliqué au document, et retenu
       // ══════════════════════════════════════════════════════════════════
@@ -374,16 +389,21 @@ module.exports = async function survCoquilleSmoke(port) {
         };
         const prest = (EXEC_STATE.data.prestataires || [])[0] || {};
         const r = { prestataire: prest.id || '', ids: [], statuts: [] };
-        // ── Ce que la mesure a trouvé, et qui n'est pas de ce tour ──
+        // ── Une liste vide, et ce n'est pas un défaut : correction ──
         //
-        // `GET /constatations` rend **une liste vide** à cette session, quand le
-        // magasin du module en porte quatre — lu directement, hors serveur.
-        // Ni la vue Prestataire (le compte est en vue AAC), ni le resserrement
-        // par instance (le choix enregistré est la vue régionale, qui laisse
-        // tout passer), ni une route qui en masquerait une autre (il n'y en a
-        // qu'une) ne l'expliquent. Aucune suite ne l'avait jamais regardé :
-        // toutes créent leurs propres constatations, celle-ci comprise.
-        // La cause demande d'instrumenter le serveur, et c'est un tour à part.
+        // Ce commentaire a d'abord annoncé un défaut qui n'existe pas :
+        // « `GET /constatations` rend une liste vide quand le magasin du module
+        // en porte quatre ». Les quatre sont dans `data/execution.json` — le
+        // magasin de **développement**. Une suite ne tourne jamais dessus : le
+        // harnais copie `tests/fixtures/` dans un bac neuf à chaque passage
+        // (`copierDonnees`), et `tests/fixtures/execution.json` porte
+        // **zéro** constatation. La route rend donc exactement ce que son bac
+        // contient, et la mesure portait sur le mauvais magasin.
+        //
+        // *On ne lit pas l'état d'un serveur dans un fichier qu'il ne sert
+        // pas.* Le relevé ci-dessous est conservé parce qu'il dit **pourquoi
+        // cette ronde pose ses propres constatations** : sans elles, il n'y a
+        // rien à filtrer.
         const rep = await J(`${api}/constatations`);
         r.routeStatut = rep.statut;
         r.routeRend = (rep.corps || []).length;
@@ -402,8 +422,9 @@ module.exports = async function survCoquilleSmoke(port) {
         return r;
       }, '/api/m/execution');
 
-      verifier('la ronde pose les deux constatations qu’il faut pour qu’un filtre ait quelque chose à filtrer',
-        chaine.ids.filter(Boolean).length === 2
+      verifier('le bac n’en porte aucune, et la ronde pose les deux qu’il faut pour qu’un filtre ait quelque chose à filtrer',
+        chaine.routeStatut === 200 && chaine.routeRend === 0
+        && chaine.ids.filter(Boolean).length === 2
         && chaine.statuts.every((s) => s === 200 || s === 201),
         JSON.stringify(chaine));
 
@@ -468,6 +489,91 @@ module.exports = async function survCoquilleSmoke(port) {
         && somme === constats.rangsAvant
         && constats.rangsFin === constats.rangsAvant,
         JSON.stringify({ ...constats, somme }));
+
+      // ══════════════════════════════════════════════════════════════════
+      //  Le classeur de la liste : ce qui part, et ce qui ne part pas
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // ── Pourquoi ce geste est mesuré **ici** ──
+      //
+      // `execExporterConstatationsXlsx` était le dernier téléchargement de SURV
+      // sans ronde. Il exporte **la liste telle qu'elle est affichée** — les
+      // identifiants retenus par les filtres, le titre du sous-menu et les
+      // filtres en clair —, et il n'y a donc nulle part ailleurs où l'éprouver :
+      // il faut une liste, et cette ronde est la seule qui en pose une.
+      //
+      // Deux propriétés, et la seconde est celle qu'on oublie :
+      //
+      //   · la liste affichée part **dans l'adresse**, par une navigation, et
+      //     la page ne la quitte pas ;
+      //   · **liste vide, rien ne part.** Le geste s'arrête avant d'appeler le
+      //     téléchargement, et le dit. Un export qui enverrait une adresse sans
+      //     identifiant rendrait un classeur vide sans que personne le voie.
+      //
+      // L'adresse est recueillie en enveloppant `oasisTelecharger` — qui est
+      // ensuite appelée pour de vrai : *un relais qu'on observe sans le laisser
+      // passer ne mesure que l'observation.*
+      jalon('constatations : le classeur de la liste');
+      const classeur = await page.evaluate(async () => {
+        const a = (ms) => new Promise((r) => setTimeout(r, ms));
+        const d = { cheminAvant: location.pathname };
+        d.retenus = (EXEC_STATE.constaExport || []).length;
+        const dits = [];
+        const urls = [];
+        const vraiToast = window.oasisToast;
+        const vraiTel = window.oasisTelecharger;
+        window.oasisToast = (m, t) => { dits.push(String(m == null ? '' : m)); return vraiToast(m, t); };
+        window.oasisTelecharger = (u) => { urls.push(String(u)); return vraiTel(u); };
+        try {
+          const geste = () => document.querySelector('[onclick^="execExporterConstatationsXlsx"]');
+          d.bouton = !!geste();
+          geste()?.click();
+          await a(4200);
+          d.adresse = urls[0] || '';
+          d.appels = urls.length;
+          d.cheminApres = location.pathname;
+          d.barreDebout = !!document.querySelector('.filter-bar');
+
+          // La liste vide : l'écran garde ce qu'il a, le temps du contrôle.
+          const garde = (EXEC_STATE.constaExport || []).slice();
+          urls.length = 0;
+          dits.length = 0;
+          EXEC_STATE.constaExport = [];
+          geste()?.click();
+          await a(2200);
+          d.videAppels = urls.length;
+          d.videDits = dits.slice();
+          EXEC_STATE.constaExport = garde;
+          d.retenusRendus = (EXEC_STATE.constaExport || []).length;
+        } finally {
+          window.oasisToast = vraiToast;
+          window.oasisTelecharger = vraiTel;
+        }
+        return d;
+      });
+
+      const adresse = (() => {
+        try { return new URL(classeur.adresse || '', 'http://local').searchParams; } catch { return null; }
+      })();
+      verifier('le classeur des constatations emporte la liste affichée dans son adresse, par une navigation qui ne quitte pas la page',
+        classeur.bouton === true && classeur.appels === 1
+        && !!adresse
+        && (adresse.get('ids') || '').split(',').filter(Boolean).length === classeur.retenus
+        && classeur.retenus >= 2
+        && (adresse.get('titre') || '').length > 0
+        && (adresse.get('filtres') || '').length > 0
+        && classeur.cheminApres === classeur.cheminAvant
+        && classeur.barreDebout === true
+        && abandons.compte(/\/constatations\/export-xlsx/) === 1,
+        JSON.stringify({ classeur: { ...classeur, adresse: (classeur.adresse || '').slice(0, 160) },
+          ids: adresse && adresse.get('ids'), abandons: abandons.vus }));
+
+      verifier('liste vide, rien ne part : le geste s’arrête avant le téléchargement, et l’écran le dit',
+        classeur.videAppels === 0
+        && (classeur.videDits || []).length === 1
+        && classeur.retenusRendus === classeur.retenus,
+        JSON.stringify({ appels: classeur.videAppels, dits: classeur.videDits,
+          rendus: classeur.retenusRendus, retenus: classeur.retenus }));
 
       // Le ménage : les deux constatations ne survivent pas à la ronde.
       const menage = await page.evaluate(async (ctx) => {

@@ -2,7 +2,7 @@
  "releve": "2026-11-13",
  "gestesNommes": 310,
  "occurrences": 505,
- "exerces": 276,
+ "exerces": 281,
  "indecidables": 3,
  "gestes": [
   {
@@ -970,7 +970,7 @@
    "evenement": "click",
    "source": "event.preventDefault();event.stopPropagation();execChkToggleGroup(this);",
    "nom": "execChkToggleGroup",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -988,7 +988,7 @@
    "evenement": "click",
    "source": "execChkFillExportPdf('${dossierId}','${checklistId}')",
    "nom": "execChkFillExportPdf",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -997,7 +997,7 @@
    "evenement": "click",
    "source": "execChkFillExportXlsx('${dossierId}','${checklistId}')",
    "nom": "execChkFillExportXlsx",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -1015,7 +1015,7 @@
    "evenement": "change",
    "source": "execChkFillImportXlsx('${dossierId}','${checklistId}',event)",
    "nom": "execChkFillImportXlsx",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-checklists-saisie.js",
@@ -1225,7 +1225,7 @@
    "evenement": "click",
    "source": "execExporterConstatationsXlsx()",
    "nom": "execExporterConstatationsXlsx",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",

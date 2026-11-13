@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **310 gestes nommés, 276 occurrences exercées** (89 %) — mesuré par **cinq** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille` et `surv-circuit`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84, 5.f.85 et 5.f.86) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, les constatations à 57 sur 61, les activités à 65 sur 67. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Le gisement qui vient est `exec-processus.js`, 18 sur 32 |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 281 occurrences exercées** (91 %) — mesuré par **cinq** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille` et `surv-circuit`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84, 5.f.85, 5.f.86 et 5.f.87) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Le gisement qui vient est `exec-dossier-actions.js`, 9 sur 18 |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -11997,3 +11997,174 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            corrigée la veille (n° 5.f.84) **sans qu'aucune ronde l'atteigne**.
            Une correction non exercée est une affirmation ; celle-là attend
            depuis un jour.
+
+       5.f.87 [x] **Les quatre échanges du remplisseur, le classeur des
+           constatations — et un défaut annoncé qui n'existait pas** — fait le
+           13 novembre 2026.
+           Il restait à SURV **cinq gestes de téléchargement ou de dépôt
+           qu'aucune ronde n'atteignait**. Ils sont tous exercés, et plus aucun
+           échange de fichier de cet écran n'est sans mesure.
+
+           ── Les quatre du remplisseur de checklist ──
+
+           `exec-checklists-saisie.js` portait seize occurrences, douze
+           exercées, et **les quatre qui restaient étaient ses échanges avec le
+           dehors** : le classeur qui sort, le document qui s'imprime, le
+           classeur qui rentre, et la bascule qui retire un regroupement du
+           décompte. Elles sont mesurées dans une **réouverture** du
+           remplisseur, au sein de la ronde du volet, et non dans une suite à
+           part : l'import se fabrique **hors du navigateur** — un `.xlsx` ne
+           s'écrit pas dans la page —, et il faut donc sortir de l'évaluation
+           pour le préparer, puis y revenir. *Rouvrir coûte un clic ; couper le
+           bloc du dessus en deux coûterait sa chaîne.*
+
+           Ce que chacun doit tenir :
+
+             · le classeur **sort par une navigation** : la fenêtre est menée à
+               l'adresse, le navigateur enregistre la pièce jointe et abandonne
+               la navigation — un abandon déclaré de plus, et le remplisseur
+               reste debout ;
+             · le document d'impression est **composé dans le client**, comme
+               celui de la fiche : `window.open` est enveloppée, et c'est le
+               produit qui est mesuré — complet, en paysage, sept colonnes, son
+               impression, et **les statuts que la ronde vient de poser**, lus
+               au DOM et non au serveur ;
+             · le classeur **rentre** et renseigne l'item que sa référence
+               désigne ; l'écran rechargé rend ce que le serveur porte ;
+             · la bascule d'un regroupement **le retire du dénominateur du
+               taux** — le bandeau tombe de 141 à 140 —, marque ses lignes, le
+               replie, et écrit le drapeau `disabled` **au serveur**. Et elle se
+               défait : tout revient, drapeau compris.
+
+           ── Trois pièges, et le troisième était un faux succès ──
+
+           **Le signal d'enregistrement est la coche, non le mot.** L'écran
+           écrit « … enregistrement » en *commençant* et « ✓ enregistré » en
+           finissant : un motif sur `enregistr` rendait vrai au premier instant,
+           et la ronde lisait la base au milieu de l'écriture — un contrôle qui
+           mesure sa propre hâte.
+
+           **Le plus petit regroupement, et non le premier.** Ils sont
+           emboîtés — sous-domaine, thème, sous-thème —, et le premier dans
+           l'ordre du document est le plus extérieur : ses lignes sont *toutes*
+           celles de la checklist, cent quarante et une. Le drapeau s'écrivant
+           item par item, à deux requêtes chacun, la bascule du plus grand
+           demandait près de trois cents allers-retours pour mesurer la même
+           propriété. La ronde prend le plus petit qui porte au moins une ligne.
+
+           **`data-ref` n'est pas la référence.** Elle porte « référence +
+           description » : c'est l'index de la recherche. La route, elle,
+           retrouve les items par la **référence seule**. Un classeur bâti sur
+           `data-ref` n'aurait rien trouvé — et un import qui n'importe rien
+           rend « 0 » et un bandeau vert. *C'est la forme la plus dangereuse de
+           l'échec : celle qui se présente comme un succès.* La référence se lit
+           désormais dans la première cellule, et le contrôle dépose **deux**
+           lignes dont une fictive, pour que le compte annoncé soit **un**, non
+           deux.
+
+           Un quatrième, du même genre : l'option d'un statut affiche
+           `alias || libelle`, et le document d'impression écrit le `libelle`.
+           Lire l'option aurait fait rougir le contrôle sur un alias — une
+           mesure qui éprouve l'affichage là où elle croit éprouver la donnée.
+
+           ── Le classeur des constatations, et ce qui ne part pas ──
+
+           `execExporterConstatationsXlsx` exporte **la liste telle qu'elle est
+           affichée** — les identifiants retenus par les filtres, le titre du
+           sous-menu, les filtres en clair. Il n'y a nulle part ailleurs où
+           l'éprouver : il faut une liste, et `surv-coquille` est la seule ronde
+           qui en pose une. Elle y gagne sa première déclaration d'abandon.
+
+           Deux propriétés, et la seconde est celle qu'on oublie : la liste part
+           **dans l'adresse**, par une navigation qui ne quitte pas la page ; et
+           **liste vide, rien ne part**.
+
+           La contre-épreuve de la seconde est la plus parlante de ce tour. La
+           garde retirée, l'adresse devient :
+
+               …/constatations/export-xlsx?ids=&titre=…&filtres=Aucun+filtre
+
+           Un classeur demandé **sans aucun identifiant**, deux abandons au lieu
+           d'un, et deux contrôles rouges. Sans ce contrôle, l'écran aurait
+           téléchargé un classeur vide en annonçant un succès.
+
+           La seconde contre-épreuve discrimine ce qu'il faut : la persistance
+           du drapeau retirée, la moitié **cliente** du geste reste parfaite —
+           marque, libellé basculé, repli, décompte à 140 — et `enBase` rend
+           `[]`. Deux contrôles tombent, 231 sur 233. *Un contrôle qui n'aurait
+           regardé que l'écran aurait passé.*
+
+           ── Un défaut annoncé qui n'existait pas ──
+
+           Le n° 5.f.85 a laissé dans `surv-coquille.smoke.js` un commentaire
+           annonçant un défaut : « `GET /constatations` rend une liste vide
+           quand le magasin du module en porte quatre ». **La mesure portait sur
+           le mauvais magasin.** Les quatre sont dans `data/execution.json`, le
+           magasin de *développement* ; une suite n'y touche jamais — le harnais
+           copie `tests/fixtures/` dans un bac neuf à chaque passage, et
+           `tests/fixtures/execution.json` porte **zéro** constatation. La route
+           rendait exactement ce que son bac contenait.
+
+           *On ne lit pas l'état d'un serveur dans un fichier qu'il ne sert
+           pas.* Le relevé est devenu un **contrôle** — « le bac n'en porte
+           aucune, et la ronde pose les deux qu'il faut » —, de sorte que le
+           jour où le jeu d'essai en portera, il le dira. L'entrée est
+           **conservée** au registre, retirée mais non effacée : elle dit où la
+           mesure a dérapé, et empêche de rouvrir la question.
+
+           ── Un registre pour ce que le code ne peut pas trancher ──
+
+           `docs/QUESTIONS-DE-MAITRISE-D-OUVRAGE.md` est ouvert, pour la même
+           raison que le garde des pages sans chemin : **nommer sans décider**.
+           Une question laissée dans un commentaire se perd ; une question qu'un
+           agent tranche au passage est une décision prise par personne.
+
+           Deux entrées ouvertes, et la première a de la suite :
+
+             · **Q-01** — `RAB-OPS 1.037` nomme le secteur `OPS-TAC`,
+               `RAB-145.A.30` nomme `AIR-OMA`, et les huit secteurs du
+               référentiel sont `AMO, CAMO, CAT, STA, ATO, MED, ANP, ADM`.
+               Vérifié dans les **deux** magasins. C'est la seconde raison —
+               après le défaut de code corrigé en 5.f.84 — pour laquelle le
+               sélecteur de dispositions et la liste d'exigences du formulaire
+               de constatation restent vides. Et **aucun contrôle ne peut le
+               dire** : le détecteur d'orphelins exclut les exigences,
+               délibérément, pour ne pas les emporter quand on efface un
+               secteur. L'exclusion est juste pour la suppression ; elle vaut
+               aussi pour le comptage. *Ne pas supprimer et ne pas voir sont
+               deux décisions ; une seule a été prise.*
+             · **Q-02** — les deux dernières boîtes natives du dépôt, hors de ce
+               module : un `window.confirm` dans RAMP, un `window.prompt` au
+               portail. La contre-épreuve du n° 5.f.86 dit ce qu'elles coûtent :
+               elles ne sont pas mal mesurables, elles sont **inéprouvables**.
+
+           ── Le budget remonte, et à découvert ──
+
+           `surv.smoke.js` : **7 513 → 7 890**. Le garde-fou de taille n'empêche
+           pas de grandir, il empêche de grandir en silence — et ce bloc **est
+           lié** : il lui faut un dossier, une checklist rattachée et le volet à
+           l'étape « Réalisation », c'est-à-dire la chaîne que ce fichier bâtit
+           déjà. La coupe qui vient est nommée dans le budget lui-même : le
+           remplisseur est un éditeur plein écran de **seize** gestes, qui n'a
+           besoin que d'un dossier et d'une checklist ; un
+           `surv-checklist.smoke.js` les lui donnerait et emporterait du même
+           coup les douze occurrences que la ronde du volet exerce aujourd'hui.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 276 / 310 (89 %) | **281 / 310 (91 %)** |
+           | `exec-checklists-saisie.js` | 12 / 16 | **16 / 16** |
+           | `exec-constatations.js` | 57 / 61 | **58 / 61** |
+           | `surv.smoke.js` | 223 contrôles | **233** |
+           | `surv-coquille.smoke.js` | 15 contrôles | **18** |
+           | Campagne | 1 741 | **1 754** |
+
+           Le gisement qui vient est `exec-dossier-actions.js`, **9 sur 18** :
+           le formulaire de constatation, et parmi ses six noms
+           `execFncOnSecteurChange` — le geste dont la liste des exigences a été
+           corrigée en 5.f.84 **sans qu'aucune ronde l'atteigne**, et dont
+           Q-01 dit maintenant qu'elle restera vide tant que la maîtrise
+           d'ouvrage n'aura pas tranché. *Une correction non exercée est une
+           affirmation.*

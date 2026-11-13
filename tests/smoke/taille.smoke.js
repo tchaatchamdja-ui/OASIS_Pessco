@@ -2423,7 +2423,26 @@ module.exports = async function tailleSmoke() {
     //
     // Le chiffre baisse donc deux fois : *un budget qui ne fait que monter
     // n'est pas un budget, c'est une chronique.*
-    'surv.smoke.js': 7513,
+    //
+    // ── 7 513 → 7 890, et pourquoi il remonte ──
+    //
+    // Les quatre échanges du remplisseur de checklist — le classeur qui sort,
+    // le document qui s'imprime, le classeur qui rentre, la bascule qui retire
+    // un regroupement du décompte — sont venus ici et non dans une suite à
+    // part, et la raison est celle qui a présidé aux coupes précédentes : ce
+    // bloc **est lié**. Il lui faut un dossier, une checklist rattachée et le
+    // volet à l'étape « Réalisation », c'est-à-dire la chaîne que ce fichier
+    // bâtit déjà. L'y poser coûte trois cents lignes ; l'extraire coûterait de
+    // rebâtir la chaîne, et un second jeu d'essai à tenir d'accord avec
+    // celui-ci.
+    //
+    // Il remonte donc, et **à découvert** : c'est l'office de ce garde, qui
+    // n'empêche pas de grandir mais empêche de grandir en silence. La coupe
+    // qui vient est nommée : le remplisseur est un éditeur plein écran de
+    // seize gestes, qui n'a besoin que d'un dossier et d'une checklist — un
+    // `surv-checklist.smoke.js` les lui donnerait, et emporterait du même coup
+    // les douze occurrences que la ronde du volet exerce aujourd'hui.
+    'surv.smoke.js': 7890,
     'ramp.navigateur.smoke.js': 6526,
     'profil-risque.navigateur.smoke.js': 3432,
     'parcours.smoke.js': 3211,

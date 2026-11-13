@@ -149,6 +149,7 @@ OASIS/
 | `docs/CONFORMITE-FICHE-TECHNIQUE.md` | Conformité à la fiche technique URSAC/GT2 : ce qui est tenu, ce qui ne l'est pas |
 | `docs/PLAN-CONFORMITE.md` | Plan de mise en conformité : ce qui peut être fait, ce qui ne le peut pas |
 | `docs/REGISTRE-DES-TRAITEMENTS.md` | Registre des traitements de données à caractère personnel |
+| `docs/QUESTIONS-DE-MAITRISE-D-OUVRAGE.md` | Ce que la mesure a trouvé et que le code ne peut pas trancher |
 | `CHANGELOG.md` | Journal des versions |
 | `.env.example` | Variables d'environnement, commentées |
 

@@ -59,6 +59,7 @@
 // console**. Les seuils ci-dessous viennent de là, et non d'une supposition.
 const fs = require('fs');
 const path = require('path');
+const XLSX = require('xlsx');
 const { verifier } = require('./harness');
 // La mise en place — sas de messagerie, serveur, navigateur, mouchard, relevé
 // des incidents, session — vit dans le socle, que les deux suites de SURV
@@ -198,6 +199,13 @@ module.exports = async function survSmoke(port) {
         pourquoi: 'la réinitialisation d’un mot de passe compose le courriel qui'
           + ' le transmet. Contrôle « le mot de passe réinitialisé est annoncé'
           + ' dans la langue du module, et le courriel composé » (n° 5.f.76).',
+      },
+      {
+        motif: /ERR_ABORTED/, chemin: /checklist-fill\/[^/]+\/[^/]+\/export-xlsx$/,
+        pourquoi: 'l’export de la checklist renseignée mène la fenêtre au'
+          + ' classeur, servi en pièce jointe : le navigateur l’enregistre et'
+          + ' abandonne la navigation. Contrôle « l’export du classeur mène la'
+          + ' fenêtre à la pièce jointe sans quitter le remplisseur ».',
       },
     ],
     rondes: async ({ page, sas, jalon, abandons }) => {
@@ -1920,6 +1928,397 @@ module.exports = async function survSmoke(port) {
       verifier('le remplisseur se referme par son geste',
         volet.remplisseurReferme === true,
         JSON.stringify({ referme: volet.remplisseurReferme }));
+
+      // ══════════════════════════════════════════════════════════════════════
+      //  Les quatre échanges du remplisseur : désactiver, exporter, importer
+      // ══════════════════════════════════════════════════════════════════════
+      //
+      // ── Pourquoi ces quatre-là, et pourquoi ici ──
+      //
+      // Le remplisseur porte seize occurrences de gestes ; douze étaient
+      // exercées, et **les quatre qui restaient sont ses échanges avec le
+      // dehors** : le classeur qui sort, le document qui s'imprime, le classeur
+      // qui rentre, et la bascule qui retire un regroupement du décompte.
+      //
+      // Ils sont mesurés dans une réouverture du remplisseur, et non dans le
+      // bloc du dessus : l'import se construit **hors du navigateur** — un
+      // classeur `.xlsx` ne se fabrique pas dans la page —, et il faut donc
+      // sortir de l'évaluation pour le préparer, puis y revenir. *Rouvrir coûte
+      // un clic ; couper le bloc du dessus en deux coûterait sa chaîne.*
+      //
+      // Le dossier est encore à l'étape « Réalisation » — le document de la
+      // fiche vient d'y ramener le volet —, et c'est la seule étape où le
+      // bouton du remplisseur existe.
+      jalon('remplisseur : désactiver, exporter, importer');
+      const echanges = await page.evaluate(async (dossierId) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const r = {};
+        const bouton = document.querySelector('[onclick^="execOpenChecklistFiller"]');
+        r.bouton = !!bouton;
+        if (!bouton) return r;
+        bouton.click();
+        await attendre(4500);
+        r.wrap = !!document.getElementById('execChkFillerWrap');
+        if (!r.wrap) return r;
+        document.querySelector('[onclick^="execChkFillExpandAll(true)"]')?.click();
+        await attendre(1200);
+
+        // Le bandeau annonce « n / total » par statut : le total est le nombre
+        // d'items **comptés**, et c'est lui que la bascule doit faire bouger.
+        const totalDuBandeau = () => {
+          const t = (document.getElementById('execChkFillerSummary') || {}).textContent || '';
+          const m = /\/\s*(\d+)/.exec(t);
+          return m ? Number(m[1]) : null;
+        };
+        // L'enregistrement du drapeau se fait item par item : on attend qu'il
+        // le dise, et non un délai choisi au hasard.
+        //
+        // *Le signal est la coche, non le mot.* L'écran écrit « … enregistrement »
+        // en **commençant**, et « ✓ enregistré » en finissant : un motif sur
+        // `enregistr` rendrait vrai au premier instant, et la ronde lirait la
+        // base au milieu de l'écriture — un contrôle qui mesure sa propre hâte.
+        const attendreEnregistrement = async () => {
+          const etat = () => document.getElementById('execChkFillerSaveState');
+          for (let i = 0; i < 60; i += 1) {
+            if (/✓/.test((etat() || {}).textContent || '')) return true;
+            await attendre(500);
+          }
+          return false;
+        };
+        const reponses = async () => {
+          const rep = await fetch('/api/m/execution/exec-checklist-responses',
+            { credentials: 'same-origin' });
+          return rep.ok ? await rep.json() : [];
+        };
+
+        // ── 1. Désactiver un regroupement : le retirer du décompte ──
+        //
+        // Le geste fait cinq choses d'un coup, et c'est l'ensemble qui est sa
+        // propriété : la marque sur le regroupement, le libellé du bouton qui
+        // bascule, les lignes marquées, le repli automatique, et le drapeau
+        // `disabled` **écrit au serveur** pour chaque item. Le bandeau est la
+        // conséquence qui compte : un regroupement désactivé n'entre plus au
+        // dénominateur du taux.
+        //
+        // ── Le plus petit regroupement, et non le premier ──
+        //
+        // Les regroupements sont **emboîtés** : sous-domaine, thème,
+        // sous-thème. Le premier dans l'ordre du document est le plus
+        // extérieur, et ses lignes sont *toutes* celles de la checklist — cent
+        // quarante et une sur ce jeu d'essai. Le drapeau s'écrit item par item,
+        // deux requêtes chacun : la bascule du plus grand demanderait près de
+        // trois cents allers-retours, et la ronde attendrait des minutes pour
+        // mesurer la même propriété. On prend donc le plus petit qui en porte
+        // au moins une.
+        const bascule = [...document.querySelectorAll('#execChkFillerGroups [onclick*="execChkToggleGroup"]')]
+          .map((b) => {
+            const g = b.closest('details.exec-chk-grp');
+            return { b, n: g ? g.querySelectorAll('tr[data-item-id]').length : 0 };
+          })
+          .filter((x) => x.n > 0)
+          .sort((x, y) => x.n - y.n)
+          .map((x) => x.b)[0] || null;
+        r.groupe = { bouton: !!bascule };
+        if (bascule) {
+          const grp = bascule.closest('details.exec-chk-grp');
+          const items = [...grp.querySelectorAll('tr[data-item-id]')]
+            .map((tr) => String(tr.getAttribute('data-item-id')));
+          r.groupe.items = items.length;
+          r.groupe.totalAvant = totalDuBandeau();
+          r.groupe.libelleAvant = (bascule.textContent || '').trim();
+          const etatEl = document.getElementById('execChkFillerSaveState');
+          if (etatEl) etatEl.textContent = '';
+          bascule.click();
+          r.groupe.annonce = await attendreEnregistrement();
+          await attendre(800);
+          r.groupe.eteint = grp.classList.contains('exec-chk-grp-off');
+          r.groupe.libelleApres = (bascule.textContent || '').trim();
+          r.groupe.lignesEteintes = grp.querySelectorAll('tr.exec-chk-row-off').length;
+          r.groupe.replie = grp.open === false;
+          r.groupe.totalApres = totalDuBandeau();
+          r.groupe.enBase = (await reponses())
+            .filter((x) => x.dossier_id === dossierId && items.includes(String(x.item_id)))
+            .map((x) => Number(x.disabled) || 0);
+
+          // Et l'autre moitié du geste : rallumé, tout revient — y compris en
+          // base. Une bascule qui ne se défait pas n'est pas une bascule.
+          if (etatEl) etatEl.textContent = '';
+          bascule.click();
+          await attendreEnregistrement();
+          await attendre(800);
+          r.groupe.rallume = !grp.classList.contains('exec-chk-grp-off');
+          r.groupe.libelleRendu = (bascule.textContent || '').trim();
+          r.groupe.lignesRendues = grp.querySelectorAll('tr.exec-chk-row-off').length;
+          r.groupe.totalRendu = totalDuBandeau();
+          r.groupe.enBaseRendu = (await reponses())
+            .filter((x) => x.dossier_id === dossierId && items.includes(String(x.item_id)))
+            .map((x) => Number(x.disabled) || 0);
+        }
+
+        // ── 2. Le classeur qui sort : une navigation, et rien de plus ──
+        //
+        // `oasisTelecharger` mène la fenêtre à l'adresse du classeur ; le
+        // navigateur reçoit la pièce jointe, l'enregistre, et **abandonne la
+        // navigation**. Le remplisseur reste donc debout, et le chemin de la
+        // page n'a pas changé. L'abandon est déclaré en tête de cette suite :
+        // c'est ainsi qu'un téléchargement se présente à un moniteur de
+        // requêtes, et non une panne.
+        r.exportXlsx = { cheminAvant: location.pathname };
+        document.querySelector('[onclick^="execChkFillExportXlsx"]')?.click();
+        await attendre(4000);
+        r.exportXlsx.cheminApres = location.pathname;
+        r.exportXlsx.wrapDebout = !!document.getElementById('execChkFillerWrap');
+
+        // ── 3. Le document d'impression : composé dans le client ──
+        //
+        // Comme celui de la fiche, et pour la même raison : le module ne
+        // demande pas de PDF au serveur, il compose un document et l'ouvre en
+        // fenêtre avec son impression. `window.open` est donc enveloppée, et
+        // c'est **le produit** qui est mesuré — un relais se mesure jusqu'à la
+        // porte, jamais au-delà.
+        const recus = [];
+        const vraiOpen = window.open;
+        window.open = () => {
+          const doc = { html: '' };
+          recus.push(doc);
+          return {
+            document: { write: (h) => { doc.html += String(h || ''); }, close: () => {} },
+            focus: () => {}, print: () => {}, close: () => {},
+          };
+        };
+        try {
+          document.querySelector('[onclick^="execChkFillExportPdf"]')?.click();
+          await attendre(2500);
+        } finally {
+          window.open = vraiOpen;
+        }
+        r.pdf = { fenetres: recus.length };
+        if (recus[0]) {
+          const html = recus[0].html || '';
+          const porte = (motif) => new RegExp(motif).test(html);
+          // Les statuts du document sont lus **dans le DOM du remplisseur**,
+          // non au serveur : le document doit donc porter le statut que la
+          // ronde a posé plus haut, et c'est ce que l'on vérifie.
+          // Le libellé vient du **référentiel**, non du texte de l'option : une
+          // option affiche `alias || libelle`, et le document écrit le libellé.
+          // Lire l'option aurait fait rougir le contrôle sur un alias — une
+          // mesure qui éprouve l'affichage là où elle croit éprouver la donnée.
+          const parStatut = {};
+          ((window._execChkFillerCtx || {}).statuts || [])
+            .forEach((st) => { parStatut[st.id] = st.libelle || ''; });
+          const poses = [...document.querySelectorAll('#execChkFillerGroups .exec-chk-fill-statut')]
+            .filter((s) => s.value && parStatut[s.value])
+            .map((s) => parStatut[s.value])
+            .filter((t, i, a) => a.indexOf(t) === i);
+          r.pdf.statutsPoses = poses;
+          r.pdf.doc = {
+            complet: porte('<!doctype html>') && porte('</html>'),
+            titre: (/<title>([^<]*)<\/title>/.exec(html) || [])[1] || '',
+            colonnes: (html.match(/<th>/g) || []).length,
+            lignes: (html.match(/<tr>/g) || []).length,
+            paysage: porte('size:A4 landscape'),
+            impression: porte('window\\.print\\(\\)'),
+            statutRendu: poses.length > 0 && poses.every((t) => html.includes(t)),
+            taille: html.length,
+          };
+        }
+
+        // Ce que l'écran annonce, recueilli en enveloppant la fonction qui le
+        // pose : un toast s'efface au bout de quatre secondes, et le lire dans
+        // le document reviendrait à mesurer la vitesse de la ronde.
+        window.__ditsFiller = [];
+        const vraiToast = window.oasisToast;
+        window.__vraiToastFiller = vraiToast;
+        window.oasisToast = (m, t) => {
+          window.__ditsFiller.push(String(m == null ? '' : m));
+          return vraiToast(m, t);
+        };
+
+        // Ce dont l'import a besoin, lu dans l'écran lui-même : les items par
+        // leur référence — c'est par elle que la route les retrouve —, et les
+        // libellés de statut, qu'elle retrouve de même.
+        const ctx = window._execChkFillerCtx || {};
+        r.pourImport = {
+          dossier: ctx.dossierId || dossierId,
+          checklist: ctx.checklistId || '',
+          statuts: (ctx.statuts || []).map((s) => ({ id: s.id, libelle: s.libelle })),
+          // ── La référence se lit dans la première cellule ──
+          //
+          // `data-ref` porte « référence + description » — c'est l'index de la
+          // recherche, non la référence. La route retrouve les items par la
+          // **référence seule**, et un classeur bâti sur `data-ref` n'aurait
+          // rien trouvé : un import qui n'importe rien rend « 0 », et c'est un
+          // succès apparent.
+          lignes: [...document.querySelectorAll('#execChkFillerGroups tr[data-item-id]')]
+            .map((tr) => ({
+              item: String(tr.getAttribute('data-item-id')),
+              ref: ((tr.querySelector('td strong') || {}).textContent || '').trim(),
+              statut: (tr.querySelector('.exec-chk-fill-statut') || {}).value || '',
+            }))
+            .map((l) => (l.ref === '-' ? { ...l, ref: '' } : l)),
+        };
+        return r;
+      }, chaine.dossierId);
+
+      verifier('le remplisseur se rouvre, et son bandeau annonce un total d’items',
+        echanges.bouton === true && echanges.wrap === true
+        && !!echanges.groupe && echanges.groupe.bouton === true
+        && echanges.groupe.totalAvant > 0,
+        JSON.stringify({ bouton: echanges.bouton, wrap: echanges.wrap,
+          groupe: echanges.groupe && { bouton: echanges.groupe.bouton,
+            total: echanges.groupe.totalAvant } }));
+
+      verifier('désactiver un regroupement le marque, replie, retire ses lignes du décompte, et le serveur porte le drapeau',
+        !!echanges.groupe && echanges.groupe.items > 0
+        && echanges.groupe.eteint === true
+        && echanges.groupe.libelleApres !== echanges.groupe.libelleAvant
+        && echanges.groupe.lignesEteintes === echanges.groupe.items
+        && echanges.groupe.replie === true
+        && echanges.groupe.totalApres === echanges.groupe.totalAvant - echanges.groupe.items
+        && echanges.groupe.annonce === true
+        && (echanges.groupe.enBase || []).length === echanges.groupe.items
+        && (echanges.groupe.enBase || []).every((d) => d === 1),
+        JSON.stringify(echanges.groupe));
+
+      verifier('et la bascule se défait : les lignes, le décompte et le drapeau reviennent',
+        !!echanges.groupe && echanges.groupe.rallume === true
+        && echanges.groupe.libelleRendu === echanges.groupe.libelleAvant
+        && echanges.groupe.lignesRendues === 0
+        && echanges.groupe.totalRendu === echanges.groupe.totalAvant
+        && (echanges.groupe.enBaseRendu || []).length === echanges.groupe.items
+        && (echanges.groupe.enBaseRendu || []).every((d) => d === 0),
+        JSON.stringify(echanges.groupe));
+
+      verifier('l’export du classeur mène la fenêtre à la pièce jointe sans quitter le remplisseur',
+        !!echanges.exportXlsx
+        && echanges.exportXlsx.cheminApres === echanges.exportXlsx.cheminAvant
+        && echanges.exportXlsx.wrapDebout === true
+        && abandons.compte(/checklist-fill\/[^/]+\/[^/]+\/export-xlsx$/) === 1,
+        JSON.stringify({ exportXlsx: echanges.exportXlsx, abandons: abandons.vus }));
+
+      verifier('« Exporter PDF » compose un document complet, en paysage, avec sa colonne de statuts et son impression',
+        !!echanges.pdf && echanges.pdf.fenetres === 1
+        && !!echanges.pdf.doc && echanges.pdf.doc.complet === true
+        && echanges.pdf.doc.colonnes === 7
+        && echanges.pdf.doc.lignes > 1
+        && echanges.pdf.doc.paysage === true
+        && echanges.pdf.doc.impression === true
+        && echanges.pdf.doc.titre.length > 0
+        && echanges.pdf.doc.taille > 2000,
+        JSON.stringify(echanges.pdf));
+
+      verifier('et il porte les statuts que la ronde a posés dans le remplisseur, lus au DOM et non au serveur',
+        !!echanges.pdf && (echanges.pdf.statutsPoses || []).length > 0
+        && echanges.pdf.doc.statutRendu === true,
+        JSON.stringify({ poses: echanges.pdf && echanges.pdf.statutsPoses,
+          rendu: echanges.pdf && echanges.pdf.doc && echanges.pdf.doc.statutRendu }));
+
+      // ── 4. Le classeur qui rentre ──
+      //
+      // Le classeur se fabrique **ici**, dans Node : la page n'a pas de quoi
+      // écrire un `.xlsx`, et c'est la raison pour laquelle ce bloc est sorti du
+      // précédent. Sa forme est celle que la route attend — titre en ligne 1,
+      // ligne vide, en-têtes en ligne 3 —, et ses en-têtes sont **ceux de
+      // l'export** : le classeur qui rentre est celui qui sort, rempli.
+      //
+      // Deux lignes y sont déposées, et la seconde est **fictive** : la route
+      // retrouve les items par leur référence et ignore ce qu'elle ne connaît
+      // pas. Le compte annoncé doit donc être **un**, non deux — une ligne
+      // muette qui se compterait quand même ferait croire à un import réussi
+      // sur une référence fausse.
+      const ENTETES_FILL = ['Ordre', 'Réf. Item', 'Réf. Règlement', 'Thème',
+        'Sous-thème', 'Description', 'Directives', 'Statut', 'Observations'];
+      const pour = echanges.pourImport || { lignes: [], statuts: [] };
+      const cible = (pour.lignes || []).find((l) => l.ref && !l.statut)
+        || (pour.lignes || []).find((l) => l.ref);
+      const statutImporte = (pour.statuts || [])
+        .find((s) => /non applicable/i.test(s.libelle || ''))
+        || (pour.statuts || [])[0];
+      const OBSERVATION = 'SURV 1.k — observation venue du classeur';
+      verifier('le remplisseur donne de quoi adresser un import : un item par sa référence, et un statut par son libellé',
+        !!cible && !!cible.ref && !!statutImporte && !!statutImporte.libelle
+        && !!pour.checklist,
+        JSON.stringify({ cible, statut: statutImporte, checklist: pour.checklist,
+          lignes: (pour.lignes || []).length }));
+
+      const octetsFill = (() => {
+        if (!cible || !statutImporte) return null;
+        const grille = [
+          ['Checklist renseignée'], [], ENTETES_FILL,
+          [1, cible.ref, '', '', '', '', '', statutImporte.libelle, OBSERVATION],
+          [2, 'REF-QUI-N-EXISTE-PAS', '', '', '', '', '', statutImporte.libelle, 'ligne muette'],
+        ];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(grille), 'Feuille');
+        return [...XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })];
+      })();
+
+      const importFill = octetsFill ? await page.evaluate(async (ctx) => {
+        const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+        const entree = document.getElementById('execChkFillImportFile');
+        if (!entree) return { entree: false };
+        const dt = new DataTransfer();
+        dt.items.add(new File([new Uint8Array(ctx.bytes)], 'checklist-renseignee.xlsx', {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }));
+        entree.files = dt.files;
+        entree.dispatchEvent(new Event('change', { bubbles: true }));
+        await attendre(6000);
+        const d = {
+          entree: true,
+          entreeVidee: entree.value === '',
+          // Le geste recharge le remplisseur pour montrer ce qui est rentré :
+          // c'est sa dernière ligne, et elle fait partie de son contrat.
+          wrapRecharge: !!document.getElementById('execChkFillerWrap'),
+          annonces: (window.__ditsFiller || []).slice(),
+        };
+        const rep = await fetch('/api/m/execution/exec-checklist-responses',
+          { credentials: 'same-origin' });
+        const toutes = rep.ok ? await rep.json() : [];
+        d.enBase = toutes
+          .filter((x) => x.dossier_id === ctx.dossier && String(x.item_id) === String(ctx.item))
+          .map((x) => ({ statut: x.statut_id, obs: x.observations, resp: x.statut_resp }));
+        // Et la ligne muette n'a rien écrit : aucune réponse ne porte son
+        // observation.
+        d.muettes = toutes.filter((x) => /ligne muette/.test(String(x.observations || ''))).length;
+        // La ligne rechargée montre ce qui est rentré — l'écran et le serveur
+        // disent la même chose, ou l'un des deux ment.
+        const tr = document.querySelector(
+          `#execChkFillerGroups tr[data-item-id="${ctx.item}"]`);
+        d.surEcran = tr ? {
+          statut: (tr.querySelector('.exec-chk-fill-statut') || {}).value || '',
+          obs: (tr.querySelector('.exec-chk-fill-obs') || {}).value || '',
+        } : null;
+        if (window.__vraiToastFiller) window.oasisToast = window.__vraiToastFiller;
+        document.querySelector('[onclick^="execCloseChecklistFiller"]')?.click();
+        await attendre(2500);
+        d.referme = !document.getElementById('execChkFillerWrap');
+        return d;
+      }, { bytes: octetsFill, dossier: pour.dossier, item: cible.item }) : { entree: false };
+
+      verifier('le classeur déposé renseigne l’item que sa référence désigne, et le serveur porte statut et observation',
+        importFill.entree === true
+        && (importFill.enBase || []).length === 1
+        && importFill.enBase[0].statut === statutImporte.id
+        && importFill.enBase[0].obs === OBSERVATION
+        && importFill.enBase[0].resp === 'brouillon',
+        JSON.stringify({ attendu: { statut: statutImporte, obs: OBSERVATION },
+          enBase: importFill.enBase, item: cible && cible.item }));
+
+      verifier('une référence que la checklist ne connaît pas n’écrit rien, et le compte annoncé est de un, non de deux',
+        importFill.muettes === 0
+        && (importFill.annonces || []).some((m) => /1/.test(m) && !/\b2\b/.test(m)),
+        JSON.stringify({ muettes: importFill.muettes, annonces: importFill.annonces }));
+
+      verifier('l’import recharge le remplisseur, qui rend à l’écran ce que le serveur porte, puis se referme',
+        importFill.entreeVidee === true
+        && importFill.wrapRecharge === true
+        && !!importFill.surEcran
+        && importFill.surEcran.statut === statutImporte.id
+        && importFill.surEcran.obs === OBSERVATION
+        && importFill.referme === true,
+        JSON.stringify({ videe: importFill.entreeVidee, recharge: importFill.wrapRecharge,
+          surEcran: importFill.surEcran, referme: importFill.referme }));
 
       verifier('la checklist se retire du dossier par son geste, et le serveur ne la porte plus',
         volet.boutonRetirer === true && volet.retraitConfirme === true

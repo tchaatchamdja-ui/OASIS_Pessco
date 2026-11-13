@@ -2460,6 +2460,19 @@ module.exports = async function tailleSmoke() {
     // d'une pièce et les champs écartés d'une constatation opposable l'ont porté
     // à 1 297.
     'execution.smoke.js': 1297,
+    // ── Un budget qui naît, et c'est le garde qui l'a demandé ──
+    //
+    // Cette suite vivait sous le seuil des mille lignes : elle n'avait pas de
+    // budget, et n'en avait pas besoin. La ronde du formulaire de constatation
+    // l'a portée de 880 à 1 168 lignes, et le garde a dit « non déclaré » —
+    // c'est son autre office, celui qu'on voit moins : il ne surveille pas
+    // seulement les gros fichiers, il **remarque qu'un fichier est devenu
+    // gros**.
+    //
+    // Le bloc ajouté est lié : le tiroir de la constatation ne s'ouvre que sur
+    // un dossier, et sa date d'ouverture ne se mesure que si l'activité a une
+    // date de début. La chaîne de cette suite les porte toutes les deux.
+    'surv-pieces.smoke.js': 1168,
   };
   const SEUIL_SUITE = 1000;
   const DOSSIER_SUITES = path.join(RACINE, 'tests', 'smoke');

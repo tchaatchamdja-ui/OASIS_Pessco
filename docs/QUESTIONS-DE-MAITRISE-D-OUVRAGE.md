@@ -60,6 +60,18 @@ exigences réglementaires qui s'y rattachent. Mais elle vaut aussi pour le
 
 *Ne pas supprimer et ne pas voir sont deux décisions ; une seule a été prise.*
 
+### Un contrôle tient la question — 13 novembre 2026
+
+Depuis la ronde du formulaire de constatation, `surv-pieces.smoke.js` porte
+« changer de secteur rebâtit la liste des exigences proposées : sans secteur
+toutes les actives, avec un secteur celles de sa portée ». Il mesure le
+**chemin**, non le contenu : sans secteur la liste propose les deux exigences
+actives, avec n'importe lequel des huit elle en propose **zéro**.
+
+C'est le couple qui discrimine, et c'est aussi la question écrite en chiffres.
+Le jour où la maîtrise d'ouvrage tranchera, le même contrôle dira que la liste
+s'est remplie — ou rougira si l'on croit avoir tranché sans que rien ne change.
+
 ### La décision demandée
 
 Trois issues, et le choix n'appartient pas au code :

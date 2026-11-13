@@ -523,6 +523,294 @@ module.exports = async function survPiecesSmoke(port) {
           JSON.stringify({ neuve: redaction.annexeNeuveNommee, rendue: redaction.annexeRendueNommee,
             enBase: redaction.enBase && redaction.enBase.annexes }));
 
+        // 3 bis. Le formulaire de constatation, de bout en bout.
+        //
+        // Neuf occurrences de `exec-dossier-actions.js` n'avaient aucune ronde,
+        // et toutes vivent dans ce tiroir : la fermeture par le bandeau et par
+        // le pied, la liste des exigences au changement de secteur, les deux
+        // façons d'ajouter une référence, le calcul de la date due, le garde de
+        // la date d'ouverture et le dépôt d'une preuve.
+        //
+        // Le tour écrit une **seconde** constatation sur le dossier, puis
+        // l'efface par la route avant de rendre la main : la suite de cette
+        // chaîne — rapport validé, constatation opposable, transmission — doit
+        // retrouver l'état qu'elle avait, à l'écart près qu'elle a posé.
+        const formulaire = await page.evaluate(async (ctx) => {
+          const { api, dossierId } = ctx;
+          const attendre = (ms) => new Promise((res) => setTimeout(res, ms));
+          const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a]);
+          const dits = [];
+          const vraiToast = window.oasisToast;
+          window.oasisToast = (m, t) => { dits.push(String(m == null ? '' : m)); return vraiToast(m, t); };
+          const r = {};
+          const J = async (u, m, b) => {
+            const rep = await fetch(u, {
+              method: m || 'GET',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+              ...(b ? { body: JSON.stringify(b) } : {}),
+            });
+            let c = null; try { c = await rep.json(); } catch { c = null; }
+            return { statut: rep.status, corps: c };
+          };
+          const duDossier = async () => ((await J(`${api}/constatations`)).corps || [])
+            .filter((c) => String(c.dossier_id) === String(dossierId));
+          const propositions = () => [...document.querySelectorAll('#fnc_exig_list option')]
+            .map((o) => o.value);
+          const etiquettes = () => [...document.querySelectorAll('#fnc_ref_tags .fnc-ref-tag')]
+            .map((t) => t.dataset.ref);
+          const ouvrirNeuf = async () => {
+            await execOpenDossierSlider(dossierId, 'constatations');
+            await attendre(3600);
+            const b = document.querySelector('#execSlider [onclick^="execOpenFNCForm"]');
+            if (!b) return false;
+            b.click();
+            await attendre(2600);
+            return !!document.getElementById('execFncTiroir');
+          };
+
+          // ── 1. Le retour du bandeau referme le tiroir ──
+          r.ouvertUn = await ouvrirNeuf();
+          const retour = document.querySelector(
+            '#execFncTiroir .exec-fnc-tiroir-tete [onclick^="execFermerFncTiroir"]');
+          r.gesteRetour = !!retour;
+          if (retour) retour.click();
+          await attendre(900);
+          r.fermeParRetour = !document.getElementById('execFncTiroir');
+
+          // ── 2. La ronde du formulaire ──
+          r.ouvertDeux = await ouvrirNeuf();
+          if (!r.ouvertDeux) { window.oasisToast = vraiToast; return r; }
+          const secteur = document.getElementById('fnc_secteur');
+          r.secteurAuDepart = secteur ? secteur.value : null;
+          r.propositionsAuDepart = propositions();
+          if (!secteur) { window.oasisToast = vraiToast; return r; }
+
+          // Sans secteur, la liste propose **toutes** les exigences actives ;
+          // avec un secteur, celles de sa portée. C'est le seul couple qui
+          // discrimine : sur ce référentiel les deux exigences nomment des
+          // secteurs qui n'existent plus (Q-01), si bien que tout secteur rend
+          // zéro. Mesurer le chemin, et non le contenu.
+          secteur.value = '';
+          secteur.dispatchEvent(new Event('change', { bubbles: true }));
+          await attendre(400);
+          r.sansSecteur = propositions();
+          const unSecteur = [...secteur.options].map((o) => o.value).filter(Boolean)[0] || '';
+          r.secteurChoisi = unSecteur;
+          secteur.value = unSecteur;
+          secteur.dispatchEvent(new Event('change', { bubbles: true }));
+          await attendre(400);
+          r.avecSecteur = propositions();
+
+          // La liste est rendue à « aucun secteur » : c'est de là que les deux
+          // références que la ronde va poser se proposent.
+          secteur.value = '';
+          secteur.dispatchEvent(new Event('change', { bubbles: true }));
+          await attendre(400);
+          const [refA, refB] = propositions();
+          r.refA = refA || '';
+          r.refB = refB || '';
+
+          // ── Les deux chemins d'ajout, et la règle qu'ils partagent ──
+          const champ = document.getElementById('fnc_ref_input');
+          r.champRef = !!champ;
+          if (champ && refA && refB) {
+            // a) la touche Entrée, sur le libellé entier que la liste propose
+            const exigA = (EXEC_STATE.data.exigences || []).find((e) => e.reference === refA);
+            champ.value = `${refA} — ${(exigA && exigA.libelle) || ''}`;
+            champ.dispatchEvent(new KeyboardEvent('keydown',
+              { key: 'Enter', bubbles: true, cancelable: true }));
+            await attendre(300);
+            r.apresEntree = etiquettes();
+            r.champVideApresEntree = champ.value === '';
+            // b) le même, par le relais du changement : une référence déjà
+            //    posée ne se pose pas deux fois
+            champ.value = refA;
+            champ.dispatchEvent(new Event('change', { bubbles: true }));
+            await attendre(300);
+            r.apresDoublon = etiquettes();
+            // c) la seconde, par le même relais
+            champ.value = refB;
+            champ.dispatchEvent(new Event('change', { bubbles: true }));
+            await attendre(300);
+            r.apresSeconde = etiquettes();
+          }
+
+          // ── Le délai mène la date due ──
+          const delai = document.getElementById('fnc_delai');
+          const ouverture = document.getElementById('fnc_date_ouverture');
+          const due = document.getElementById('fnc_date_due');
+          r.minDate = (document.getElementById('fnc_min_date') || {}).value || '';
+          if (delai && due) {
+            delai.value = '45';
+            delai.dispatchEvent(new Event('input', { bubbles: true }));
+            await attendre(300);
+            r.ouvertureAvant = ouverture ? ouverture.value : '';
+            r.dueApresSaisie = due.value;
+            delai.dispatchEvent(new Event('change', { bubbles: true }));
+            await attendre(300);
+            r.dueApresChangement = due.value;
+          }
+
+          // ── Le garde de la date d'ouverture ──
+          //
+          // L'activité a commencé le 1er septembre ; une ouverture antérieure
+          // est dite, ramenée à la borne, et la date due suit.
+          const ditsAvantDate = dits.length;
+          if (ouverture) {
+            ouverture.value = '2026-07-15';
+            ouverture.dispatchEvent(new Event('change', { bubbles: true }));
+            await attendre(500);
+            r.ouvertureApresGarde = ouverture.value;
+            r.ditSurLaDate = dits.slice(ditsAvantDate).join(' | ');
+            r.dueApresGarde = due ? due.value : '';
+          }
+
+          // ── La preuve déposée ──
+          const entree = document.getElementById('fnc_proof_input');
+          r.zonePreuve = !!document.querySelector('#execFncTiroir [onclick*="fnc_proof_input"]');
+          if (entree) {
+            const dt = new DataTransfer();
+            dt.items.add(new File([pdf], 'preuve-de-la-constatation.pdf',
+              { type: 'application/pdf' }));
+            entree.files = dt.files;
+            entree.dispatchEvent(new Event('change', { bubbles: true }));
+            await attendre(3200);
+          }
+          r.preuvesAffichees = [...document.querySelectorAll('#fnc_preuves_list > div')]
+            .map((d) => ({
+              nom: ((d.querySelector('span') || {}).textContent || '').trim(),
+              chemin: d.dataset.path || '',
+            }));
+
+          r.description = 'SURV 0.d — constatation saisie par le formulaire.';
+          const desc = document.getElementById('fnc_description');
+          if (desc) {
+            desc.value = r.description;
+            desc.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+
+          const avantEnregistrement = (await duDossier()).length;
+          document.querySelector('#execFncTiroir [onclick^="execSaveFNC"]')?.click();
+          await attendre(3600);
+          const apres = await duDossier();
+          r.compteApresEnregistrement = apres.length - avantEnregistrement;
+          const neuve = apres.find((c) => c.description === r.description);
+          r.enBase = neuve ? {
+            refs: neuve.ref_reglementaires || '',
+            delai: String(neuve.delai_solde || ''),
+            ouverture: neuve.date_ouverture || '',
+            due: neuve.date_due_cloture || '',
+            preuves: (neuve.preuves_constatation || [])
+              .map((p) => (p && p.filename) || p || ''),
+          } : null;
+
+          // ── 3. Le pied : annuler ne referme pas seulement, il n'écrit rien ──
+          const avantAnnulation = (await duDossier()).length;
+          r.ouvertTrois = await ouvrirNeuf();
+          const descBis = document.getElementById('fnc_description');
+          if (descBis) {
+            descBis.value = 'SURV 0.d — constatation que le pied doit emporter.';
+            descBis.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          const annuler = document.querySelector(
+            '#execFncTiroir .exec-fnc-tiroir-pied [onclick^="execFermerFncTiroir"]');
+          r.gesteAnnuler = !!annuler;
+          if (annuler) annuler.click();
+          await attendre(900);
+          r.fermeParLePied = !document.getElementById('execFncTiroir');
+          const apresAnnulation = await duDossier();
+          r.ecritParLAnnulation = apresAnnulation.length - avantAnnulation;
+
+          // ── Le ménage du tour : la chaîne reprend son écart unique ──
+          if (neuve) r.menage = (await J(`${api}/constatations/${neuve.id}`, 'DELETE')).statut;
+          await execRefreshDynamic();
+          await attendre(800);
+          r.resteApresMenage = (await duDossier()).length;
+
+          window.oasisToast = vraiToast;
+          return r;
+        }, { api: M, dossierId: socle.dossierId });
+
+        verifier('le formulaire de constatation se referme par le retour du bandeau comme par le pied, et le pied n’écrit rien',
+          formulaire.ouvertUn === true && formulaire.gesteRetour === true
+          && formulaire.fermeParRetour === true
+          && formulaire.ouvertTrois === true && formulaire.gesteAnnuler === true
+          && formulaire.fermeParLePied === true
+          && formulaire.ecritParLAnnulation === 0,
+          JSON.stringify({ retour: [formulaire.gesteRetour, formulaire.fermeParRetour],
+            pied: [formulaire.gesteAnnuler, formulaire.fermeParLePied],
+            ecrit: formulaire.ecritParLAnnulation }));
+
+        // Le contrôle porte sur le **chemin**, non sur le contenu : les deux
+        // exigences du référentiel nomment des secteurs qui n'existent plus
+        // parmi les huit, et la liste reste donc vide quel que soit le secteur
+        // choisi (Q-01 du registre de maîtrise d'ouvrage). Ce qui se mesure est
+        // que le changement de secteur **rebâtit** la liste, et que la règle
+        // appliquée est bien celle de la portée — « sans secteur, toutes les
+        // actives ». Le jour où la maîtrise d'ouvrage tranchera, c'est le même
+        // contrôle qui dira que la liste s'est remplie.
+        verifier('changer de secteur rebâtit la liste des exigences proposées : sans secteur toutes les actives, avec un secteur celles de sa portée',
+          Array.isArray(formulaire.sansSecteur) && formulaire.sansSecteur.length === 2
+          && formulaire.sansSecteur.includes('RAB-OPS 1.037')
+          && formulaire.sansSecteur.includes('RAB-145.A.30')
+          && !!formulaire.secteurChoisi
+          && Array.isArray(formulaire.avecSecteur) && formulaire.avecSecteur.length === 0,
+          JSON.stringify({ depart: formulaire.propositionsAuDepart,
+            sansSecteur: formulaire.sansSecteur, secteur: formulaire.secteurChoisi,
+            avecSecteur: formulaire.avecSecteur }));
+
+        verifier('une référence s’ajoute par la touche Entrée comme par le choix dans la liste, ne se pose pas deux fois, et le serveur porte les deux',
+          formulaire.champRef === true
+          && (formulaire.apresEntree || []).length === 1
+          && formulaire.apresEntree[0] === formulaire.refA
+          && formulaire.champVideApresEntree === true
+          && (formulaire.apresDoublon || []).length === 1
+          && (formulaire.apresSeconde || []).length === 2
+          && formulaire.apresSeconde[1] === formulaire.refB
+          && !!formulaire.enBase
+          && formulaire.enBase.refs.includes(formulaire.refA)
+          && formulaire.enBase.refs.includes(formulaire.refB),
+          JSON.stringify({ entree: formulaire.apresEntree, doublon: formulaire.apresDoublon,
+            seconde: formulaire.apresSeconde, enBase: formulaire.enBase }));
+
+        // La date due se mesure en **écart de jours**, non en chaîne attendue :
+        // c'est la propriété que le calcul porte, et elle ne dépend pas du
+        // fuseau de la machine qui fait tourner la ronde.
+        {
+          const jours = (a, b) => (!a || !b ? null
+            : Math.round((Date.parse(b) - Date.parse(a)) / 86400000));
+          verifier('le délai mène la date due — à la saisie comme au changement —, et le garde ramène une ouverture antérieure au début de l’activité',
+            jours(formulaire.ouvertureAvant, formulaire.dueApresSaisie) === 45
+            && formulaire.dueApresChangement === formulaire.dueApresSaisie
+            && formulaire.minDate === '2026-09-01'
+            && formulaire.ouvertureApresGarde === formulaire.minDate
+            && (formulaire.ditSurLaDate || '').includes(formulaire.minDate)
+            && jours(formulaire.ouvertureApresGarde, formulaire.dueApresGarde) === 45
+            && !!formulaire.enBase && formulaire.enBase.delai === '45'
+            && formulaire.enBase.ouverture === formulaire.minDate
+            && jours(formulaire.enBase.ouverture, formulaire.enBase.due) === 45,
+            JSON.stringify({ saisie: [formulaire.ouvertureAvant, formulaire.dueApresSaisie],
+              changement: formulaire.dueApresChangement, min: formulaire.minDate,
+              garde: [formulaire.ouvertureApresGarde, formulaire.dueApresGarde],
+              dit: formulaire.ditSurLaDate, enBase: formulaire.enBase }));
+        }
+
+        verifier('la preuve déposée paraît sous son nom avec le chemin que le serveur lui donne, et la constatation enregistrée la porte',
+          formulaire.zonePreuve === true
+          && (formulaire.preuvesAffichees || []).length === 1
+          && formulaire.preuvesAffichees[0].nom === 'preuve-de-la-constatation.pdf'
+          && !!formulaire.preuvesAffichees[0].chemin
+          && formulaire.compteApresEnregistrement === 1
+          && !!formulaire.enBase
+          && (formulaire.enBase.preuves || []).includes('preuve-de-la-constatation.pdf'),
+          JSON.stringify({ affichees: formulaire.preuvesAffichees,
+            compte: formulaire.compteApresEnregistrement, enBase: formulaire.enBase }));
+
+        verifier('le tour rend la chaîne telle qu’il l’a trouvée : la constatation qu’il a écrite est effacée, et l’écart de la ronde reste seul',
+          formulaire.menage === 200 && formulaire.resteApresMenage === 1,
+          JSON.stringify({ menage: formulaire.menage, reste: formulaire.resteApresMenage }));
+
         // 4. La constatation devenue opposable, et ce qu'« enregistrer » dit
         //    alors. C'est le contre-essai du défaut n° 4.
         const opposable = await page.evaluate(async (ctx) => {

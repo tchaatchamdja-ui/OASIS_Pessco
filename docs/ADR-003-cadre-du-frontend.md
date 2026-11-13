@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **310 gestes nommés, 281 occurrences exercées** (91 %) — mesuré par **cinq** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille` et `surv-circuit`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84, 5.f.85, 5.f.86 et 5.f.87) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Le gisement qui vient est `exec-dossier-actions.js`, 9 sur 18 |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 287 exercés** (93 %), 471 occurrences sur 505 — mesuré par **cinq** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille` et `surv-circuit`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.88) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les vingt noms non exercés sont dispersés sur quatorze fichiers, et le plus chargé, `exec-etats.js`, doit six occurrences à un défaut du relevé plutôt qu'à une absence de ronde. Le gisement qui vient est `exec-plans.js`, 6 sur 10 |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -12168,3 +12168,123 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            Q-01 dit maintenant qu'elle restera vide tant que la maîtrise
            d'ouvrage n'aura pas tranché. *Une correction non exercée est une
            affirmation.*
+
+       5.f.88 [x] **Le tiroir de la constatation — et deux défauts qui se
+           présentaient comme réglés** — fait le 13 novembre 2026.
+           `exec-dossier-actions.js` portait **9 occurrences sur 18** sans
+           ronde, et toutes les neuf vivent dans le même tiroir : le formulaire
+           de constatation, ouvert par-dessus le rapport. Six noms : la
+           fermeture par le bandeau et par le pied, la liste des exigences au
+           changement de secteur, les deux façons d'ajouter une référence, le
+           calcul de la date due, le garde de la date d'ouverture, le dépôt
+           d'une preuve.
+
+           Le tour prend place dans `surv-pieces.smoke.js`, seule suite qui
+           ouvre ce tiroir, et dont la chaîne porte déjà ce dont le formulaire a
+           besoin : un dossier, et une activité qui a une date de début. Il
+           écrit une **seconde** constatation, la relit au serveur, puis
+           **l'efface par la route** avant de rendre la main : la suite de la
+           chaîne — rapport validé, constatation opposable, transmission —
+           retrouve l'état qu'elle avait.
+
+           ── Les deux défauts que la contre-épreuve a montrés ──
+
+           **Le garde de la date disait déjà ce qu'il ne faisait plus.** Ôtée la
+           ligne qui ramène la date d'ouverture à la borne, le bandeau paraît
+           quand même — « La date d'ouverture ne peut pas être antérieure au
+           début de l'activité (2026-09-01) » —, le champ garde le 15 juillet,
+           et le serveur l'écrit. L'écran annonce un refus et enregistre la
+           valeur refusée. *L'annonce n'est pas la correction* : un contrôle qui
+           n'aurait lu que le bandeau aurait été vert sur un formulaire qui ne
+           garde plus rien. Celui-ci lit la valeur du champ, celle de la date
+           due, **et** ce que le serveur porte.
+
+           **Une preuve peut être nommée sans être rattachée.** Ôté le
+           `div.dataset.path = data.path`, le fichier part bien au serveur, la
+           ligne paraît sous son nom, et la constatation enregistrée porte
+           toujours « preuve-de-la-constatation.pdf » — parce qu'`execSaveFNC`
+           se rabat sur le nom quand le chemin manque. Ce qui disparaît, c'est
+           le **lien** vers le document déposé : la pièce existe sur le serveur,
+           la constatation la nomme, et plus rien ne les joint. Une vérification
+           faite au seul magasin aurait été verte. Le contrôle exige donc que la
+           ligne affichée porte un chemin **non vide**.
+
+           Les deux autres contre-épreuves ont dit ce qu'on leur demandait : la
+           liste des exigences non rebâtie au changement de secteur, et le
+           doublon de référence non refusé — « RAB-OPS 1.037, RAB-OPS 1.037,
+           RAB-145.A.30 » jusque dans le magasin.
+
+           ── Mesurer le chemin quand le contenu n'existe pas encore ──
+
+           `execFncOnSecteurChange` est le geste dont la liste des exigences a
+           été corrigée en 5.f.84 **sans qu'aucune ronde l'atteigne**. Elle est
+           atteinte. Mais Q-01 dit que cette liste reste vide pour une raison de
+           **données** : les deux exigences du référentiel nomment des secteurs
+           qui n'existent plus parmi les huit. Un contrôle qui attendrait des
+           exigences rougirait sur un produit sain.
+
+           Le couple qui discrimine est ailleurs : **sans** secteur, la règle
+           rend toutes les exigences actives — deux ; **avec** n'importe lequel
+           des huit, elle en rend zéro. Le contrôle mesure donc que le geste
+           rebâtit la liste et que la règle appliquée est bien celle de la
+           portée. Le jour où la maîtrise d'ouvrage tranchera, c'est ce même
+           contrôle qui dira que la liste s'est remplie — ou rougira si l'on
+           croit avoir tranché sans que rien ne bouge. La note est portée au
+           registre, sous Q-01.
+
+           ── Un budget qui naît ──
+
+           `surv-pieces.smoke.js` vivait sous le seuil des mille lignes : elle
+           n'avait pas de budget, et n'en avait pas besoin. Le bloc l'a portée
+           de 880 à **1 168** lignes, et le garde a dit « non déclaré ». C'est
+           son autre office, celui qu'on voit moins : il ne surveille pas
+           seulement les gros fichiers, **il remarque qu'un fichier est devenu
+           gros**.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, **noms** exercés | 281 / 310 (91 %) | **287 / 310 (93 %)** |
+           | SURV, **occurrences** exercées | 462 / 505 (91 %) | **471 / 505 (93 %)** |
+           | `exec-dossier-actions.js` | 9 / 18 occurrences | **18 / 18**, 11 noms sur 11 |
+           | `surv-pieces.smoke.js` | 21 contrôles, 880 lignes | **27**, 1 168 |
+           | Campagne | 1 754 | **1 760** |
+
+           Le premier passage de cette campagne a perdu **deux** suites —
+           `surv` et `profil-risque-navigateur` — sur « Target closed » : le
+           navigateur est mort en cours de route, à deux endroits différents, et
+           ni l'une ni l'autre n'est touchée par ce point. Aucun serveur
+           orphelin, aucune mémoire à l'étroit. Repassée telle quelle, la
+           campagne est entière. *Une suite qui meurt n'est pas une suite qui
+           rougit, et l'on ne compte ni l'une ni l'autre comme un succès* : le
+           chiffre ci-dessus est celui du passage complet, non du premier.
+
+           ── Un libellé remis d'aplomb ──
+
+           Ce tableau porte depuis plusieurs entrées « SURV, occurrences
+           exercées : 276 / 310 », puis « 281 / 310 ». **Le chiffre comptait des
+           noms**, non des occurrences : l'écran en porte 505, et le relevé dit
+           les deux à côté l'une de l'autre. L'erreur est de libellé, non de
+           mesure — le numérateur et le dénominateur venaient bien du même
+           compte —, et elle a tenu parce que les deux ratios tombaient sur le
+           même pourcentage. Ils y retombent ici, 93 % et 93 %. *Deux comptes
+           qui donnent le même nombre ne sont pas le même compte.* Les deux
+           lignes sont dites désormais, et le tableau du § 5.c avec elles.
+
+           ── Ce que le relevé laisse derrière lui, et qui n'est plus un gisement ──
+
+           Il ne reste plus un seul gros fichier : les vingt noms non exercés
+           sont dispersés sur quatorze. Le plus chargé est `exec-etats.js`,
+           **six occurrences** — et les six sont le **même geste**, posé six
+           fois : `onclick="…${execEtatsOuvrir(l)}"`. Le relevé renonce à les
+           nommer dès qu'il rencontre `${`, les appelle « ${} », et les comptera
+           non exercées quoi qu'une ronde fasse. Le nom est pourtant lisible à
+           l'endroit même où il est posé. C'est la famille du fantôme « null »
+           du n° 5.f.86 : *six occurrences retirées du dénominateur, ou six
+           occurrences rendues mesurables — mais pas six faux manquants de
+           plus.*
+
+           Le gisement qui vient, lui, est `exec-plans.js`, **6 sur 10** :
+           quatre fonctions nommées, archiver un plan, exporter les plans en
+           PDF, réinitialiser une activité et ouvrir son historique.

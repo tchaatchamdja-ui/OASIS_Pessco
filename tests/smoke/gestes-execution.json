@@ -2,7 +2,7 @@
  "releve": "2026-11-13",
  "gestesNommes": 310,
  "occurrences": 505,
- "exerces": 281,
+ "exerces": 287,
  "indecidables": 3,
  "gestes": [
   {
@@ -1911,7 +1911,7 @@
    "evenement": "click",
    "source": "execFermerFncTiroir()",
    "nom": "execFermerFncTiroir",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -1920,7 +1920,7 @@
    "evenement": "change",
    "source": "execValidateDateOuverture()",
    "nom": "execValidateDateOuverture",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -1929,7 +1929,7 @@
    "evenement": "change",
    "source": "execFncOnSecteurChange()",
    "nom": "execFncOnSecteurChange",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -1956,7 +1956,7 @@
    "evenement": "change",
    "source": "execFncAddRef(this.value);this.value='';",
    "nom": "execFncAddRef",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -1965,7 +1965,7 @@
    "evenement": "keydown",
    "source": "if(event.key==='Enter'){event.preventDefault();execFncAddRef(this.value);this.value='';}",
    "nom": "execFncAddRef",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -1983,7 +1983,7 @@
    "evenement": "change",
    "source": "execCalcDateDue()",
    "nom": "execCalcDateDue",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -1992,7 +1992,7 @@
    "evenement": "input",
    "source": "execCalcDateDue()",
    "nom": "execCalcDateDue",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -2019,7 +2019,7 @@
    "evenement": "change",
    "source": "execUploadFNCProof(this.files)",
    "nom": "execUploadFNCProof",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",
@@ -2028,7 +2028,7 @@
    "evenement": "click",
    "source": "execFermerFncTiroir()",
    "nom": "execFermerFncTiroir",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dossier-actions.js",

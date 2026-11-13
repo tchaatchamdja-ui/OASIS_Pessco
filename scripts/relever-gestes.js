@@ -496,7 +496,60 @@ const nomDuGeste = (corps) => {
 // Les gardes de tête se retirent au passage, par la même règle qu'ailleurs :
 // une garde n'est pas un geste, et `appelsDuGestionnaire` ne le savait pas —
 // `event.preventDefault` y figurait comme un appel ordinaire.
-const nomsPosables = (corps) => {
+// ── Une aide qui **écrit** un gestionnaire n'est pas un gestionnaire ──
+//
+// `exec-etats.js` pose six fois le même clic par une aide de fichier :
+//
+//   const execEtatsOuvrir = (l) => `execOpenActiviteProcessus('${l.planId}',…)`;
+//   …  onclick="if(!event.target.closest('button'))${execEtatsOuvrir(l)}"
+//
+// `execEtatsOuvrir` n'est **pas** le geste : c'est la fonction qui l'écrit, et
+// la retenir serait la même faute que retenir `_escAttr`. L'occurrence était
+// donc indécidable, « composé au rendu », et le geste réel —
+// `execOpenActiviteProcessus` — n'apparaissait nulle part dans ces six lignes.
+//
+// La doctrine ne change pas d'un pouce : *on retient ce que l'interpolation
+// **écrit**, non ce qui l'assemble.* Elle ne regardait que les littéraux écrits
+// sur place ; elle regarde maintenant, **d'un seul cran**, ceux qu'une aide du
+// même fichier écrit à sa place. Une aide n'est reconnue que si son corps est
+// un gabarit qui commence par un appel : tout le reste reste indécidable, et
+// l'indirection ne se poursuit pas — une aide qui appellerait une aide n'est
+// plus quelque chose qu'on lit, c'est quelque chose qu'on exécute.
+const corpsDuGabarit = (texte, depart) => {
+  let i = depart + 1;
+  let profondeur = 0;
+  while (i < texte.length) {
+    const c = texte[i];
+    if (c === '\\') { i += 2; continue; }
+    if (c === '$' && texte[i + 1] === '{') { profondeur += 1; i += 2; continue; }
+    if (c === '}' && profondeur > 0) { profondeur -= 1; i += 1; continue; }
+    if (c === '`') {
+      if (profondeur === 0) return { corps: texte.slice(depart + 1, i), fin: i };
+      const imbrique = corpsDuGabarit(texte, i);
+      if (!imbrique) return null;
+      i = imbrique.fin + 1;
+      continue;
+    }
+    i += 1;
+  }
+  return null;
+};
+
+const MOTIF_AIDE = /(?:^|[\n;])\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*\([^()]*\)\s*=>\s*`/g;
+
+const aidesDeTexte = (texte) => {
+  const aides = new Map();
+  for (const m of String(texte).matchAll(MOTIF_AIDE)) {
+    const gabarit = corpsDuGabarit(texte, m.index + m[0].length - 1);
+    if (!gabarit) continue;
+    // Elle n'est une aide que si elle écrit un **appel**, et rien d'autre.
+    if (!/^\s*[A-Za-z_$][\w$.]*\s*\(/.test(gabarit.corps)) continue;
+    aides.set(m[1], gabarit.corps);
+  }
+  return aides;
+};
+
+const nomsPosables = (corps, aides) => {
   let t = String(corps).trim();
   for (let m = GARDE_EN_TETE.exec(t); m; m = GARDE_EN_TETE.exec(t)) t = t.slice(m[0].length);
   // ── Et la condition, par la même règle qu'ailleurs ──
@@ -526,6 +579,14 @@ const nomsPosables = (corps) => {
         }
       }
       const dedans = t.slice(i + 2, j);
+      // L'aide du même fichier, si c'en est une : son gabarit prend la place de
+      // l'appel, et c'est lui qu'on lit ensuite. Un seul cran, sans récursion.
+      const appel = /^\s*([A-Za-z_$][\w$]*)\s*\(/.exec(dedans);
+      if (appel && aides && aides.has(appel[1])) {
+        pose += aides.get(appel[1]);
+        i = j < t.length ? j + 1 : t.length;
+        continue;
+      }
       // Ce que l'interpolation **écrit** : ses littéraux. Le reste l'assemble.
       //
       // Un seul littéral tient la place de l'interpolation, et le texte qui
@@ -548,6 +609,29 @@ const nomsPosables = (corps) => {
     }
   }
   return appelsDuGestionnaire(pose);
+};
+
+// ── Ce qu'une ligne de fichier dit, et ce qu'elle taisait ──
+//
+// Elle disait `exec-etats.js — 28/34 occurrences`. Six de ces trente-quatre
+// étaient **indécidables** : un dénominateur dans lequel on ne peut pas
+// progresser, et rien pour le dire. Je les ai lues comme six rondes manquantes,
+// je l'ai écrit au registre et dans un message de validation, et rien ne m'a
+// contredit (n° 5.f.89).
+//
+// Le bilan du haut distingue les trois états depuis toujours ; cette ligne,
+// non. C'est la suite directe de ce que le paragraphe suivant dit de l'unité :
+// *il ne suffit pas qu'une mesure nomme son unité, il faut qu'elle dise ce
+// qu'elle ne sait pas mesurer* — sinon celui qui la lit le porte au débit.
+//
+// Elle vit ici, et non dans la boucle qui l'imprime, pour la même raison que
+// `classer` : un garde-fou qui la réécrirait éprouverait sa propre version de
+// la règle.
+const ligneDeFichier = ({ exercees, occurrences, indecidables, nomsExerces, noms }) => {
+  const dont = indecidables
+    ? `, dont ${indecidables} indécidable${indecidables > 1 ? 's' : ''}`
+    : '';
+  return `${exercees}/${occurrences} occurrences${dont}, ${nomsExerces}/${noms} noms`;
 };
 
 // ── Classer un gestionnaire en ligne : la décision, en un seul endroit ──
@@ -574,10 +658,10 @@ const nomsPosables = (corps) => {
 // `raison` distingue les deux silences, parce qu'ils ne se corrigent pas de la
 // même façon : l'un demande de nommer le gestionnaire, l'autre de le poser sans
 // l'assembler.
-const classer = (corps) => {
+const classer = (corps, aides) => {
   const nom = nomDuGeste(corps);
   if (!nom.includes('${}')) return [{ nom }];
-  const noms = nomsPosables(corps);
+  const noms = nomsPosables(corps, aides);
   if (noms.length) return noms.map((n) => ({ nom: n, interpole: true }));
   return [{
     nom,
@@ -592,6 +676,9 @@ function relever(fichiers) {
     const abs = path.join(RACINE, rel);
     if (!fs.existsSync(abs)) continue;
     const texte = blanchirCommentaires(fs.readFileSync(abs, 'utf8'));
+    // Les aides du fichier, relevées sur le texte **blanchi** : une définition
+    // laissée dans un commentaire n'en est pas une.
+    const aides = aidesDeTexte(texte);
     // Sans espace avant le `=` : voir le point 3 ci-dessus.
     const motifEnLigne = new RegExp(`\\bon(${EVENEMENTS.join('|')})=\\s*(["'\`])((?:\\\\.|(?!\\2).)*)\\2`, 'g');
     for (const m of texte.matchAll(motifEnLigne)) {
@@ -603,7 +690,7 @@ function relever(fichiers) {
         evenement: m[1],
         source: corps.slice(0, 120),
       };
-      classer(corps).forEach((g) => gestes.push({ ...commun, ...g }));
+      classer(corps, aides).forEach((g) => gestes.push({ ...commun, ...g }));
     }
     // ── Troisième forme : le gestionnaire posé en **propriété** ──
     //
@@ -1266,7 +1353,13 @@ async function principal() {
     // pas sur une ligne. *Une mesure qui ne nomme pas son unité laisse celui qui
     // la lit en choisir une.*
     const nomsExerces = [...noms.values()].filter((e) => e.exerce > 0).length;
-    console.log(`── ${f} — ${n}/${liste.length} occurrences, ${nomsExerces}/${noms.size} noms ──`);
+    console.log(`── ${f} — ${ligneDeFichier({
+      exercees: n,
+      occurrences: liste.length,
+      indecidables: liste.filter((g) => g.exerce === null).length,
+      nomsExerces,
+      noms: noms.size,
+    })} ──`);
     [...noms.entries()]
       .sort((a, b) => (a[1].exerce ? 1 : 0) - (b[1].exerce ? 1 : 0) || b[1].total - a[1].total)
       .forEach(([nom, e]) => {
@@ -1303,6 +1396,7 @@ const MOUCHARD = `(${MOUCHARD_FN.toString()})(${JSON.stringify(EVENEMENTS)})`;
 
 module.exports = {
   MOUCHARD, MOUCHARD_FN, EVENEMENTS, relever, ECRANS, classer, nomsPosables,
+  aidesDeTexte, ligneDeFichier,
   // Le nommeur est exporté pour être éprouvé seul : c’est lui qui décide ce
   // qu’un geste **est**, et plusieurs de ses règles sont nées d’un relevé faux.
   // `nomDuGeste` est l’entrée : les deux côtés — la source et le mouchard — ne

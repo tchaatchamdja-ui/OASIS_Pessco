@@ -897,7 +897,7 @@ async function courrielsSansSecret() {
 // faute déjà payée trois fois sur le contrôle des noms de suites.
 function nommageDesGestes() {
   // eslint-disable-next-line global-require
-  const { classer } = require(path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'));
+  const { classer, aidesDeTexte, ligneDeFichier } = require(path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'));
   const noms = (corps) => classer(corps).map((g) => g.nom);
   const seul = (corps) => classer(corps)[0];
 
@@ -935,6 +935,66 @@ function nommageDesGestes() {
     && !noms(composeGarde).includes('execEtatsOuvrir')
     && !noms(composeGarde).includes('event.target.closest'),
     JSON.stringify([classer(compose), classer(composeGarde)]));
+
+  // ── Sauf si le fichier **écrit** le gestionnaire ailleurs, d'un seul cran ──
+  //
+  // La doctrine ne bouge pas : on retient ce que l'interpolation écrit, non ce
+  // qui l'assemble. Ce qui change, c'est où l'on va le lire — une aide du même
+  // fichier dont le corps est un gabarit qui commence par un appel.
+  // `execEtatsOuvrir` n'est toujours **pas** retenu ; c'est ce qu'il écrit qui
+  // l'est.
+  const source = [
+    "const execEtatsOuvrir = (l) => `execOpenActiviteProcessus('${l.planId}','${l.activiteId}')`;",
+    'function rendu() { return `<tr onclick="${execEtatsOuvrir(l)}">`; }',
+  ].join('\n');
+  const aides = aidesDeTexte(source);
+  verifier('nommage : une aide du même fichier qui écrit un appel rend le geste nommable, et c’est l’appel qu’on retient — non l’aide',
+    aides.size === 1 && aides.has('execEtatsOuvrir')
+    && classer(composeGarde, aides).map((g) => g.nom).join() === 'execOpenActiviteProcessus'
+    && classer(composeGarde, aides)[0].interpole === true
+    && classer(composeGarde, aides)[0].indecidable === undefined
+    && !classer(composeGarde, aides).some((g) => g.nom === 'execEtatsOuvrir')
+    // Sans la carte des aides, rien ne change : l'indirection se lit dans le
+    // fichier, elle ne se devine pas.
+    && seul(composeGarde).indecidable === true,
+    JSON.stringify([[...aides.keys()], classer(composeGarde, aides)]));
+
+  // ── Et l'indirection ne se poursuit pas ──
+  //
+  // Une aide qui appelle une aide n'est plus quelque chose qu'on lit, c'est
+  // quelque chose qu'on exécute. *Une mesure qui se met à exécuter le code
+  // qu'elle mesure a changé de métier.*
+  const deuxCrans = [
+    'const b = (x) => `execCible(\'${x}\')`;',
+    'const a = (x) => `${b(x)}`;',
+  ].join('\n');
+  const aides2 = aidesDeTexte(deuxCrans);
+  verifier('nommage : l’indirection d’une aide ne se poursuit pas — deux crans restent indécidables',
+    aides2.has('b') && !aides2.has('a')
+    && classer('${a(l)}', aides2)[0].indecidable === true,
+    JSON.stringify([[...aides2.keys()], classer('${a(l)}', aides2)]));
+
+  // ── Une aide qui n'écrit pas un appel n'est pas une aide ──
+  verifier('nommage : un gabarit du même fichier qui n’écrit pas un appel ne sert pas à nommer',
+    aidesDeTexte('const etiquette = (x) => `<span>${x}</span>`;').size === 0
+    && aidesDeTexte("const chemin = (x) => `/api/m/execution/${x}`;").size === 0,
+    JSON.stringify([...aidesDeTexte('const etiquette = (x) => `<span>${x}</span>`;').keys()]));
+
+  // ── Et la ligne qui m'a trompé ──
+  //
+  // `exec-etats.js — 28/34 occurrences` taisait six indécidables. Elle les dit,
+  // et c'est éprouvé ici plutôt que relu : *il ne suffit pas qu'une mesure
+  // nomme son unité, il faut qu'elle dise ce qu'elle ne sait pas mesurer.*
+  const ligne = (o) => ligneDeFichier(o);
+  verifier('relevé : la ligne d’un fichier dit ses indécidables, et se tait quand il n’y en a pas',
+    ligne({ exercees: 28, occurrences: 34, indecidables: 6, nomsExerces: 2, noms: 5 })
+      === '28/34 occurrences, dont 6 indécidables, 2/5 noms'
+    && ligne({ exercees: 65, occurrences: 67, indecidables: 1, nomsExerces: 43, noms: 45 })
+      === '65/67 occurrences, dont 1 indécidable, 43/45 noms'
+    && ligne({ exercees: 34, occurrences: 34, indecidables: 0, nomsExerces: 25, noms: 25 })
+      === '34/34 occurrences, 25/25 noms',
+    JSON.stringify([ligne({ exercees: 28, occurrences: 34, indecidables: 6, nomsExerces: 2, noms: 5 }),
+      ligne({ exercees: 34, occurrences: 34, indecidables: 0, nomsExerces: 25, noms: 25 })]));
 
   // ── Ce qu'un littéral **écrit**, en revanche, se pose ──
   const defaut = "${ouvrir || 'rampOuvrirParam'}('${p.id}')";
@@ -1081,6 +1141,52 @@ function racinePubliqueDesCourriels() {
 // Les contrôles ci-dessous sont le garde de ces règles. Un nommeur qui se
 // trompe ne fait pas tomber une suite d'écran : il **déplace un dénominateur**,
 // en silence, et c'est le pire des défauts d'un instrument de mesure.
+// ── Le relevé figé dit-il encore ce que le script produit ? ──
+//
+// Les `tests/smoke/gestes-<écran>.json` sont **figés** : ils servent de
+// référence à la couverture déclarée, et personne ne les recalcule à chaque
+// campagne — le relevé demande cinq suites de navigateur et vingt minutes.
+//
+// Rien ne disait donc qu'ils correspondaient encore au script. Toucher au
+// nommeur et oublier de refiger, c'est porter au dépôt un relevé qui décrit une
+// règle qui n'existe plus — et la couverture déclarée s'appuie dessus. Le cas
+// s'est présenté le 13 novembre, et il a fallu le vérifier à la main.
+//
+// Ce qui se compare est la **structure** : fichier, ligne, événement, nom,
+// indécidabilité, raison. L'état d'exercice, lui, vient des journaux du
+// navigateur et n'a rien à faire ici. `relever` est pur — il lit des fichiers
+// et rend une liste —, le contrôle ne coûte donc que des millisecondes.
+function releveFige() {
+  // eslint-disable-next-line global-require
+  const { relever, ECRANS } = require(path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'));
+  const perimes = [];
+  const comptes = [];
+  Object.entries(ECRANS).forEach(([quoi, e]) => {
+    const chemin = path.join(__dirname, `gestes-${quoi}.json`);
+    if (!fs.existsSync(chemin)) return;
+    const fige = JSON.parse(fs.readFileSync(chemin, 'utf8'));
+    if (fige.sansSuite || !Array.isArray(fige.gestes)) return;
+    const sources = typeof e.sources === 'function' ? e.sources() : e.sources;
+    const frais = relever(Array.isArray(sources) ? sources : [sources]);
+    const cle = (g) => [g.fichier, g.ligne, g.evenement, g.nom,
+      g.indecidable === true, g.raison || ''].join('|');
+    const a = frais.map(cle).sort();
+    const b = fige.gestes.map(cle).sort();
+    comptes.push(`${quoi} : ${a.length}`);
+    if (a.length !== b.length) {
+      perimes.push(`${quoi} : ${b.length} occurrences figées, ${a.length} au relevé frais`);
+      return;
+    }
+    const ecart = a.findIndex((x, i) => x !== b[i]);
+    if (ecart >= 0) perimes.push(`${quoi} : figé « ${b[ecart]} », frais « ${a[ecart]} »`);
+  });
+  verifier('chaque relevé figé décrit encore ce que le nommeur produit aujourd’hui',
+    perimes.length === 0,
+    perimes.length
+      ? `${perimes.join(' · ')} — refiger avec \`node scripts/relever-gestes.js <écran>\``
+      : comptes.join(', '));
+}
+
 function nommeurDeGestes() {
   // eslint-disable-next-line global-require
   // `nomDuGeste` est l'entrée : c'est elle que les deux côtés appellent, et
@@ -1857,6 +1963,7 @@ module.exports = async function unitairesSmoke() {
     await courrielsSansSecret();
     racinePubliqueDesCourriels();
     nommageDesGestes();
+    releveFige();
     verrouDuRepertoire();
     await vecteursDeMigration();
     conservation();

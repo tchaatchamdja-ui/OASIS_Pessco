@@ -2452,7 +2452,16 @@ module.exports = async function tailleSmoke() {
     // socle dont il appelle les noms. Il est né d'un défaut que rien d'autre
     // ne pouvait voir — cinq téléchargements de SURV levaient une exception.
     'taille.smoke.js': 2473,
-    'unitaires.smoke.js': 1802,
+    // 1 802 → 1 997 : cinq contrôles de plus, et les deux derniers tiennent le
+    // relevé lui-même. Trois sur le nommage — l'aide de fichier qui écrit un
+    // gestionnaire, le refus de poursuivre l'indirection d'un cran de plus, le
+    // gabarit qui n'écrit pas un appel —, un sur la ligne par fichier qui
+    // taisait ses indécidables, et un qui vérifie que chaque relevé **figé**
+    // décrit encore ce que le nommeur produit. Ce dernier a trouvé deux
+    // fichiers périmés à son premier passage. Cette suite grandit par contrôles
+    // unitaires de règles : c'est son office, et elle n'a de chaîne à partager
+    // avec personne.
+    'unitaires.smoke.js': 1997,
     'ramp.smoke.js': 1447,
     // Franchi le 11 novembre 2026, au tour suivant la pose de ce garde : la
     // ronde de portée des notifications l'a mené de 995 à 1 174 lignes, et le

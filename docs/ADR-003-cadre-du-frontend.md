@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **310 gestes nommés, 287 exercés** (93 %), 471 occurrences sur 505 — mesuré par **cinq** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille` et `surv-circuit`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.88) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les vingt noms non exercés sont dispersés sur quatorze fichiers, et le plus chargé, `exec-etats.js`, doit six occurrences à un défaut du relevé plutôt qu'à une absence de ronde. Le gisement qui vient est `exec-plans.js`, 6 sur 10 |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 287 exercés** (93 %), 477 occurrences sur 505 dont 6 indécidables — mesuré par **cinq** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille` et `surv-circuit`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.89) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les vingt noms non exercés sont dispersés sur dix fichiers. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). Le gisement qui vient est `exec-plans.js`, 6 sur 10 |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -12288,3 +12288,154 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            Le gisement qui vient, lui, est `exec-plans.js`, **6 sur 10** :
            quatre fonctions nommées, archiver un plan, exporter les plans en
            PDF, réinitialiser une activité et ouvrir son historique.
+
+
+       5.f.89 [x] **« Indécidable » n'est pas « non exercé » — et j'ai lu le
+           relevé comme on ne doit pas le lire** — fait le 13 novembre 2026.
+           Le n° 5.f.88 se termine par une phrase fausse, écrite deux fois : au
+           registre et dans le message de validation.
+
+           ── Ce qui a été affirmé, et ce qui est ──
+
+           J'ai écrit que `exec-etats.js` devait six occurrences à un défaut du
+           relevé, que « les six sont le même geste, `execEtatsOuvrir` », et
+           qu'il « les comptera non exercées quoi qu'une ronde fasse ». Les
+           trois sont fausses.
+
+             · Elles sont **indécidables** — `exerce: null`, `raison: composé au
+               rendu` —, et non « non exercées ». C'est le verdict prudent que
+               le relevé rend exprès, et son commentaire le dit depuis le
+               8 novembre : *dire « non couvert » de ce qu'on ne sait pas
+               rapprocher serait une fausse alarme.*
+             · `execEtatsOuvrir` n'est **pas un geste**. C'est une aide d'une
+               ligne qui **écrit** le gestionnaire :
+               `const execEtatsOuvrir = (l) => \`execOpenActiviteProcessus(…)\`;`.
+               La retenir serait exactement la faute que le relevé évite en ne
+               retenant pas `_escAttr`, et un contrôle unitaire l'interdit
+               nommément depuis le 11 novembre.
+             · Le geste réel est `execOpenActiviteProcessus`, et il est **déjà
+               exercé**, deux fois, depuis `exec-plans.js` et
+               `exec-processus.js`.
+
+           **Comment je m'y suis pris pour me tromper.** J'ai compté les
+           occurrences en Python avec `exerce is not True` pour « reste à
+           faire », ce qui met les indécidables au débit. C'est, mot pour mot,
+           la faute contre laquelle le relevé est écrit — commise en le lisant.
+           *Un outil qui distingue trois états ne protège pas celui qui n'en
+           lit que deux.*
+
+           La même lecture a produit un second chiffre faux dans la même entrée :
+           « vingt noms non exercés dispersés sur **quatorze** fichiers ». Ils
+           sont sur **dix** — les quatre autres ne portaient que des
+           indécidables. Et en corrigeant le tableau du § 5.c, j'ai d'abord
+           écrit « treize », de tête, avant de le mesurer. *Une erreur de
+           lecture se reproduit tant qu'on corrige le chiffre sans changer la
+           façon de compter.*
+
+           ── Ce qui restait vrai, et qu'il a fallu corriger ──
+
+           Le bilan du haut distingue les trois états depuis toujours. **La
+           ligne par fichier, non** : elle disait `exec-etats.js — 28/34
+           occurrences`, sans dire que six de ces trente-quatre ne sont pas
+           mesurables. Un dénominateur dans lequel on ne peut pas progresser, et
+           rien pour le signaler. Elle porte désormais « dont 6 indécidables ».
+
+           C'est la suite directe du paragraphe que cette même ligne portait
+           déjà — « une mesure qui ne nomme pas son unité laisse celui qui la
+           lit en choisir une ». D'un cran plus loin : *il ne suffit pas qu'une
+           mesure nomme son unité, il faut qu'elle dise ce qu'elle ne sait pas
+           mesurer.*
+
+           ── Et un cran de plus pour le nommeur ──
+
+           La doctrine ne bouge pas : **on retient ce que l'interpolation
+           écrit, non ce qui l'assemble.** Elle ne regardait que les littéraux
+           écrits sur place ; elle regarde maintenant ceux qu'une aide du
+           **même fichier** écrit à sa place. Une aide n'est reconnue que si son
+           corps est un gabarit commençant par un appel, et **l'indirection ne
+           se poursuit pas** : une aide qui appellerait une aide n'est plus
+           quelque chose qu'on lit, c'est quelque chose qu'on exécute. *Une
+           mesure qui se met à exécuter le code qu'elle mesure a changé de
+           métier.*
+
+           Une seule aide y répond dans tout le front. Une règle qui ne sert
+           qu'une fois reste une règle : l'autre voie était de faire répéter six
+           fois le même appel dans `exec-etats.js` pour plaire à l'outil, et
+           *une mesure qui force le code à être moins bon est une mauvaise
+           mesure.*
+
+           Trois contrôles unitaires la tiennent, dont deux qui disent ce
+           qu'elle **ne** fait **pas** : l'aide n'est jamais retenue à la place
+           de ce qu'elle écrit, et deux crans d'indirection restent
+           indécidables. Le contrôle du 11 novembre, qui exige l'indécidable
+           sans carte des aides, est **conservé tel quel** — c'est lui qui
+           garantit que l'indirection se lit dans le fichier et ne se devine
+           pas.
+
+           ── Et un garde né de la vérification faite à la main ──
+
+           Pour m'assurer que le relevé figé décrivait encore ce que le script
+           produit, j'ai comparé les deux à la main. **Rien ne le vérifiait.**
+           Les `gestes-<écran>.json` servent de référence à la couverture
+           déclarée et personne ne les recalcule à chaque campagne — le relevé
+           de SURV demande cinq suites de navigateur et vingt minutes. Toucher
+           au nommeur et oublier de refiger, c'est porter au dépôt un relevé qui
+           décrit une règle qui n'existe plus.
+
+           Le contrôle compare la **structure** — fichier, ligne, événement,
+           nom, indécidabilité, raison —, jamais l'état d'exercice, qui vient
+           des journaux. `relever` est pur : le contrôle coûte des
+           millisecondes, là où refiger coûte vingt minutes.
+
+           **Il a trouvé deux fichiers périmés à son premier passage** :
+           `gestes-portail.json` et `gestes-mesures.json`, figés les 3 et
+           4 novembre — donc **avant** que le champ `raison` n'existe. Refigés,
+           leurs chiffres n'ont pas bougé d'une unité : la péremption était
+           entière dans la structure, nulle dans les comptes. *Les nombres
+           étaient justes ; la description ne l'était plus.* Le jour où un
+           changement du nommeur déplacera un chiffre, ce garde le dira avant
+           que le registre ne cite un nombre mort.
+
+           ── Un navigateur qui meurt, deux fois sur trois campagnes ──
+
+           Le premier passage de cette campagne a perdu `parcours` sur
+           « Target closed », puis `frontend` — la suite suivante — sur un délai
+           de navigation dépassé. Au n° 5.f.88, c'étaient `surv` et
+           `profil-risque-navigateur`. **Deux campagnes sur les trois
+           dernières** : ce n'est plus un accident, c'est une propriété de
+           l'endroit où la campagne tourne.
+
+           La mesure, cette fois, plutôt que la relance : aucun navigateur ni
+           serveur de test laissé derrière — le harnais nettoie —, mais le swap
+           à **4,75 Go sur 6**. La campagne partage la machine avec le travail de
+           son propriétaire, traitement de texte, messagerie, synchronisation
+           de fichiers, et c'est elle qui cède : un Chromium sans tête qui
+           swappe meurt ou expire. Seules, les deux suites rendent 110 sur 110
+           et 12 sur 12. Le passage suivant, relancé tel quel, est allé au bout :
+           24 suites, 1 765 contrôles, aucun rouge — c'est lui que porte le
+           tableau ci-dessous.
+
+           La règle tenue est celle du n° 5.f.88 : *une suite qui meurt n'est
+           ni un succès ni un échec du produit, et le chiffre porté est celui
+           d'un passage complet.* Ce qui manque, et qui est nommé sans être
+           fait : quand une suite meurt, le lanceur pourrait dire **dans quel
+           état était la mémoire** à cet instant. Il a fallu le mesurer à la
+           main, après coup — c'est-à-dire sur une machine qui n'était plus
+           celle du moment.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 471 / 505 (93 %) | **477 / 505 (94 %)**, 6 indécidables |
+           | `exec-etats.js` | 28 / 34, 6 indécidables | **34 / 34**, 25 noms sur 25 |
+           | SURV, noms exercés | 287 / 310 (93 %) | **287 / 310 (93 %)** |
+           | `unitaires.smoke.js` | 163 contrôles, 1 802 lignes | **168**, 1 997 |
+           | Campagne | 1 760 | **1 765**, 24 suites, 0 rouge |
+
+           Les noms ne bougent pas, et c'est la preuve que la correction ne
+           gonfle rien : `execOpenActiviteProcessus` était déjà compté exercé.
+           Ce qui change est la **lisibilité** — six occurrences cessent d'être
+           muettes, et un fichier cesse d'annoncer un reste qu'il n'a pas.
+
+           Le gisement qui vient est toujours `exec-plans.js`, **6 sur 10**.

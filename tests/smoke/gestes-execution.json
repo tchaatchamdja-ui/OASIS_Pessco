@@ -2063,10 +2063,9 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
+   "nom": "execOpenActiviteProcessus",
+   "interpole": true,
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2083,10 +2082,9 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
+   "nom": "execOpenActiviteProcessus",
+   "interpole": true,
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2103,10 +2101,9 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
+   "nom": "execOpenActiviteProcessus",
+   "interpole": true,
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2114,10 +2111,9 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "${execEtatsOuvrir(l)}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
+   "nom": "execOpenActiviteProcessus",
+   "interpole": true,
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2170,10 +2166,9 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "if(!event.target.closest('button'))${execEtatsOuvrir(l)}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
+   "nom": "execOpenActiviteProcessus",
+   "interpole": true,
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",
@@ -2181,10 +2176,9 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "${execEtatsOuvrir(l)}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
+   "nom": "execOpenActiviteProcessus",
+   "interpole": true,
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-etats.js",

@@ -1,5 +1,5 @@
 {
- "releve": "2026-11-04",
+ "releve": "2026-11-13",
  "gestesNommes": 89,
  "occurrences": 144,
  "exerces": 63,
@@ -373,6 +373,7 @@
    "source": "${action}('${s.cle}')",
    "nom": "${}('${}')",
    "indecidable": true,
+   "raison": "sans nom",
    "exerce": null
   },
   {
@@ -582,6 +583,7 @@
    "source": "${ouvrir}()",
    "nom": "${}()",
    "indecidable": true,
+   "raison": "sans nom",
    "exerce": null
   },
   {
@@ -1051,6 +1053,7 @@
    "source": "${geste}",
    "nom": "${}",
    "indecidable": true,
+   "raison": "sans nom",
    "exerce": null
   },
   {
@@ -1106,6 +1109,7 @@
    "source": "${geste}",
    "nom": "${}",
    "indecidable": true,
+   "raison": "sans nom",
    "exerce": null
   },
   {
@@ -1170,6 +1174,7 @@
    "source": "${geste}",
    "nom": "${}",
    "indecidable": true,
+   "raison": "sans nom",
    "exerce": null
   },
   {

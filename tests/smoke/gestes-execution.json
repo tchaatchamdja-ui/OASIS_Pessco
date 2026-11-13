@@ -2,7 +2,7 @@
  "releve": "2026-11-13",
  "gestesNommes": 310,
  "occurrences": 505,
- "exerces": 294,
+ "exerces": 297,
  "indecidables": 3,
  "gestes": [
   {
@@ -2421,7 +2421,7 @@
    "evenement": "click",
    "source": "window.print()",
    "nom": "window.print",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
@@ -2430,7 +2430,7 @@
    "evenement": "click",
    "source": "window.close()",
    "nom": "window.close",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-fiche.js",
@@ -4452,7 +4452,7 @@
    "evenement": "click",
    "source": "window.print()",
    "nom": "window.print",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-rapports.js",
@@ -4461,7 +4461,7 @@
    "evenement": "click",
    "source": "window.close()",
    "nom": "window.close",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-rapports.js",
@@ -4470,7 +4470,7 @@
    "evenement": "click",
    "source": "this.parentElement.style.display='none'",
    "nom": "this.parentElement.style.display",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-rapports.js",

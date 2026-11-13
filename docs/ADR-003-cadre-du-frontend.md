@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **310 gestes nommés, 294 exercés** (95 %), 484 occurrences sur 505 dont 6 indécidables — mesuré par **sept** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans` et `surv-processus`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.91) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les treize noms non exercés sont dispersés sur huit fichiers, aucun au-delà de trois occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Le gisement qui vient est celui des **documents imprimables**, la barre de la fiche et du rapport : cinq occurrences de même nature sur `exec-fiche.js` et `exec-rapports.js` |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 297 exercés** (96 %), 489 occurrences sur 505 dont 6 indécidables — mesuré par **huit** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus` et `surv-documents`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.92) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les dix noms non exercés sont dispersés sur sept fichiers, aucun au-delà de deux occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Le gisement qui vient est `exec-prestataires.js`, les deux tris des tables de dossiers |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -12650,3 +12650,95 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            rapport dans leur fenêtre — imprimer, fermer, et, au rapport,
            écarter l'astuce d'impression —, cinq occurrences de même nature sur
            `exec-fiche.js` et `exec-rapports.js`.
+
+       5.f.92 [x] **Les documents imprimables, dans leur vraie fenêtre — et un
+           mouchard qui n'y entrait pas** — fait le 13 novembre 2026. C'était
+           le gisement annoncé par le n° 5.f.91 : la barre que portent la fiche
+           de notification et le rapport dans la fenêtre qu'ils ouvrent —
+           « Télécharger PDF », « Fermer », et au rapport la croix qui écarte
+           l'astuce d'impression. Cinq occurrences sur `exec-fiche.js` et
+           `exec-rapports.js`.
+
+           ── Présents dans un texte n'est pas faire ce qu'ils disent ──
+
+           Ces boutons avaient un contrôle depuis le n° 5.f.74 : `surv.smoke.js`
+           constate que le document produit les **porte**. Mais il le lit dans
+           un relais — une fausse fenêtre qui recueille le texte écrit. Un
+           bouton présent dans un texte n'est pas un bouton qui imprime.
+
+           Une huitième suite, `surv-documents` (port 4812), ouvre la **vraie**
+           fenêtre par le vrai geste — l'œil de la page des rapports, « Exporter
+           PDF » du volet du dossier —, et y clique. L'impression est comptée
+           (la boîte n'a pas à s'ouvrir) ; la fermeture est comptée **et
+           exécutée** : la fenêtre doit être réellement fermée.
+
+           ── Sa propre chaîne ──
+
+           Une suite seule part de l'amorce, qui n'a ni dossier ni rapport
+           transmis — seul statut que la page des rapports affiche. La ronde
+           pose une notification sur une activité d'un plan validé, la mène au
+           dossier, soumet le dossier, valide et transmet le rapport qui en
+           naît. En partant elle supprime le dossier, ce qui emporte rapport et
+           notification et rend l'activité « à notifier ».
+
+           Le premier passage avait ajouté par-dessus une réinitialisation de
+           l'activité : elle a rendu 404. La suppression du dossier avait déjà
+           tout fait — la route le dit dans son code. Le geste redondant est
+           retiré, et le 404 n'est pas déclaré : il n'y avait rien à refuser.
+
+           ── Sept contrôles ──
+
+           - la chaîne se bâtit, et la ronde ne laisse rien ;
+           - au rapport, la croix écarte l'astuce **sans toucher à la barre** ;
+             « Télécharger PDF » imprime une fois, la fenêtre reste ouverte ;
+             « Fermer » la ferme ;
+           - la fiche, ouverte avec impression automatique, s'imprime **une
+             fois** d'elle-même au chargement — le défaut d'`exec-plans.js`
+             (n° 5.f.90) ne s'y retrouve pas —, une de plus au bouton, et se
+             ferme.
+
+           ── Le mouchard n'entrait pas dans la fenêtre ──
+
+           Le relevé a d'abord refusé la suite : rouge sous le mouchard, verte
+           sans. Le mouchard est posé par le socle sur la page ; une fenêtre que
+           l'écran ouvre lui-même ne le reçoit pas, et ses clics manqueraient au
+           relevé **sans que rien ne le dise** — couverture nulle présentée comme
+           mesurée. La suite l'y pose donc elle-même, et c'est là qu'elle
+           cassait : par `eval`, que la politique de contenu de l'application
+           refuse (`unsafe-eval`), et dont la fenêtre hérite.
+
+           Il entre désormais par un élément de script, que la politique admet,
+           et **après** que l'écran a écrit son document : `document.open()`
+           efface les écouteurs du document qu'il remplace, et un mouchard posé
+           avant serait présent sans rien voir. Sous le relevé, les contrôles
+           exigent qu'il soit là dans chaque fenêtre. Mesuré : son registre
+           porte les cinq gestes.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | N — la croix de l'astuce ne masque qu'elle-même | l'astuce du rapport |
+           | O — « Fermer » de la fiche n'appelle plus `close` | la barre de la fiche |
+           | P — la fiche s'imprime deux fois d'elle-même | l'impression automatique (+ la barre) |
+           | Q — le mouchard non posé dans la fenêtre, sous le relevé | les deux barres ; et son registre tombe à **zéro** geste |
+
+           O rougit parce que le bouton n'est plus trouvé par ce qu'il appelle,
+           non parce que la fenêtre resterait ouverte : `close` est au
+           navigateur, l'écran ne peut le casser qu'en ne l'appelant pas.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-fiche.js` | 8 / 11 | **10 / 11** |
+           | `exec-rapports.js` | 3 / 6 | **6 / 6** |
+           | SURV, occurrences exercées | 484 / 505 (96 %) | **489 / 505 (97 %)** |
+           | SURV, noms exercés | 294 / 310 (95 %) | **297 / 310 (96 %)** |
+           | Campagne | 1 782, 26 suites | **1 789**, 27 suites, 0 rouge |
+
+           Il reste dix noms non exercés sur sept fichiers, aucun au-delà de
+           deux. Le reste de `exec-fiche.js` est « Soumettre pour validation »
+           depuis l'aperçu de la fiche. Le gisement qui vient est
+           `exec-prestataires.js` : **les deux tris** des tables de dossiers,
+           en cours et archivés, sur un même écran.

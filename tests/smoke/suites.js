@@ -97,6 +97,9 @@ const SUITES = [
   // La septième : la configuration des processus, sortie de `surv.smoke.js`
   // sans rien changer — elle y bâtissait déjà son processus et le retirait.
   { nom: 'surv-processus', port: 4811, fichier: './surv-processus.smoke' },
+  // La huitième : les documents imprimables — la fiche et le rapport, dans
+  // leur vraie fenêtre, le mouchard posé dedans.
+  { nom: 'surv-documents', port: 4812, fichier: './surv-documents.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

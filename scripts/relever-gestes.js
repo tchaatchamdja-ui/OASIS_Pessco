@@ -184,7 +184,11 @@ ECRANS.execution = {
 // `suite` est désormais refusé plutôt que mesuré de travers.
 ECRANS.ramp = { ...ecranDeModule('ramp'), suite: 'ramp-navigateur' };
 ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: 'profil-risque-navigateur' };
-ECRANS.planification = { ...ecranDeModule('planification'), suite: 'planification-navigateur' };
+// PLAN porte deux suites depuis le 14 novembre 2026 : la sienne, et celle des
+// gestes qu'elle ne pressait pas (ADR-003, n° 5.f.99).
+ECRANS.planification = {
+  ...ecranDeModule('planification'), suite: ['planification-navigateur', 'plan-gestes'],
+};
 ECRANS.mesures = { ...ecranDeModule('mesures'), suite: 'mesures-navigateur' };
 ECRANS.droits = { ...ecranDeModule('droits'), suite: 'droits-navigateur' };
 
@@ -494,6 +498,42 @@ const nomDuGestionnaire = (corps) => {
   }
   // Rien après la garde : la garde **est** le geste.
   if (!sansGarde) return premiereGarde || 'event.stopPropagation';
+  // ── Une déclaration en tête n'est pas le geste ──
+  //
+  // `const r=document.getElementById('${id}');r.style.display=…;this.classList
+  // .toggle('expanded')` (`pl-validation.js`, le dépli d'un amendement) ne
+  // tombait sous aucune règle, et se nommait par ses quarante-huit premiers
+  // caractères. Deux torts en un : côté source, l'interpolation gardée dans ce
+  // fragment l'envoyait sur la voie des noms « posables », qui en tirait
+  // **deux** gestes ; côté mouchard, le fragment portait l'identifiant réel.
+  // Aucun ne pouvait se rapprocher de rien. `document.getElementById` passait
+  // pour exercé grâce à une **autre** occurrence — la croix des notifications —
+  // et `this.classList.toggle` restait non exercé pour toujours, sur un geste
+  // que `plan-gestes` presse (n° 5.f.99). Le masquage par agrégation, encore
+  // (n° 5.f.30).
+  //
+  // La déclaration se saute, et l'on nomme ce qui suit, par les mêmes règles.
+  // S'il ne suit rien, le geste est l'appel qui initialise la variable.
+  const declaration = /^(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*=/.exec(sansGarde);
+  if (declaration) {
+    let profondeur = 0;
+    let guillemet = null;
+    let i = declaration[0].length;
+    for (; i < sansGarde.length; i += 1) {
+      const c = sansGarde[i];
+      if (guillemet) {
+        if (c === '\\') i += 1;
+        else if (c === guillemet) guillemet = null;
+      } else if (c === '"' || c === "'" || c === '`') guillemet = c;
+      else if ('([{'.includes(c)) profondeur += 1;
+      else if (')]}'.includes(c)) profondeur -= 1;
+      else if (c === ';' && profondeur === 0) break;
+    }
+    const suite = sansGarde.slice(i + 1).trim();
+    if (suite) return nomDuGestionnaire(suite);
+    const init = /([A-Za-z_$][\w$.]*)\s*\(/.exec(sansGarde.slice(declaration[0].length));
+    if (init) return init[1];
+  }
   const appel = /^([A-Za-z_$][\w$.]*)\s*\(/.exec(sansGarde);
   if (appel) return appel[1];
   // Une affectation : la cible la nomme. `EXEC_STATE.filters.domaine=this.value;…`

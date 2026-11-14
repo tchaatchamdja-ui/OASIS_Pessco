@@ -1219,6 +1219,12 @@ function nommeurDeGestes() {
   // geste : les interpolations se normalisent avant de nommer.
   cas('une interpolation ne multiplie pas les gestes',
     "planUpdateActivity('${actId}')", 'planUpdateActivity');
+  // Une déclaration en tête n'est pas le geste : on nomme ce qui suit, et
+  // l'interpolation qu'elle porte ne fabrique plus deux noms (n° 5.f.99).
+  cas('une déclaration en tête se saute, et l’on nomme ce qui suit',
+    "const r=document.getElementById('${id}');r.style.display='';this.classList.toggle('x');", 'r.style.display');
+  cas('une déclaration seule se nomme par l’appel qui l’initialise',
+    "const x=ouvrir('a')", 'ouvrir');
 
   // ── La symétrie elle-même, gardée par la forme ──
   //
@@ -1751,8 +1757,8 @@ function verrouDeCampagne() {
 function tableDesSuites() {
   const { SUITES, choisir } = require('./suites');
 
-  verifier('suites : la table en porte trente-deux, et chacune dit son nom, son port et son fichier',
-    SUITES.length === 32
+  verifier('suites : la table en porte trente-trois, et chacune dit son nom, son port et son fichier',
+    SUITES.length === 33
     && SUITES.every((s) => typeof s.nom === 'string' && s.nom.length > 2
       && Number.isInteger(s.port) && typeof s.fichier === 'string'),
     `${SUITES.length} suites`);

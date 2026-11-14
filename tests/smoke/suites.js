@@ -115,6 +115,10 @@ const SUITES = [
   // La treizième : les fenêtres qu'on referme sans rien décider — le fond du
   // volet, celui du choix du validateur, et la fenêtre d'intitulé d'une preuve.
   { nom: 'surv-fenetres', port: 4817, fichier: './surv-fenetres.smoke' },
+  // PLAN, avant sa conversion : les gestes que sa suite d'origine ne pressait
+  // pas — l'instance, les notifications, le calendrier, un amendement et la
+  // synchronisation des risques.
+  { nom: 'plan-gestes', port: 4818, fichier: './plan-gestes.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 77 exercés**, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83) |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 85 exercés** — le plafond : les trois restants sont inatteignables, mesurés —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; **prêt pour sa conversion** |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -13309,3 +13309,130 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            plus une question en attente, ni un défaut à corriger : une ronde
            qui ne trouverait pas le dossier depuis la table des constatations
            ne devra pas le « réparer ».
+
+       5.f.99 [x] **PLAN, mesuré avant d'être réécrit : huit gestes de plus,
+           un motif périmé, et un nom que rien ne pouvait rapprocher** — fait
+           le 14 novembre 2026. PLAN est le prochain écran de la conversion
+           (5.c) ; sa seconde suite, `plan-gestes`.
+
+           ── Les onze qui restaient, relus contre l'écran ──
+
+           Le relevé laissait onze gestes non exercés, et la note en disait
+           quatre inatteignables. Relus un par un :
+
+           - **trois le restent** — la barre de sous-onglets
+             (`PLAN_STATE.currentSub`), qu'aucune entrée de `PLAN_NAV` ne
+             déclare ; l'approbation du directeur et la transmission, dont les
+             boutons exigent `valide` ou `approuve_dg` dans le seul rendu qui
+             ne reçoit que des plans `soumis` ;
+           - **le quatrième ne l'était plus** : `planAppliquerInstance` était
+             dit hors d'atteinte faute de multi-instances, « Docker étant à
+             l'arrêt ». L'environnement d'essai en offre — `surv-barre` change
+             déjà l'instance de SURV par la même barre du socle. C'est la faute
+             des n° 5.f.88 et 5.f.97, une troisième fois : *une limite écrite
+             se relit comme un fait longtemps après que ce qui la fondait a
+             changé* ;
+           - **les sept autres** n'avaient jamais été dits inatteignables : ils
+             n'étaient pas pressés.
+
+           ── La seconde suite, et le socle qu'elle partage avec SURV ──
+
+           `plan-gestes` avait besoin de la mise en place de `surv-socle.js` —
+           sas, serveur, mouchard, console, session. La copier aurait fait deux
+           socles qui divergent. Trois choses seules distinguent un module :
+           son chemin, l'élément où il pose son contenu, la largeur de fenêtre
+           de sa suite. Elles sont devenues des paramètres de
+           `module-socle.js` ; `surv-socle.js` les fixe pour SURV, et ses
+           treize suites n'ont pas bougé.
+
+           Huit gestes, onze contrôles :
+
+           - l'instance regardée — reprise sans effet ; une autre retenue, le
+             module rechargé, et le même geste qui ramène l'origine sans que la
+             route ait à servir ;
+           - la croix du panneau des notifications ;
+           - les flèches du calendrier, qui ne valent que si la piste déborde :
+             la fenêtre rétrécie, l'écouteur `resize` doit les armer ; « › »
+             défile, « ‹ » ramène ; la largeur rendue, elles suivent ;
+           - l'étiquette d'une sous-activité — voir plus bas ;
+           - « Activité pour ce prestataire » : le plan s'ouvre, et la nouvelle
+             activité reprend le prestataire ;
+           - le dépli des modifications d'un amendement, dans l'historique ;
+           - « Tout sélectionner », à la synchronisation des risques.
+
+           Le plan, son activité, sa validation et son amendement soumis sont
+           bâtis par les routes, et retirés par elles ; un contrôle exige qu'il
+           n'en reste rien.
+
+           ── Deux fautes de ma ronde, une leçon de l'écran ──
+
+           Le premier passage a rendu neuf sur onze. L'historique : j'avais
+           appelé la page `history` ; elle s'appelle `historique`. L'étiquette :
+           j'exigeais que cocher la case **ne bouge pas** le volet. L'écran les
+           lie exprès — cocher ouvre, décocher referme (`pl-crud.js`) — et
+           c'était mal lire l'écran. Le contrôle mesure désormais l'accord de
+           la case et du volet, dans les deux sens, par un vrai clic de souris.
+
+           ── Une garde qui ne garde rien ici ──
+
+           L'étiquette porte `onclick="event.stopPropagation();"`, censé
+           empêcher le clic de basculer le volet une seconde fois. Le
+           contre-test qui la **retire** (AE) est resté vert : dans Chrome,
+           un clic sur une étiquette placée dans un `<summary>` est activé par
+           l'étiquette, et le volet ne bascule pas de lui-même. La garde n'a
+           ici aucun effet mesurable, et le contrôle ne la prouve pas — il est
+           dit tel, dans la suite. Elle reste, inoffensive : d'autres
+           navigateurs ont traité autrement le contenu interactif d'un
+           `<summary>`, et ce dépôt ne les éprouve pas. *Un contre-test vert
+           n'est pas un échec de la méthode : c'est elle qui dit ce qu'un
+           contrôle ne prouve pas.*
+
+           ── Un nom que rien ne pouvait rapprocher ──
+
+           Le relevé refait laissait un quatrième non exercé :
+           `this.classList.toggle`, dans le dépli d'un amendement — le geste
+           que la ronde presse, et que son contre-test (AG) fait rougir.
+
+           Le gestionnaire commence par une **déclaration** :
+           `const r=document.getElementById('${diffRowId}');…`. Aucune règle du
+           nommeur ne s'y appliquait, et il se nommait par ses quarante-huit
+           premiers caractères. Côté source, l'interpolation gardée dans ce
+           fragment l'envoyait sur la voie des noms « posables », qui en tirait
+           **deux** gestes ; côté mouchard, le fragment portait l'identifiant
+           réel. Rien ne pouvait se rapprocher. `document.getElementById`
+           passait pour exercé grâce à une **autre** occurrence — la croix des
+           notifications —, et `this.classList.toggle` restait non exercé pour
+           toujours. Le masquage par agrégation du n° 5.f.30, encore.
+
+           Une déclaration en tête se saute désormais, et l'on nomme ce qui
+           suit, par les mêmes règles — `r.style.display` ; s'il ne suit rien,
+           l'appel qui initialise la variable. Mesuré sur les sept écrans avant
+           de figer : **une seule occurrence** change, celle-ci. Deux cas
+           s'ajoutent aux contrôles du nommeur.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | AA — reprendre la même instance écrit et recharge | reprendre sans effet |
+           | AB — la croix vise un autre panneau | les notifications |
+           | AC — plus d'écouteur `resize` | l'armement des flèches, et le défilement |
+           | AD — les deux flèches défilent dans le même sens | le défilement |
+           | AE — la garde de l'étiquette retirée | **aucun** — voir plus haut |
+           | AF — le prestataire n'est plus gardé à l'ouverture | « Activité pour ce prestataire » |
+           | AG — le chevron ne marque plus son dépli | l'historique |
+           | AH — « Tout sélectionner » ne décoche plus | la synchronisation |
+           | AI — la règle de la déclaration retirée | les deux cas du nommeur, et le relevé figé |
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | PLAN, noms exercés | 77 / 93 | **85 / 93** — les trois restants inatteignables, mesurés ; 5 indécidables |
+           | PLAN, occurrences exercées | — | **127 / 137**, 7 indécidables |
+           | Suites PLAN | 1 | **2** |
+           | Campagne | 1 834, 32 suites | **1 847, 33 suites** |
+
+           PLAN est désormais mesuré jusqu'à son plafond. Sa conversion peut
+           commencer — à la manière de DROITS (suite n° 1) : les contrôles de
+           ses deux suites sont la définition de « la réécriture marche ».

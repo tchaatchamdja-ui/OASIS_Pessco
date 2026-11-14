@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-12",
+ "releve": "2026-11-14",
  "gestesNommes": 93,
- "occurrences": 138,
- "exerces": 77,
+ "occurrences": 137,
+ "exerces": 85,
  "indecidables": 5,
  "gestes": [
   {
@@ -84,7 +84,7 @@
    "evenement": "click",
    "source": "document.getElementById('planNotifPanel')?.remove()",
    "nom": "document.getElementById",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-actions.js",
@@ -132,7 +132,7 @@
    "evenement": "click",
    "source": "planCalDefiler(-1, this)",
    "nom": "planCalDefiler",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
@@ -150,7 +150,7 @@
    "evenement": "click",
    "source": "planCalDefiler(1, this)",
    "nom": "planCalDefiler",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
@@ -169,7 +169,7 @@
    "nom": "window:resize",
    "source": "window.addEventListener('resize', () => window.planCalNavEtat());",
    "id": null,
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-calendrier.js",
@@ -340,7 +340,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();planOpenDetailForPrestataire('${plan.id}','${p.id}')",
    "nom": "planOpenDetailForPrestataire",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -405,7 +405,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -414,7 +414,7 @@
    "evenement": "change",
    "source": "document.querySelectorAll('.sync-check:not([disabled])').forEach(cb=>cb.checked=this.checked);",
    "nom": "document.querySelectorAll",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-crud.js",
@@ -538,7 +538,7 @@
    "evenement": "change",
    "nom": "planAppliquerInstance",
    "source": "(v) => planAppliquerInstance(v)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-mes-activites.js",
@@ -1121,7 +1121,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
@@ -1130,7 +1130,7 @@
    "evenement": "click",
    "source": "event.stopPropagation();",
    "nom": "event.stopPropagation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
@@ -1210,19 +1210,8 @@
    "forme": "en ligne",
    "evenement": "click",
    "source": "const r=document.getElementById('${diffRowId}');r.style.display=r.style.display==='none'?'':'none';this.classList.toggle",
-   "nom": "document.getElementById",
-   "interpole": true,
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 444,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "const r=document.getElementById('${diffRowId}');r.style.display=r.style.display==='none'?'':'none';this.classList.toggle",
-   "nom": "this.classList.toggle",
-   "interpole": true,
-   "exerce": false
+   "nom": "r.style.display",
+   "exerce": true
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",

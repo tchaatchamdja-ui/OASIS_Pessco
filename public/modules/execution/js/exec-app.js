@@ -532,8 +532,13 @@ async function execRefreshDynamic() {
                 const fullDossier = await api(`${EXEC_MODULE_API}/dossiers/${did}`);
                 if (fullDossier && fullDossier.id) EXEC_STATE.selectedDossier = fullDossier;
             } catch (e) {
+                // Un 404 dit que le dossier n'existe plus — supprimé par un
+                // autre, ou par les États. Le garder, c'était le redemander à
+                // chaque rafraîchissement, un 404 de plus chaque fois. Une
+                // panne passagère, elle, ne fait rien oublier.
                 const fresh = dossiers.find(d => d.id === did);
                 if (fresh) EXEC_STATE.selectedDossier = fresh;
+                else if (e && e.statut === 404) EXEC_STATE.selectedDossier = null;
             }
         }
     } catch (e) {

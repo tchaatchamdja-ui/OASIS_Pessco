@@ -782,6 +782,10 @@ async function execDeleteDossier(dossierId) {
     }
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, { method: 'DELETE' });
+        // Le dossier supprimé était peut-être le dernier vu : l'écran le
+        // retient après la fermeture de son volet, et le rafraîchissement
+        // redemanderait au serveur ce qu'on vient de lui faire supprimer.
+        if (EXEC_STATE.selectedDossier?.id === dossierId) EXEC_STATE.selectedDossier = null;
         await execRefreshDynamic();
         execRenderPage();
     } catch (e) {

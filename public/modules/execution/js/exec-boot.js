@@ -65,7 +65,11 @@ async function api(path, options = {}) {
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(oasisMessageErreur(err, res.status));
+        // Le code suit le message : un appelant qui doit distinguer « n'existe
+        // plus » d'une panne passagère le lit, au lieu de deviner.
+        const e = new Error(oasisMessageErreur(err, res.status));
+        e.statut = res.status;
+        throw e;
     }
     if ((res.headers.get('content-type') || '').includes('application/json')) return res.json();
     return res;

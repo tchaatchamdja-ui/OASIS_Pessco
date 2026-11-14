@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **310 gestes nommés, 299 exercés** (96 %), 491 occurrences sur 505 dont 6 indécidables — mesuré par **neuf** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents` et `surv-dossiers`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.93) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les huit noms non exercés sont dispersés sur six fichiers, aucun au-delà de deux occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). Le gisement qui vient est `exec-adapters.js`, le changement d'instance et le renvoi vers la gestion des droits |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 300 exercés** (97 %), 492 occurrences sur 505 dont 6 indécidables — mesuré par **neuf** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents` et `surv-dossiers`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.94) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les sept noms non exercés sont dispersés sur cinq fichiers, aucun au-delà de deux occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). Le gisement qui vient est `exec-adapters.js`, le changement d'instance et le renvoi vers la gestion des droits |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -12793,3 +12793,104 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            deux. Le gisement qui vient est `exec-adapters.js` : **le
            changement d'instance** et **le renvoi vers la gestion des droits**,
            les deux gestes que l'adaptateur pose sur la barre du socle.
+
+       5.f.94 [x] **Soumettre depuis l'aperçu — et un dossier supprimé que
+           l'écran redemandait** — fait le 14 novembre 2026. Le reste
+           d'`exec-fiche.js` : « Soumettre pour validation », au pied de
+           l'aperçu de la fiche qu'offre le formulaire d'une notification en
+           brouillon.
+
+           ── Trois issues au choix du validateur ──
+
+           Soumettre ouvre le choix du validateur. La ronde, ajoutée à
+           `surv-documents`, pose un brouillon par la route, l'ouvre par le
+           formulaire, passe à l'aperçu, et y soumet :
+
+           - le choix **refusé** se ferme, et la notification reste un
+             brouillon ;
+           - **confirmé sans validateur**, il reste ouvert, l'écran le dit
+             (« selectionner_validateur »), et rien ne part ;
+           - le validateur **choisi**, la notification est soumise **à lui** —
+             le serveur garde son identifiant —, la saisie est gardée, le volet
+             se ferme et l'écran passe aux soumises.
+
+           Elle la rejette puis la supprime en partant.
+
+           ── Ce que la ronde a trouvé en passant ──
+
+           Le premier passage était vert sur les trois contrôles, et rouge sur
+           la console : un 404 sur `GET /dossiers/:id`, le dossier que la ronde
+           venait de supprimer. La cause est dans l'écran, non dans la ronde.
+
+           `execOpenDossierSlider` retient le dossier vu
+           (`EXEC_STATE.selectedDossier`), et rien ne l'oublie à la fermeture
+           du volet. `execRefreshDynamic`, qu'appellent toutes les actions, le
+           recharge **unitairement** dès qu'il est retenu. Un utilisateur qui
+           regarde un dossier, ferme le volet, puis le supprime du tableau :
+           le rafraîchissement de la suppression redemande au serveur ce qu'on
+           vient de lui faire supprimer, et chaque action suivante le
+           redemande encore. Mesuré par le vrai geste — la référence saisie,
+           comme à l'écran : **deux 404 de suite**, et le dossier toujours
+           retenu.
+
+           Deux corrections, chacune à l'endroit qui sait :
+
+           - `execDeleteDossier` sait ce qu'il supprime : il oublie le dossier
+             retenu si c'est lui. **Aucune** demande ne part plus ;
+           - `execRefreshDynamic` oublie un dossier dont le rechargement rend
+             **404** et que la liste ne porte plus — supprimé par une autre
+             main, ou par les États. **Une** demande, puis plus aucune. Pour le
+             distinguer d'une panne passagère, `api()` attache désormais le
+             code HTTP à l'erreur qu'elle lève (`e.statut`) : une panne ne fait
+             rien oublier.
+
+           Deux pistes plus larges ont été écartées, toutes deux mesurées
+           fausses à la lecture :
+
+           - oublier à la fermeture du volet : `execShowSlider` ferme le volet
+             précédent **après** que `execOpenDossierSlider` a retenu le
+             dossier — le volet du dossier aurait perdu le sien ;
+           - oublier tout dossier absent de la liste : la liste d'un
+             prestataire ne porte que les dossiers **clôturés**, alors qu'il
+             ouvre le dossier d'une constatation avant la clôture
+             (`exec-constatations.js`). Son volet aurait perdu son dossier.
+
+           Le ménage de la ronde passe donc désormais par le geste de l'écran,
+           et deux contrôles comptent les demandes faites pour le dossier :
+           zéro au geste, une à l'autre main. Le 404 de l'autre main est
+           déclaré ; c'est le compte qui garde ce que la déclaration dispense.
+
+           Ce qui reste : `execEtatsSupprimer` ne connaît que la notification,
+           et s'en remet au rafraîchissement — un 404 au plus, non mesuré par
+           son propre geste.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | U — la suppression n'oublie plus le dossier retenu | le geste : une demande au lieu de zéro |
+           | V — le rafraîchissement garde un dossier introuvable | l'autre main : deux demandes, non oublié |
+           | W — `api()` ne porte plus le code HTTP | l'autre main : deux demandes, non oublié |
+           | X — refuser le choix soumet quand même | le refus (+ sans validateur, par suite) |
+           | Y — confirmer sans validateur est accepté | sans validateur (+ le choix) |
+           | Z — le validateur choisi n'est pas transmis | le validateur choisi |
+
+           U montre que le contrôle du geste ne se suffit pas de l'oubli : sans
+           la première correction, la seconde oublie le dossier après un 404 —
+           déclaré —, et seul le compte des demandes le voit.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-fiche.js` | 10 / 11 | **11 / 11** |
+           | SURV, occurrences exercées | 491 / 505 (97 %) | **492 / 505 (97 %)** |
+           | SURV, noms exercés | 299 / 310 (96 %) | **300 / 310 (97 %)** |
+           | `surv-documents` | 7 contrôles | **12** |
+           | Campagne | 1 795, 28 suites | **1 800, 28 suites** |
+
+           `exec-fiche.js` est complet. Le gisement qui vient est
+           `exec-adapters.js` : l'instance regardée et le renvoi vers la
+           gestion des droits, les deux gestes que l'adaptateur pose sur la
+           barre du socle — deux gestes qui quittent la page, et qu'on mesure
+           donc de part et d'autre du chargement.

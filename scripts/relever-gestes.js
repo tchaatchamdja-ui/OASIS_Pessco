@@ -163,7 +163,7 @@ ECRANS.execution = {
   ...ecranDeModule('execution'),
   suite: ['surv', 'surv-pieces', 'surv-parametres', 'surv-coquille', 'surv-circuit',
     'surv-plans', 'surv-processus', 'surv-documents', 'surv-dossiers', 'surv-barre',
-    'surv-constatations', 'surv-prestataire'],
+    'surv-constatations', 'surv-prestataire', 'surv-fenetres'],
 };
 
 // ── Les cinq autres, et pourquoi `suite: null` et non rien du tout ──
@@ -294,6 +294,90 @@ function blanchirCommentaires(code) {
   }
   return sortie.join('');
 }
+
+// ── Une fonction fléchée posée en propriété se nomme **par sa source** ──
+//
+// `overlay.onclick = () => execCloseSlider()` ne donne aucun nom à la
+// fonction : l'inférence de nom ne s'applique pas à une affectation sur un
+// membre. Le mouchard voyait donc `''`, puis « (anonyme) », et le relevé ne
+// pouvait rien rapprocher — il les laissait dehors, un angle mort (n° 5.f.97).
+//
+// Ce qui identifie une telle fonction est son **texte**, que les deux côtés
+// voient : la source l'écrit, et le navigateur le rend par `String(fn)`. Mais
+// pas sous la même forme. Un écran TypeScript est réimprimé par esbuild — les
+// guillemets simples deviennent doubles, les blocs se réindentent —, et un
+// commentaire glissé dans le corps est blanchi d'un côté, gardé de l'autre.
+// Comparer les textes tels quels aurait rendu « non exercé » un geste pressé.
+//
+// Les deux côtés passent donc par **la même** mise en forme : esbuild, celui
+// qui construit le portail, réimprime l'expression, puis les blancs se
+// réduisent. *Deux côtés qui nomment séparément finissent par nommer
+// différemment* (n° 5.f.3) : ici, ils ne nomment que par `formeDeFleche`.
+//
+// Ce que cela coûte, et qui est dit : deux flèches au texte identique, en deux
+// endroits, ne font qu'un geste — comme deux attributs qui appellent la même
+// fonction. Rien d'autre n'est confondu : le texte entier est la clé, non le
+// premier appel qu'il contient (`el.remove`, `fermer` diraient trop peu).
+const formeDeFleche = (texte, chargeur = 'js') => {
+  let transformSync;
+  try {
+    // eslint-disable-next-line global-require
+    ({ transformSync } = require('esbuild'));
+  } catch {
+    return null;
+  }
+  try {
+    // Les commentaires sont blanchis **ici**, des deux côtés : esbuild en garde
+    // certains, et `String(fn)` les rend tous, quand la source arrive déjà
+    // blanchie. Sans cette ligne, une flèche commentée ne se rapprochait
+    // jamais — c'est le contrôle unitaire écrit pour cela qui l'a montré, au
+    // premier passage.
+    const { code } = transformSync(`(${blanchirCommentaires(String(texte))});`,
+      { loader: chargeur, logLevel: 'silent' });
+    return code.replace(/\s+/g, ' ').trim().replace(/;$/, '');
+  } catch {
+    return null;
+  }
+};
+
+// Le texte d'une fonction fléchée dans la source, de ses paramètres à la fin
+// de son corps. Un corps en bloc se clôt à son accolade ; une expression, au
+// premier `;`, `,` ou saut de ligne hors de toute parenthèse — ou à la
+// parenthèse qui la contient. Les chaînes et les gabarits sont sautés entiers :
+// une accolade dans `'{'` n'en est pas une.
+const texteDeFleche = (texte, depart) => {
+  const ouvrants = '([{';
+  const fermants = ')]}';
+  const fleche = texte.indexOf('=>', depart);
+  if (fleche < 0) return null;
+  let i = fleche + 2;
+  while (/\s/.test(texte[i] || '')) i += 1;
+  const bloc = texte[i] === '{';
+  let profondeur = 0;
+  while (i < texte.length) {
+    const c = texte[i];
+    if (c === '`') {
+      const g = corpsDuGabarit(texte, i);
+      if (!g) return null;
+      i = g.fin + 1;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      i += 1;
+      while (i < texte.length && texte[i] !== c) i += texte[i] === '\\' ? 2 : 1;
+      i += 1;
+      continue;
+    }
+    if (ouvrants.includes(c)) profondeur += 1;
+    else if (fermants.includes(c)) {
+      profondeur -= 1;
+      if (profondeur < 0) break;
+      if (bloc && profondeur === 0) { i += 1; break; }
+    } else if (!bloc && profondeur === 0 && (c === ';' || c === ',' || c === '\n')) break;
+    i += 1;
+  }
+  return texte.slice(depart, i).trim();
+};
 
 // ── Le nom d'un gestionnaire en ligne, et les trois formes qu'il prend ──
 //
@@ -748,7 +832,16 @@ function relever(fichiers) {
       }
     }
 
-    const motifPropriete = new RegExp(`\\b([\\w$.[\\]'"]+)\\.on(${EVENEMENTS.join('|')})\\s*=\\s*([A-Za-z_$][\\w$.]*)`, 'g');
+    // ── Une cible peut être un **appel** ──
+    //
+    // `el.querySelector('#exec_preuve_ok').onclick = …` finit par `)` : le motif
+    // ne lisait qu'un identifiant pointé avant `.on…`, et ces affectations
+    // n'entraient au relevé sous **aucune** forme. Six dans SURV, trouvées en
+    // comptant toutes les affectations `.on<événement> =` du dépôt contre ce que
+    // le relevé en retenait (n° 5.f.98). La cible n'est pas le nom : il suffit
+    // de la reconnaître.
+    const CIBLE = `((?:[\\w$.[\\]'"]+|\\)))\\.on(${EVENEMENTS.join('|')})\\s*=\\s*`;
+    const motifPropriete = new RegExp(`${CIBLE}([A-Za-z_$][\\w$.]*)`, 'g');
     for (const m of texte.matchAll(motifPropriete)) {
       // ── Une propriété mise à `null` **retire** un gestionnaire ──
       //
@@ -762,6 +855,9 @@ function relever(fichiers) {
       // (n° 5.f.83) : *retirer du dénominateur ce qui n'y a jamais eu sa
       // place, sans rien ajouter au numérateur.*
       if (m[3] === 'null' || m[3] === 'undefined') continue;
+      // `= async () => …` et `= function …` ne sont pas des noms : la flèche a
+      // son motif, et le relevé ne connaît aucune `function` posée ainsi.
+      if (m[3] === 'async' || m[3] === 'function') continue;
       // ── Un identifiant suivi de `=>` est un **paramètre**, non un nom ──
       //
       // `el.onclick = e => { … }` pose une fonction fléchée **anonyme** : le
@@ -771,17 +867,37 @@ function relever(fichiers) {
       // un « non exercé » éternel sur un geste que `surv-constatations` presse
       // et contre-teste (n° 5.f.96).
       //
-      // `el.onclick = (e) => …`, la même chose entre parenthèses, n'entre déjà
-      // pas au relevé : le motif exige un identifiant. Les deux formes sont
-      // désormais traitées pareil. Sept fonctions fléchées posées ainsi
-      // restent donc hors du relevé — c'est un angle mort, nommé, et non
-      // un geste qu'on prétendrait couvert (ADR-003, n° 5.f.97).
+      // `el.onclick = (e) => …`, la même chose entre parenthèses, n'entre pas
+      // à ce motif-ci : il exige un identifiant. Les flèches, sous l'une et
+      // l'autre forme, ont le leur, juste en dessous.
       if (/^\s*=>/.test(texte.slice(m.index + m[0].length))) continue;
       gestes.push({
         fichier: rel, ligne: texte.slice(0, m.index).split('\n').length,
         forme: 'propriété', evenement: m[2], nom: m[3],
         source: m[0].slice(0, 120), id: null,
       });
+    }
+
+    // ── La fonction fléchée posée en propriété, nommée par son texte ──
+    //
+    // Écartées jusqu'ici, et dites « un angle mort » (n° 5.f.97) — sept, disait
+    // la phrase. Le compte de toutes les affectations en a trouvé **seize** :
+    // quatorze dans SURV, deux dans le portail. Voir `formeDeFleche`.
+    // Le type de retour d'une flèche TypeScript — `(e): void => …` — se tient
+    // entre ses paramètres et `=>` : sans lui, `instances.ts` restait dehors.
+    const motifFleche = new RegExp(`${CIBLE}`
+      + '(?=(?:async\\s*)?(?:\\([^()]*\\)(?:\\s*:\\s*[\\w$<>\\[\\]|. ]+?)?|[A-Za-z_$][\\w$]*)\\s*=>)', 'g');
+    for (const m of texte.matchAll(motifFleche)) {
+      const fleche = texteDeFleche(texte, m.index + m[0].length);
+      const forme = fleche && formeDeFleche(fleche, /\.tsx?$/.test(rel) ? 'ts' : 'js');
+      const commun = {
+        fichier: rel, ligne: texte.slice(0, m.index).split('\n').length,
+        forme: 'propriété', evenement: m[2], source: (fleche || m[0]).slice(0, 120), id: null,
+      };
+      // Un texte qu'esbuild ne sait pas relire ne se rapproche de rien : il est
+      // dit indécidable, et non compté pour non exercé.
+      if (!forme) gestes.push({ ...commun, nom: '(flèche illisible)', indecidable: true, raison: 'flèche illisible' });
+      else gestes.push({ ...commun, nom: forme });
     }
 
     // ── Quatrième forme : l'action remise au socle ──
@@ -1012,10 +1128,13 @@ const MOUCHARD_FN = (EVTS) => {
           try {
             nom = Object.getOwnPropertyNames(window).find((k) => {
               try { return window[k] === fn; } catch { return false; }
-            }) || '(anonyme)';
-          } catch { nom = '(anonyme)'; }
+            }) || '';
+          } catch { nom = ''; }
         }
-        garder('propriete', nom);
+        // Ni nom ni globale : une fonction fléchée posée sur place. On garde
+        // **son texte**, que le côté Node met en forme par `formeDeFleche`,
+        // comme la source — le nommage n'appartient pas à la page.
+        garder('propriete', nom || { source: String(fn).slice(0, 2000) });
         break;
       }
     }, true);
@@ -1270,7 +1389,10 @@ async function principal() {
     const i = t.indexOf('=>');
     return nomDuGeste(i >= 0 ? t.slice(i + 2).trim() : t);
   }));
-  const proprietesVues = new Set(exerces.propriete || []);
+  // Une propriété vue sans nom porte son texte : on le met en forme par la
+  // fonction qui a nommé la source, et par elle seule.
+  const proprietesVues = new Set((exerces.propriete || []).map((v) => (
+    v && typeof v === 'object' ? formeDeFleche(String(v.source || '')) : v)).filter(Boolean));
   // ── Nommer un gestionnaire JSX **vu au vol**, comme on nomme celui qui est
   //    écrit dans la source ──
   //
@@ -1419,4 +1541,7 @@ module.exports = {
   // `nomDuGeste` est l’entrée : les deux côtés — la source et le mouchard — ne
   // nomment que par elle.
   nomDuGeste, nomDuGestionnaire,
+  // La mise en forme d'une flèche posée en propriété, pour la même raison : les
+  // deux côtés ne nomment une flèche que par elle.
+  formeDeFleche,
 };

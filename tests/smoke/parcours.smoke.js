@@ -1089,6 +1089,78 @@ module.exports = async function parcoursSmoke(port) {
     verifier('une instance s’ouvre depuis la configuration',
       ouverte.bouton && presente.trouvee, JSON.stringify({ ...ouverte, ...presente }));
 
+    // ── L'instance regardée, choisie dans la barre ──
+    //
+    // `choix.onchange = (e): void => { … }` (`instances.ts`) : une flèche posée
+    // en propriété, que le relevé ne voyait pas — et la note du portail disait
+    // en conséquence qu'aucun geste couvrable n'y restait sans ronde. Le relevé
+    // les nomme désormais par leur texte (ADR-003, n° 5.f.98), et celui-ci est
+    // apparu, couvrable, non couvert.
+    //
+    // L'instance d'essai qu'on vient d'ouvrir est dans la liste : on la choisit,
+    // le portail se recharge sur elle, puis on revient à l'origine. Le choix est
+    // **persisté pour le compte** : la route le rétablit quoi qu'il arrive, et
+    // le contrôle exige qu'elle n'ait pas eu à servir.
+    const lireInstance = () => page.evaluate(async () => {
+      const r = await fetch('/api/instance', { credentials: 'same-origin' });
+      return (await r.json().catch(() => ({}))).courante || '';
+    });
+    const choisirDansLaBarre = async (valeur) => {
+      const rechargement = page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 })
+        .then(() => true).catch(() => false);
+      const offerte = await page.evaluate((v) => {
+        const s = document.getElementById('instanceSelect');
+        if (!s || ![...s.options].some((o) => o.value === v)) return false;
+        s.value = v;
+        s.dispatchEvent(new Event('change', { bubbles: true }));
+        return true;
+      }, valeur);
+      const recharge = offerte ? await rechargement : false;
+      if (recharge) {
+        await page.waitForSelector('#instanceSelect', { timeout: 10000 }).catch(() => {});
+      }
+      return {
+        offerte, recharge,
+        affichee: await page.evaluate(() => (document.getElementById('instanceSelect') || {}).value ?? null),
+        serveur: await lireInstance(),
+      };
+    };
+    const origine = await page.evaluate(() => (document.getElementById('instanceSelect') || {}).value ?? null);
+    const versEssai = origine === null ? null : await choisirDansLaBarre(NOM_ESSAI);
+    const retourOrigine = versEssai && versEssai.recharge ? await choisirDansLaBarre(origine) : null;
+    let retabliParLaRoute = false;
+    if (origine !== null && (await lireInstance()) !== origine) {
+      retabliParLaRoute = true;
+      await page.evaluate(async (v) => {
+        await fetch('/api/instance', {
+          method: 'PUT', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
+          body: JSON.stringify({ instance: v }),
+        });
+      }, origine);
+      await page.reload({ waitUntil: 'networkidle2' });
+    }
+    verifier('l’instance choisie dans la barre est retenue, le portail rechargé sur elle, et le même geste ramène l’origine',
+      origine !== null && !!versEssai && versEssai.offerte && versEssai.recharge
+      && versEssai.affichee === NOM_ESSAI && versEssai.serveur === NOM_ESSAI
+      && !!retourOrigine && retourOrigine.recharge
+      && retourOrigine.affichee === origine && retourOrigine.serveur === origine
+      && !retabliParLaRoute,
+      JSON.stringify({ origine, versEssai, retourOrigine, retabliParLaRoute }));
+
+    // Le portail a été rechargé : on rouvre la table des instances pour la
+    // suite de la ronde.
+    await ouvrir('config');
+    await page.evaluate(() => {
+      const b = [...document.querySelectorAll('.cfg-sidebar-item')]
+        .find((e) => (e.getAttribute('onclick') || '').includes("cfgNavigate('instances')"));
+      if (b) b.click();
+    });
+    await page.waitForFunction(
+      () => document.querySelectorAll('[onclick^="basculerInstance"]').length > 0,
+      { timeout: 10000 },
+    ).catch(() => { /* le contrôle suivant le dira */ });
+
     // La mise en sommeil, puis le réveil : l'état de la ligne doit suivre.
     const bascule = await page.evaluate(async (nom) => {
       const presser = async () => {

@@ -1,8 +1,8 @@
 {
  "releve": "2026-11-14",
- "gestesNommes": 309,
- "occurrences": 504,
- "exerces": 306,
+ "gestesNommes": 323,
+ "occurrences": 518,
+ "exerces": 320,
  "indecidables": 3,
  "gestes": [
   {
@@ -909,6 +909,16 @@
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
+   "ligne": 1276,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "() => execCloseSlider()",
+   "id": null,
+   "nom": "(() => execCloseSlider())",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-app.js",
    "ligne": 1227,
    "forme": "écouteur",
    "evenement": "click",
@@ -1621,6 +1631,46 @@
    "evenement": "click",
    "source": "document.getElementById('${id}').remove()",
    "nom": "document.getElementById",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-constatations.js",
+   "ligne": 1666,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "e => { if (e.target === el) el.remove(); }",
+   "id": null,
+   "nom": "((e) => { if (e.target === el) el.remove(); })",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-constatations.js",
+   "ligne": 1680,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "() => {\n        const txt = (document.getElementById('exec_comment_text')?.value || '').trim();\n        if (!txt) { _exe",
+   "id": null,
+   "nom": "(() => { const txt = (document.getElementById(\"exec_comment_text\")?.value || \"\").trim(); if (!txt) { _execToast(te(\"commentaire_obligatoire\"), \"warning\"); return; } el.remove(); onConfirm(txt); })",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-constatations.js",
+   "ligne": 1713,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "(ev) => { if (ev.target === el) el.remove(); }",
+   "id": null,
+   "nom": "((ev) => { if (ev.target === el) el.remove(); })",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-constatations.js",
+   "ligne": 1724,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "async () => {\n        el.remove();\n        await action();\n    }",
+   "id": null,
+   "nom": "(async () => { el.remove(); await action(); })",
    "exerce": true
   },
   {
@@ -2757,6 +2807,36 @@
    "exerce": true
   },
   {
+   "fichier": "public/modules/execution/js/exec-notifications.js",
+   "ligne": 810,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "() => overlay.remove()",
+   "id": null,
+   "nom": "(() => overlay.remove())",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-notifications.js",
+   "ligne": 811,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "(e) => { if (e.target === overlay) overlay.remove(); }",
+   "id": null,
+   "nom": "((e) => { if (e.target === overlay) overlay.remove(); })",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-notifications.js",
+   "ligne": 812,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "() => {\n            const sel = document.getElementById('validator_picker_select')?.value || '';\n            if (!sel) {",
+   "id": null,
+   "nom": "(() => { const sel = document.getElementById(\"validator_picker_select\")?.value || \"\"; if (!sel) { oasisToast(te(\"selectionner_validateur\"), \"warning\"); return; } overlay.remove(); onConfirm(sel); })",
+   "exerce": true
+  },
+  {
    "fichier": "public/modules/execution/js/exec-pac-suivi.js",
    "ligne": 332,
    "forme": "en ligne",
@@ -2844,6 +2924,16 @@
    "evenement": "click",
    "source": "execSupprimerSuivi(this)",
    "nom": "execSupprimerSuivi",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-pac-suivi.js",
+   "ligne": 369,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "() => execPacDiscussionsOuvrir(fncId)",
+   "id": null,
+   "nom": "(() => execPacDiscussionsOuvrir(fncId))",
    "exerce": true
   },
   {
@@ -3267,6 +3357,56 @@
    "evenement": "click",
    "source": "execPreuveSupprimer(this)",
    "nom": "execPreuveSupprimer",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-pac.js",
+   "ligne": 140,
+   "forme": "propriété",
+   "evenement": "input",
+   "source": "() => txt.classList.toggle('exec-pac-manquant', !txt.value.trim())",
+   "id": null,
+   "nom": "(() => txt.classList.toggle(\"exec-pac-manquant\", !txt.value.trim()))",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-pac.js",
+   "ligne": 1165,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "(e) => { if (e.target === el) fermer(null); }",
+   "id": null,
+   "nom": "((e) => { if (e.target === el) fermer(null); })",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-pac.js",
+   "ligne": 1186,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "() => fermer(null)",
+   "id": null,
+   "nom": "(() => fermer(null))",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-pac.js",
+   "ligne": 1187,
+   "forme": "propriété",
+   "evenement": "click",
+   "source": "() => {\n            const intitule = (champ.value || '').trim();\n            if (!intitule) { _execToast(te('preuve_inti",
+   "id": null,
+   "nom": "(() => { const intitule = (champ.value || \"\").trim(); if (!intitule) { _execToast(te(\"preuve_intitule_requis\"), \"warning\"); champ.focus(); return; } fermer({ intitule, commentaire: (el.querySelector(\"#exec_preuve_commentaire\").value || \"\").trim() }); })",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/execution/js/exec-pac.js",
+   "ligne": 1192,
+   "forme": "propriété",
+   "evenement": "keydown",
+   "source": "(e) => { if (e.key === 'Enter') el.querySelector('#exec_preuve_ok').click(); }",
+   "id": null,
+   "nom": "((e) => { if (e.key === \"Enter\") el.querySelector(\"#exec_preuve_ok\").click(); })",
    "exerce": true
   },
   {

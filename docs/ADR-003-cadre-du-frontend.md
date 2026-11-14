@@ -864,12 +864,12 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 67 exercés — le plafond atteignable —, 9 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
+           | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
            | PLAN (`planification`) | 5 955 | **93 gestes nommés, 77 exercés**, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **309 gestes nommés, 306 exercés** (99 %) — tous les décidables —, 498 occurrences sur 504 dont 6 indécidables — mesuré par **douze** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers`, `surv-barre`, `surv-constatations` et `surv-prestataire`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.97) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 59 sur 60, les activités à 66 sur 67 — leurs restes indécidables —, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. **Plus aucun nom décidable n'est sans ronde.** `execViewFNC` et `execAccuserReception`, qu'on disait ici hors de portée — offerts au seul compte qui ne gouverne pas —, le sont en vue Prestataire, que la barre offre au super-administrateur (n° 5.f.97, qui corrige cette phrase). `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). La remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire sont exercés, `exec-dashboard.js` 29 sur 29 (n° 5.f.96) ; l'accusé de réception et la consultation d'une constatation, du côté de l'organisme, le sont aussi — et le dernier « non exercé », `e`, était un paramètre que le relevé lisait comme un nom (n° 5.f.97). Sept fonctions fléchées posées en propriété restent hors du relevé : un angle mort nommé |
+           | SURV (`execution`) | 24 162 | **323 gestes nommés, 320 exercés** (99 %) — tous les décidables —, 512 occurrences sur 518 dont 6 indécidables — mesuré par **treize** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers`, `surv-barre`, `surv-constatations`, `surv-prestataire` et `surv-fenetres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.98) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 59 sur 60, les activités à 66 sur 67 — leurs restes indécidables —, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. **Plus aucun nom décidable n'est sans ronde.** `execViewFNC` et `execAccuserReception`, qu'on disait ici hors de portée — offerts au seul compte qui ne gouverne pas —, le sont en vue Prestataire, que la barre offre au super-administrateur (n° 5.f.97, qui corrige cette phrase). `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). La remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire sont exercés, `exec-dashboard.js` 29 sur 29 (n° 5.f.96) ; l'accusé de réception et la consultation d'une constatation, du côté de l'organisme, le sont aussi — et le dernier « non exercé », `e`, était un paramètre que le relevé lisait comme un nom (n° 5.f.97). Les fonctions fléchées posées en propriété, que le relevé laissait dehors — seize, et non sept —, sont nommées par leur texte des deux côtés ; les cinq renoncements qu'aucune suite ne pressait le sont par `surv-fenetres` (n° 5.f.98). |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -13163,3 +13163,149 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            - **l'accès de l'organisme au dossier d'une constatation** — par les
              seules statistiques aujourd'hui. Une décision d'écran, à demander
              à la maîtrise d'ouvrage avant toute ligne de code.
+
+       5.f.98 [x] **L'angle mort du relevé : les flèches posées en propriété,
+           nommées par leur texte — et seize là où l'on en disait sept** —
+           fait le 14 novembre 2026. Une suite SURV de plus, `surv-fenetres`,
+           et une ronde de plus au `parcours`.
+
+           ── Ce qui manquait au relevé ──
+
+           `overlay.onclick = () => execCloseSlider()` pose une fonction sans
+           nom : une affectation sur un membre n'en donne aucun. Le relevé
+           nommait un gestionnaire en propriété par l'identifiant écrit après
+           `=` ; une flèche n'en a pas, et elle restait dehors. Le n° 5.f.97
+           l'avait dit — « sept fonctions fléchées » —, sans les avoir comptées
+           toutes.
+
+           Le compte a été refait sur **toutes** les affectations
+           `.on<événement> =` des sources, contre ce que le relevé en retenait.
+           Il en manquait **seize**, en trois familles :
+
+           - neuf flèches derrière une cible simple — `el.onclick = (e) => …` ;
+           - six derrière une cible qui est un **appel** —
+             `el.querySelector('#exec_preuve_ok').onclick = () => …`. Le motif
+             ne lisait qu'un identifiant pointé avant `.on…` : ces affectations
+             n'entraient au relevé sous **aucune** forme, nommée ou non. Elles
+             n'étaient pas dans les sept ;
+           - une avec un type de retour TypeScript — `(e): void => …`
+             (`instances.ts`).
+
+           Quatorze dans SURV, deux dans le portail. La seule affectation encore
+           hors du relevé est `voile.onclick = null`, qui retire un geste.
+
+           ── Les nommer par leur texte, des deux côtés ──
+
+           Le texte d'une flèche est ce que les deux côtés voient : la source
+           l'écrit, le navigateur le rend par `String(fn)`. Mais pas sous la même
+           forme — un écran TypeScript est réimprimé par esbuild, qui change les
+           guillemets et réindente les blocs, et un commentaire est blanchi d'un
+           côté, gardé de l'autre. Les deux côtés passent donc par **une seule**
+           mise en forme, `formeDeFleche` : esbuild réimprime l'expression, et
+           les blancs se réduisent. Le mouchard, quand une fonction n'a ni nom
+           ni globale qui la porte, rend son texte au lieu de « (anonyme) » ; le
+           côté Node le met en forme.
+
+           Le texte **entier** est la clé, non le premier appel qu'il contient :
+           `el.remove` ou `fermer` diraient trop peu, et confondraient les
+           fenêtres. Le prix, dit : deux flèches identiques en deux endroits ne
+           font qu'un geste, comme deux attributs qui appellent la même fonction.
+
+           Quatre contrôles unitaires le gardent : une flèche écrite et la même
+           servie par esbuild ont une clé ; un commentaire n'y change rien ; deux
+           flèches qui appellent autre chose restent deux ; les deux côtés
+           passent par la même fonction.
+
+           Le deuxième a rougi au premier passage, sur un code sans faute
+           apparente : esbuild **garde** certains commentaires, et `String(fn)`
+           les rend tous, quand la source arrive aux motifs déjà blanchie. Une
+           flèche commentée ne se serait jamais rapprochée. Aucune ne l'est
+           aujourd'hui, et c'est pourquoi le relevé ne l'aurait pas dit :
+           `formeDeFleche` blanchit désormais elle-même, des deux côtés.
+
+           ── Ce que les suites pressaient déjà, et ce qu'elles ne pressaient pas ──
+
+           Le premier relevé refait a rapproché **neuf** flèches sur seize —
+           toutes dans SURV, aucune au portail. C'est la preuve que le
+           rapprochement tient : ce sont celles que des rondes pressent, et le
+           fond de la fenêtre de commentaire que `surv-constatations`
+           contre-teste en est.
+
+           Restaient cinq gestes SURV, tous des **renoncements** — le fond du
+           volet, le fond du choix du validateur, et dans la fenêtre d'intitulé
+           d'une preuve son fond, « Annuler », et la touche Entrée, qui vaut
+           « Ajouter ». La treizième suite SURV, `surv-fenetres`, les joue par
+           leurs vrais chemins — la soumission d'une notification, le sélecteur
+           de fichiers d'une preuve — et compte les écritures pendant chaque
+           geste : la fenêtre doit se fermer, et rien ne doit partir. L'Entrée
+           est l'inverse : un seul dépôt, sous l'intitulé saisi ; une autre
+           touche ne valide rien.
+
+           Une attente bornée garde la ronde : une fenêtre qui ne se refermerait
+           plus aurait laissé pendre la promesse qui l'ouvre, et la suite se
+           serait **arrêtée** au lieu de rougir. Le contre-test T l'a confirmé :
+           il rougit, et ne pend pas.
+
+           ── Une phrase du portail, fausse sans que rien ne le dise ──
+
+           La note de couverture du portail portait : *« Il ne reste aucun geste
+           du portail qui soit à la fois couvrable et non couvert. »* Le choix de
+           l'instance dans la barre l'était — couvrable, non couvert —, mais
+           invisible : c'est la flèche de `instances.ts`. Le `parcours` le couvre
+           au même pas : l'instance d'essai qu'il vient d'ouvrir est choisie
+           dans la barre, le portail se recharge sur elle, puis le même geste
+           ramène l'origine. Le choix étant persisté pour le compte, la route le
+           rétablit quoi qu'il arrive, et le contrôle exige qu'elle n'ait pas eu
+           à servir. *Un bloc vide ne prouve rien de plus que l'instrument qui
+           l'a vidé.*
+
+           La seconde flèche du portail, `(e) => e.preventDefault()` sur le
+           `mousedown` du bouton de vidage, est la même précaution que
+           l'attribut déjà déclaré « pas un geste » : elle est déclarée à côté.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | R — le fond du volet ne referme plus | le fond du volet |
+           | S — le fond du validateur referme à tout clic, dedans compris | le choix du validateur |
+           | T — le fond de la preuve ne referme plus | la preuve par son fond (sans pendre) |
+           | U — « Annuler » valide au lieu de renoncer | « Annuler », et l'Entrée (un dépôt de trop) |
+           | V — toute touche vaut Entrée | l'Entrée (une autre touche valide) |
+           | W — le choix d'instance ne recharge plus le portail | l'instance choisie dans la barre |
+           | X — le choix d'instance n'envoie pas la valeur choisie | l'instance choisie dans la barre |
+           | Y — le mouchard ne met plus le texte en forme par `formeDeFleche` | les deux côtés, par la même fonction (unitaires) |
+           | Z — la mise en forme ne blanchit plus les commentaires | un commentaire ne change pas la clé (unitaires) |
+
+           Sous W et X, la route a rétabli l'instance : le reste du parcours
+           n'en a pas hérité (110 sur 111).
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, noms exercés | 306 / 309 | **320 / 323** — tous les décidables ; 512 occurrences sur 518, 6 indécidables |
+           | Portail, noms exercés | 67 / 84 | **68 / 86** — le plafond, 10 motivés, 8 indécidables |
+           | Affectations `.on… =` hors du relevé | 16 | **0** (et `= null`) |
+           | Suites SURV | 12 | **13** |
+           | Campagne | 1 823, 31 suites | **1 834, 32 suites** |
+
+           Le relevé n'a plus d'angle mort connu parmi les gestionnaires posés
+           en propriété. Ce qu'il ne voit pas encore, il ne le sait pas — et
+           c'est le compte de toutes les affectations, refait contre lui, qui
+           l'a montré cette fois-ci : *mesurer l'instrument contre une liste
+           qu'il n'a pas faite lui-même.*
+
+           ── Une décision, prise le même jour ──
+
+           Le n° 5.f.97 laissait ouverte une question d'écran : un organisme ne
+           rejoint le dossier d'une constatation, et sa fiche en lecture, que
+           par les statistiques — « émises — clôturées », puis l'œil. Faut-il
+           l'y mener aussi depuis la table de ses constatations ?
+
+           **Décidé par la maîtrise d'ouvrage, le 14 novembre 2026 : la
+           situation actuelle est maintenue.** Le chemin par les statistiques
+           est le chemin voulu, et `surv-prestataire` le garde. Ce n'est donc
+           plus une question en attente, ni un défaut à corriger : une ronde
+           qui ne trouverait pas le dossier depuis la table des constatations
+           ne devra pas le « réparer ».

@@ -1234,6 +1234,26 @@ function nommeurDeGestes() {
     !/\.map\(nomDuGestionnaire\)/.test(source)
     && /exerces\.enLigne\.map\(nomDuGeste\)/.test(source),
     'le côté du mouchard doit appeler nomDuGeste, comme le côté de la source');
+
+  // ── Une flèche posée en propriété : le même texte, deux écritures ──
+  //
+  // La source l'écrit à sa façon ; le navigateur rend `String(fn)`, réimprimé
+  // par esbuild pour un écran TypeScript. Les deux doivent donner la même clé,
+  // sans quoi le geste pressé compterait pour non exercé (n° 5.f.98).
+  const { formeDeFleche: fleche } = require('../../scripts/relever-gestes');
+  const ecrite = "(e) => { if (e.key === 'Enter') ok(); }";
+  const servie = '(e) => {\n    if (e.key === "Enter") ok();\n  }';
+  verifier('nommeur : une flèche écrite et la même servie par esbuild ont une seule clé',
+    fleche(ecrite, 'ts') !== null && fleche(ecrite, 'ts') === fleche(servie),
+    `${fleche(ecrite, 'ts')} · ${fleche(servie)}`);
+  verifier('nommeur : un commentaire dans le corps ne change pas la clé',
+    fleche('() => /* x */ go()') === fleche('() => go()'), fleche('() => /* x */ go()'));
+  verifier('nommeur : deux flèches qui ne diffèrent que par ce qu’elles appellent restent deux',
+    fleche('() => ouvrir(a)') !== fleche('() => fermer(a)'), fleche('() => ouvrir(a)'));
+  verifier('nommeur : les deux côtés mettent une flèche en forme par la même fonction',
+    /formeDeFleche\(fleche, /.test(source)
+    && /formeDeFleche\(String\(v\.source/.test(source),
+    'la source et le mouchard doivent passer par formeDeFleche');
 }
 
 function sondeDesSauvegardes() {
@@ -1731,8 +1751,8 @@ function verrouDeCampagne() {
 function tableDesSuites() {
   const { SUITES, choisir } = require('./suites');
 
-  verifier('suites : la table en porte trente et une, et chacune dit son nom, son port et son fichier',
-    SUITES.length === 31
+  verifier('suites : la table en porte trente-deux, et chacune dit son nom, son port et son fichier',
+    SUITES.length === 32
     && SUITES.every((s) => typeof s.nom === 'string' && s.nom.length > 2
       && Number.isInteger(s.port) && typeof s.fichier === 'string'),
     `${SUITES.length} suites`);

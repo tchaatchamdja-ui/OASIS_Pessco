@@ -112,6 +112,9 @@ const SUITES = [
   // La douzième : deux gestes que seul l'organisme voit — l'accusé de réception
   // et la consultation d'une constatation —, joués en vue Prestataire.
   { nom: 'surv-prestataire', port: 4816, fichier: './surv-prestataire.smoke' },
+  // La treizième : les fenêtres qu'on referme sans rien décider — le fond du
+  // volet, celui du choix du validateur, et la fenêtre d'intitulé d'une preuve.
+  { nom: 'surv-fenetres', port: 4817, fichier: './surv-fenetres.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

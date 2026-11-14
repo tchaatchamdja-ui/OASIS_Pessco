@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **310 gestes nommés, 300 exercés** (97 %), 492 occurrences sur 505 dont 6 indécidables — mesuré par **neuf** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents` et `surv-dossiers`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.94) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les sept noms non exercés sont dispersés sur cinq fichiers, aucun au-delà de deux occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). Le gisement qui vient est `exec-adapters.js`, le changement d'instance et le renvoi vers la gestion des droits |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 302 exercés** (97 %), 494 occurrences sur 505 dont 6 indécidables — mesuré par **dix** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers` et `surv-barre`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.95) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les cinq noms non exercés sont dispersés sur quatre fichiers, aucun au-delà de deux occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). Restent, hors des deux noms d'un compte qui ne gouverne pas, la remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -12894,3 +12894,100 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            gestion des droits, les deux gestes que l'adaptateur pose sur la
            barre du socle — deux gestes qui quittent la page, et qu'on mesure
            donc de part et d'autre du chargement.
+
+       5.f.95 [x] **La barre du socle : l'instance, les droits — et un bouton
+           qui manquait quand le compte arrivait le dernier** — fait le
+           14 novembre 2026. Le reste d'`exec-adapters.js` : les deux gestes
+           que l'adaptateur pose sur la barre supérieure, l'instance regardée
+           et le renvoi vers la gestion des droits.
+
+           ── Deux gestes qui quittent la page ──
+
+           Changer d'instance écrit le choix chez le serveur, puis **recharge**
+           le module ; la gestion des droits **navigue** vers un autre écran.
+           On ne les mesure donc pas dans la page, mais de part et d'autre du
+           chargement. La dixième suite SURV, `surv-barre`, le fait :
+
+           - reprendre l'instance déjà regardée ne fait **rien** — ni écriture,
+             ni rechargement (une marque posée dans la page y survit) ;
+           - une autre instance choisie est retenue par le serveur, et la page
+             rechargée la montre ; le même geste ramène l'origine. Le choix est
+             persisté pour le compte : la ronde le rétablit par la route quoi
+             qu'il arrive, et le contrôle exige que la route n'ait **pas** eu à
+             servir ;
+           - « Gestion des Droits » ouvre l'écran des droits réglé sur SURV, et
+             « Retour au module » y ramène.
+
+           ── Ce que la ronde a trouvé en passant ──
+
+           Le premier passage était vert. Le passage témoin d'après, sur le même
+           code, rougissait : **le bouton des droits manquait**.
+
+           La barre se dessine à trois arrivées : `/vue`, `/instance`, et le
+           compte. Le bouton tient au rôle, donc au compte. L'adaptateur
+           attendait bien `EXEC_BOOT` pour redessiner — mais deux attentes
+           pendaient à cette promesse, la sienne et celle de la page qui **pose**
+           le compte, et la sienne, inscrite la première, était servie la
+           première : elle redessinait sur un compte encore inconnu. Le bouton
+           ne tenait donc qu'à ce que `/vue` ou `/instance` réponde **après**
+           `/context`.
+
+           C'est l'ordre ordinaire, à dix ou vingt millisecondes près : douze
+           rechargements, douze boutons. Forcé — `/context` retardé —, le
+           bouton manque, et rien ne le rend. Un administrateur pouvait ne pas
+           trouver la gestion des droits, et la retrouver en rechargeant.
+
+           La correction est à l'endroit qui sait : la page redessine la barre
+           sitôt le compte posé (`index.html`). L'attente de l'adaptateur, qui
+           ne servait à rien, est retirée, et son commentaire dit pourquoi.
+
+           Un relevé ne verrait ce défaut qu'une fois sur cent. Le contrôle ne
+           s'en remet donc pas au hasard : il **force** l'ordre perdant —
+           `/context` retardé dans la page avant que rien n'y soit chargé —,
+           vérifie qu'il l'a bien obtenu (le compte servi après les deux
+           autres), puis exige le bouton.
+
+           Deux autres choses apprises en route :
+
+           - le contrôle « sans effet » rougissait, au défaut réintroduit, par
+             une **exception** — le rechargement emportait le contexte de
+             l'évaluation — et non par son nom. Il lit désormais ce
+             rechargement comme le défaut qu'il est ;
+           - au défaut C (plus de rechargement), le retour à l'origine échoue
+             aussi : l'adaptateur garde l'instance d'avant, et juge le retour
+             sans objet. La route rétablit, et le contrôle le voit.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | A — reprendre la même instance écrit et recharge | sans effet (rechargée) |
+           | B — le choix n'est plus écrit chez le serveur | une autre instance retenue |
+           | C — plus de rechargement après le choix | retenue, et le retour à l'origine |
+           | D — le renvoi vise un autre module | les droits réglés sur SURV, et le retour |
+           | E — le bouton des droits n'est plus posé | les droits, et le retour |
+           | F — la page ne redessine plus le compte posé | le contexte arrivé le dernier |
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-adapters.js` | 2 / 4 | **4 / 4** |
+           | SURV, occurrences exercées | 492 / 505 (97 %) | **494 / 505 (98 %)** |
+           | SURV, noms exercés | 300 / 310 (97 %) | **302 / 310 (97 %)** |
+           | Suites SURV | 9 | **10** |
+           | Campagne | 1 800, 28 suites | **1 808, 29 suites** |
+
+           La campagne a été coupée par une mise en veille de la machine
+           (batterie à 1 %, quatre heures d'hibernation) : `ramp-navigateur`,
+           qui tournait, a perdu son navigateur, et `droits-navigateur` a
+           démarré au réveil. Les deux ont été rejouées — seules, puis dans le
+           même processus derrière `surv-barre`, comme en campagne —, vertes.
+           Leurs contrôles restés en vol avaient été comptés à la suite
+           suivante (`PLAN`, 88 au lieu de 51) : le total ci-dessus est fait
+           des comptes de chaque suite, non de ce relevé faussé.
+
+           `exec-adapters.js` est complet. Restent, hors des deux noms qu'un
+           compte gouvernant ne voit pas : la remise d'une constatation
+           directe, l'œil des statistiques, et le fond de la fenêtre de
+           commentaire.

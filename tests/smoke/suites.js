@@ -103,6 +103,9 @@ const SUITES = [
   // La neuvième : les tris des dossiers en cours et archivés — deux dossiers
   // bâtis dans une même table, menés jusqu'à l'archive, puis retirés.
   { nom: 'surv-dossiers', port: 4813, fichier: './surv-dossiers.smoke' },
+  // La dixième : les deux gestes que l'adaptateur pose sur la barre du socle —
+  // l'instance regardée et la gestion des droits —, qui quittent la page.
+  { nom: 'surv-barre', port: 4814, fichier: './surv-barre.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

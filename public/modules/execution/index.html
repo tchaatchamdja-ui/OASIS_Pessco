@@ -120,6 +120,11 @@
         window.EXEC_STATE.user = boot.execUser;
         window.EXEC_STATE.theme = boot.theme;
         window.EXEC_STATE.lang = boot.lang;
+        // La barre se redessine ici, le compte posé : « Gestion des Droits »
+        // tient au rôle. L'adaptateur se redessine aussi à l'arrivée de `/vue`
+        // et de `/instance` ; arrivées avant `/context`, elles trouvaient un
+        // compte encore inconnu, et le bouton manquait sans que rien le rende.
+        if (typeof execDessinerActions === 'function') execDessinerActions();
         await execLoadData();
         await execEtatsChargerDelais();
         execRenderApp();

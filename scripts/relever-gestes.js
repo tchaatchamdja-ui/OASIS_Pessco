@@ -162,7 +162,7 @@ const ecranDeModule = (nom) => ({
 ECRANS.execution = {
   ...ecranDeModule('execution'),
   suite: ['surv', 'surv-pieces', 'surv-parametres', 'surv-coquille', 'surv-circuit',
-    'surv-plans', 'surv-processus', 'surv-documents', 'surv-dossiers'],
+    'surv-plans', 'surv-processus', 'surv-documents', 'surv-dossiers', 'surv-barre'],
 };
 
 // ── Les cinq autres, et pourquoi `suite: null` et non rien du tout ──

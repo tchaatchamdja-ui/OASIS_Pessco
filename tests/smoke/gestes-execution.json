@@ -2,7 +2,7 @@
  "releve": "2026-11-14",
  "gestesNommes": 310,
  "occurrences": 505,
- "exerces": 300,
+ "exerces": 302,
  "indecidables": 3,
  "gestes": [
   {
@@ -635,7 +635,7 @@
    "evenement": "change",
    "nom": "execAppliquerInstance",
    "source": "(v) => execAppliquerInstance(v)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-adapters.js",
@@ -644,7 +644,7 @@
    "evenement": "click",
    "nom": "{ window.location.href = '/modules/droits/index.",
    "source": "() => { window.location.href = '/modules/droits/index.html?module=SURV'; }",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",

@@ -81,8 +81,11 @@ declare global {
     OASIS_MODULE_LABEL?: string;
     /** Code du module pour « Gestion des Droits » ; `PLAN` à défaut. */
     OASIS_MODULE_RIGHTS?: string;
-    /** État du shell de « Planification » — son volet latéral. */
-    PLAN_STATE?: { sidebarCollapsed?: boolean };
+    // `PLAN_STATE` — l'état du shell de « Planification », dont ce fichier
+    // déplie le volet latéral — n'est plus déclaré ici : PLAN le définit dans
+    // son propre sas depuis sa conversion (`frontend/planification/globales/
+    // pl-i18n.ts`), et la règle de 5.b veut que le module qui définit un nom
+    // soit le seul à le déclarer (ADR-003, n° 5.f.101).
   }
 }
 

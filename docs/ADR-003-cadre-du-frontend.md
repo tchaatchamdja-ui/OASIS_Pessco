@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **prêt pour sa conversion** |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion commencée** — 1 fichier sur 13, les libellés et l'état (n° 5.f.101) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -13515,3 +13515,108 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Contrôles HTTP de PLAN | 71 | **73** |
            | Contrôles de navigateur de PLAN | 51 | **52** |
            | Campagne | 1 847, 33 suites | **1 850, 33 suites** |
+
+       5.f.101 [x] **PLAN en TypeScript, premier fichier : les libellés et
+           l'état — et un nom que le socle déclarait pour un autre** — fait le
+           14 novembre 2026. La conversion de PLAN commence (5.c), par le seul
+           de ses treize fichiers qui n'a pas d'interface, `pl-i18n.js`
+           (1 032 lignes). C'est l'ordre du portail en 5.c.1 : ce qui n'a pas
+           d'interface se prouve entièrement.
+
+           ── Ce qui est converti ──
+
+           | Source | Devient |
+           |---|---|
+           | la table `PLAN_TR`, trois volets de 330 clés | `traductions.fr.ts`, `.en.ts`, `.pt.ts` — un fichier par volet, sous le seuil de forme |
+           | `tp`, `pt` | `traductions.ts` |
+           | `PLAN_MODULE_API`, `PLAN_STATE` | `etat.ts` — l'état d'un écran n'avait rien à faire dans le fichier des libellés |
+           | ce que la page lisait en globales | le sas `globales/pl-i18n.ts`, construit vers `modules/planification/app/pl-i18n.js` |
+
+           Les volets ne sont pas recopiés : ils sont **générés** depuis la
+           table elle-même, relus, et comparés entrée par entrée. Le français
+           définit les clés, les deux autres sont typés par lui — une
+           traduction oubliée ne construit plus.
+
+           ── La surface, mesurée ──
+
+           `PLAN_MODULE_API` et `PLAN_TR` étaient des `const` de premier
+           niveau : des globales **lexicales**, lues en identifiant nu, et
+           qu'un module ne peut pas créer. Le sas les pose sur `window`, où une
+           lecture nue les retrouve — la leçon de `CURRENT_LANG` (5.c.1).
+           Aucun autre fichier ne redéclare l'un des cinq noms, faute de quoi
+           la pose serait masquée. Les deux contre-tests qui retirent une pose
+           arrêtent l'écran au montage — `PLAN_STATE is not defined`,
+           `PLAN_MODULE_API is not defined` : l'un arrête `plan-gestes` après
+           trois contrôles rouges, l'autre en fait tomber huit sur onze.
+
+           ── La preuve d'équivalence ──
+
+           L'ancien fichier, pris dans `git`, et le paquet construit, chacun
+           dans un contexte isolé : **6 077 comparaisons, aucun écart** —
+           chaque clé dans six langues, dont une inconnue, une vide et une
+           nulle ; chaque clé avec des arguments, `$&` compris ; `pt` avec et
+           sans table du portail ; l'état initial selon quatre valeurs du
+           stockage ; les lectures nues et sur `window`. La comparaison a été
+           contre-essayée cinq fois — une pose retirée, `tp` qui remplace tout,
+           `pt` qui préfère la langue du portail, une traduction altérée, une
+           autre clé de stockage —, et chaque fois elle a mordu.
+
+           Elle a aussi montré ce qu'elle préserve et qu'on ne choisirait pas :
+           `tp('field_changed', 'A', 2, '$&')` rend `« {2} »`, l'argument `$&`
+           étant lu par `replace` comme « le texte trouvé ». C'est l'ancien
+           comportement, conservé : une conversion ne corrige rien, elle rend
+           vérifiable.
+
+           Une seule différence, dite : `tp` convertit ses arguments par
+           `String()`, l'ancien les passait bruts. Une fonction passée en
+           argument aurait été **appelée** par `replace` ; mesuré, aucun appel
+           n'en passe — ce sont des nombres et des chaînes.
+
+           ── Un nom que le socle déclarait pour un autre ──
+
+           Le compilateur a refusé la première construction : `frontend/socle/
+           chrome.ts` **déclarait** `window.PLAN_STATE`, qu'il lit pour déplier
+           le volet latéral de PLAN. Il le faisait faute de définisseur — PLAN
+           était en JavaScript. Il en a un maintenant, et la règle de 5.b veut
+           que le module qui définit un nom soit le seul à le déclarer. La
+           déclaration passe au sas de PLAN, **optionnelle**, parce que c'est la
+           vérité : seule la page de PLAN le pose.
+
+           ── Deux garde-fous qui ont demandé leur dû ──
+
+           - **le typage ne se défait nulle part** : ma première écriture de
+             `traductions.ts` lisait la table et `window` par
+             `as unknown as`. Refusé, à bon droit. La table s'affecte sans
+             transtypage à un type indexé par chaîne — le même objet, la même
+             lecture —, et `PORTAL_TRANSLATIONS`, que **rien ne définit** dans
+             le dépôt, est déclaré avec les autres noms sans propriétaire
+             (`sans-proprietaire.d.ts`) plutôt que tu par un transtypage. `pt`
+             rend donc toujours la clé : c'était vrai avant, c'est écrit
+             maintenant ;
+           - **les clés orphelines** : le garde lisait la table dans
+             `public/…/js` seul. La table partie dans `frontend/`, il aurait
+             déclaré orphelines les deux mille clés que les fichiers restés en
+             JavaScript demandent. Il lit désormais les deux répertoires, et la
+             forme convertie des volets (`export const FR = {`).
+
+           Et un troisième, qui a mordu avant toute suite : la page laissée sur
+           l'ancien chemin, **la construction s'arrête** — « un sas que rien
+           n'atteint ». Le contrôle des ressources servies n'a pas eu à parler.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui rougit |
+           |---|---|
+           | AO — le sas ne pose plus `PLAN_STATE` | l'écran au montage — trois contrôles rouges, puis la suite s'arrête sur l'exception |
+           | AP — le sas ne pose plus `PLAN_MODULE_API` | l'écran au montage ; 8 contrôles sur 11 |
+           | AQ — la page demande encore l'ancien chemin | la construction elle-même |
+           | 1 à 5 — sur la comparaison | la comparaison, chaque fois |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **1 sur 13** — 1 032 lignes sur 5 958 |
+           | Restent | `pl-namespace.js` (28), `pl-instances.js` (61), et les dix qui portent l'interface |
+           | Contrôles qui définissent « la réécriture marche » | 52 + 11 de navigateur, 73 HTTP — inchangés, tous verts |
+           | Campagne | **1 850, 33 suites** — inchangée : la conversion n’ajoute ni ne retire aucun contrôle |

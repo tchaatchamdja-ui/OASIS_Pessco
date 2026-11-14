@@ -2319,7 +2319,11 @@ module.exports = async function tailleSmoke() {
     // Un écran : sa table, son répertoire, et les noms de sa fonction.
     const ECRANS = [
       { nom: 'SURV', table: 'EXEC_TR', dir: 'public/modules/execution/js', fn: ['te'] },
-      { nom: 'PLAN', table: 'PLAN_TR', dir: 'public/modules/planification/js', fn: ['pt', 'tp'] },
+      // PLAN se convertit fichier par fichier : sa table vit dans `frontend/`
+      // depuis le 14 novembre 2026, et ses appels encore dans `public/`. Les
+      // deux répertoires sont lus — ne lire que l'un aurait déclaré orphelines
+      // les 2 000 clés de l'autre, ou ne les aurait plus vues (n° 5.f.101).
+      { nom: 'PLAN', table: 'PLAN_TR', dir: 'public/modules/planification/js', ts: 'frontend/planification', fn: ['pt', 'tp'] },
       { nom: 'RAMP', table: 'RAMP_TR', dir: 'public/modules/ramp/js', fn: ['tr', 'rt'] },
       { nom: 'CARE', table: 'MES_TR', dir: 'public/modules/mesures/js', fn: ['tm', 'mt'] },
       { nom: 'PR', table: 'TRANSLATIONS', dir: 'public/modules/profil_risque/js', fn: ['pt', 't'] },
@@ -2329,12 +2333,25 @@ module.exports = async function tailleSmoke() {
     let examines = 0;
     ECRANS.forEach((e) => {
       const d = path.join(RACINE, e.dir);
+      const dts = e.ts ? path.join(RACINE, e.ts) : null;
       // Un écran converti en React n'a plus de `public/modules/<nom>/js` : son
       // absence n'est pas un défaut, c'est l'avancement de la reprise.
-      if (!fs.existsSync(d)) return;
+      if (!fs.existsSync(d) && !(dts && fs.existsSync(dts))) return;
       examines += 1;
-      const fichiers = fs.readdirSync(d).filter((x) => x.endsWith('.js'))
-        .map((x) => path.join(d, x));
+      const fichiers = fs.existsSync(d)
+        ? fs.readdirSync(d).filter((x) => x.endsWith('.js')).map((x) => path.join(d, x)) : [];
+      // ── Et ses fichiers convertis, où la table a pu partir ──
+      //
+      // Un volet converti s'écrit `export const FR = {` : ni `PLAN_TR = {`, ni
+      // `PLAN_TR.fr = {`. Sans ce motif, la table passée en TypeScript aurait
+      // rendu **toutes** les clés orphelines — ou, pire, un garde réécrit à la
+      // hâte les aurait tues.
+      const parcourirTs = (r) => fs.readdirSync(r, { withFileTypes: true }).forEach((x) => {
+        const p = path.join(r, x.name);
+        if (x.isDirectory()) parcourirTs(p);
+        else if (/\.tsx?$/.test(x.name)) fichiers.push(p);
+      });
+      if (dts && fs.existsSync(dts)) parcourirTs(dts);
       const cles = new Set();
       fichiers.forEach((x) => {
         // Les commentaires sont effacés **avant la lecture de la table**, et
@@ -2358,6 +2375,10 @@ module.exports = async function tailleSmoke() {
           clesDuBloc(texte, texte.indexOf('{', m.index + m[0].length - 1)).forEach((k) => cles.add(k));
         }
         for (const m of texte.matchAll(new RegExp(`Object\\.assign\\(${e.table}\\.(fr|en|pt)\\s*,\\s*\\{`, 'g'))) {
+          clesDuBloc(texte, texte.indexOf('{', m.index + m[0].length - 1)).forEach((k) => cles.add(k));
+        }
+        // Un volet converti : une constante nommée de la langue.
+        for (const m of texte.matchAll(/\bconst (FR|EN|PT)\b[^=\n]*=\s*\{/g)) {
           clesDuBloc(texte, texte.indexOf('{', m.index + m[0].length - 1)).forEach((k) => cles.add(k));
         }
       });

@@ -13,6 +13,7 @@ tests/
 public/modules/*/app/
 public/shared/app/
 public/app/
+public/modules/planification/app/
 .DS_Store
 *.log
 *.tmp

@@ -34,3 +34,8 @@ public/shared/app/
 # encore écrit en JavaScript, `public/app/` ce qui est construit à partir de
 # `frontend/portail/`. Même règle que le socle, même jour de disparition.
 public/app/
+# PLAN en cours de conversion (ADR-003, n° 5.f.101) : `js/` est ce qui est encore
+# écrit en JavaScript, `app/` ce qui est construit depuis `frontend/planification/`.
+# Le motif `public/modules/*/app/` le couvre déjà ; la ligne est écrite pour que la
+# sortie soit nommée, comme les deux précédentes.
+public/modules/planification/app/

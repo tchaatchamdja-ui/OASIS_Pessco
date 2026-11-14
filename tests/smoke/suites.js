@@ -106,6 +106,12 @@ const SUITES = [
   // La dixième : les deux gestes que l'adaptateur pose sur la barre du socle —
   // l'instance regardée et la gestion des droits —, qui quittent la page.
   { nom: 'surv-barre', port: 4814, fichier: './surv-barre.smoke' },
+  // La onzième : la remise d'une constatation directe, l'œil des statistiques,
+  // et la fenêtre de commentaire refermée par son fond.
+  { nom: 'surv-constatations', port: 4815, fichier: './surv-constatations.smoke' },
+  // La douzième : deux gestes que seul l'organisme voit — l'accusé de réception
+  // et la consultation d'une constatation —, joués en vue Prestataire.
+  { nom: 'surv-prestataire', port: 4816, fichier: './surv-prestataire.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

@@ -162,7 +162,8 @@ const ecranDeModule = (nom) => ({
 ECRANS.execution = {
   ...ecranDeModule('execution'),
   suite: ['surv', 'surv-pieces', 'surv-parametres', 'surv-coquille', 'surv-circuit',
-    'surv-plans', 'surv-processus', 'surv-documents', 'surv-dossiers', 'surv-barre'],
+    'surv-plans', 'surv-processus', 'surv-documents', 'surv-dossiers', 'surv-barre',
+    'surv-constatations', 'surv-prestataire'],
 };
 
 // ── Les cinq autres, et pourquoi `suite: null` et non rien du tout ──
@@ -761,6 +762,21 @@ function relever(fichiers) {
       // (n° 5.f.83) : *retirer du dénominateur ce qui n'y a jamais eu sa
       // place, sans rien ajouter au numérateur.*
       if (m[3] === 'null' || m[3] === 'undefined') continue;
+      // ── Un identifiant suivi de `=>` est un **paramètre**, non un nom ──
+      //
+      // `el.onclick = e => { … }` pose une fonction fléchée **anonyme** : le
+      // motif lisait `e`, son paramètre, comme le nom du gestionnaire. À
+      // l'exécution, la fonction n'a pas de nom — une affectation sur un membre
+      // n'en infère aucun —, et le rapprochement ne pouvait jamais se faire :
+      // un « non exercé » éternel sur un geste que `surv-constatations` presse
+      // et contre-teste (n° 5.f.96).
+      //
+      // `el.onclick = (e) => …`, la même chose entre parenthèses, n'entre déjà
+      // pas au relevé : le motif exige un identifiant. Les deux formes sont
+      // désormais traitées pareil. Sept fonctions fléchées posées ainsi
+      // restent donc hors du relevé — c'est un angle mort, nommé, et non
+      // un geste qu'on prétendrait couvert (ADR-003, n° 5.f.97).
+      if (/^\s*=>/.test(texte.slice(m.index + m[0].length))) continue;
       gestes.push({
         fichier: rel, ligne: texte.slice(0, m.index).split('\n').length,
         forme: 'propriété', evenement: m[2], nom: m[3],

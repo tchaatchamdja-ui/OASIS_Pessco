@@ -1,8 +1,8 @@
 {
  "releve": "2026-11-14",
- "gestesNommes": 310,
- "occurrences": 505,
- "exerces": 302,
+ "gestesNommes": 309,
+ "occurrences": 504,
+ "exerces": 306,
  "indecidables": 3,
  "gestes": [
   {
@@ -437,7 +437,7 @@
    "evenement": "click",
    "source": "execViewFNC('${dossierId}','${c.id}')",
    "nom": "execViewFNC",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-activites.js",
@@ -734,7 +734,7 @@
    "evenement": "click",
    "source": "execAccuserReception('${n.id}')",
    "nom": "execAccuserReception",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-app.js",
@@ -1603,7 +1603,7 @@
    "evenement": "click",
    "source": "execTransmettreConstatation('${fnc.id}')",
    "nom": "execTransmettreConstatation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-constatations.js",
@@ -1622,16 +1622,6 @@
    "source": "document.getElementById('${id}').remove()",
    "nom": "document.getElementById",
    "exerce": true
-  },
-  {
-   "fichier": "public/modules/execution/js/exec-constatations.js",
-   "ligne": 1666,
-   "forme": "propriété",
-   "evenement": "click",
-   "nom": "e",
-   "source": "el.onclick = e",
-   "id": null,
-   "exerce": false
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",
@@ -1793,7 +1783,7 @@
    "evenement": "click",
    "source": "execOuvrirConstatation('${c.id}')",
    "nom": "execOuvrirConstatation",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-dashboard.js",

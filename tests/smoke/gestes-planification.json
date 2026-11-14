@@ -2,7 +2,7 @@
  "releve": "2026-11-14",
  "gestesNommes": 93,
  "occurrences": 137,
- "exerces": 85,
+ "exerces": 87,
  "indecidables": 5,
  "gestes": [
   {
@@ -713,7 +713,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 359,
+   "ligne": 375,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planNavigateTo('plans')",
@@ -722,7 +722,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 373,
+   "ligne": 389,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${canSync ? `planSyncRisksSelective('${plan.id}')` : 'void(0)'}",
@@ -732,7 +732,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 377,
+   "ligne": 393,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planExportPDF('${plan.id}')",
@@ -741,7 +741,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 386,
+   "ligne": 402,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planShowActivityModal('${plan.id}')",
@@ -750,7 +750,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 389,
+   "ligne": 405,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planSubmit('${plan.id}')",
@@ -759,7 +759,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 390,
+   "ligne": 406,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planAmend('${plan.id}')",
@@ -768,7 +768,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 391,
+   "ligne": 407,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planCancelAmendment('${plan.id}')",
@@ -777,7 +777,25 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 403,
+   "ligne": 408,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planApprouverDG('${plan.id}')",
+   "nom": "planApprouverDG",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/planification/js/pl-plans.js",
+   "ligne": 409,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planTransmettre('${plan.id}')",
+   "nom": "planTransmettre",
+   "exerce": true
+  },
+  {
+   "fichier": "public/modules/planification/js/pl-plans.js",
+   "ligne": 421,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planShowCommentModal('${plan.id}')",
@@ -786,7 +804,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 627,
+   "ligne": 645,
    "forme": "en ligne",
    "evenement": "click",
    "source": "this.closest('tr').nextElementSibling.classList.toggle('hidden')",
@@ -795,7 +813,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 633,
+   "ligne": 651,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planShowValidationComment('${a.id}')",
@@ -804,7 +822,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 637,
+   "ligne": 655,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planShowActivityModal('${a.plan_id}','${a.id}')",
@@ -813,7 +831,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-plans.js",
-   "ligne": 638,
+   "ligne": 656,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planDeleteActivity('${a.id}')",
@@ -1134,7 +1152,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 297,
+   "ligne": 284,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();planValidate('${plan.id}')",
@@ -1143,7 +1161,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 298,
+   "ligne": 285,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();planReject('${plan.id}')",
@@ -1152,7 +1170,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 299,
+   "ligne": 286,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();planRejectClose('${plan.id}')",
@@ -1161,25 +1179,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 304,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();planApprouverDG('${plan.id}')",
-   "nom": "planApprouverDG",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 307,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();planTransmettre('${plan.id}')",
-   "nom": "planTransmettre",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 332,
+   "ligne": 314,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planAccBasculer(this)",
@@ -1188,7 +1188,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 332,
+   "ligne": 314,
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "planAccClavier(event, this)",
@@ -1197,7 +1197,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 334,
+   "ligne": 316,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();planOpenDetail('${plan.id}');return false;",
@@ -1206,7 +1206,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 444,
+   "ligne": 426,
    "forme": "en ligne",
    "evenement": "click",
    "source": "const r=document.getElementById('${diffRowId}');r.style.display=r.style.display==='none'?'':'none';this.classList.toggle",
@@ -1215,7 +1215,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 451,
+   "ligne": 433,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planExportPDF('${v.id}')",
@@ -1224,7 +1224,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 454,
+   "ligne": 436,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planShowWorkflowHistory('${v.id}')",
@@ -1233,7 +1233,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 455,
+   "ligne": 437,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planOpenDetail('${v.id}')",
@@ -1242,7 +1242,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 469,
+   "ligne": 451,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planAccBasculer(this)",
@@ -1251,7 +1251,7 @@
   },
   {
    "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 469,
+   "ligne": 451,
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "planAccClavier(event, this)",

@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 85 exercés** — le plafond : les trois restants sont inatteignables, mesurés —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; **prêt pour sa conversion** |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **prêt pour sa conversion** |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -13436,3 +13436,82 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            PLAN est désormais mesuré jusqu'à son plafond. Sa conversion peut
            commencer — à la manière de DROITS (suite n° 1) : les contrôles de
            ses deux suites sont la définition de « la réécriture marche ».
+
+       5.f.100 [x] **L'approbation du directeur et la transmission, rendues à
+           l'écran — et une lettre que le serveur jetait** — fait le
+           14 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           ── La décision ──
+
+           Le n° 5.f.99 laissait deux actes du circuit (Chap. 4 §4.2.3.e-f)
+           qu'aucun écran n'offrait, quand le serveur les exécute : leurs
+           boutons vivaient dans la page de validation, qui ne reçoit que des
+           plans soumis, et ils exigent un plan validé. La question était de
+           les rendre accessibles ou de les retirer. **Décidé : les rendre
+           accessibles.**
+
+           ── Où, et à qui ──
+
+           Au **détail du plan**. Ce n'est pas un choix d'agencement : les deux
+           gestes y ramènent déjà après succès (`planOpenDetail`). L'écran
+           savait où il les attendait ; seul l'appel manquait.
+
+           À l'intersection de deux règles : l'administrateur agit comme DG — la
+           règle que l'écran portait —, et le serveur exige le privilège de
+           validation sur le secteur du plan. *Un bouton que le serveur
+           refuserait ne s'offre pas.* « Approuver (DG) » sur un plan validé,
+           « Transmettre au prestataire » sur un plan approuvé, et plus rien
+           sur un plan transmis.
+
+           La branche de la page de validation, qui ne pouvait jamais
+           s'afficher, est retirée, avec le statut `valide_directeur` qu'elle
+           testait et qu'aucune transition ne produit.
+
+           ── Ce que la ronde a trouvé en jouant l'acte ──
+
+           Le contrôle de la suite d'origine **constatait** le manque. Il a été
+           réécrit pour jouer les deux actes par leurs boutons — l'approbation
+           et ses deux invites enchaînées, le commentaire puis la lettre de
+           transmission ; la transmission refusée une fois à la confirmation,
+           puis confirmée.
+
+           Tout a tenu, sauf une chose, que le contrôle cherchait exprès : **la
+           lettre de transmission se perdait.** L'écran la demande ; la
+           confirmation de la transmission la dit « enregistrée » ; le
+           gestionnaire générique des transitions ne retenait que le motif et
+           le commentaire. Sur un acte d'autorité, c'est une donnée saisie et
+           jetée sans un mot. Aucune suite ne pouvait le voir tant que le
+           bouton n'existait pas : la route était éprouvée par la suite HTTP,
+           mais avec un corps qui ne portait pas de lettre.
+
+           Le serveur la garde désormais, sur le plan et dans son circuit, et
+           refuse une lettre qui n'est pas un texte raisonnable plutôt que de la
+           tronquer. Deux contrôles HTTP de plus.
+
+           ── Une faiblesse vue, et non corrigée ici ──
+
+           Les sept transitions du circuit passent par un seul gestionnaire,
+           qui **ne vérifie pas le statut d'origine** : la route
+           `transmettre` transmettrait un brouillon, `valider` validerait un
+           plan jamais soumis. L'écran seul tient l'ordre du circuit. Le
+           corriger change la règle de toutes les transitions, et la suite
+           HTTP en exerce plusieurs hors de l'ordre de l'écran : c'est une
+           décision à part, nommée ici plutôt que glissée dans celle-ci.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | AJ — le bouton d'approbation n'est plus rendu au détail | l'approbation, et la transmission qui la suit |
+           | AK — « Transmettre » offert dès le plan validé | l'approbation (transmettre offert trop tôt) |
+           | AL — le serveur ne garde plus la lettre | la lettre gardée (HTTP) |
+           | AM — la transmission part sans confirmation | la transmission (le refus transmet) |
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | PLAN, noms exercés | 85 / 93 | **87 / 93** — le seul reste, la barre de sous-onglets, est inatteignable |
+           | Contrôles HTTP de PLAN | 71 | **73** |
+           | Contrôles de navigateur de PLAN | 51 | **52** |
+           | Campagne | 1 847, 33 suites | **1 850, 33 suites** |

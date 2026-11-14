@@ -70,6 +70,21 @@ module.exports = function register(app, deps, M) {
       const body = req.body || {};
       const commentaire = body.commentaire || body.motif || '';
       const champ = route.replace(/-/g, '_');
+      // ── La lettre de transmission, que l'écran demande et que rien ne gardait ──
+      //
+      // L'approbation du directeur la saisit (`planApprouverDG`), et la
+      // transmission la dit « enregistrée » avant de partir. Ce gestionnaire ne
+      // retenait que le motif et le commentaire : la lettre arrivait, et se
+      // perdait. Mesuré le 14 novembre 2026, le jour où les deux actes sont
+      // devenus accessibles à l'écran (ADR-003, n° 5.f.100). Elle est gardée
+      // sur le plan et dans son circuit — et refusée si ce n'est pas un texte
+      // raisonnable, plutôt que tronquée en silence.
+      const lettre = route === 'approuver-dg' ? body.lettre_transmission : undefined;
+      if (lettre !== undefined && lettre !== null
+        && (typeof lettre !== 'string' || lettre.length > 4000)) {
+        return res.status(400).json({ error: 'lettre_transmission_invalide' });
+      }
+      const avecLettre = route === 'approuver-dg' ? { lettre_transmission: lettre || '' } : {};
 
       let rec = null;
       await db.transformer((d) => {
@@ -90,6 +105,7 @@ module.exports = function register(app, deps, M) {
           // sur l'état qu'on écrit, et non par une seconde lecture d'avant.
           commentaire_rejet: ['rejeter', 'rejeter-annuler'].includes(route) ? commentaire
             : (route === 'soumettre' ? '' : plans[i].commentaire_rejet),
+          ...avecLettre,
           updatedAt: new Date().toISOString(),
         };
         rec = plans[i];
@@ -107,7 +123,8 @@ module.exports = function register(app, deps, M) {
         d.activites = acts;
 
         if (route === 'valider' && rec.parent_plan_id) retirerAncetres(d, rec, req.user.username);
-        D.inscrireWf(d, rec.id, route, req.user.username, { motif: body.motif || '', commentaire });
+        D.inscrireWf(d, rec.id, route, req.user.username,
+          { motif: body.motif || '', commentaire, ...avecLettre });
         return d;
       });
 

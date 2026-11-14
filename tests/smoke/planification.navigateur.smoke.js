@@ -1356,72 +1356,62 @@ module.exports = async function planificationNavigateurSmoke(port) {
         return d;
       });
 
-      // ── 6. Deux actes du circuit que l'écran n'offre nulle part ──
+      // ── 6. L'approbation du directeur, puis la transmission au prestataire ──
       //
-      // `planApprouverDG` et `planTransmettre` — l'approbation du directeur
-      // général et la transmission au prestataire, Chap. 4 §4.2.3.e-f — sont
-      // rendus par `_renderPlanDiffAccordion`, sous condition de statut
-      // `valide` / `approuve_dg`. Or ce rendu n'est appelé qu'**une fois** dans
-      // tout le module, sur `pending = plans.filter(p => p.statut === 'soumis')`.
+      // Jusqu'au 14 novembre 2026, ce contrôle **constatait** un manque :
+      // `planApprouverDG` et `planTransmettre` (Chap. 4 §4.2.3.e-f) étaient
+      // rendus par la page de validation, qui ne reçoit que des plans soumis,
+      // quand ils exigent un plan validé — les deux boutons ne pouvaient jamais
+      // paraître, et le serveur exécutait pourtant les deux transitions.
       //
-      // Les deux conditions s'excluent : un plan soumis n'est ni validé ni
-      // approuvé. **Les deux boutons ne peuvent donc jamais paraître.** Ce
-      // contrôle le constate, et montre que le manque est dans l'écran seul :
-      // les transitions du serveur, elles, fonctionnent.
+      // La maîtrise d'ouvrage a décidé de les rendre accessibles. Ils sont au
+      // **détail du plan**, là où les deux gestes ramènent après succès, et la
+      // ronde les joue par leurs boutons : l'approbation, avec ses deux invites
+      // enchaînées — le commentaire, puis la lettre de transmission —, puis la
+      // transmission, refusée une fois à la confirmation, puis confirmée.
+      //
+      // Et ce que l'approbation saisit doit **rester** : la lettre de
+      // transmission est demandée à l'écran, et la transmission la dit
+      // « enregistrée ». Le contrôle la cherche dans le plan et dans son
+      // circuit (ADR-003, n° 5.f.100).
       await essai('directeur', async () => {
         const d = {};
-        // Les deux plans soumis ont été rejetés par les phases précédentes : la
-        // page du circuit est vide, et une page vide ne départage rien. Cette
-        // phase sème donc son propre témoin — *une ronde qui suit une autre
-        // commence par relever ce qu'elle hérite.*
-        o.idTemoin = await semer('Circuit — témoin soumis', 'soumis');
-        d.temoin = !!o.idTemoin;
-        if (typeof window.planLoadData === 'function') await window.planLoadData();
-        await a(1500);
-        document.querySelector('.nav-btn[data-page="workflow"]')?.click();
-        await a(3500);
-        // La page ne montre que les plans soumis…
-        const titres = (document.querySelector('.page-content, main') || document.body).textContent || '';
-        d.montreLeSoumis = titres.includes('Circuit — témoin soumis');
-        d.montreLeValide = titres.includes('Circuit — pour le DG');
-        // …et aucun des deux gestes n'est dans le DOM, pour aucun plan.
-        d.approuverNullePart = document.querySelectorAll('[onclick*="planApprouverDG"]').length;
-        d.transmettreNullePart = document.querySelectorAll('[onclick*="planTransmettre"]').length;
-        // Le serveur, lui, sait faire les deux transitions.
+        if (typeof window.planOpenDetail !== 'function') return d;
+        await window.planOpenDetail(o.idDG);
+        await a(2500);
         d.statutAvant = await statutDe(o.idDG);
-        d.routeDG = (await env(`/plans/${o.idDG}/approuver-dg`, 'POST',
-          { commentaire: 'Par la route, faute d’écran.' })).statut;
+        d.detail = S().currentPage === 'plan-detail' && (S().selectedPlan || {}).id === o.idDG;
+        d.approuverOffert = !!parBouton('planApprouverDG', o.idDG);
+        d.transmettreAvant = !!parBouton('planTransmettre', o.idDG);
+        parBouton('planApprouverDG', o.idDG)?.click();
+        d.commentaire = await saisir('Approuvé en comité de direction.', 600);
+        d.lettre = await saisir('Lettre de transmission n° 2030-17', 4500);
         d.statutApresDG = await statutDe(o.idDG);
-        d.routeTransmettre = (await env(`/plans/${o.idDG}/transmettre`, 'POST', {})).statut;
+        d.redetail = S().currentPage === 'plan-detail' && (S().selectedPlan || {}).id === o.idDG;
+        d.approuverApres = !!parBouton('planApprouverDG', o.idDG);
+        d.transmettreOffert = !!parBouton('planTransmettre', o.idDG);
+        const lu = JSON.stringify((await env(`/plans/${o.idDG}`, 'GET')).corps || {});
+        const circuit = JSON.stringify((await env(`/plans/${o.idDG}/workflow`, 'GET')).corps || []);
+        d.commentaireGarde = circuit.includes('comité de direction');
+        d.lettreGardee = lu.includes('2030-17') && circuit.includes('2030-17');
+        // La transmission, refusée à la confirmation : rien ne part.
+        parBouton('planTransmettre', o.idDG)?.click();
+        await a(900);
+        const non = document.querySelector('.oasis-confirm-non');
+        d.refusOffert = !!non;
+        non?.click();
+        await a(1800);
+        d.statutApresRefus = await statutDe(o.idDG);
+        // Puis confirmée.
+        parBouton('planTransmettre', o.idDG)?.click();
+        d.confirme = await oui(4500);
         d.statutApresTransmission = await statutDe(o.idDG);
-
-        // ── Où est le manque, exactement ──
-        //
-        // La fonction de rendu, appelée à la main sur un plan validé, **porte**
-        // le bouton : la condition de rôle passe (`_isAdmin()` reconnaît le
-        // SUPERADMIN, ce que la comparaison à `'Administrateur'` ne faisait
-        // pas), et la condition de statut est satisfaite. Ce qui manque est le
-        // seul **appel** : la page ne lui donne jamais de plan validé.
-        d.role = o.role;
-        const rendu = (statut) => {
-          if (typeof window._renderPlanDiffAccordion !== 'function') return null;
-          try {
-            return window._renderPlanDiffAccordion({
-              id: 'essai-rendu', titre: 'Essai de rendu', version: 1,
-              statut, secteur_id: '', parent_plan_id: null,
-            });
-          } catch { return null; }
-        };
-        const htmlValide = rendu('valide');
-        const htmlApprouve = rendu('approuve_dg');
-        const htmlSoumis = rendu('soumis');
-        d.renduJoignable = typeof htmlValide === 'string';
-        d.renduValidePorteDG = !!htmlValide && htmlValide.includes('planApprouverDG');
-        d.renduApprouvePorteTransmettre = !!htmlApprouve && htmlApprouve.includes('planTransmettre');
-        // Et le soumis — le seul que la page lui donne — ne porte ni l'un ni l'autre.
-        d.renduSoumisPorteNiLUnNiLAutre = !!htmlSoumis
-          && !htmlSoumis.includes('planApprouverDG')
-          && !htmlSoumis.includes('planTransmettre');
+        d.plusRien = !parBouton('planTransmettre', o.idDG) && !parBouton('planApprouverDG', o.idDG);
+        // La page de validation n'en porte plus aucun : la branche qui ne
+        // pouvait jamais s'afficher est retirée.
+        document.querySelector('.nav-btn[data-page="workflow"]')?.click();
+        await a(3000);
+        d.circuitSansDG = document.querySelectorAll('[onclick*="planApprouverDG"], [onclick*="planTransmettre"]').length === 0;
         return d;
       });
 
@@ -1499,26 +1489,19 @@ module.exports = async function planificationNavigateurSmoke(port) {
         && typeof Cl.statut === 'string' && Cl.statut !== 'soumis'
         && Cl.statut !== Re.statut,
         JSON.stringify(Cl));
-      verifier('l’approbation du directeur et la transmission au prestataire ne sont offertes par aucun écran, alors que le serveur les exécute',
-        // La page du circuit ne liste que les plans soumis : un plan validé
-        // n'y paraît pas, et c'est là que les deux boutons seraient rendus.
-        Dg.temoin === true
-        && Dg.montreLeSoumis === true && Dg.montreLeValide === false
-        // Les deux gestes sont absents du document, pour tout plan.
-        && Dg.approuverNullePart === 0 && Dg.transmettreNullePart === 0
-        // Le dispositif sait pourtant faire les deux transitions : le manque
-        // est dans l'écran, non dans le serveur.
-        && Dg.statutAvant === 'valide'
-        && Dg.routeDG === 200 && Dg.statutApresDG === 'approuve_dg'
-        && Dg.routeTransmettre === 200 && Dg.statutApresTransmission === 'transmis'
-        // Le manque est le seul **appel** : la fonction de rendu, appelée à la
-        // main sur un plan validé, porte bien le bouton — la condition de rôle
-        // passe depuis qu'elle suit `_isAdmin()` comme le reste du module.
-        && Dg.renduJoignable === true
-        && Dg.renduValidePorteDG === true
-        && Dg.renduApprouvePorteTransmettre === true
-        && Dg.renduSoumisPorteNiLUnNiLAutre === true,
-        JSON.stringify(Dg).slice(0, 460));
+      verifier('au détail d’un plan validé, le directeur l’approuve par son bouton, commentaire et lettre de transmission gardés',
+        Dg.statutAvant === 'valide' && Dg.detail === true
+        && Dg.approuverOffert === true && Dg.transmettreAvant === false
+        && !!Dg.commentaire && !!Dg.lettre
+        && Dg.statutApresDG === 'approuve_dg' && Dg.redetail === true
+        && Dg.approuverApres === false && Dg.transmettreOffert === true
+        && Dg.commentaireGarde === true && Dg.lettreGardee === true,
+        JSON.stringify(Dg));
+      verifier('le plan approuvé se transmet au prestataire par son bouton — un refus de confirmation ne transmet rien',
+        Dg.refusOffert === true && Dg.statutApresRefus === 'approuve_dg'
+        && Dg.confirme === true && Dg.statutApresTransmission === 'transmis'
+        && Dg.plusRien === true && Dg.circuitSansDG === true,
+        JSON.stringify(Dg));
       verifier('l’historique du circuit d’une version s’ouvre garni et se referme',
         Hi.bouton === true && Hi.fenetre === true && Hi.garnie === true
         && Hi.fermee === true,

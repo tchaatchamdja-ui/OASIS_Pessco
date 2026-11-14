@@ -227,13 +227,30 @@ module.exports = async function planificationSmoke(port) {
       Array.isArray(circuitParent) && circuitParent.some((w) => w.action === 'remplacer'),
       (circuitParent.map ? circuitParent.map((w) => w.action).join(', ') : String(circuitParent)).slice(0, 120));
 
-    // 3. Les deux dernières transitions, jamais exercées.
+    // 3. Les deux dernières transitions. L'approbation du directeur porte la
+    //    lettre de transmission, que l'écran demande : elle doit rester, sur le
+    //    plan et dans son circuit — elle se perdait (ADR-003, n° 5.f.100). Une
+    //    lettre qui n'est pas un texte est refusée, et le plan ne bouge pas.
+    const lettreRefusee = await P(`/api/m/planification/plans/${cibleSync.id}/approuver-dg`,
+      { commentaire: '', lettre_transmission: { pas: 'un texte' } });
+    verifier('une lettre de transmission qui n’est pas un texte est refusée, et le plan reste validé',
+      lettreRefusee.statut === 400
+      && (await srv.appel(`/api/m/planification/plans/${cibleSync.id}`)).corps.statut === 'valide',
+      `statut ${lettreRefusee.statut}`);
+    const LETTRE = 'Lettre de transmission n° 2030-42';
     for (const [transition, attendu] of [['approuver-dg', 'approuve_dg'], ['transmettre', 'transmis']]) {
-      const r = await P(`/api/m/planification/plans/${cibleSync.id}/${transition}`, { commentaire: '' });
+      const r = await P(`/api/m/planification/plans/${cibleSync.id}/${transition}`,
+        transition === 'approuver-dg' ? { commentaire: '', lettre_transmission: LETTRE } : { commentaire: '' });
       const apres = (await srv.appel(`/api/m/planification/plans/${cibleSync.id}`)).corps || {};
       verifier(`transition « ${transition} »`, r.statut === 200 && apres.statut === attendu,
         `statut ${r.statut}, plan « ${apres.statut} »`);
     }
+    const planTransmis = (await srv.appel(`/api/m/planification/plans/${cibleSync.id}`)).corps || {};
+    const circuitDG = ((await srv.appel(`/api/m/planification/plans/${cibleSync.id}/workflow`)).corps || [])
+      .find((w) => w.action === 'approuver-dg') || {};
+    verifier('la lettre de transmission saisie à l’approbation reste, sur le plan et dans son circuit',
+      planTransmis.lettre_transmission === LETTRE && circuitDG.lettre_transmission === LETTRE,
+      JSON.stringify({ plan: planTransmis.lettre_transmission, circuit: circuitDG.lettre_transmission }));
 
     // 4. L'exception d'archive posée activité par activité, puis levée.
     const actCible = (cibleSync.activites || [])[0] || {};

@@ -351,6 +351,22 @@ function planRenderPlanDetail() {
     // Distinct flag: this plan itself is an amendment child (used for cancel button logic)
     const isAmendmentChild = !!(plan.parent_plan_id);
     const canCancelAmend = isAmendmentChild && (plan.statut === 'brouillon' || plan.statut === 'rejete') && _canContribute(secteurPlan);
+    // ── L'approbation du directeur et la transmission (Chap. 4 §4.2.3.e-f) ──
+    //
+    // Les deux actes n'étaient offerts par aucun écran : leurs boutons vivaient
+    // dans la page de validation, qui ne reçoit que des plans « soumis », quand
+    // ils exigent un plan « validé » ou « approuvé DG » — deux conditions qui
+    // s'excluaient (ADR-003, n° 5.f.99). Le serveur, lui, les exécutait.
+    // Décision de la maîtrise d'ouvrage, le 14 novembre 2026 : les rendre
+    // accessibles. Ils viennent **ici**, au détail du plan, parce que c'est là
+    // que les deux gestes ramènent après succès (`planOpenDetail`).
+    //
+    // Offerts à l'intersection de deux règles : l'administrateur agit comme
+    // DG, et le serveur exige le privilège de validation sur le secteur du plan.
+    // Un bouton que le serveur refuserait ne s'offre pas.
+    const peutAgirCommeDG = _isAdmin() && _canValidate(secteurPlan);
+    const canApprouverDG = peutAgirCommeDG && plan.statut === 'valide';
+    const canTransmettre = peutAgirCommeDG && plan.statut === 'approuve_dg';
 
     return `
     <div class="page-content">
@@ -389,6 +405,8 @@ function planRenderPlanDetail() {
                     ${canSubmit ? `<button class="btn btn-primary btn-sm" onclick="planSubmit('${plan.id}')">${PLAN_ICONS.send} ${tp('submit_plan')}</button>` : ''}
                     ${canAmendBtn ? `<button class="btn btn-warning btn-sm" onclick="planAmend('${plan.id}')">${PLAN_ICONS.edit} ${tp('amend_plan')}</button>` : ''}
                     ${canCancelAmend ? `<button class="btn btn-danger btn-sm" onclick="planCancelAmendment('${plan.id}')">${PLAN_ICONS.x} ${tp('cancel_amendment')}</button>` : ''}
+                    ${canApprouverDG ? `<button class="btn btn-primary btn-sm" onclick="planApprouverDG('${plan.id}')">${tp('approuver_dg')}</button>` : ''}
+                    ${canTransmettre ? `<button class="btn btn-primary btn-sm" onclick="planTransmettre('${plan.id}')">${tp('transmettre_prestataire')}</button>` : ''}
                 </div>
             </div>
             <div class="card-body">

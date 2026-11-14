@@ -278,19 +278,6 @@ function _renderPlanDiffBody(diff, planId) {
 function _renderPlanDiffAccordion(plan) {
     const isAmendment = !!plan.parent_plan_id;
     const diff = isAmendment ? _computePlanDiff(plan) : null;
-    // `'Administrateur'` n'est pas un rôle du dispositif : c'est une valeur
-    // **traduite**, que `src/modules/profil_risque/roles.js` calcule à partir
-    // de SUPERADMIN et ADMIN. Comparée telle quelle au rôle stocké, la
-    // condition était fausse pour tout le monde — et les deux actes qu'elle
-    // garde, l'approbation du directeur et la transmission au prestataire
-    // (Chap. 4 §4.2.3.e-f), n'étaient offerts à aucun compte.
-    //
-    // Le module porte déjà sa règle, dans `pl-shell.js` : `_isAdmin()`
-    // reconnaît SUPERADMIN, ADMIN, le libellé traduit, et le privilège
-    // M2_Administrateur. On s'y tient — *deux définitions du même mot dans un
-    // même module finissent par diverger, et c'est la plus étroite qui gagne
-    // en silence.*
-    const isAdminRole = _isAdmin();
     let actionsHtml = '';
     if (_canValidate(plan.secteur_id)) {
         actionsHtml += `
@@ -298,15 +285,10 @@ function _renderPlanDiffAccordion(plan) {
         <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();planReject('${plan.id}')">${PLAN_ICONS.x} ${tp('reject_plan')}</button>
         <button class="btn btn-outline btn-sm" style="border-color:#dc2626;color:#dc2626;" onclick="event.stopPropagation();planRejectClose('${plan.id}')" title="${tp('reject_close_hint')}">${PLAN_ICONS.x} ${tp('reject_close')}</button>`;
     }
-    // Phase 7 — Approbation DG + transmission (Chap. 4 §4.2.3.e-f) — Admin agit comme DG
-    if (isAdminRole) {
-        if (plan.statut === 'valide' || plan.statut === 'valide_directeur') {
-            actionsHtml += ` <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();planApprouverDG('${plan.id}')">📑 Approuver DG</button>`;
-        }
-        if (plan.statut === 'approuve_dg') {
-            actionsHtml += ` <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();planTransmettre('${plan.id}')">${tp('transmettre_prestataire')}</button>`;
-        }
-    }
+    // L'approbation du directeur et la transmission ne sont plus ici : cette
+    // page ne reçoit que des plans « soumis », et ces deux actes exigent un plan
+    // validé — leurs boutons n'y apparaissaient jamais. Ils sont passés au
+    // détail du plan (`planRenderPlanDetail`, ADR-003 n° 5.f.100).
 
     const badge = isAmendment
         ? `<span class="badge badge-warning">${tp('amendement')}</span>

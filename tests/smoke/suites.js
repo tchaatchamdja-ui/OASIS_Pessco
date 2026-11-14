@@ -100,6 +100,9 @@ const SUITES = [
   // La huitième : les documents imprimables — la fiche et le rapport, dans
   // leur vraie fenêtre, le mouchard posé dedans.
   { nom: 'surv-documents', port: 4812, fichier: './surv-documents.smoke' },
+  // La neuvième : les tris des dossiers en cours et archivés — deux dossiers
+  // bâtis dans une même table, menés jusqu'à l'archive, puis retirés.
+  { nom: 'surv-dossiers', port: 4813, fichier: './surv-dossiers.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

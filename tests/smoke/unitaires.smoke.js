@@ -1731,8 +1731,8 @@ function verrouDeCampagne() {
 function tableDesSuites() {
   const { SUITES, choisir } = require('./suites');
 
-  verifier('suites : la table en porte vingt-sept, et chacune dit son nom, son port et son fichier',
-    SUITES.length === 27
+  verifier('suites : la table en porte vingt-huit, et chacune dit son nom, son port et son fichier',
+    SUITES.length === 28
     && SUITES.every((s) => typeof s.nom === 'string' && s.nom.length > 2
       && Number.isInteger(s.port) && typeof s.fichier === 'string'),
     `${SUITES.length} suites`);

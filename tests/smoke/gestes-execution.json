@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-13",
+ "releve": "2026-11-14",
  "gestesNommes": 310,
  "occurrences": 505,
- "exerces": 297,
+ "exerces": 299,
  "indecidables": 3,
  "gestes": [
   {
@@ -3936,7 +3936,7 @@
    "evenement": "click",
    "source": "execSortDossiersEnCours('${col}')",
    "nom": "execSortDossiersEnCours",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-prestataires.js",
@@ -3981,7 +3981,7 @@
    "evenement": "click",
    "source": "execSortDossiersArchives('${col}')",
    "nom": "execSortDossiersArchives",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/execution/js/exec-prestataires.js",

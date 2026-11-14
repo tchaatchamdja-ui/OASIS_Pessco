@@ -869,7 +869,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
-           | SURV (`execution`) | 24 162 | **310 gestes nommés, 297 exercés** (96 %), 489 occurrences sur 505 dont 6 indécidables — mesuré par **huit** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus` et `surv-documents`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.92) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les dix noms non exercés sont dispersés sur sept fichiers, aucun au-delà de deux occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Le gisement qui vient est `exec-prestataires.js`, les deux tris des tables de dossiers |
+           | SURV (`execution`) | 24 162 | **310 gestes nommés, 299 exercés** (96 %), 491 occurrences sur 505 dont 6 indécidables — mesuré par **neuf** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents` et `surv-dossiers`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.93) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 58 sur 61, les activités à 65 sur 67, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. Deux noms seulement restent hors de portée des suites, et pour la même raison : `execViewFNC` et `execAccuserReception` ne sont offerts qu'à un compte qui ne gouverne pas le module. Il ne reste plus un seul gros gisement : les huit noms non exercés sont dispersés sur six fichiers, aucun au-delà de deux occurrences. `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). Le gisement qui vient est `exec-adapters.js`, le changement d'instance et le renvoi vers la gestion des droits |
 
            ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
 
@@ -12742,3 +12742,54 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            depuis l'aperçu de la fiche. Le gisement qui vient est
            `exec-prestataires.js` : **les deux tris** des tables de dossiers,
            en cours et archivés, sur un même écran.
+
+       5.f.93 [x] **Les tris des dossiers, mesurés à deux lignes** — fait le
+           14 novembre 2026. `exec-prestataires.js` était le gisement annoncé
+           par le n° 5.f.92 : ses deux restes sont les tris des tables de
+           dossiers en cours et de dossiers archivés, sur la page
+           « Prestataires ». Celui des clôturés est exercé par `surv.smoke.js`.
+
+           ── Un tri ne se mesure qu'à deux lignes ──
+
+           Le contrôle des clôturés le dit lui-même : avec une seule ligne, la
+           flèche est le seul témoin, et une flèche n'est qu'un état qui
+           s'affiche. Une neuvième suite, `surv-dossiers` (port 4813), bâtit
+           donc **deux** dossiers sur des activités dont les organismes
+           partagent un domaine — ils tombent dans la même table —, et lit
+           l'ordre des lignes : croissant au premier clic sur la référence,
+           décroissant au second, l'ordre réellement inversé, et la flèche qui
+           suit.
+
+           Elle les mène ensuite à l'archive par les vraies routes — dossier
+           soumis, rapport validé puis transmis, clôture, archivage — pour
+           éprouver le second tri, puis les désarchive et les supprime. Six
+           contrôles, chaîne et ménage compris.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | R — le second clic ne bascule plus le sens (dossiers en cours) | le tri des dossiers en cours |
+           | S — la table des archivés ignore le tri | le tri des dossiers archivés |
+           | T — le décroissant n'inverse plus l'ordre (dossiers en cours) | le tri des dossiers en cours |
+
+           Ce que la mesure ne prouve pas, et que S a montré : aux dossiers en
+           cours, l'ordre par défaut — par date — coïncide avec l'ordre
+           croissant des références. Le premier clic y serait donc vert même
+           sans effet ; c'est le retour décroissant qui prouve le tri, et R et T
+           le gardent. Aux archivés, l'ordre non trié est l'inverse — 002 puis
+           001 —, et le premier clic s'y mesure aussi.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-prestataires.js` | 6 / 8 | **8 / 8** |
+           | SURV, occurrences exercées | 489 / 505 (97 %) | **491 / 505 (97 %)** |
+           | SURV, noms exercés | 297 / 310 (96 %) | **299 / 310 (96 %)** |
+           | Campagne | 1 789, 27 suites | **1 795, 28 suites** |
+
+           Il reste huit noms non exercés sur six fichiers, aucun au-delà de
+           deux. Le gisement qui vient est `exec-adapters.js` : **le
+           changement d'instance** et **le renvoi vers la gestion des droits**,
+           les deux gestes que l'adaptateur pose sur la barre du socle.

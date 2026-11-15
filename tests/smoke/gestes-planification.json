@@ -6,97 +6,6 @@
  "indecidables": 5,
  "gestes": [
   {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 23,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 24,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planConfirmSubmit('${planId}')",
-   "nom": "planConfirmSubmit",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 100,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 101,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planApplyDecision()",
-   "nom": "planApplyDecision",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 212,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 375,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planDeleteComment('${it.id}','${planId}')",
-   "nom": "planDeleteComment",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 393,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 394,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCreateComment('${planId}')",
-   "nom": "planCreateComment",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 637,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "document.getElementById('planNotifPanel')?.remove()",
-   "nom": "document.getElementById",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-actions.js",
-   "ligne": 669,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "document:click",
-   "source": "document.addEventListener('click', handler);",
-   "id": null,
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/planification/js/pl-shell.js",
    "ligne": 287,
    "forme": "en ligne",
@@ -310,6 +219,25 @@
    "exerce": null
   },
   {
+   "fichier": "frontend/planification/affichage.ts",
+   "ligne": 323,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "document.getElementById('planNotifPanel')?.remove()",
+   "nom": "document.getElementById",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/affichage.ts",
+   "ligne": 356,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document:click",
+   "source": "document.addEventListener('click', handler);",
+   "id": null,
+   "exerce": true
+  },
+  {
    "fichier": "frontend/planification/calendrier-bord.ts",
    "ligne": 224,
    "forme": "en ligne",
@@ -507,6 +435,78 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
    "nom": "PLAN_STATE.calendarMonth",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/decisions.ts",
+   "ligne": 55,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/decisions.ts",
+   "ligne": 56,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planConfirmSubmit('${planId}')",
+   "nom": "planConfirmSubmit",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/decisions.ts",
+   "ligne": 133,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/decisions.ts",
+   "ligne": 134,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planApplyDecision()",
+   "nom": "planApplyDecision",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/decisions.ts",
+   "ligne": 245,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/decisions.ts",
+   "ligne": 285,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planDeleteComment('${it.id}','${planId}')",
+   "nom": "planDeleteComment",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/decisions.ts",
+   "ligne": 303,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/decisions.ts",
+   "ligne": 304,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCreateComment('${planId}')",
+   "nom": "planCreateComment",
    "exerce": true
   },
   {

@@ -21,10 +21,6 @@ declare global {
     planRenderPage?: () => void;
     /** `pl-shell.js` — une date au format du module. */
     planDateFr?: (valeur: unknown) => string;
-    /** `pl-actions.js` — l'échappement d'un texte pour le balisage. */
-    _esc?: (valeur: unknown) => string;
-    /** `pl-actions.js` — la pastille d'un niveau de risque. */
-    _riskBadge?: (libelle: unknown) => string;
     /** `pl-shell.js` — le privilège de validation, sur un secteur ou en général. */
     _canValidate?: (secteurId?: string) => boolean;
     /** `pl-shell.js` — la barre de filtres d'une page. */
@@ -35,14 +31,6 @@ declare global {
     planCloseModal?: () => void;
     /** `pl-shell.js` — recharger les données de l'écran. */
     planLoadData?: () => Promise<void>;
-    /** `pl-actions.js` — la teinte d'un organisme, stable d'une vue à l'autre. */
-    _prestataireColor?: (prestataireId: string | undefined) => string;
-    /** `pl-actions.js` — l'échappement d'une valeur d'attribut. */
-    _escAttr?: (valeur: unknown) => string;
-    /** `pl-actions.js` — la pastille du type d'un plan. */
-    _planTypeBadge?: (type: unknown) => string;
-    /** `pl-actions.js` — la pastille d'un statut. */
-    _statusBadge?: (statut: unknown) => string;
     /** `pl-shell.js` — le compte est-il administrateur du module ? */
     _isAdmin?: () => boolean;
     /** `pl-shell.js` — le meilleur privilège du compte, tous secteurs confondus. */
@@ -53,10 +41,6 @@ declare global {
     _canContribute?: (secteurId?: string) => boolean;
     /** `pl-shell.js` — la barre de navigation remise à la page courante. */
     planUpdateNavUI?: () => void;
-    /** `pl-actions.js` — la couleur d'un statut. */
-    _statusColor?: (statut: unknown) => string;
-    /** `pl-actions.js` — les commentaires par activité d'un texte de décision. */
-    _parseActivityCommentsFromText?: (texte: unknown) => { global: string; perActivity: { objet?: string }[] };
     /** `pl-shell.js` — les boutons d'années d'une barre de filtres. */
     _planBoutonsAnnees?: (annees: unknown[], retenue: string, geste: (a: unknown) => string) => string;
   }

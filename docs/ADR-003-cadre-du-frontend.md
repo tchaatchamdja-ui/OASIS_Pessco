@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 11 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.107) ; restent `pl-actions.js` et `pl-shell.js` |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 12 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.108) ; reste `pl-shell.js` |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -14071,5 +14071,83 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|
            | Fichiers convertis | **11 sur 13** — 4 706 lignes sur 5 958 |
            | Restent | `pl-actions.js` et `pl-shell.js` — 1 252 lignes |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — inchangée |
+
+       5.f.108 [x] **PLAN en TypeScript : les actes du circuit et les pastilles
+           — un cache qui doit rester unique, et ce que mon scénario lisait de
+           trop** — fait le 15 novembre 2026. `pl-actions.js` (671 lignes),
+           l'avant-dernier fichier.
+
+           ── La photographie ──
+
+           Ce fichier tient les actes du circuit — soumettre, valider, rejeter,
+           rejeter définitivement, approuver au nom du directeur, transmettre,
+           amender, annuler un amendement —, les discussions d'un plan,
+           l'historique de son circuit, son export PDF, la cloche des
+           notifications, et les petites aides que presque tous les modules
+           convertis lisent : l'échappement, les pastilles, les couleurs.
+
+           Comme pour les fenêtres de saisie, la photographie enregistre chaque
+           appel au serveur avec son corps, chaque message, chaque confirmation
+           et chaque invite — le scénario répond « non », puis rien, puis
+           « oui ». Le commentaire par activité saisi dans la page de validation
+           y est suivi jusqu'au corps de la décision. L'export ouvre une
+           fenêtre : `window.open` est remplacé le temps de la photographie, et
+           le document écrit est capturé, comme le refus d'une fenêtre bloquée.
+           Les commentaires et l'historique affichent l'heure de leur
+           création : la comparaison normalise les horodatages courts, et deux
+           prises avant le vérifient. **52 états, 0 écart.**
+
+           ── Ce que mon scénario lisait de trop ──
+
+           La première photographie après conversion s'est arrêtée sur
+           « `planLibelleType` is not defined ». La page n'avait rien : c'est
+           **mon scénario** qui appelait ce nom, que plus aucun fichier ne lit
+           et qui quitte la portée globale. Le libellé reste photographié dans
+           la pastille du type qui l'affiche ; l'appel direct est retiré, et la
+           photographie avant a été reprise sur le code d'origine, extrait de
+           `git`. *Une mesure qui lit un détail interne mesure sa propre
+           curiosité, non l'écran.*
+
+           ── Un cache qui doit rester unique ──
+
+           La couleur d'un organisme lui est attribuée au premier passage, dans
+           l'ordre : c'est ce qui la rend stable d'une vue à l'autre. Le cache
+           vit dans `affichage.ts`, qui n'est chargé que par ce paquet ; les
+           autres appellent `_prestataireColor` sur la page. C'est la même règle
+           que pour l'état de l'écran (n° 5.f.104), appliquée à un état plus
+           petit : un second paquet qui l'importerait aurait son propre cache,
+           et les mêmes organismes changeraient de couleur d'une page à
+           l'autre. Le contre-test qui ne garde plus le cache (BN) fait
+           diverger la séquence des couleurs.
+
+           Le brouillon d'une décision reste sur `window._planDecisionDraft` :
+           la suite PLAN le lit là, entre la confirmation et son application.
+
+           ── Coupé en deux ──
+
+           `decisions.ts` — les actes, les discussions, le circuit — et
+           `affichage.ts` — l'échappement, les pastilles, l'export, la cloche —,
+           dans le même paquet. Vingt-sept noms restent publiés sur
+           trente-six ; les neuf autres quittent la portée globale. Les huit
+           déclarations que `restant.d.ts` portait pour ce fichier en sont
+           parties : il ne déclare plus que ce que `pl-shell.js` définit.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BN — le cache des couleurs n'est plus gardé | la photographie : la séquence des couleurs |
+           | BO — la décision n'envoie plus les commentaires par activité | la photographie : le corps de la validation d'un amendement |
+           | BP — le sas ne publie plus `planDeleteComment` | la suite PLAN : le commentaire retiré, et l'exception |
+           | BQ — l'annulation d'un amendement ignore une invite refusée | la photographie : un `POST` parti sur un refus |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **12 sur 13** — 5 377 lignes sur 5 958 |
+           | Reste | `pl-shell.js` — 581 lignes, et le minuteur des commentaires (n° 5.f.106) |
            | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
            | Campagne | **1 854, 33 suites** — inchangée |

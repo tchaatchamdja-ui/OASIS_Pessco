@@ -21,7 +21,9 @@
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
-const { demarrer, verifier, bilan } = require('./harness');
+const {
+  demarrer, verifier, bilan, refusDeclares, adresseDeConsole,
+} = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'planification', 'js', 'pl-shell.js');
@@ -125,15 +127,15 @@ module.exports = async function planificationNavigateurSmoke(port) {
       },
     ];
     // Un refus déclaré laisse aussi une trace en console — « Failed to load
-    // resource : … 404 », **sans l'adresse**. On tient le compte des codes
-    // rencontrés, et l'on dispense le message qui porte **le même code**. Rien
-    // de plus large : un 404 non déclaré garde son message.
-    const codesAttendus = new Set();
+    // resource : … 400 ». Son texte ne dit pas l'adresse, mais sa `location`
+    // la porte. La règle vit dans le harnais (`refusDeclares`) : la ligne de console se
+    // confronte aux déclarations par son adresse, et non au code d'une réponse
+    // que Puppeteer peut rendre après elle (15 novembre 2026).
+    const refusVus = refusDeclares(REFUS_ATTENDUS);
     page.on('console', (m) => {
       if (!plan || m.type() !== 'error') return;
       const texte = m.text();
-      const code = (/status of (\d{3})/.exec(texte) || [])[1];
-      if (code && codesAttendus.has(Number(code))) return;
+      if (refusVus.console(texte, adresseDeConsole(m))) return;
       incidents.push(`[${etape}] console : ${texte.slice(0, 160)}`);
     });
     page.on('pageerror', (e) => {
@@ -149,9 +151,7 @@ module.exports = async function planificationNavigateurSmoke(port) {
     page.on('response', (r) => {
       if (!plan || r.status() < 400) return;
       const chemin = r.url().replace(srv.base, '');
-      const attendu = REFUS_ATTENDUS.some((x) => x.code === r.status()
-        && x.methode === r.request().method() && x.chemin.test(chemin));
-      if (attendu) { codesAttendus.add(r.status()); return; }
+      if (refusVus.reponse(r.status(), r.request().method(), chemin)) return;
       // La méthode est dite : un chemin seul ne dit pas quelle déclaration
       // aurait dû couvrir le refus.
       incidents.push(`[${etape}] ${r.request().method()} ${r.status()} ${chemin.slice(0, 120)}`);

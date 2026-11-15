@@ -19,12 +19,6 @@ declare global {
     planNavigateTo?: (page: string, sub?: string) => void;
     /** `pl-shell.js` — redessiner la page courante. */
     planRenderPage?: () => void;
-    /** `pl-crud.js` — un message éphémère. */
-    planShowEphemeralToast?: (message: string, type?: string, duration?: number) => void;
-    /** `pl-crud.js` — la fenêtre d'une activité. */
-    planShowActivityModal?: (planId: string, actId?: string, options?: { lecture?: boolean }) => void;
-    /** `pl-crud.js` — la durée d'une activité, en jours. */
-    _planDureeEntre?: (debut: unknown, fin: unknown) => number | string;
     /** `pl-shell.js` — une date au format du module. */
     planDateFr?: (valeur: unknown) => string;
     /** `pl-actions.js` — l'échappement d'un texte pour le balisage. */
@@ -59,8 +53,6 @@ declare global {
     _canContribute?: (secteurId?: string) => boolean;
     /** `pl-shell.js` — la barre de navigation remise à la page courante. */
     planUpdateNavUI?: () => void;
-    /** `pl-crud.js` — le volet des prestataires d'un plan périodique. */
-    planPrestThemesPanel?: (plan: unknown) => string;
     /** `pl-actions.js` — la couleur d'un statut. */
     _statusColor?: (statut: unknown) => string;
     /** `pl-actions.js` — les commentaires par activité d'un texte de décision. */

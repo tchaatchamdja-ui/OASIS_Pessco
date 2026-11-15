@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 10 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.106) |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 11 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.107) ; restent `pl-actions.js` et `pl-shell.js` |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -13998,5 +13998,78 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|
            | Fichiers convertis | **10 sur 13** — 3 900 lignes sur 5 958 |
            | Restent | `pl-crud.js`, puis `pl-actions.js` et `pl-shell.js` — 2 058 lignes |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — inchangée |
+
+       5.f.107 [x] **PLAN en TypeScript : les fenêtres de saisie — photographier
+           ce qui part au serveur, et un relevé que mon écriture aveuglait** —
+           fait le 15 novembre 2026. `pl-crud.js` (806 lignes).
+
+           ── Photographier les écritures ──
+
+           Jusqu'ici, la photographie regardait ce que l'écran dessine ; les
+           écritures étaient laissées aux suites de PLAN. Ce fichier est fait
+           d'écritures : créer, modifier, supprimer un plan ou une activité,
+           archiver, synchroniser. La photographie enregistre donc **chaque
+           appel au serveur, avec son corps**, chaque message de l'écran, et
+           chaque confirmation demandée — répondue « non » puis « oui » par le
+           scénario.
+
+           **75 états** : les fenêtres de création et d'édition sous chaque type
+           de plan, le volet des prestataires et ses tris, la fenêtre d'une
+           activité — neuve, modifiée, en lecture, ouverte depuis « Mes
+           activités », pré-remplie depuis un prestataire —, la liaison des
+           dates et de la durée dans les quatre sens, les volets de
+           sous-activités, deux refus de saisie — une année hors du plan, une
+           fin avant le début —, les confirmations refusées et acceptées, et la
+           synchronisation des risques jusqu'à l'amendement automatique d'un
+           plan validé. Deux prises avant sans écart ; avant et après : **0
+           écart**, corps des requêtes compris.
+
+           Le contre-test BK — la suppression d'un plan ignore la confirmation
+           — le montre : sur la confirmation refusée, la photographie voit
+           partir un `DELETE`.
+
+           ── Un relevé que mon écriture aveuglait ──
+
+           Le relevé refait rendait 84 noms exercés au lieu de 87, et trois
+           indécidables de plus : les écouteurs de la date de début, de la date
+           de fin et de la durée. L'écran n'avait rien. Le relevé rapproche un
+           écouteur de sa cible par l'identifiant qu'il lit sur la ligne qui
+           déclare la variable — `const debut = document.getElementById(
+           'actDebut')`. J'avais écrit `champ('actDebut')`, une aide plus
+           courte, que le relevé ne sait pas lire. Les trois lignes ont repris
+           la forme lisible, et un commentaire dit pourquoi. *Une conversion qui
+           rend le code plus court peut rendre la mesure aveugle ; c'est la
+           mesure refaite qui l'a dit.*
+
+           ── Coupé en deux ──
+
+           Comme `pl-plans.js`, le fichier passait les 600 lignes accordées à un
+           fichier de frontend : `saisie-plan.ts` — les fenêtres d'un plan, son
+           volet de prestataires, la synchronisation — et `saisie-activite.ts` —
+           la fenêtre d'une activité —, dans le même paquet.
+
+           Dix-huit noms sur vingt-deux restent publiés : onze lus par d'autres
+           fichiers, et les gestes des boutons que ces fenêtres portent. Les
+           quatre autres — la fin déduite d'une durée, la liaison des dates,
+           l'année d'une activité, la lecture du formulaire — quittent la
+           portée globale.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BJ — le formulaire n'envoie plus le responsable | la photographie : le corps de la création et de la modification |
+           | BK — la suppression d'un plan ignore la confirmation | la photographie : un `DELETE` sur un « non » |
+           | BL — le sas ne publie plus `planUpdateActivity` | la suite PLAN : la modification d'une activité, et l'exception |
+           | BM — la fin déduite d'une durée décalée d'un jour | la photographie : trois liaisons dates ↔ durée |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **11 sur 13** — 4 706 lignes sur 5 958 |
+           | Restent | `pl-actions.js` et `pl-shell.js` — 1 252 lignes |
            | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
            | Campagne | **1 854, 33 suites** — inchangée |

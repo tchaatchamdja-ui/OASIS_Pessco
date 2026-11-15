@@ -97,204 +97,6 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 62,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 63,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCreatePlan()",
-   "nom": "planCreatePlan",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 122,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planSortThemeTable(this,${col})",
-   "nom": "planSortThemeTable",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 133,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();event.preventDefault();planOpenDetailForPrestataire('${plan.id}','${p.id}')",
-   "nom": "planOpenDetailForPrestataire",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 258,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 259,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planUpdatePlan('${planId}')",
-   "nom": "planUpdatePlan",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 490,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 492,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 493,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}",
-   "nom": "planUpdateActivity",
-   "interpole": true,
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 493,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}",
-   "nom": "planCreateActivity",
-   "interpole": true,
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 538,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 755,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "document.querySelectorAll('.sync-check:not([disabled])').forEach(cb=>cb.checked=this.checked);",
-   "nom": "document.querySelectorAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 768,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planApplySyncSelection('${planId}')",
-   "nom": "planApplySyncSelection",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 769,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 343,
-   "forme": "écouteur",
-   "evenement": "change",
-   "nom": "debut:change",
-   "source": "debut.addEventListener('change', () => {",
-   "id": "actDebut",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 348,
-   "forme": "écouteur",
-   "evenement": "change",
-   "nom": "fin:change",
-   "source": "fin.addEventListener('change', depuisDates);",
-   "id": "actFin",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 349,
-   "forme": "écouteur",
-   "evenement": "input",
-   "nom": "duree:input",
-   "source": "duree.addEventListener('input', () => {",
-   "id": "actDuree",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 566,
-   "forme": "écouteur",
-   "evenement": "toggle",
-   "nom": "det:toggle",
-   "source": "det.addEventListener('toggle', () => {",
-   "id": null,
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 572,
-   "forme": "écouteur",
-   "evenement": "change",
-   "nom": "saBox:change",
-   "source": "saBox.addEventListener('change', () => {",
-   "id": null,
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 579,
-   "forme": "écouteur",
-   "evenement": "change",
-   "nom": "tc:change",
-   "source": "tc.addEventListener('change', () => {",
-   "id": null,
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-crud.js",
-   "ligne": 590,
-   "forme": "écouteur",
-   "evenement": "change",
-   "nom": "secteurSelect:change",
-   "source": "secteurSelect.addEventListener('change', _renderSAThemesTable);",
-   "id": "actSecteur",
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/planification/js/pl-shell.js",
    "ligne": 287,
    "forme": "en ligne",
@@ -1103,6 +905,204 @@
    "evenement": "click",
    "source": "planSaveRiskProfile()",
    "nom": "planSaveRiskProfile",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 214,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 216,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 217,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}",
+   "nom": "planUpdateActivity",
+   "interpole": true,
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 217,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}",
+   "nom": "planCreateActivity",
+   "interpole": true,
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 262,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 68,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "debut:change",
+   "source": "debut.addEventListener('change', () => {",
+   "id": "actDebut",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 73,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "fin:change",
+   "source": "fin.addEventListener('change', depuisDates);",
+   "id": "actFin",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 74,
+   "forme": "écouteur",
+   "evenement": "input",
+   "nom": "duree:input",
+   "source": "duree.addEventListener('input', () => {",
+   "id": "actDuree",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 290,
+   "forme": "écouteur",
+   "evenement": "toggle",
+   "nom": "det:toggle",
+   "source": "det.addEventListener('toggle', () => {",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 296,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "saBox:change",
+   "source": "saBox.addEventListener('change', () => {",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 303,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "tc:change",
+   "source": "tc.addEventListener('change', () => {",
+   "id": null,
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/planification/saisie-activite.ts",
+   "ligne": 314,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "secteurSelect:change",
+   "source": "secteurSelect.addEventListener('change', _renderSAThemesTable);",
+   "id": "actSecteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-plan.ts",
+   "ligne": 84,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-plan.ts",
+   "ligne": 85,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCreatePlan()",
+   "nom": "planCreatePlan",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-plan.ts",
+   "ligne": 145,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planSortThemeTable(this,${col})",
+   "nom": "planSortThemeTable",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-plan.ts",
+   "ligne": 156,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();event.preventDefault();planOpenDetailForPrestataire('${plan.id}','${p.id}')",
+   "nom": "planOpenDetailForPrestataire",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-plan.ts",
+   "ligne": 281,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-plan.ts",
+   "ligne": 282,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planUpdatePlan('${planId}')",
+   "nom": "planUpdatePlan",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-plan.ts",
+   "ligne": 398,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "document.querySelectorAll('.sync-check:not([disabled])').forEach(cb=>cb.checked=this.checked);",
+   "nom": "document.querySelectorAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-plan.ts",
+   "ligne": 411,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planApplySyncSelection('${planId}')",
+   "nom": "planApplySyncSelection",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/saisie-plan.ts",
+   "ligne": 412,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
    "exerce": true
   },
   {

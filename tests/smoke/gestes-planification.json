@@ -1,5 +1,5 @@
 {
- "releve": "2026-11-14",
+ "releve": "2026-11-15",
  "gestesNommes": 93,
  "occurrences": 137,
  "exerces": 87,
@@ -169,141 +169,6 @@
    "nom": "window:resize",
    "source": "window.addEventListener('resize', () => window.planCalNavEtat());",
    "id": null,
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 49,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.calendarYear--;planRenderPage();",
-   "nom": "PLAN_STATE.calendarYear",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 51,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.calendarYear++;planRenderPage();",
-   "nom": "PLAN_STATE.calendarYear",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 57,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.calendarView='month';planRenderPage();",
-   "nom": "PLAN_STATE.calendarView",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 58,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.calendarView='week';planRenderPage();",
-   "nom": "PLAN_STATE.calendarView",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 161,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.calFilters.domaine=this.value;PLAN_STATE.calFilters.secteur='';PLAN_STATE.calFilters.prestataire='';planRende",
-   "nom": "PLAN_STATE.calFilters.domaine",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 165,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.calFilters.secteur=this.value;PLAN_STATE.calFilters.prestataire='';planRenderPage();",
-   "nom": "PLAN_STATE.calFilters.secteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 169,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.calFilters.prestataire=this.value;planRenderPage();",
-   "nom": "PLAN_STATE.calFilters.prestataire",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 173,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.calFilters.trimestre=this.value;planRenderPage();",
-   "nom": "PLAN_STATE.calFilters.trimestre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 180,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.calFilters.responsable=this.value;planRenderPage();",
-   "nom": "PLAN_STATE.calFilters.responsable",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 184,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "_pesSearchInput(this, () => { PLAN_STATE.calFilters.search=document.getElementById('plan-cal-search').value; planRenderP",
-   "nom": "_pesSearchInput",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 185,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.calFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:'',responsable:'',search:''};planRenderPa",
-   "nom": "PLAN_STATE.calFilters",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 262,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
-   "nom": "PLAN_STATE.calendarMonth",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 264,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
-   "nom": "PLAN_STATE.calendarMonth",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 357,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
-   "nom": "PLAN_STATE.calendarMonth",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier.js",
-   "ligne": 359,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
-   "nom": "PLAN_STATE.calendarMonth",
    "exerce": true
   },
   {
@@ -532,87 +397,6 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/planification/js/pl-mes-activites.js",
-   "ligne": 110,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planMaOuvrir('${a.id}')",
-   "nom": "planMaOuvrir",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-mes-activites.js",
-   "ligne": 128,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planOuvrirCalendrier()",
-   "nom": "planOuvrirCalendrier",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-mes-activites.js",
-   "ligne": 135,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planMaSetFiltre('responsable', this.value)",
-   "nom": "planMaSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-mes-activites.js",
-   "ligne": 139,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planMaSetFiltre('secteur', this.value)",
-   "nom": "planMaSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-mes-activites.js",
-   "ligne": 143,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planMaSetFiltre('prestataire', this.value)",
-   "nom": "planMaSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-mes-activites.js",
-   "ligne": 147,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planMaSetFiltre('mode', this.value)",
-   "nom": "planMaSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-mes-activites.js",
-   "ligne": 153,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planMaSetFiltre('du', this.value)",
-   "nom": "planMaSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-mes-activites.js",
-   "ligne": 157,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planMaSetFiltre('au', this.value)",
-   "nom": "planMaSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-mes-activites.js",
-   "ligne": 159,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planMaReinit()",
-   "nom": "planMaReinit",
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/planification/js/pl-plans.js",
    "ligne": 25,
    "forme": "en ligne",
@@ -827,87 +611,6 @@
    "evenement": "click",
    "source": "planDeleteActivity('${a.id}')",
    "nom": "planDeleteActivity",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-prestataires.js",
-   "ligne": 39,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planSyncPrestatairesRisques()",
-   "nom": "planSyncPrestatairesRisques",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-prestataires.js",
-   "ligne": 40,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planShowAddRiskProfileModal()",
-   "nom": "planShowAddRiskProfileModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-prestataires.js",
-   "ligne": 73,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planUpdateCycleDate('${p.id}','debut_cycle',this.value,this)",
-   "nom": "planUpdateCycleDate",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-prestataires.js",
-   "ligne": 76,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planUpdateCycleDate('${p.id}','fin_cycle',this.value,this)",
-   "nom": "planUpdateCycleDate",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-prestataires.js",
-   "ligne": 79,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planPrestBasculer(this)",
-   "nom": "planPrestBasculer",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-prestataires.js",
-   "ligne": 205,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planRPFillDefaults()",
-   "nom": "planRPFillDefaults",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-prestataires.js",
-   "ligne": 215,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "planRPRenderSARows()",
-   "nom": "planRPRenderSARows",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-prestataires.js",
-   "ligne": 253,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-prestataires.js",
-   "ligne": 254,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planSaveRiskProfile()",
-   "nom": "planSaveRiskProfile",
    "exerce": true
   },
   {
@@ -1250,12 +953,309 @@
    "exerce": true
   },
   {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 94,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.calendarYear--;planRenderPage();",
+   "nom": "PLAN_STATE.calendarYear",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 96,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.calendarYear++;planRenderPage();",
+   "nom": "PLAN_STATE.calendarYear",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 102,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.calendarView='month';planRenderPage();",
+   "nom": "PLAN_STATE.calendarView",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 103,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.calendarView='week';planRenderPage();",
+   "nom": "PLAN_STATE.calendarView",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 203,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.calFilters.domaine=this.value;PLAN_STATE.calFilters.secteur='';PLAN_STATE.calFilters.prestataire='';planRende",
+   "nom": "PLAN_STATE.calFilters.domaine",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 207,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.calFilters.secteur=this.value;PLAN_STATE.calFilters.prestataire='';planRenderPage();",
+   "nom": "PLAN_STATE.calFilters.secteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 211,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.calFilters.prestataire=this.value;planRenderPage();",
+   "nom": "PLAN_STATE.calFilters.prestataire",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 215,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.calFilters.trimestre=this.value;planRenderPage();",
+   "nom": "PLAN_STATE.calFilters.trimestre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 222,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.calFilters.responsable=this.value;planRenderPage();",
+   "nom": "PLAN_STATE.calFilters.responsable",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 226,
+   "forme": "en ligne",
+   "evenement": "input",
+   "source": "_pesSearchInput(this, () => { PLAN_STATE.calFilters.search=document.getElementById('plan-cal-search').value; planRenderP",
+   "nom": "_pesSearchInput",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 227,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.calFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:'',responsable:'',search:''};planRenderPa",
+   "nom": "PLAN_STATE.calFilters",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 304,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
+   "nom": "PLAN_STATE.calendarMonth",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 306,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
+   "nom": "PLAN_STATE.calendarMonth",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 399,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
+   "nom": "PLAN_STATE.calendarMonth",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/calendrier.ts",
+   "ligne": 401,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
+   "nom": "PLAN_STATE.calendarMonth",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/mes-activites.ts",
+   "ligne": 145,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planMaOuvrir('${a.id}')",
+   "nom": "planMaOuvrir",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/mes-activites.ts",
+   "ligne": 163,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planOuvrirCalendrier()",
+   "nom": "planOuvrirCalendrier",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/mes-activites.ts",
+   "ligne": 170,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planMaSetFiltre('responsable', this.value)",
+   "nom": "planMaSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/mes-activites.ts",
+   "ligne": 174,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planMaSetFiltre('secteur', this.value)",
+   "nom": "planMaSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/mes-activites.ts",
+   "ligne": 178,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planMaSetFiltre('prestataire', this.value)",
+   "nom": "planMaSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/mes-activites.ts",
+   "ligne": 182,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planMaSetFiltre('mode', this.value)",
+   "nom": "planMaSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/mes-activites.ts",
+   "ligne": 188,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planMaSetFiltre('du', this.value)",
+   "nom": "planMaSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/mes-activites.ts",
+   "ligne": 192,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planMaSetFiltre('au', this.value)",
+   "nom": "planMaSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/mes-activites.ts",
+   "ligne": 194,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planMaReinit()",
+   "nom": "planMaReinit",
+   "exerce": true
+  },
+  {
    "fichier": "frontend/planification/pages/pl-instances.ts",
    "ligne": 63,
    "forme": "action de barre",
    "evenement": "change",
    "nom": "planAppliquerInstance",
    "source": "(v: string) => planAppliquerInstance(v)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/prestataires.ts",
+   "ligne": 70,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planSyncPrestatairesRisques()",
+   "nom": "planSyncPrestatairesRisques",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/prestataires.ts",
+   "ligne": 71,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planShowAddRiskProfileModal()",
+   "nom": "planShowAddRiskProfileModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/prestataires.ts",
+   "ligne": 104,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planUpdateCycleDate('${p.id}','debut_cycle',this.value,this)",
+   "nom": "planUpdateCycleDate",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/prestataires.ts",
+   "ligne": 107,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planUpdateCycleDate('${p.id}','fin_cycle',this.value,this)",
+   "nom": "planUpdateCycleDate",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/prestataires.ts",
+   "ligne": 110,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planPrestBasculer(this)",
+   "nom": "planPrestBasculer",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/prestataires.ts",
+   "ligne": 239,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planRPFillDefaults()",
+   "nom": "planRPFillDefaults",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/prestataires.ts",
+   "ligne": 249,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "planRPRenderSARows()",
+   "nom": "planRPRenderSARows",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/prestataires.ts",
+   "ligne": 287,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/prestataires.ts",
+   "ligne": 288,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planSaveRiskProfile()",
+   "nom": "planSaveRiskProfile",
    "exerce": true
   }
  ]

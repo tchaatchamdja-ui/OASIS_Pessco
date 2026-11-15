@@ -21,19 +21,48 @@ declare global {
     planRenderPage?: () => void;
     /** `pl-dashboard.js` — la page d'accueil. */
     planRenderDashboard?: () => string;
-    /** `pl-prestataires.js` — les profils de risque. */
-    planRenderPrestataires?: () => string;
     /** `pl-plans.js` — la liste des plans. */
     planRenderPlans?: () => string;
-    /** `pl-calendrier.js` — le calendrier. */
-    planRenderCalendar?: () => string;
     /** `pl-validation.js` — la page de validation. */
     planRenderWorkflow?: () => string;
     /** `pl-validation.js` — l'historique. */
     planRenderHistory?: () => string;
     /** `pl-crud.js` — un message éphémère. */
     planShowEphemeralToast?: (message: string, type?: string, duration?: number) => void;
+    /** `pl-crud.js` — la fenêtre d'une activité. */
+    planShowActivityModal?: (planId: string, actId?: string, options?: { lecture?: boolean }) => void;
+    /** `pl-crud.js` — la durée d'une activité, en jours. */
+    _planDureeEntre?: (debut: unknown, fin: unknown) => number | string;
+    /** `pl-shell.js` — une date au format du module. */
+    planDateFr?: (valeur: unknown) => string;
+    /** `pl-actions.js` — l'échappement d'un texte pour le balisage. */
+    _esc?: (valeur: unknown) => string;
+    /** `pl-actions.js` — la pastille d'un niveau de risque. */
+    _riskBadge?: (libelle: unknown) => string;
+    /** `pl-shell.js` — le privilège de validation, sur un secteur ou en général. */
+    _canValidate?: (secteurId?: string) => boolean;
+    /** `pl-shell.js` — la barre de filtres d'une page. */
+    _renderFilterBar?: (surChangement: string, options?: Record<string, boolean>) => string;
+    /** `pl-shell.js` — la fenêtre modale du module. */
+    planShowModal?: (titre: string, corps: string, pied?: string, taille?: string) => void;
+    /** `pl-shell.js` — la refermer. */
+    planCloseModal?: () => void;
+    /** `pl-shell.js` — recharger les données de l'écran. */
+    planLoadData?: () => Promise<void>;
+    /** `pl-actions.js` — la teinte d'un organisme, stable d'une vue à l'autre. */
+    _prestataireColor?: (prestataireId: string | undefined) => string;
+    /** `pl-calendrier-bord.js` — le diagramme de l'année. */
+    _planCalendrierHtml?: (activites: unknown[], options: Record<string, unknown>) => string;
+    /** `pl-shell.js` — les boutons d'années d'une barre de filtres. */
+    _planBoutonsAnnees?: (annees: unknown[], retenue: string, geste: (a: unknown) => string) => string;
   }
+
+  /**
+   * `pl-shell.js` — les icônes du module. Un `const` de premier niveau : une
+   * globale **lexicale**, que l'on atteint par son nom et qui n'est pas sur
+   * `window`.
+   */
+  const PLAN_ICONS: Record<string, string>;
 }
 
 export {};

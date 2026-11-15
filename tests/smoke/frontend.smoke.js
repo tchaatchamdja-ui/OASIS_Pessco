@@ -363,6 +363,64 @@ module.exports = async function frontendSmoke(port) {
     .map((e) => e.name);
   verifier('au moins un écran en TypeScript est trouvé', modules.length > 0, modules.join(', '));
 
+  // ── Un seul état par page de PLAN (ADR-003, n° 5.f.104) ──
+  //
+  // Chaque sas de PLAN est un **paquet séparé**, chargé à la position du
+  // fichier qu'il remplace. Un paquet qui importe `etat.ts` — directement, ou
+  // par `traductions.ts` — emporte **sa propre copie** du module : un second
+  // `PLAN_STATE`, que rien ne relie à celui de la page. Sa langue resterait
+  // « fr », ses filtres ne verraient rien, et aucun contrôle de navigateur ne
+  // le dirait tant que la page convertie s'affiche en français.
+  //
+  // Seul `globales/pl-i18n.ts` porte donc l'état ; les autres le lisent sur la
+  // page, par `partage.ts`. Ce contrôle suit les imports **exécutés** — un
+  // `import type` s'efface à la construction — et exige aussi que `pl-i18n`
+  // atteigne bien l'état : sans cela, il serait vrai sans rien regarder.
+  {
+    const PLAN_FRONT = path.join(RACINE, 'frontend', 'planification');
+    if (fs.existsSync(PLAN_FRONT)) {
+      const importsDe = (f) => [...fs.readFileSync(f, 'utf8')
+        .matchAll(/^import\s+(?!type\b)[^;]*?from\s+'(\.[^']+)'/gm)].map((m) => m[1]);
+      const resoudre = (de, rel) => {
+        const base = path.resolve(path.dirname(de), rel);
+        return [base, `${base}.ts`, `${base}.tsx`, path.join(base, 'index.ts')]
+          .find((c) => fs.existsSync(c) && fs.statSync(c).isFile()) || null;
+      };
+      const atteint = (depart) => {
+        const vus = new Set();
+        const pile = [depart];
+        while (pile.length) {
+          const f = pile.pop();
+          if (!vus.has(f)) {
+            vus.add(f);
+            importsDe(f).forEach((r) => { const c = resoudre(f, r); if (c) pile.push(c); });
+          }
+        }
+        return vus;
+      };
+      const ETAT = path.join(PLAN_FRONT, 'etat.ts');
+      const PORTEUR = path.join(PLAN_FRONT, 'globales', 'pl-i18n.ts');
+      const fautifs = [];
+      let paquets = 0;
+      ['globales', 'pages'].forEach((sorte) => {
+        const d = path.join(PLAN_FRONT, sorte);
+        if (!fs.existsSync(d)) return;
+        fs.readdirSync(d).filter((x) => x.endsWith('.ts')).forEach((x) => {
+          const f = path.join(d, x);
+          paquets += 1;
+          if (f !== PORTEUR && atteint(f).has(ETAT)) fautifs.push(`${sorte}/${x}`);
+        });
+      });
+      const porteurAtteint = fs.existsSync(PORTEUR) && atteint(PORTEUR).has(ETAT);
+      verifier('PLAN : un seul paquet porte l’état de la page — aucun autre n’atteint etat.ts',
+        porteurAtteint && fautifs.length === 0,
+        !porteurAtteint ? 'pl-i18n n’atteint pas etat.ts : le contrôle ne regarderait rien'
+          : fautifs.length ? `${fautifs.join(', ')} — lire l’état et les libellés par partage.ts`
+            : `${paquets} paquet(s), seul pl-i18n porte l’état`);
+    }
+  }
+
+
   const srv = await demarrer({ port });
   let navigateur = null;
   try {

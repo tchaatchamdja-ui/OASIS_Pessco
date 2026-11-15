@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion commencée** — 3 fichiers sur 13, ceux qui n'ont pas d'interface (n° 5.f.101, 5.f.102) |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 6 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque et le calendrier (n° 5.f.101, 5.f.102, 5.f.104) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -13745,3 +13745,97 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | Contrôles HTTP de PLAN | 73 | **76** |
            | Campagne | 1 850, 33 suites | **1 853, 33 suites** |
+
+       5.f.104 [x] **PLAN en TypeScript, les trois premières pages : « Mes
+           activités », les profils de risque, le calendrier — et un second
+           état que rien n'aurait vu** — fait le 15 novembre 2026.
+
+           ── La manière, choisie sur mesure ──
+
+           Les dix fichiers restants portent l'interface : 4 837 lignes de
+           gabarits en chaînes, et leurs gestes en `onclick`. Deux voies
+           s'offraient — des modules TypeScript publiés par sas, comme le
+           portail, ou une réécriture en React, comme DROITS. **La première
+           est retenue**, pour une raison mesurée : une réécriture en React
+           change le balisage, donc ce que les 63 contrôles de navigateur et
+           le relevé des gestes regardent, et l'équivalence ne se prouverait
+           plus. Convertis à la lettre, les gabarits se comparent **caractère
+           pour caractère**. React viendra, s'il vient, sur un écran déjà typé.
+
+           L'ordre suit le couplage, relevé fichier par fichier : `pl-shell.js`
+           et `pl-actions.js` sont lus par presque tous les autres et les
+           lisent ; ils viendront en dernier. Les feuilles d'abord.
+
+           ── Un second état, que rien n'aurait vu ──
+
+           Chaque sas de PLAN est un **paquet séparé**, chargé à la position du
+           fichier qu'il remplace — la cohabitation l'impose. En écrivant la
+           première page, j'allais importer `tp` depuis `traductions.ts`. Le
+           paquet aurait emporté sa propre copie d'`etat.ts` : un second
+           `PLAN_STATE`, que rien ne relie à celui de la page.
+
+           Le défaut a été **mesuré**, non supposé, par un contre-test (AX) :
+           l'écran passé en anglais, la page convertie affichait « Mes
+           Activités » au lieu de « My Activities ». Aucun des 63 contrôles de
+           navigateur ne l'aurait vu : ils tournent en français.
+
+           D'où deux choses. Les modules convertis lisent l'état, les libellés
+           et les aides des fichiers restés en JavaScript **sur la page**, au
+           moment de l'appel, par un seul module, `partage.ts` — comme les
+           fichiers en JavaScript les lisaient par leur nom. Et un garde-fou,
+           dans la suite `frontend`, suit les imports **exécutés** de chaque
+           paquet de PLAN et refuse que l'un d'eux, hors `pl-i18n`, atteigne
+           `etat.ts`. Il exige aussi que `pl-i18n` l'atteigne : sans cela, il
+           serait vrai sans rien regarder. Écrit d'abord dans la suite `taille`,
+           il l'a fait sortir de son propre budget de lignes ; il a rejoint la
+           suite dont c'est le sujet plutôt que de relever le plafond.
+
+           ── La preuve, page par page ──
+
+           Chaque page est photographiée dans un navigateur avant et après :
+
+           | Page | États photographiés | Écarts |
+           |---|---|---|
+           | « Mes activités » | 12 — le compte courant, chaque filtre, la période, la réinitialisation | **0** |
+           | Profils de risque | 20 — les filtres, le volet d'un prestataire, la fenêtre d'ajout et ses lignes par secteur, le refus faute de champs | **0** |
+           | Calendrier | 38 — les douze mois en deux vues, chaque filtre, le volet ouvert ; 490 000 caractères | **0** |
+
+           Les écritures — la date d'un cycle, l'enregistrement d'un profil, la
+           synchronisation — ne se photographient pas : les deux suites de PLAN
+           les exercent, et passent sans changement.
+
+           La seule différence, sur chaque page, est déclarée : les noms que
+           personne d'autre ne lisait quittent la portée globale — six, un,
+           sept. Chaque sas pose ceux qui sont lus, **y compris par les `onclick`
+           du fichier lui-même**, qui s'évaluent dans la portée de la page.
+
+           ── La frontière de la cohabitation ──
+
+           Les aides que lisent les modules convertis sont définies par des
+           fichiers restés en JavaScript — `_esc`, `planShowModal`,
+           `_canValidate`, `PLAN_ICONS`… Elles sont déclarées en un seul
+           endroit, `restant.d.ts`, optionnelles, et exigées à l'appel par
+           `requis()`, qui dit laquelle manque. Une ligne part de ce fichier
+           avec la conversion de celui qui définit son nom : les deux
+           déclarations de `planRenderPrestataires` et `planRenderCalendar` en
+           sont parties dès ce pas.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | AX — un module importe `tp` au lieu de le lire sur la page | le garde « un seul état » ; la page reste en français dans un écran anglais |
+           | AY — le sas ne pose plus `planMaSetFiltre` | la suite PLAN : l'exception au premier filtre |
+           | AZ — l'échappement est retiré | la photographie : la vue dont les données portent un caractère à échapper |
+           | BA — le sas ne pose plus `planUpdateCycleDate` | la suite PLAN : le cycle réglé en ligne, et l'exception |
+           | BB — le volet d'un prestataire dit son état à l'envers | la photographie : ouvert et fermé |
+           | BC — le numéro de semaine décalé d'une semaine | la photographie : les douze vues semaine |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **6 sur 13** — 2 095 lignes sur 5 958 |
+           | Restent | `pl-dashboard.js`, `pl-validation.js`, `pl-calendrier-bord.js`, `pl-plans.js`, `pl-crud.js`, puis `pl-actions.js` et `pl-shell.js` — 3 863 lignes |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — un contrôle de plus, le garde « un seul état » |

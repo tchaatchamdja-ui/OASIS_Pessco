@@ -19,8 +19,6 @@ declare global {
     planNavigateTo?: (page: string, sub?: string) => void;
     /** `pl-shell.js` — redessiner la page courante. */
     planRenderPage?: () => void;
-    /** `pl-plans.js` — la liste des plans. */
-    planRenderPlans?: () => string;
     /** `pl-crud.js` — un message éphémère. */
     planShowEphemeralToast?: (message: string, type?: string, duration?: number) => void;
     /** `pl-crud.js` — la fenêtre d'une activité. */
@@ -45,14 +43,28 @@ declare global {
     planLoadData?: () => Promise<void>;
     /** `pl-actions.js` — la teinte d'un organisme, stable d'une vue à l'autre. */
     _prestataireColor?: (prestataireId: string | undefined) => string;
-    /** `pl-plans.js` — les plans que le rôle du compte laisse voir. */
-    _applyRoleFilter?: <T>(plans: T[]) => T[];
     /** `pl-actions.js` — l'échappement d'une valeur d'attribut. */
     _escAttr?: (valeur: unknown) => string;
     /** `pl-actions.js` — la pastille du type d'un plan. */
     _planTypeBadge?: (type: unknown) => string;
     /** `pl-actions.js` — la pastille d'un statut. */
     _statusBadge?: (statut: unknown) => string;
+    /** `pl-shell.js` — le compte est-il administrateur du module ? */
+    _isAdmin?: () => boolean;
+    /** `pl-shell.js` — le meilleur privilège du compte, tous secteurs confondus. */
+    _meilleurPriv?: () => string;
+    /** `pl-shell.js` — le privilège du compte sur un secteur. */
+    _privOn?: (secteurId?: string) => string;
+    /** `pl-shell.js` — le privilège de contribution, sur un secteur ou en général. */
+    _canContribute?: (secteurId?: string) => boolean;
+    /** `pl-shell.js` — la barre de navigation remise à la page courante. */
+    planUpdateNavUI?: () => void;
+    /** `pl-crud.js` — le volet des prestataires d'un plan périodique. */
+    planPrestThemesPanel?: (plan: unknown) => string;
+    /** `pl-actions.js` — la couleur d'un statut. */
+    _statusColor?: (statut: unknown) => string;
+    /** `pl-actions.js` — les commentaires par activité d'un texte de décision. */
+    _parseActivityCommentsFromText?: (texte: unknown) => { global: string; perActivity: { objet?: string }[] };
     /** `pl-shell.js` — les boutons d'années d'une barre de filtres. */
     _planBoutonsAnnees?: (annees: unknown[], retenue: string, geste: (a: unknown) => string) => string;
   }
@@ -63,6 +75,8 @@ declare global {
    * `window`.
    */
   const PLAN_ICONS: Record<string, string>;
+  /** `pl-shell.js` — les privilèges qui valident. Globale lexicale. */
+  const PL_VALIDE: string[];
   /** `pl-shell.js` — les statuts d'un plan en vigueur. Globale lexicale. */
   const PL_STATUTS_EN_VIGUEUR: string[];
   /** `pl-shell.js` — les statuts d'un amendement en circuit. Globale lexicale. */

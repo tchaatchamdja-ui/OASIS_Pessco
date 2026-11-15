@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 9 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique (n° 5.f.101, 5.f.102, 5.f.104, 5.f.105) |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 10 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.106) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -13916,5 +13916,87 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|
            | Fichiers convertis | **9 sur 13** — 3 223 lignes sur 5 958 |
            | Restent | `pl-plans.js`, `pl-crud.js`, puis `pl-actions.js` et `pl-shell.js` — 2 735 lignes |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — inchangée |
+
+       5.f.106 [x] **PLAN en TypeScript : la liste et le détail des plans — un
+           contrôle devenu aveugle, et un minuteur qui lit trop tard** — fait
+           le 15 novembre 2026. `pl-plans.js` (677 lignes).
+
+           ── La photographie : un plan dans chacun de ses statuts ──
+
+           Les boutons du détail dépendent du statut. Le scénario bâtit donc,
+           par les routes, un plan de chaque sorte : brouillon, soumis, rejeté
+           avec son commentaire, validé puis amendé et revalidé — sa lignée v1 →
+           v2, l'ancêtre « remplacé » —, validé avec un amendement en cours,
+           approuvé par le DG, transmis, et un plan « ponctuel / spécial », dont
+           la synchronisation est désactivée. Puis la liste sous chacun de ses
+           six tris dans les deux sens et sous ses filtres, l'accordéon à la
+           souris et au clavier — la touche portée par un lien de l'en-tête
+           comprise —, le détail de chaque plan et le pré-remplissage d'une
+           activité. **50 états**, deux prises avant sans écart entre elles ;
+           avant et après la conversion : **0 écart**.
+
+           ── Un minuteur qui lit trop tard — dans `pl-shell.js` ──
+
+           Les deux prises avant portaient deux exceptions. La pile les a
+           rapportées à `pl-shell.js:382` : après chaque rendu du détail, un
+           minuteur charge les commentaires du plan **cent millisecondes plus
+           tard**, et lit `PLAN_STATE.selectedPlan.id` à ce moment-là, non au
+           moment du rendu. Mon scénario ouvrait deux détails puis quittait la
+           page aussitôt ; `planNavigateTo` vide alors le plan choisi, et les
+           deux minuteurs lisent `null`. Ouvrir un autre plan dans l'intervalle
+           chargerait, lui, les commentaires du mauvais plan.
+
+           Le défaut est antérieur à la conversion, et il appartient à
+           `pl-shell.js` : il sera corrigé avec la conversion de ce fichier,
+           non glissé dans celle-ci, qui ne change aucun comportement. Les deux
+           photographies portent la même exception, et c'est voulu.
+
+           ── Un contrôle devenu aveugle ──
+
+           La suite PLAN a rougi sur « toute page que l'aiguillage rend est
+           atteignable — sans chemin : plan-detail ». L'écran n'avait rien : le
+           contrôle lit les sources pour trouver ce qui ouvre chaque page, et ne
+           lisait que `public/…/js`. L'affectation qui ouvre le détail était
+           partie avec `pl-plans.js`. C'est le défaut que `traductions.smoke.js`
+           avait prévu pour lui-même — *un contrôle qui lit les sources doit
+           suivre la source où elle va* — : il lit désormais les deux
+           répertoires de l'écran. Le contre-test qui retire l'affectation (BG)
+           le fait rougir, avec trois contrôles de comportement.
+
+           ── Un fichier coupé à sa frontière ──
+
+           Converti d'un bloc, le module faisait 718 lignes ; le dépôt en accorde
+           600 à un fichier de frontend, et le garde-fou l'a refusé. Le fichier
+           d'origine portait déjà sa frontière — « PLANS LIST », « PLAN
+           DETAIL » — : `liste-plans.ts` et `detail-plan.ts`, dans le même
+           paquet, le second important du premier l'en-tête d'accordéon et les
+           types. Le même paquet n'évalue qu'une copie de chacun.
+
+           ── Ce qui reste publié ──
+
+           Huit noms sur dix-neuf : les deux pages, `planOpenDetail` — lu par
+           quatre fichiers et une dizaine de gabarits —, `_applyRoleFilter`,
+           l'accordéon, le tri et son état, `_planTableSort`, qui vit sur
+           `window` comme à l'origine et que le module relit à chaque usage. Les
+           onze autres quittent la portée globale. Quatre variables calculées et
+           jamais lues, et un paramètre inutilisé, sont retirés ; la
+           photographie dit que rien n'en dépendait.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BG — l'ouverture ne pose plus la page du détail | la suite PLAN : la page sans chemin, et trois contrôles de comportement |
+           | BH — le sas n'initialise plus l'état du tri | `plan-gestes` : l'exception au rendu de la liste |
+           | BI — le clavier de l'accordéon ne vérifie plus sa cible | la photographie : deux états |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **10 sur 13** — 3 900 lignes sur 5 958 |
+           | Restent | `pl-crud.js`, puis `pl-actions.js` et `pl-shell.js` — 2 058 lignes |
            | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
            | Campagne | **1 854, 33 suites** — inchangée |

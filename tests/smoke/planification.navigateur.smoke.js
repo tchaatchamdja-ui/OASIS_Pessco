@@ -53,13 +53,32 @@ function aiguillageEtChemins() {
   // Une page sans entrée de menu peut rester atteignable : « plan-detail » est
   // ouverte en posant `currentPage`, depuis la table des plans. On lit donc les
   // deux chemins — l'appel nommé, et l'affectation.
-  const js = path.join(RACINE, 'public', 'modules', 'planification', 'js');
+  //
+  // ── Les deux répertoires de l'écran, pendant sa conversion ──
+  //
+  // PLAN passe en TypeScript fichier par fichier (ADR-003, 5.c) : ses sources
+  // vivent à la fois dans `public/…/js` et dans `frontend/planification`. Ne
+  // lire que le premier a fait rougir ce contrôle à la conversion de
+  // `pl-plans.js` — « sans chemin : plan-detail » —, l'affectation qui ouvre
+  // la page étant partie avec lui (n° 5.f.106). L'écran n'avait rien ; le
+  // contrôle devenait aveugle. Il lit donc les deux.
   const ouvrables = new Set();
-  fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => {
-    const t = fs.readFileSync(path.join(js, f), 'utf8');
+  const lire = (t) => {
     for (const m of t.matchAll(/planNavigateTo\(\s*'([\w-]+)'/g)) ouvrables.add(m[1]);
     for (const m of t.matchAll(/currentPage\s*=\s*'([\w-]+)'/g)) ouvrables.add(m[1]);
-  });
+  };
+  const js = path.join(RACINE, 'public', 'modules', 'planification', 'js');
+  if (fs.existsSync(js)) {
+    fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => lire(fs.readFileSync(path.join(js, f), 'utf8')));
+  }
+  (function parcourir(rep) {
+    if (!fs.existsSync(rep)) return;
+    fs.readdirSync(rep, { withFileTypes: true }).forEach((e) => {
+      const c = path.join(rep, e.name);
+      if (e.isDirectory()) parcourir(c);
+      else if (/\.tsx?$/.test(e.name)) lire(fs.readFileSync(c, 'utf8'));
+    });
+  }(path.join(RACINE, 'frontend', 'planification')));
   return { rendues, ouvrables: [...ouvrables] };
 }
 

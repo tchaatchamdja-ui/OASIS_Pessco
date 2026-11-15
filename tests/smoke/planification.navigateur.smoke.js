@@ -24,7 +24,9 @@ const puppeteer = require('puppeteer');
 const { demarrer, verifier, bilan } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
-const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'planification', 'js', 'pl-shell.js');
+// La coquille de l'écran, en TypeScript depuis le 15 novembre 2026 (ADR-003,
+// n° 5.f.109) : `PLAN_NAV` et l'aiguillage de `planRenderPage` y sont lus.
+const SOURCE_NAV = path.join(RACINE, 'frontend', 'planification', 'coquille.ts');
 
 const IDENTIFIANT = 'superadmin@anac.bj';
 const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
@@ -33,12 +35,12 @@ const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
 // et le contrôle aurait mesuré sa propre liste.
 function pagesDeclarees() {
   const texte = fs.readFileSync(SOURCE_NAV, 'utf8');
-  const bloc = /const PLAN_NAV = \{([\s\S]*?)\n\};/.exec(texte);
+  const bloc = /const PLAN_NAV(?:: [^=]+)? = \{([\s\S]*?)\n\};/.exec(texte);
   if (!bloc) {
-    throw new Error('refus : PLAN_NAV introuvable dans public/modules/planification/js/pl-shell.js —'
+    throw new Error('refus : PLAN_NAV introuvable dans frontend/planification/coquille.ts —'
       + ' le contrôle ne sait plus quelles pages l’écran déclare.');
   }
-  const cles = [...bloc[1].matchAll(/^\s{4}'?([\w-]+)'?:\s*\{/gm)].map((m) => m[1]);
+  const cles = [...bloc[1].matchAll(/^\s+'?([\w-]+)'?:\s*\{/gm)].map((m) => m[1]);
   if (!cles.length) throw new Error('refus : PLAN_NAV ne se lit plus entrée par entrée.');
   return cles;
 }
@@ -46,9 +48,9 @@ function pagesDeclarees() {
 // Les cas de l'aiguillage, et ce qui peut les ouvrir.
 function aiguillageEtChemins() {
   const texte = fs.readFileSync(SOURCE_NAV, 'utf8');
-  const rendues = [...texte.matchAll(/^\s*case '([\w-]+)': content = plan\w+\(\);/gm)].map((m) => m[1]);
+  const rendues = [...texte.matchAll(/^\s*case '([\w-]+)': content = (?:rendre\('plan\w+'\)|plan\w+\(\));/gm)].map((m) => m[1]);
   if (!rendues.length) {
-    throw new Error('refus : l’aiguillage de planRenderPage ne se lit plus dans pl-shell.js.');
+    throw new Error('refus : l’aiguillage de planRenderPage ne se lit plus dans coquille.ts.');
   }
   // Une page sans entrée de menu peut rester atteignable : « plan-detail » est
   // ouverte en posant `currentPage`, depuis la table des plans. On lit donc les

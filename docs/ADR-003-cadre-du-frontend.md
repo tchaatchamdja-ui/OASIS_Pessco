@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 12 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.108) ; reste `pl-shell.js` |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **converti** — 13 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles, la coquille (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.109) ; plus aucun fichier en JavaScript — restent le typage de l'état à resserrer et la façade `window.PL` à décider |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -14151,3 +14151,144 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Reste | `pl-shell.js` — 581 lignes, et le minuteur des commentaires (n° 5.f.106) |
            | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
            | Campagne | **1 854, 33 suites** — inchangée |
+
+       5.f.109 [x] **PLAN en TypeScript : la coquille, le dernier fichier — un
+           minuteur corrigé, une phrase de ce registre démentie, et une page qui
+           enveloppe sa navigation** — fait le 15 novembre 2026. `pl-shell.js`
+           (581 lignes). PLAN n'a plus de fichier en JavaScript.
+
+           ── La photographie ──
+
+           La coquille porte ce que les autres pages supposent : le démarrage
+           et le chargement des données, la barre latérale et la barre
+           supérieure, le thème et la langue, l'aiguillage des pages, le volet
+           du calendrier, la fenêtre modale, la barre de filtres et les droits
+           du compte. Le scénario les joue par de vrais clics — chaque entrée de
+           menu, chaque pastille de thème, les trois langues, la barre repliée
+           et dépliée, le menu sur petit écran et son fond —, puis la barre de
+           filtres sous six jeux d'options et six états des filtres, la cascade
+           et la rangée des années, les droits sous huit accès et sept comptes,
+           le volet ouvert, redessiné et refermé de quatre façons, la fenêtre
+           modale sous ses trois tailles, le chargement des données réussi,
+           privé des droits, en échec, et nourri par l'hôte, le démarrage
+           hébergé. Elle enregistre aussi **les messages que la page envoie au
+           portail** à chaque changement de page. **141 états**, deux prises
+           avant sans écart.
+
+           Avant et après : **un écart, et c'est le correctif** — ci-dessous.
+
+           ── Le minuteur des discussions, et une phrase démentie ──
+
+           Le n° 5.f.106 l'avait relevé : après le rendu du détail, un minuteur
+           charge les commentaires du plan cent millisecondes plus tard, en
+           lisant le plan choisi **à ce moment-là**. Quitter le détail dans
+           l'intervalle lui faisait lire `null` et lever une exception — la
+           page n'en disait rien, la console seule. Le plan est désormais lu au
+           rendu, et le minuteur ne charge que si ce détail est encore celui
+           qu'on regarde.
+
+           Ce registre ajoutait : « ouvrir un autre plan dans l'intervalle
+           chargerait, lui, les commentaires du mauvais plan ». **La mesure le
+           dément.** Le minuteur lisant tard, il lit le plan qu'on regarde : il
+           chargeait donc les commentaires du bon plan — **deux fois**, le sien
+           et celui du rendu précédent. La photographie le montre : deux
+           lectures avant, une après ; c'est l'écart, et le seul. *J'avais
+           déduit un effet d'une lecture du code ; il fallait le mesurer avant
+           de l'écrire.*
+
+           Un contrôle de plus dans `plan-gestes` le tient : ouvrir le détail
+           puis le quitter aussitôt ne lève rien et ne lit rien ; y rester lit
+           une fois ; enchaîner deux plans lit le second, une fois. Le
+           contre-test qui rétablit l'ancien minuteur (BR) le fait rougir sur
+           l'exception et sur la double lecture.
+
+           ── Une photographie qui ne voyait pas la cascade ──
+
+           Le contre-test BV fausse la cascade : un domaine choisi ne restreint
+           plus les organismes, les sous-activités ni les thèmes. Il est resté
+           **vert**. Dans les données d'essai, tout ce que ces listes portent
+           relève du domaine que mon scénario choisissait : le restreindre ne
+           retirait rien. La photographie a reçu la barre sous chacun des
+           domaines, et la photographie avant a été reprise — deux prises sans
+           écart, 141 états. BV : **4 vues en écart**, une par domaine qui n'est
+           pas celui de l'essai. C'est le cas du n° 5.f.105, revenu sous une
+           autre forme : *une donnée d'essai trop uniforme rend une règle
+           invisible à la mesure.*
+
+           ── Une page qui enveloppe sa navigation ──
+
+           `index.html` remplace `window.planNavigateTo` après le premier rendu,
+           pour dire au portail quelle page est ouverte. Dans un script
+           classique, une fonction de premier niveau est une propriété de la
+           page : l'ancien fichier, en appelant `planNavigateTo` par son nom nu
+           — au changement de langue, au démarrage hébergé —, appelait
+           l'enveloppe. Un module appellerait sa propre fonction, et le portail
+           ne saurait plus rien. Ces appels passent donc par la page. Le
+           contre-test qui les rend directs (BS) fait diverger les messages au
+           portail sur les quatre changements de langue et au démarrage hébergé.
+
+           ── Quatre globales lexicales devenues des propriétés ──
+
+           `PLAN_ICONS`, `PL_VALIDE` et les deux listes de statuts étaient des
+           `const` de premier niveau : atteintes par leur nom nu, absentes de
+           `window`. Un paquet ne peut pas poser de globale lexicale ; le sas
+           les pose sur `window`, où le nom nu les atteint encore, et les autres
+           paquets les lisent comme avant. Les importer en aurait fait une copie
+           par paquet. Ma première photographie y a vu un écart : mon scénario
+           les cherchait sur `window`, où elles n'étaient pas avant. Il les lit
+           désormais par leur nom, et la photographie avant a été reprise.
+
+           ── Coupé en quatre ──
+
+           `coquille.ts` — le démarrage, la navigation, le rendu, le volet, la
+           fenêtre —, `filtres.ts`, `droits.ts`, `icones.ts`, dans un même
+           paquet. Vingt-sept noms sur trente-deux restent publiés ; la table de
+           la barre latérale, le privilège de contribution, la lecture des
+           droits, le libellé du rôle et le dessin du volet quittent la portée
+           globale. Les pages de l'aiguillage sont rendues par des paquets
+           chargés après celui-ci : il les lit sur la page au moment du rendu.
+
+           La suite `planification-navigateur` lisait `PLAN_NAV` et
+           l'aiguillage dans `pl-shell.js` ; elle les lit dans `coquille.ts`.
+
+           ── `restant.d.ts` retiré ──
+
+           Il déclarait ce que les fichiers restés en JavaScript définissaient ;
+           il n'en reste plus. Chaque nom est déclaré par le sas qui le publie.
+           L'état de l'hôte en mode hébergé, `window.PESSCO`, ne déclarait que
+           sa langue ; il déclare aussi le compte, le thème et les référentiels
+           que la coquille y lit.
+
+           ── Un garde qui ne cherchait que du JavaScript ──
+
+           La campagne a rougi sur un contrôle de `taille` que je n'avais pas
+           vu venir : celui qui tient, sur les cinq écrans, l'ancre que le
+           socle remplace par « Retour au portail », et l'absence de toute
+           déconnexion propre à un module. Il lisait les sources de chaque
+           écran dans `public/modules/<écran>/js` ; pour PLAN, ce répertoire
+           est vide, et le garde concluait « pas de source ». Il lit
+           désormais aussi les sources TypeScript de l'écran, et reconnaît
+           une fonction exportée. Deux contre-tests : un gestionnaire posé
+           sur l'ancre de la coquille (BW), l'ancre retirée (BX) — rouges
+           l'un et l'autre, et nommant le fichier.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BR — le minuteur lit le plan à son déclenchement | `plan-gestes` : l'exception, et la double lecture |
+           | BS — la coquille navigue sans passer par la page | la photographie : les messages au portail, 5 vues |
+           | BT — le sas ne publie plus `planResetFilters` | la suite PLAN : la remise à zéro, l'exception, et onze contrôles qui la suivent |
+           | BU — le droit de contribuer confondu avec celui de valider | la photographie : les droits, secteur par secteur |
+           | BV — la cascade des filtres ignore le domaine | la photographie renforcée : la barre sous chacun des cinq domaines |
+           | BW — un gestionnaire sur l'ancre de déconnexion de la coquille | `taille` : le gestionnaire, et son fichier |
+           | BX — l'ancre retirée de la coquille | `taille` : l'ancre absente sur PLAN |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **13 sur 13** — 5 958 lignes ; `public/modules/planification/js` est vide |
+           | Reste | resserrer le typage de l'état, et décider de la façade `window.PL`, qu'aucun fichier ne lit |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences ; seuls les fichiers et les lignes ont changé |
+           | Campagne | **1 855, 33 suites** — un contrôle de plus, le minuteur des discussions |

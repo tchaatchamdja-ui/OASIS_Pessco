@@ -41,8 +41,17 @@ declare global {
      */
     APP_STATE?: { lang?: string; sidebarCollapsed?: boolean };
 
-    /** L'état partagé posé par le portail, dont la langue retenue. */
-    PESSCO?: { lang?: string };
+    /**
+     * L'état partagé posé par le portail en mode hébergé : la langue retenue,
+     * et, pour PLAN, le compte, le thème et les référentiels déjà chargés
+     * (`planification/coquille.ts`).
+     */
+    PESSCO?: {
+      lang?: string;
+      user?: unknown;
+      theme?: string;
+      sharedData?: Partial<Record<'domaines' | 'secteurs' | 'sousActivites' | 'prestataires' | 'aac', unknown>>;
+    };
     /**
      * Les libellés partagés du portail, que `pt()` de PLAN et `exec-i18n.js`
      * cherchent. **Aucun fichier du dépôt ne les définit** — mesuré le

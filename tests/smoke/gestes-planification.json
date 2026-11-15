@@ -6,219 +6,6 @@
  "indecidables": 5,
  "gestes": [
   {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 287,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planNavigateTo('${key}')",
-   "nom": "planNavigateTo",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 306,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planSetTheme('${th}')",
-   "nom": "planSetTheme",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 311,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planSetLang('${l.toLowerCase()}')",
-   "nom": "planSetLang",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 315,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planToggleSidebar()",
-   "nom": "planToggleSidebar",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 319,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planToggleMobileSidebar()",
-   "nom": "planToggleMobileSidebar",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 323,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planToggleMobileSidebar()",
-   "nom": "planToggleMobileSidebar",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 333,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planToggleNotifPanel()",
-   "nom": "planToggleNotifPanel",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 363,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.currentSub='${s.id}';planRenderPage();",
-   "nom": "PLAN_STATE.currentSub",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 442,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planFermerCalendrier()",
-   "nom": "planFermerCalendrier",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 445,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planFermerCalendrier()",
-   "nom": "planFermerCalendrier",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 464,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 514,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.domaine=this.value;PLAN_STATE.filters.secteur='';PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.domaine",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 517,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.secteur=this.value;PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.secteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 522,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.prestataire=this.value;${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.prestataire",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 527,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.sousActivite=this.value;PLAN_STATE.filters.theme='';${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.sousActivite",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 530,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.theme=this.value;${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.theme",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 536,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.statut=this.value;${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.statut",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 547,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeF",
-   "nom": "_pesSearchInput",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 548,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planResetFilters()",
-   "nom": "planResetFilters",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 578,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${geste('')}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 579,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${geste(a)}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 434,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "fond:click",
-   "source": "fond.addEventListener('click', planFermerCalendrier);",
-   "id": "planVoletFond",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 469,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "div:click",
-   "source": "div.addEventListener('click', (e) => { if (e.target === div) planCloseModal(); });",
-   "id": null,
-   "exerce": null
-  },
-  {
    "fichier": "frontend/planification/affichage.ts",
    "ligne": 323,
    "forme": "en ligne",
@@ -438,6 +225,125 @@
    "exerce": true
   },
   {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 226,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planNavigateTo('${key}')",
+   "nom": "planNavigateTo",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 246,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planSetTheme('${th}')",
+   "nom": "planSetTheme",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 251,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planSetLang('${l.toLowerCase()}')",
+   "nom": "planSetLang",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 255,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planToggleSidebar()",
+   "nom": "planToggleSidebar",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 259,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planToggleMobileSidebar()",
+   "nom": "planToggleMobileSidebar",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 263,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planToggleMobileSidebar()",
+   "nom": "planToggleMobileSidebar",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 273,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planToggleNotifPanel()",
+   "nom": "planToggleNotifPanel",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 309,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.currentSub='${s.id}';planRenderPage();",
+   "nom": "PLAN_STATE.currentSub",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 399,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planFermerCalendrier()",
+   "nom": "planFermerCalendrier",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 402,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planFermerCalendrier()",
+   "nom": "planFermerCalendrier",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 421,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 391,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "fond:click",
+   "source": "fond.addEventListener('click', planFermerCalendrier);",
+   "id": "planVoletFond",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 426,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "div:click",
+   "source": "div.addEventListener('click', (e) => { if (e.target === div) planCloseModal(); });",
+   "id": null,
+   "exerce": null
+  },
+  {
    "fichier": "frontend/planification/decisions.ts",
    "ligne": 55,
    "forme": "en ligne",
@@ -635,6 +541,100 @@
    "source": "planDeleteActivity('${a.id}')",
    "nom": "planDeleteActivity",
    "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 73,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.domaine=this.value;PLAN_STATE.filters.secteur='';PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.domaine",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 76,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.secteur=this.value;PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.secteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 81,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.prestataire=this.value;${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.prestataire",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 86,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.sousActivite=this.value;PLAN_STATE.filters.theme='';${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.sousActivite",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 89,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.theme=this.value;${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.theme",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 95,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.statut=this.value;${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.statut",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 106,
+   "forme": "en ligne",
+   "evenement": "input",
+   "source": "_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeF",
+   "nom": "_pesSearchInput",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 107,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planResetFilters()",
+   "nom": "planResetFilters",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 139,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${geste('')}",
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 140,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${geste(a)}",
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
    "fichier": "frontend/planification/globales/pl-calendrier-bord.ts",

@@ -16,8 +16,8 @@
 // d'origine, non l'enveloppe — c'était vrai avant, la photographie de la page le
 // vérifie, et le sas le garde. `state` est un accesseur : il rend l'état vivant.
 //
-// Les noms qu'elle lit sont définis par des fichiers restés en JavaScript :
-// voir `../restant.d.ts`.
+// Les noms qu'elle lit sont publiés par les autres sas de PLAN, qui les
+// déclarent ; depuis le 15 novembre 2026, plus aucun n'est en JavaScript.
 type Rendu = (() => string) | null;
 
 /** La façade du module. */

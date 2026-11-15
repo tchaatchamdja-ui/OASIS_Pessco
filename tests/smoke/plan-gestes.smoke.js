@@ -400,6 +400,52 @@ module.exports = async function planGestesSmoke(port) {
         verifier('« Tout sélectionner » décoche puis recoche toutes les lignes à synchroniser',
           !!synchro && synchro.tout && synchro.cases > 0 && synchro.decochees && synchro.recochees,
           JSON.stringify(synchro));
+
+        // ── 4.e Les discussions d'un plan, chargées après son rendu ──
+        //
+        // Le détail charge ses commentaires cent millisecondes après le rendu.
+        // L'ancien minuteur lisait le plan choisi **à ce moment-là** : quitter
+        // le détail dans l'intervalle levait une exception — la page n'en
+        // disait rien, la console seule —, et ouvrir un autre plan chargeait
+        // ses commentaires deux fois (ADR-003, n° 5.f.106 et 5.f.109).
+        const minuteur = (bati.plan && bati.amendement) ? await page.evaluate(async ({ a, b }) => {
+          const attendre = (ms) => new Promise((ok) => setTimeout(ok, ms));
+          const erreurs = [];
+          const garde = (e) => erreurs.push(String(e.message || e.error));
+          const lectures = [];
+          const vrai = window.api;
+          window.addEventListener('error', garde);
+          window.api = (chemin, o) => {
+            const m = /\/plans\/([^/]+)\/commentaires$/.exec(chemin);
+            if (m) lectures.push(m[1] === a ? 'a' : (m[1] === b ? 'b' : m[1]));
+            return vrai(chemin, o);
+          };
+          const r = {};
+          try {
+            await planOpenDetail(a);
+            planNavigateTo('plans');
+            await attendre(500);
+            r.quitte = { erreurs: erreurs.splice(0), lectures: lectures.splice(0) };
+            await planOpenDetail(a);
+            await attendre(500);
+            r.reste = { erreurs: erreurs.splice(0), lectures: lectures.splice(0) };
+            await planOpenDetail(a);
+            await planOpenDetail(b);
+            await attendre(500);
+            r.enchaine = { erreurs: erreurs.splice(0), lectures: lectures.splice(0) };
+          } finally {
+            window.api = vrai;
+            window.removeEventListener('error', garde);
+            planNavigateTo('dashboard');
+          }
+          return r;
+        }, { a: bati.plan, b: bati.amendement }) : null;
+        verifier('le détail charge les discussions du plan qu’il montre, une fois — et rien s’il a été quitté entre-temps',
+          !!minuteur
+          && !minuteur.quitte.erreurs.length && !minuteur.quitte.lectures.length
+          && !minuteur.reste.erreurs.length && minuteur.reste.lectures.join() === 'a'
+          && !minuteur.enchaine.erreurs.length && minuteur.enchaine.lectures.join() === 'b',
+          JSON.stringify({ bati, minuteur }));
       } finally {
         // ── Le ménage : l'amendement d'abord, puis le plan ──
         await page.evaluate(async ({ api, ids }) => {

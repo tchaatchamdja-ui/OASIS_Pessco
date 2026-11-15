@@ -217,20 +217,38 @@ module.exports = async function tailleSmoke() {
     const sansAncre = [];
     const avecGestionnaire = [];
     const avecFonction = [];
-    ecrans.forEach((e) => {
+    // Les sources d'un écran : ses fichiers restés en JavaScript, et ceux
+    // convertis en TypeScript (ADR-003) — PLAN n'a plus que les seconds.
+    const sourcesDe = (e) => {
+      const fichiers = [];
       const js = path.join(RACINE, 'public', 'modules', e, 'js');
-      if (!fs.existsSync(js)) { sansAncre.push(`${e} (pas de source)`); return; }
+      if (fs.existsSync(js)) {
+        fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => fichiers.push(path.join(js, f)));
+      }
+      const parcourir = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((x) => {
+        const c = path.join(d, x.name);
+        if (x.isDirectory()) parcourir(c);
+        else if (x.name.endsWith('.ts') && !x.name.endsWith('.d.ts')) fichiers.push(c);
+      });
+      const ts = path.join(RACINE, 'frontend', e);
+      if (fs.existsSync(ts)) parcourir(ts);
+      return fichiers;
+    };
+    ecrans.forEach((e) => {
+      const sources = sourcesDe(e);
+      if (!sources.length) { sansAncre.push(`${e} (pas de source)`); return; }
       let ancres = 0;
-      fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => {
-        const t = fs.readFileSync(path.join(js, f), 'utf8');
+      sources.forEach((chemin) => {
+        const f = path.relative(RACINE, chemin);
+        const t = fs.readFileSync(chemin, 'utf8');
         // L'ancre : un nœud de classe `btn-logout`, et rien d'autre dessus.
         for (const m of t.matchAll(/<button[^>]*class="btn-logout"[^>]*>/g)) {
           ancres += 1;
-          if (/\bon[a-z]+=/.test(m[0])) avecGestionnaire.push(`${e}/${f} : ${m[0].slice(0, 90)}`);
+          if (/\bon[a-z]+=/.test(m[0])) avecGestionnaire.push(`${f} : ${m[0].slice(0, 90)}`);
         }
         // Et la fonction : aucun écran de module n'en déclare plus.
-        for (const m of t.matchAll(/^(?:async\s+)?function\s+(\w*(?:[Ll]ogout|[Dd]econnexion)\w*)\s*\(/gm)) {
-          avecFonction.push(`${e}/${f} : ${m[1]}`);
+        for (const m of t.matchAll(/^(?:export\s+)?(?:async\s+)?function\s+(\w*(?:[Ll]ogout|[Dd]econnexion)\w*)\s*\(/gm)) {
+          avecFonction.push(`${f} : ${m[1]}`);
         }
       });
       if (!ancres) sansAncre.push(e);

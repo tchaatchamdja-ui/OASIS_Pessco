@@ -120,6 +120,21 @@ module.exports = async function planificationSmoke(port) {
     verifier('détail du plan avec ses activités',
       detail.statut === 200 && (detail.corps.activites || []).length === 1);
 
+    // ── L'ordre du circuit, tenu par le serveur (ADR-003, n° 5.f.103) ──
+    //
+    // Un brouillon ne se décide pas, ne s'approuve pas, ne se transmet pas :
+    // chacune de ces routes le refuse, et le plan reste un brouillon. Elles le
+    // faisaient toutes, l'écran seul tenant l'ordre.
+    const horsOrdre = [];
+    for (const transition of ['valider', 'rejeter', 'rejeter-annuler', 'approuver-dg', 'transmettre']) {
+      const r = await P(`/api/m/planification/plans/${id}/${transition}`, { commentaire: '' });
+      if (r.statut !== 409 || (r.corps || {}).error !== 'transition_invalide') horsOrdre.push(`${transition} → ${r.statut}`);
+    }
+    verifier('un brouillon ne se valide, ne se rejette, ne s’approuve ni ne se transmet : 409, et il reste brouillon',
+      horsOrdre.length === 0
+      && (await srv.appel(`/api/m/planification/plans/${id}`)).corps.statut === 'brouillon',
+      horsOrdre.join(' · ') || 'cinq refus');
+
     await P(`/api/m/planification/plans/${id}/soumettre`, { commentaire: '' });
     verifier('soumission', (await srv.appel(`/api/m/planification/plans/${id}`)).corps.statut === 'soumis');
 
@@ -137,6 +152,12 @@ module.exports = async function planificationSmoke(port) {
     await P(`/api/m/planification/plans/${id}/soumettre`, { commentaire: '' });
     await P(`/api/m/planification/plans/${id}/valider`, { commentaire: 'ok' });
     verifier('validation', (await srv.appel(`/api/m/planification/plans/${id}`)).corps.statut === 'valide');
+    const resoumis = await P(`/api/m/planification/plans/${id}/soumettre`, { commentaire: '' });
+    const transmisTot = await P(`/api/m/planification/plans/${id}/transmettre`, { commentaire: '' });
+    verifier('un plan validé ne se resoumet pas, et ne se transmet qu’une fois approuvé : 409, et il reste validé',
+      resoumis.statut === 409 && transmisTot.statut === 409
+      && (await srv.appel(`/api/m/planification/plans/${id}`)).corps.statut === 'valide',
+      `soumettre ${resoumis.statut}, transmettre ${transmisTot.statut}`);
 
     const amend = await P(`/api/m/planification/plans/${id}/amender`, { motif: 'amendement de fumée' });
     verifier('amendement : nouvelle version en brouillon', amend.statut === 200 && !!amend.corps.new_plan_id);
@@ -265,6 +286,8 @@ module.exports = async function planificationSmoke(port) {
     await P(`/api/m/planification/plans/${cibleSync.id}/archiver`, { commentaire: 'fin de plan' });
     verifier('plan archivé',
       (await srv.appel(`/api/m/planification/plans/${cibleSync.id}`)).corps.statut === 'archive');
+    verifier('un plan archivé ne s’archive pas une seconde fois : 409',
+      (await P(`/api/m/planification/plans/${cibleSync.id}/archiver`, { commentaire: '' })).statut === 409);
     const sortiePlan = await P(`/api/m/planification/plans/${cibleSync.id}/desarchiver`, {});
     const revenu = (await srv.appel(`/api/m/planification/plans/${cibleSync.id}`)).corps || {};
     verifier('plan sorti des archives, exceptions levées',

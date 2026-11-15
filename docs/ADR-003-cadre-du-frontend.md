@@ -13693,3 +13693,55 @@ Ce que l'ingénierie peut dire, et qui a été dit :
 
            **3 fichiers sur 13**, 1 121 lignes sur 5 958 — les trois qui n'ont
            pas d'interface. Restent les dix qui en portent, 4 837 lignes.
+
+       5.f.103 [x] **Le circuit des plans, tenu par le serveur** — fait le
+           15 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           Le n° 5.f.100 l'avait vu et nommé : les sept transitions d'un plan
+           passent par un seul gestionnaire, qui ne vérifiait pas le statut
+           d'origine. `transmettre` transmettait un brouillon, `valider`
+           validait un plan jamais soumis ; l'écran seul tenait l'ordre. Sur
+           des actes d'autorité, c'est l'écran qui protégeait le serveur — à
+           l'envers.
+
+           ── La règle ──
+
+           Chaque transition déclare d'où elle part, et ces origines sont
+           **celles que l'écran offre**, relevées dans ses gabarits :
+
+           | Transition | Depuis |
+           |---|---|
+           | soumettre | brouillon, rejeté |
+           | valider, rejeter, rejeter définitivement | soumis (et `en_revue`, que l'écran traite comme soumis) |
+           | approuver (DG) | validé |
+           | transmettre | approuvé DG |
+           | archiver | tout statut, sauf archivé — l'écran l'offre ainsi |
+
+           Hors de cet ordre, la route répond **409 `transition_invalide`**,
+           avec le statut trouvé et ceux attendus, et le plan ne bouge pas —
+           la convention que RAMP suit déjà pour ses fiches. Le statut est lu
+           **dans** la transaction : deux décisions simultanées ne passent pas
+           toutes deux sur la foi d'une lecture d'avant. Et la vérification
+           vient **après** celle des droits : un lecteur reçoit toujours son
+           403, et la suite HTTP l'éprouvait déjà.
+
+           Ce qui n'a pas bougé le dit autant que ce qui a bougé : les 52 + 11
+           contrôles de navigateur de PLAN passent sans changement — l'écran
+           ne demandait jamais une transition hors d'ordre.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôles qui rougissent |
+           |---|---|
+           | AU — plus aucune vérification | les trois contrôles d'ordre |
+           | AV — un plan rejeté ne se resoumet plus (règle trop étroite) | **27** — tout le cycle qui suit la resoumission |
+           | AW — l'approbation admise depuis un brouillon (règle trop large) | le contrôle du brouillon, et le cycle qui suit |
+
+           AV est le plus instructif : une origine oubliée ne fait pas tomber
+           un contrôle, elle fait tomber le cycle. C'est la raison de relever
+           les origines dans l'écran plutôt que de les écrire de mémoire.
+
+           | | avant | après |
+           |---|---|---|
+           | Contrôles HTTP de PLAN | 73 | **76** |
+           | Campagne | 1 850, 33 suites | **1 853, 33 suites** |

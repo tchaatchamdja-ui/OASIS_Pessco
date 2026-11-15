@@ -532,15 +532,6 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/planification/js/pl-instances.js",
-   "ligne": 44,
-   "forme": "action de barre",
-   "evenement": "change",
-   "nom": "planAppliquerInstance",
-   "source": "(v) => planAppliquerInstance(v)",
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/planification/js/pl-mes-activites.js",
    "ligne": 110,
    "forme": "en ligne",
@@ -1256,6 +1247,15 @@
    "evenement": "keydown",
    "source": "planAccClavier(event, this)",
    "nom": "planAccClavier",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/pages/pl-instances.ts",
+   "ligne": 63,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "planAppliquerInstance",
+   "source": "(v: string) => planAppliquerInstance(v)",
    "exerce": true
   }
  ]

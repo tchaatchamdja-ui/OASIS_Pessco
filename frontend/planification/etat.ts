@@ -6,8 +6,9 @@
 // écran. Ils sont séparés à la conversion, sans rien changer à ce qu'ils valent
 // (ADR-003, n° 5.f.101).
 
-/** La racine des routes du module. */
-export const PLAN_MODULE_API = '/api/m/planification';
+// L'adresse vit dans `adresse.ts`, sans effet de bord ; elle est réexportée ici
+// pour ceux qui lisent l'état et l'adresse ensemble.
+export { PLAN_MODULE_API } from './adresse';
 
 /**
  * L'état de l'écran. Les douze fichiers restés en JavaScript l'écrivent et le

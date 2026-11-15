@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion commencée** — 1 fichier sur 13, les libellés et l'état (n° 5.f.101) |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion commencée** — 3 fichiers sur 13, ceux qui n'ont pas d'interface (n° 5.f.101, 5.f.102) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -13620,3 +13620,76 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Restent | `pl-namespace.js` (28), `pl-instances.js` (61), et les dix qui portent l'interface |
            | Contrôles qui définissent « la réécriture marche » | 52 + 11 de navigateur, 73 HTTP — inchangés, tous verts |
            | Campagne | **1 850, 33 suites** — inchangée : la conversion n’ajoute ni ne retire aucun contrôle |
+
+       5.f.102 [x] **PLAN en TypeScript, deuxième pas : la façade et
+           l'instance — une façade que personne ne lit, et un script qui ne
+           publie plus rien** — fait le 15 novembre 2026. `pl-namespace.js`
+           (28 lignes) et `pl-instances.js` (61) : les deux fichiers de PLAN
+           qui portent le moins d'interface.
+
+           ── Mesurer d'abord : une photographie de la page ──
+
+           Ni l'un ni l'autre ne se prouve par une comparaison de valeurs : ce
+           qu'ils font tient à la page entière — l'ordre de chargement, la
+           barre du socle, l'enveloppe que la page pose sur `planNavigateTo`.
+           La page de PLAN a donc été **photographiée** dans un navigateur
+           avant la conversion, puis après : `window.PL` — ses clés, chacune
+           de ses fonctions par son nom, son accesseur `state`, et le fait que
+           `navigateTo` soit la fonction d'origine et non l'enveloppe —, les
+           quatre noms de `pl-instances`, la liste d'instance de la barre, et
+           les exceptions de la page.
+
+           ── La façade : convertie telle quelle, et sans lecteur ──
+
+           `window.PL` est le point d'entrée documenté du module — « c'est
+           elle, et elle seule, que le portail, le chrome partagé ou un autre
+           module doivent utiliser ». **Aucun fichier du dépôt ne la lit.**
+           Elle est convertie à l'identique, en sas : retirer un nom n'est pas
+           l'objet d'une conversion, et son absence de lecteur est écrite dans
+           le sas, pour qu'on la pèse le jour où PLAN n'aura plus de
+           JavaScript.
+
+           Les fonctions qu'elle capture sont définies par des fichiers restés
+           en JavaScript. Le TypeScript les **déclare**, en un seul endroit —
+           `restant.d.ts`, la frontière de la cohabitation —, toutes
+           optionnelles, parce que c'est la vérité pour un programme qui ne
+           voit pas la page. Chaque ligne en partira avec le fichier qui
+           définit son nom.
+
+           ── L'instance : un script de page, et non un sas ──
+
+           `pl-instances.js` posait quatre noms au premier niveau. **Aucun
+           autre fichier ne les lit** : le geste passe par une fermeture remise
+           à la barre du socle. Converti, le fichier ne publie donc rien — il
+           est rangé dans `pages/` —, et les quatre noms quittent la portée
+           globale. C'est la **seule** différence entre les deux photographies,
+           et elle est déclarée.
+
+           Un piège évité en l'écrivant : `pl-instances` n'a besoin que de
+           l'adresse de l'API, qui vivait dans `etat.ts`. L'importer aurait
+           emporté dans son paquet un **second** état de l'écran, distinct de
+           celui que la page partage. L'adresse a son module, sans effet de
+           bord, que `etat.ts` réexporte.
+
+           ── Ce que le relevé a dit ──
+
+           Refait sur les deux suites de PLAN, il rendait d'abord **138**
+           occurrences pour 137 : j'avais oublié de retirer les deux anciens
+           fichiers, qui n'étaient plus chargés et que le relevé lisait encore.
+           Retirés, il rend 137, comme avant — et l'action de barre
+           `planAppliquerInstance`, posée désormais depuis le paquet, est
+           **reconnue au vol** : le mouchard lit le texte de la fermeture, que
+           la construction n'a pas renommée.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | AR — la façade lit `planNavigateTo` à la demande | la photographie : elle rendrait l'enveloppe |
+           | AS — la page ne charge plus le script de l'instance | la construction : « un sas que rien n'atteint » |
+           | AT — le choix d'instance n'appelle plus rien | `plan-gestes` : l'instance retenue |
+
+           ── Où en est PLAN ──
+
+           **3 fichiers sur 13**, 1 121 lignes sur 5 958 — les trois qui n'ont
+           pas d'interface. Restent les dix qui en portent, 4 837 lignes.

@@ -41,3 +41,12 @@ export function requis<K extends keyof Window>(nom: K): NonNullable<Window[K]> {
   }
   return v as NonNullable<Window[K]>;
 }
+
+/**
+ * Une liste des données chargées de l'écran — plans, activités, référentiels.
+ * Elles viennent du serveur, sans schéma ici : le type est celui que le module
+ * qui les lit en attend, et c'est une affirmation, non une vérification.
+ */
+export function donnees<T>(nom: string): T[] {
+  return (etat().data[nom] || []) as T[];
+}

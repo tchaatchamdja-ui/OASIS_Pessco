@@ -19,14 +19,8 @@ declare global {
     planNavigateTo?: (page: string, sub?: string) => void;
     /** `pl-shell.js` — redessiner la page courante. */
     planRenderPage?: () => void;
-    /** `pl-dashboard.js` — la page d'accueil. */
-    planRenderDashboard?: () => string;
     /** `pl-plans.js` — la liste des plans. */
     planRenderPlans?: () => string;
-    /** `pl-validation.js` — la page de validation. */
-    planRenderWorkflow?: () => string;
-    /** `pl-validation.js` — l'historique. */
-    planRenderHistory?: () => string;
     /** `pl-crud.js` — un message éphémère. */
     planShowEphemeralToast?: (message: string, type?: string, duration?: number) => void;
     /** `pl-crud.js` — la fenêtre d'une activité. */
@@ -51,8 +45,14 @@ declare global {
     planLoadData?: () => Promise<void>;
     /** `pl-actions.js` — la teinte d'un organisme, stable d'une vue à l'autre. */
     _prestataireColor?: (prestataireId: string | undefined) => string;
-    /** `pl-calendrier-bord.js` — le diagramme de l'année. */
-    _planCalendrierHtml?: (activites: unknown[], options: Record<string, unknown>) => string;
+    /** `pl-plans.js` — les plans que le rôle du compte laisse voir. */
+    _applyRoleFilter?: <T>(plans: T[]) => T[];
+    /** `pl-actions.js` — l'échappement d'une valeur d'attribut. */
+    _escAttr?: (valeur: unknown) => string;
+    /** `pl-actions.js` — la pastille du type d'un plan. */
+    _planTypeBadge?: (type: unknown) => string;
+    /** `pl-actions.js` — la pastille d'un statut. */
+    _statusBadge?: (statut: unknown) => string;
     /** `pl-shell.js` — les boutons d'années d'une barre de filtres. */
     _planBoutonsAnnees?: (annees: unknown[], retenue: string, geste: (a: unknown) => string) => string;
   }
@@ -63,6 +63,10 @@ declare global {
    * `window`.
    */
   const PLAN_ICONS: Record<string, string>;
+  /** `pl-shell.js` — les statuts d'un plan en vigueur. Globale lexicale. */
+  const PL_STATUTS_EN_VIGUEUR: string[];
+  /** `pl-shell.js` — les statuts d'un amendement en circuit. Globale lexicale. */
+  const PL_STATUTS_AMENDEMENT: string[];
 }
 
 export {};

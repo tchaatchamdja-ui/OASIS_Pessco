@@ -97,81 +97,6 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
-   "ligne": 195,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${_escAttr(o.clic(l))}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
-   "ligne": 256,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planOuvrirCalendrier()",
-   "nom": "planOuvrirCalendrier",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
-   "ligne": 257,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCalAnnee(-1)",
-   "nom": "planCalAnnee",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
-   "ligne": 258,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCalDefiler(-1, this)",
-   "nom": "planCalDefiler",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
-   "ligne": 259,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCalAujourdhui(this)",
-   "nom": "planCalAujourdhui",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
-   "ligne": 260,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCalDefiler(1, this)",
-   "nom": "planCalDefiler",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
-   "ligne": 261,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCalAnnee(1)",
-   "nom": "planCalAnnee",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-calendrier-bord.js",
-   "ligne": 334,
-   "forme": "écouteur",
-   "evenement": "resize",
-   "nom": "window:resize",
-   "source": "window.addEventListener('resize', () => window.planCalNavEtat());",
-   "id": null,
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/planification/js/pl-crud.js",
    "ligne": 62,
    "forme": "en ligne",
@@ -367,33 +292,6 @@
    "nom": "secteurSelect:change",
    "source": "secteurSelect.addEventListener('change', _renderSAThemesTable);",
    "id": "actSecteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-dashboard.js",
-   "ligne": 193,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planOpenDetail('${p.id}');return false;",
-   "nom": "planOpenDetail",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-dashboard.js",
-   "ligne": 198,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planOpenDetail('${p.id}')",
-   "nom": "planOpenDetail",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-dashboard.js",
-   "ligne": 217,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planOpenDetail('${a.plan_id}');return false;",
-   "nom": "planOpenDetail",
    "exerce": true
   },
   {
@@ -827,129 +725,68 @@
    "exerce": null
   },
   {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 187,
+   "fichier": "frontend/planification/calendrier-bord.ts",
+   "ligne": 224,
    "forme": "en ligne",
    "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
+   "source": "${escAttr(o.clic(l))}",
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
   },
   {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 261,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 284,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();planValidate('${plan.id}')",
-   "nom": "planValidate",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
+   "fichier": "frontend/planification/calendrier-bord.ts",
    "ligne": 285,
    "forme": "en ligne",
    "evenement": "click",
-   "source": "event.stopPropagation();planReject('${plan.id}')",
-   "nom": "planReject",
+   "source": "planOuvrirCalendrier()",
+   "nom": "planOuvrirCalendrier",
    "exerce": true
   },
   {
-   "fichier": "public/modules/planification/js/pl-validation.js",
+   "fichier": "frontend/planification/calendrier-bord.ts",
    "ligne": 286,
    "forme": "en ligne",
    "evenement": "click",
-   "source": "event.stopPropagation();planRejectClose('${plan.id}')",
-   "nom": "planRejectClose",
+   "source": "planCalAnnee(-1)",
+   "nom": "planCalAnnee",
    "exerce": true
   },
   {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 314,
+   "fichier": "frontend/planification/calendrier-bord.ts",
+   "ligne": 287,
    "forme": "en ligne",
    "evenement": "click",
-   "source": "planAccBasculer(this)",
-   "nom": "planAccBasculer",
+   "source": "planCalDefiler(-1, this)",
+   "nom": "planCalDefiler",
    "exerce": true
   },
   {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 314,
-   "forme": "en ligne",
-   "evenement": "keydown",
-   "source": "planAccClavier(event, this)",
-   "nom": "planAccClavier",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 316,
+   "fichier": "frontend/planification/calendrier-bord.ts",
+   "ligne": 288,
    "forme": "en ligne",
    "evenement": "click",
-   "source": "event.stopPropagation();planOpenDetail('${plan.id}');return false;",
-   "nom": "planOpenDetail",
+   "source": "planCalAujourdhui(this)",
+   "nom": "planCalAujourdhui",
    "exerce": true
   },
   {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 426,
+   "fichier": "frontend/planification/calendrier-bord.ts",
+   "ligne": 289,
    "forme": "en ligne",
    "evenement": "click",
-   "source": "const r=document.getElementById('${diffRowId}');r.style.display=r.style.display==='none'?'':'none';this.classList.toggle",
-   "nom": "r.style.display",
+   "source": "planCalDefiler(1, this)",
+   "nom": "planCalDefiler",
    "exerce": true
   },
   {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 433,
+   "fichier": "frontend/planification/calendrier-bord.ts",
+   "ligne": 290,
    "forme": "en ligne",
    "evenement": "click",
-   "source": "planExportPDF('${v.id}')",
-   "nom": "planExportPDF",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 436,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planShowWorkflowHistory('${v.id}')",
-   "nom": "planShowWorkflowHistory",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 437,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planOpenDetail('${v.id}')",
-   "nom": "planOpenDetail",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 451,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planAccBasculer(this)",
-   "nom": "planAccBasculer",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-validation.js",
-   "ligne": 451,
-   "forme": "en ligne",
-   "evenement": "keydown",
-   "source": "planAccClavier(event, this)",
-   "nom": "planAccClavier",
+   "source": "planCalAnnee(1)",
+   "nom": "planCalAnnee",
    "exerce": true
   },
   {
@@ -1085,6 +922,16 @@
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
    "nom": "PLAN_STATE.calendarMonth",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/globales/pl-calendrier-bord.ts",
+   "ligne": 53,
+   "forme": "écouteur",
+   "evenement": "resize",
+   "nom": "window:resize",
+   "source": "window.addEventListener('resize', () => window.planCalNavEtat?.());",
+   "id": null,
    "exerce": true
   },
   {
@@ -1256,6 +1103,159 @@
    "evenement": "click",
    "source": "planSaveRiskProfile()",
    "nom": "planSaveRiskProfile",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/tableau-de-bord.ts",
+   "ligne": 216,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planOpenDetail('${p.id}');return false;",
+   "nom": "planOpenDetail",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/tableau-de-bord.ts",
+   "ligne": 221,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planOpenDetail('${p.id}')",
+   "nom": "planOpenDetail",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/tableau-de-bord.ts",
+   "ligne": 240,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planOpenDetail('${a.plan_id}');return false;",
+   "nom": "planOpenDetail",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 218,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 292,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 315,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();planValidate('${plan.id}')",
+   "nom": "planValidate",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 316,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();planReject('${plan.id}')",
+   "nom": "planReject",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 317,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();planRejectClose('${plan.id}')",
+   "nom": "planRejectClose",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 345,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planAccBasculer(this)",
+   "nom": "planAccBasculer",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 345,
+   "forme": "en ligne",
+   "evenement": "keydown",
+   "source": "planAccClavier(event, this)",
+   "nom": "planAccClavier",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 347,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();planOpenDetail('${plan.id}');return false;",
+   "nom": "planOpenDetail",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 460,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "const r=document.getElementById('${diffRowId}');r.style.display=r.style.display==='none'?'':'none';this.classList.toggle",
+   "nom": "r.style.display",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 467,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planExportPDF('${v.id}')",
+   "nom": "planExportPDF",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 470,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planShowWorkflowHistory('${v.id}')",
+   "nom": "planShowWorkflowHistory",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 471,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planOpenDetail('${v.id}')",
+   "nom": "planOpenDetail",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 485,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planAccBasculer(this)",
+   "nom": "planAccBasculer",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/validation.ts",
+   "ligne": 485,
+   "forme": "en ligne",
+   "evenement": "keydown",
+   "source": "planAccClavier(event, this)",
+   "nom": "planAccClavier",
    "exerce": true
   }
  ]

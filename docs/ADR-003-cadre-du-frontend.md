@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 6 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque et le calendrier (n° 5.f.101, 5.f.102, 5.f.104) |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 9 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique (n° 5.f.101, 5.f.102, 5.f.104, 5.f.105) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -13839,3 +13839,82 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Restent | `pl-dashboard.js`, `pl-validation.js`, `pl-calendrier-bord.js`, `pl-plans.js`, `pl-crud.js`, puis `pl-actions.js` et `pl-shell.js` — 3 863 lignes |
            | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
            | Campagne | **1 854, 33 suites** — un contrôle de plus, le garde « un seul état » |
+
+       5.f.105 [x] **PLAN en TypeScript : le tableau de bord, son calendrier, la
+           validation et l'historique — et une photographie qui ne voyait pas
+           tout** — fait le 15 novembre 2026. `pl-dashboard.js` (273 lignes),
+           `pl-calendrier-bord.js` (382) et `pl-validation.js` (473).
+
+           ── Un seul scénario pour le lot ──
+
+           Les trois fichiers se voient sur les mêmes pages. Une seule
+           photographie les couvre : un plan validé puis amendé — une activité
+           déplacée, une retirée, une ajoutée —, un plan soumis en version
+           initiale ; puis le tableau de bord sous chacune de ses cartes et
+           chacun de ses filtres, la carte calendrier et ses commandes — sur le
+           tableau de bord comme dans le volet —, la page de validation et
+           l'historique sous leurs filtres. **72 états.**
+
+           ── Une comparaison éprouvée contre elle-même ──
+
+           Le plan et ses activités sont créés à chaque photographie, avec des
+           identifiants neufs. Comparer tel quel aurait vu des écarts partout ;
+           remplacer les identifiants par leur rang d'apparition n'a pas suffi
+           — deux prises **avant** du même code différaient encore, l'ordre de
+           certains éléments dépendant des identifiants. Ils sont donc
+           remplacés par **ce qu'ils désignent** — le titre d'un plan, l'objet
+           d'une activité —, relevé dans la même photographie ; l'ordre des
+           listes reste jugé tel quel. Ma première expression ne voyait pas un
+           identifiant précédé d'un `_` — `validComment_…` —, le souligné étant
+           un caractère de mot. Corrigée, deux prises avant donnent **0 écart
+           sur 72** : la comparaison ne prend plus le bruit pour un changement.
+
+           Avant et après la conversion : **0 écart**.
+
+           ── Une photographie qui ne voyait pas tout ──
+
+           Le contre-test BF fausse la comparaison des dates d'un amendement —
+           elle ne regarderait plus que l'année et le mois. Il est resté
+           **vert** : l'activité de mon scénario changeait de mois, et l'écart
+           se voyait encore. Une date décalée **dans son mois** n'était pas
+           protégée par la photographie.
+
+           Le scénario a reçu une activité décalée de sept jours dans le même
+           mois, et la photographie avant a été reprise sur le code d'origine,
+           extrait de `git` dans un arbre de travail à part. Avant et après :
+           0 écart. BF : **9 vues en écart**. *Un contre-test vert n'innocente
+           pas le code : il dit ce que la mesure ne regarde pas.*
+
+           ── Ce qui reste publié ──
+
+           Treize noms sur les quarante-deux que ces fichiers posaient — ceux
+           qu'un autre fichier, la façade `PL` ou un gabarit lit, dont
+           `planCalInfo`, qu'appellent les `onmouseenter` des barres : le relevé
+           des gestes n'inventorie pas cet événement, la page l'appelle quand
+           même. `planCalBord` n'a aucun lecteur ; il était posé sur `window`, il
+           l'est encore. Les vingt-neuf autres quittent la portée globale.
+
+           L'écouteur `resize` de la carte calendrier, et le drapeau qui le garde
+           de se poser deux fois, vivent dans le sas : c'est lui qui se charge à
+           la position de l'ancien fichier, et le module qu'il publie n'a plus
+           d'effet de bord. Un module qui en a ne s'importe pas d'un autre
+           paquet — il y serait évalué une seconde fois — : le tableau de bord
+           et le calendrier appellent le diagramme **sur la page**, et la page
+           de validation fait de même pour les filtres du tableau de bord.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BD — le tableau de bord ne publie plus `_applyPlanFilters` | la suite PLAN : les pages, les fenêtres, l'accordéon |
+           | BE — le sas ne pose plus l'écouteur `resize` | `plan-gestes` : les flèches du calendrier |
+           | BF — les dates d'un amendement comparées au mois près | la photographie renforcée : 9 vues |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **9 sur 13** — 3 223 lignes sur 5 958 |
+           | Restent | `pl-plans.js`, `pl-crud.js`, puis `pl-actions.js` et `pl-shell.js` — 2 735 lignes |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — inchangée |

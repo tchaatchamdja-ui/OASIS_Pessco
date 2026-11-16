@@ -865,7 +865,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **converti** — 13 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles, la coquille (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.109) ; plus aucun fichier en JavaScript — restent le typage de l'état à resserrer et la façade `window.PL` à décider |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **converti** — 13 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles, la coquille (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.109) ; plus aucun fichier en JavaScript ; l'état déclaré en un seul endroit, la façade `window.PL` retirée, une course des discussions corrigée (n° 5.f.110 à 5.f.112) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
@@ -14292,3 +14292,107 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Reste | resserrer le typage de l'état, et décider de la façade `window.PL`, qu'aucun fichier ne lit |
            | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences ; seuls les fichiers et les lignes ont changé |
            | Campagne | **1 855, 33 suites** — un contrôle de plus, le minuteur des discussions |
+
+       5.f.110 [x] **PLAN : l'état déclaré en un seul endroit — sept vues
+           locales retirées, et les gestes en ligne confrontés à la
+           déclaration** — fait le 15 novembre 2026.
+
+           `EtatPlan` portait une signature d'index du temps où des fichiers
+           en JavaScript ajoutaient des champs à l'état à la volée. Il n'en
+           reste plus, mais la signature restait, et elle en avait appelé
+           d'autres : chaque page déclarait sa part de l'état — `EtatCal`,
+           `EtatCalendrier`, `EtatBord`, `EtatSaisie`, `EtatPlans` — et la
+           lisait par une conversion de type. Rien ne confrontait ces vues
+           entre elles. Les retirer de `etat.ts` n'a fait rougir tsc que
+           **huit fois**, sur deux champs : c'est la mesure de ce que les
+           conversions cachaient.
+
+           `etat.ts` déclare désormais **tous** les champs, avec le compte, les
+           droits, et les clés des deux jeux de filtres. Les sept vues locales
+           et les conversions sont retirées ; chaque page lit `etat()` tel
+           quel.
+
+           ── Ce que tsc ne lit pas ──
+
+           Les gabarits écrivent l'état dans leurs gestes en ligne —
+           `PLAN_STATE.calendarView='week'`, `PLAN_STATE.filters.theme=''` —,
+           que tsc ne lit pas. Un contrôle de plus dans
+           `planification-navigateur` confronte chacune de ces écritures à la
+           déclaration : 47 écritures, et une remise à zéro dont il vérifie
+           les clés.
+
+           ── Rien ne change à l'exécution ──
+
+           Les paquets construits avant et après ne diffèrent, hors
+           commentaires, que de deux formes équivalentes : `() => etat()`
+           devenu `etat`, et `(user || {}).username` devenu `user?.username`.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Avant | Après |
+           |---|---|---|
+           | BY — un geste en ligne écrit `calendarVue` | — | le contrôle des gestes, et son fichier |
+           | BZ — un geste écrit `filters.sousActivites` | — | idem |
+           | CA — la remise à zéro du calendrier perd une clé | — | idem |
+           | CB — `etat().acces` au lieu de `access` | **tsc muet** | tsc refuse |
+           | CC — deux pages en désaccord sur le type de `calendrierVolet` | **tsc muet** | tsc refuse |
+
+           Un premier contre-test, `carteChoisi` pour `carteChoisie`, ne
+           départageait rien : la vue locale du tableau de bord l'attrapait
+           déjà. Je l'ai remplacé par deux cas qui distinguent avant et après.
+
+       5.f.111 [x] **PLAN : la façade `window.PL` retirée — un point d'entrée
+           sans lecteur, et qui aurait trompé le premier** — fait le
+           15 novembre 2026.
+
+           Le n° 5.f.102 l'avait convertie telle quelle, en écrivant qu'aucun
+           fichier ne la lisait, « pour qu'on la pèse le jour où PLAN n'aura
+           plus de JavaScript ». Ce jour est venu, et la mesure est la même :
+           aucun lecteur — ni dans le dépôt, ni par l'iframe, ni par un nom
+           calculé —, et cela depuis le commit d'origine.
+
+           Elle se présentait comme le seul point d'entrée du module pour le
+           portail. Or elle capturait `planNavigateTo` **avant** que la page ne
+           l'enveloppe pour prévenir le portail (n° 5.f.102, 5.f.109) : qui
+           l'aurait adoptée aurait navigué sans que le portail le sache. Le
+           contrat réel du module est ailleurs — le message `pl:page` à
+           chaque changement de page, et `initPlanificationModule` pour l'hôte.
+
+           Retirée : le sas, sa balise dans `index.html`. La photographie de
+           la coquille — 141 états, deux prises avant sans écart — n'en voit
+           **aucun** après.
+
+           `window.EXEC` et `window.PR` sont des façades du même modèle, sans
+           lecteur non plus ; elles ne relèvent pas de PLAN et restent en
+           place.
+
+       5.f.112 [x] **PLAN : les discussions d'un plan — une course supposée,
+           démentie, et une autre, réelle, corrigée** — fait le
+           15 novembre 2026.
+
+           Le n° 5.f.109 laissait une hypothèse : une réponse lente des
+           commentaires écrirait dans le détail d'un autre plan. La lecture du
+           code prédisait qu'elle était fausse — le conteneur est retenu avant
+           l'attente, et le rendu suivant le détache —, et la mesure l'a
+           confirmé : la réponse d'un plan quitté n'écrit nulle part où l'on
+           regarde.
+
+           La même mesure a trouvé l'autre course : **deux lectures du même
+           fil** — le minuteur du rendu, puis un commentaire ajouté ou retiré
+           aussitôt — revenaient dans le désordre, et la plus ancienne
+           écrasait la plus récente. Le commentaire qu'on venait d'écrire
+           disparaissait de la liste jusqu'à la lecture suivante. Seule la
+           dernière lecture lancée écrit désormais.
+
+           Un contrôle de plus dans `plan-gestes` retient chaque réponse et la
+           relâche dans l'ordre choisi, sur les deux cas. Le contre-test qui
+           retire la garde (CD) le fait rougir sur le second.
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **13 sur 13** ; l'état déclaré en un seul endroit, sans signature d'index |
+           | Façade | retirée |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés ; seules les lignes ont changé, `index.html` ayant perdu une balise |
+           | Campagne | **1 857, 33 suites** — deux contrôles de plus : les gestes en ligne, et la réponse tardive des discussions |

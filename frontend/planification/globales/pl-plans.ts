@@ -3,7 +3,7 @@
 //
 // `pl-plans.js` posait dix-neuf noms, dont quatre sur `window` à la main.
 // Huit sont lus hors du module : les deux pages par l'aiguillage de
-// `pl-shell.js` et la façade `PL` ; `planOpenDetail` par quatre fichiers et
+// `pl-shell.js` et la façade `PL` — retirée depuis (n° 5.f.111) ; `planOpenDetail` par quatre fichiers et
 // une dizaine de gabarits ; `_applyRoleFilter` par le tableau de bord ;
 // l'accordéon — `planAccBasculer`, `planAccClavier` — par les en-têtes que
 // trois pages dessinent ; le tri, `_planSortBy`, par les en-têtes de la table,

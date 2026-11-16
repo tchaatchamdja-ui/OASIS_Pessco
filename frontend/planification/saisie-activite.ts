@@ -22,7 +22,7 @@ interface PlanOuvert { id: string; annee?: number; secteur_id?: string; activite
 const champ = (id: string): HTMLInputElement | null => document.getElementById(id) as HTMLInputElement | null;
 const valeur = (id: string): string => champ(id)?.value || '';
 const API = (): string => window.PLAN_MODULE_API;
-const plan = (): PlanOuvert | null | undefined => E().selectedPlan as PlanOuvert | null | undefined;
+const plan = (): PlanOuvert | null => E().selectedPlan;
 
 // ── Activities CRUD ──
 

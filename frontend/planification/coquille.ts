@@ -16,12 +16,6 @@ interface EntreeNav {
   subs?: { id: string; labelKey: string }[];
 }
 
-/** Le compte, tel que la barre supérieure l'affiche. */
-interface Compte {
-  nom?: string;
-  prenom?: string;
-}
-
 // ══════════════════════════════════════
 //  NAVIGATION CONFIG
 // ══════════════════════════════════════
@@ -117,7 +111,7 @@ export async function planLoadData(): Promise<void> {
     // l'édition dans les deux super-menus, au même titre que dans
     // « Profils de Risques ».
     try {
-      etat().access = await api('/api/m/droits/PLAN/my-access');
+      etat().access = await api('/api/m/droits/PLAN/my-access') as AccesPlan;
     } catch {
       const aucun: AccesPlan = { hasAccess: false, privilege: '', secteurs: {} };
       etat().access = aucun;
@@ -218,7 +212,7 @@ export function planResetFilters(): void {
 
 export function planRenderApp(): void {
   const S = etat();
-  const compte = S.user as Compte | null | undefined;
+  const compte = S.user;
   const initials = (compte?.nom || 'U').split(' ').map((w) => w[0]).join('').substring(0, 2).toUpperCase();
 
   let navHtml = '';
@@ -330,11 +324,11 @@ export function planRenderPage(): void {
   // le faisait lire `null`, et lever une exception. Le plan est lu ici, au
   // rendu ; le minuteur ne charge que si ce détail est encore celui qu'on
   // regarde — sinon un autre rendu a posé le sien.
-  const plan = S.currentPage === 'plan-detail' ? S.selectedPlan as { id: string } | null : null;
+  const plan = S.currentPage === 'plan-detail' ? S.selectedPlan : null;
   if (plan) {
     const id = plan.id;
     setTimeout(() => {
-      const ouvert = etat().selectedPlan as { id?: string } | null;
+      const ouvert = etat().selectedPlan;
       if (etat().currentPage === 'plan-detail' && ouvert && ouvert.id === id) requis('planLoadComments')(id);
     }, 100);
   }

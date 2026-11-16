@@ -7,18 +7,10 @@
 // au DG (approbation, transmission).
 import { etat, tp } from './partage';
 
-/** Ce que `/api/m/droits/PLAN/my-access` rend pour le compte. */
-export interface AccesPlan {
-  hasAccess: boolean;
-  privilege: string;
-  secteurs: Record<string, string>;
-}
+import type { AccesPlan } from './etat';
 
-/** Le compte, tel que le contexte du serveur le pose. */
-interface Compte {
-  role?: string;
-  role_m2?: string;
-}
+// Déclarés avec l'état, qui les porte (n° 5.f.110).
+export type { AccesPlan } from './etat';
 
 export const PL_VALIDE = ['GESTIONNAIRE', 'VALIDATEUR'];
 const PL_CONTRIB = ['GESTIONNAIRE', 'VALIDATEUR', 'CONTRIBUTEUR'];
@@ -30,7 +22,7 @@ export const PL_STATUTS_EN_VIGUEUR = ['valide', 'approuve_dg', 'transmis'];
 export const PL_STATUTS_AMENDEMENT = ['brouillon', 'soumis', 'en_revue', 'rejete'];
 
 function _access(): AccesPlan {
-  return (etat().access as AccesPlan | undefined) || { hasAccess: false, privilege: '', secteurs: {} };
+  return etat().access || { hasAccess: false, privilege: '', secteurs: {} };
 }
 
 // Privilège effectif sur un secteur ; sans secteur, le privilège de base.
@@ -55,7 +47,7 @@ export function _meilleurPriv(): string {
 export function _userM2Role(): string {
   const p = _meilleurPriv();
   if (p) return p.charAt(0) + p.slice(1).toLowerCase();
-  const acces = etat().access as AccesPlan | undefined;
+  const acces = etat().access;
   return (acces && acces.hasAccess === false) ? tp('no_access') : '';
 }
 
@@ -63,7 +55,7 @@ export function _userM2Role(): string {
 // transmission). Le libellé peut être le rôle portail brut (SUPERADMIN) ou
 // sa transposition module (Administrateur / M2_Administrateur).
 export function _isAdmin(): boolean {
-  const compte = etat().user as Compte | null | undefined;
+  const compte = etat().user;
   const r = compte?.role || '';
   const m2 = compte?.role_m2 || '';
   return ['SUPERADMIN', 'ADMIN', 'Administrateur'].includes(r) || m2 === 'M2_Administrateur';

@@ -35,7 +35,7 @@ const toast = (m: unknown, t: string): unknown => requis('oasisToast')(m, t);
 const confirmer = (m: string): Promise<boolean> => requis('oasisConfirmer')(m);
 const saisir = (m: string, o?: Record<string, string>): Promise<string | null> => requis('oasisSaisir')(m, o);
 const API = (): string => window.PLAN_MODULE_API;
-const ouvert = (): Plan | null | undefined => (etat() as { selectedPlan?: Plan | null }).selectedPlan;
+const ouvert = (): Plan | null => etat().selectedPlan;
 
 // ══════════════════════════════════════
 //  WORKFLOW ACTIONS
@@ -250,12 +250,21 @@ export function planShowValidationComment(actId: string): void {
 //  COMMENTS (Timeline / Conversation)
 // ══════════════════════════════════════
 
+// Le numéro de la dernière lecture lancée. Deux lectures du même fil peuvent
+// revenir dans le désordre — le minuteur du rendu, puis un commentaire ajouté
+// ou retiré aussitôt — : la plus ancienne écrasait alors la plus récente, et
+// le commentaire qu'on venait d'écrire disparaissait de la liste. Seule la
+// dernière lecture écrit (n° 5.f.112).
+let derniereLecture = 0;
+
 export async function planLoadComments(planId: string): Promise<void> {
   const container = document.getElementById('planCommentsContainer');
   if (!container) return;
+  const lecture = ++derniereLecture;
   try {
     const all = await window.api(`${API()}/plans/${planId}/commentaires`) as ElementFil[];
-    const me = ((etat().user || {}) as { username?: string; email?: string; id?: string });
+    if (lecture !== derniereLecture) return;
+    const me = etat().user || {};
     const miens = [me.username, me.email, me.id].filter(Boolean);
     const VALIDATION = ['valider', 'validation', 'rejeter', 'rejeter-annuler', 'rejet'];
 
@@ -289,6 +298,7 @@ export async function planLoadComments(planId: string): Promise<void> {
             </div>`;
     }).join('')}</div>`;
   } catch (e) {
+    if (lecture !== derniereLecture) return;
     container.innerHTML = `<p class="text-danger">${(e as Error).message}</p>`;
   }
 }

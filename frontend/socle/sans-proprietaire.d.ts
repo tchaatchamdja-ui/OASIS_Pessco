@@ -43,6 +43,14 @@ declare global {
 
     /** L'état partagé posé par le portail, dont la langue retenue. */
     PESSCO?: { lang?: string };
+    /**
+     * Les libellés partagés du portail, que `pt()` de PLAN et `exec-i18n.js`
+     * cherchent. **Aucun fichier du dépôt ne les définit** — mesuré le
+     * 14 novembre 2026 : la lecture rend toujours la clé. Déclarés ici, avec
+     * les autres noms sans propriétaire, plutôt que par un transtypage qui
+     * aurait tu la question (ADR-003, n° 5.f.101).
+     */
+    PORTAL_TRANSLATIONS?: Record<string, Record<string, string | undefined> | undefined>;
   }
 }
 

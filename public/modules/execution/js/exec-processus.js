@@ -1093,8 +1093,22 @@ Object.entries(EXEC_PROC_APRES).forEach(([nom, { jalon, suivante, titre, message
 });
 
 // Renvoi d'une notification validée vers la soumission, pour correction.
+//
+// ── Le motif se demande par la boîte du socle, non par `window.prompt` ──
+//
+// C'était la seule de tout le module : `exec-notifications.js` demande le motif
+// d'un **rejet** par `oasisSaisir`, et ce renvoi-ci — le même geste, à une
+// étape près — passait par la boîte native du navigateur. Elle n'est ni
+// traduite, ni aux couleurs de l'application, ni lisible par la suite qui
+// éprouve l'écran : le navigateur l'ouvre hors de la page.
+//
+// Deux autres subsistent dans le dépôt, hors de ce module — un `window.confirm`
+// dans RAMP et un `window.prompt` au portail. Elles sont nommées dans l'ADR
+// plutôt que corrigées au passage.
 window.execProcRenvoyerSoumission = async function () {
-  const motif = window.prompt(te('proc_motif_renvoi_invite'), '') ;
+  const motif = await oasisSaisir(te('proc_motif_renvoi_invite'), {
+    titre: te('renvoyer'), libelle: te('renvoyer'),
+  });
   if (motif === null) return;                       // renvoi annulé
   try {
     await api(`${EXEC_MODULE_API}/notifications/${EXEC_PROC.notif.id}/cancel`, {

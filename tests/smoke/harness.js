@@ -156,6 +156,19 @@ async function effacerSchema(schema) {
 // Le harnais refuse donc de démarrer sur un port qui répond déjà, et son message
 // dit quoi faire. `OASIS_SMOKE_BASE` reste le chemin déclaré pour s'adresser à
 // un serveur qu'on a choisi.
+//
+// ── Ce refus a longtemps mordu pour une autre raison : le port partagé ──
+//
+// Sept suites tenaient 4797 — `ramp` en HTTP et les six de navigateur. Jouées
+// l'une après l'autre, elles s'en arrangeaient ; mais **deux ne pouvaient pas
+// tourner ensemble**, et le refus ci-dessus s'énonçait alors comme un serveur
+// « resté d'un passage interrompu » quand ce n'était que le passage en cours.
+// Le 10 novembre 2026, quatre lancements ont été perdus ainsi.
+//
+// Depuis, chaque suite a son port (`suites.js`), et un contrôle refuse qu'il
+// s'en partage à nouveau (`unitaires`, « la table des suites »). Mesuré le même
+// jour : `arreter()` **relâche** le port — immédiatement, et sans qu'il reste
+// personne à le tenir. Le reproche qu'on lui faisait n'était pas le sien.
 async function portOccupe(port) {
   try {
     const r = await fetch(`http://localhost:${port}/login.html`, {
@@ -247,6 +260,29 @@ async function demarrer({ port = 4788, env: envSup = {} } = {}) {
     return r.corps;
   };
 
+  // ── Tenir deux sessions au lieu de se reconnecter ──
+  //
+  // `connexion()` réauthentifie, et le serveur **compte les tentatives** :
+  // vingt par quart d'heure et par adresse (SEC, plafond d'authentification).
+  // Une ronde qui éprouve une portée alterne nécessairement entre le compte qui
+  // la pose et celui qui l'éprouve — mesuré le 11 novembre 2026, douze bascules
+  // ont fait rendre **429** à la suite `execution`, sur un code sans défaut.
+  //
+  // Baisser le plafond du serveur pour les essais aurait été affaiblir une
+  // protection pour la commodité d'un test. Or il n'y a rien à affaiblir : une
+  // session déjà ouverte n'a pas à être rouverte. `session()` rend le témoin
+  // courant, `session(valeur)` le repose — deux connexions suffisent alors pour
+  // toute une ronde, quel que soit le nombre de bascules.
+  //
+  // La configuration du bac désactive `singleSession` (voir `copierDonnees`) :
+  // les deux sessions coexistent, ce qui n'est pas le cas en production.
+  //
+  // *Un essai qui bute sur une protection n'est pas une raison de la desserrer.*
+  const session = (valeur) => {
+    if (valeur !== undefined) cookie = valeur;
+    return cookie;
+  };
+
   const arreter = () => {
     // Rien à arrêter ni à effacer quand le serveur n'est pas de nous.
     if (!proc) return;
@@ -305,6 +341,7 @@ async function demarrer({ port = 4788, env: envSup = {} } = {}) {
     local: !externe,
     appel,
     connexion,
+    session,
     arreter,
     donnees,
     fichierExiste,
@@ -350,6 +387,178 @@ function bilan(titre) {
   return ok;
 }
 
+// ── Un refus que la ronde attend, déclaré et vérifié ──
+//
+// Toute suite de navigateur collecte les réponses 4xx et 5xx comme des défauts,
+// et il le faut : un 403 passé inaperçu est une règle qu'on croit tenue. Mais
+// une règle qui **refuse** ne se mesure qu'en la provoquant, et la provoquer
+// fait rougir le collecteur — de sorte qu'aucune règle de refus n'était
+// éprouvable, dans aucune suite.
+//
+// Une ronde déclare donc, dans une fenêtre qu'elle ouvre avant le geste et
+// referme après, le refus qu'elle attend : son code et un fragment de son
+// adresse. Le refus déclaré n'entre pas aux incidents ; il est marqué
+// **rencontré**, et `verifierRefus()` exige qu'il l'ait été. Une déclaration qui
+// cesse de correspondre fait donc rougir elle aussi, au lieu de masquer — c'est
+// cette symétrie qui distingue un mécanisme d'une échappatoire.
+//
+// Le navigateur dit le même fait deux fois : la réponse, et une ligne de console
+// pour la ressource. Dans la fenêtre, la seconde ne compte pas.
+//
+// Écrit pour la suite PR (ADR-003, 5.f.60), il vit ici parce qu'il sert à
+// plusieurs : une copie par suite aurait divergé, et ce dépôt a déjà payé cette
+// leçon deux fois.
+function refusAttendus() {
+  const liste = [];
+  let fenetre = false;
+  return {
+    // À poser avant le geste qui provoque le refus.
+    declarer(statut, url) {
+      const a = { statut, url, rencontre: false };
+      liste.push(a);
+      fenetre = true;
+      return a;
+    },
+    // Et à refermer juste après : hors de la fenêtre, un 4xx reste un défaut.
+    clore() { fenetre = false; },
+    // Vrai si cette réponse est celle qu'on attendait — et elle est alors
+    // marquée, pour qu'un second passage ne la consomme pas deux fois.
+    attendu(statut, url) {
+      if (!fenetre) return false;
+      const a = liste.find((x) => x.statut === statut && url.includes(x.url) && !x.rencontre);
+      if (!a) return false;
+      a.rencontre = true;
+      return true;
+    },
+    // La ligne que le navigateur écrit pour la même requête.
+    bruit(texte) { return fenetre && /Failed to load resource/.test(texte); },
+    // Le contrôle : chaque refus déclaré doit être venu.
+    verifier(ecran) {
+      verifier(`chaque refus que la ronde de ${ecran} a déclaré attendre est bien venu`,
+        liste.length > 0 && liste.every((a) => a.rencontre), JSON.stringify(liste));
+    },
+    liste,
+  };
+}
+
+// ── Les refus qu'une suite déclare pour toute sa durée, et leur trace en console ──
+//
+// Trois suites de navigateur — le socle des modules, RAMP, PLAN — déclarent
+// leurs refus par code, méthode et chemin, et le navigateur dit chacun deux
+// fois : la **réponse**, et la ligne de console « Failed to load resource : …
+// status of 400 ». Les trois tenaient la même règle, copiée : la réponse
+// déclarée versait son code dans un ensemble, et la ligne de console était
+// dispensée si son code y était déjà.
+//
+// **Déjà** : c'est là qu'était le défaut. Puppeteer ne rend pas la réponse dès
+// que Chrome l'annonce — il attend `Network.responseReceivedExtraInfo`, qui
+// vient du processus réseau, tandis que la ligne de console vient du rendu.
+// Les deux chemins ne s'attendent pas — CDP dit lui-même que l'ExtraInfo peut
+// venir avant ou après `responseReceived`. Mesuré le 15 novembre 2026 sur
+// `surv-parametres`, au niveau du protocole : ExtraInfo, `responseReceived`,
+// puis `Log.entryAdded`, le tout en une milliseconde. Qu'ExtraInfo glisse d'une
+// milliseconde et la console passe la première ; le premier refus déclaré
+// d'une suite — l'ensemble encore vide — devient alors un incident. C'est
+// arrivé une fois en vingt-sept campagnes, jamais sur un tir seul, et quatre
+// tirs sous une charge processeur délibérée ne l'ont pas reproduit : ce n'est
+// pas la charge du processeur seule qui le décide.
+//
+// La ligne de console porte pourtant l'adresse de la ressource (`location`).
+// On la confronte donc **aux déclarations elles-mêmes**, code et chemin, et
+// l'ordre d'arrivée cesse de compter. La méthode, que la console ne dit pas,
+// reste éprouvée sur la réponse : toute réponse passe par `reponse()`, et un
+// refus non déclaré y devient un incident quoi que la console en ait dit.
+//
+// Sans adresse — un navigateur qui ne la donnerait pas —, on retombe sur
+// l'ancienne règle, la seule disponible.
+const sansOrigine = (url) => String(url || '').replace(/^[a-z][a-z0-9+.-]*:\/\/[^/]+/i, '');
+
+function refusDeclares(declarations) {
+  const codesVus = new Set();
+  return {
+    // Vrai si cette réponse est l'un des refus déclarés.
+    reponse(statut, methode, chemin) {
+      const attendu = declarations.some((x) => x.code === statut
+        && x.methode === methode && x.chemin.test(chemin));
+      if (attendu) codesVus.add(statut);
+      return attendu;
+    },
+    // Vrai si cette ligne de console est la trace d'un refus déclaré.
+    console(texte, url) {
+      const code = Number((/status of (\d{3})/.exec(String(texte || '')) || [])[1]);
+      if (!code) return false;
+      const chemin = sansOrigine(url);
+      if (!chemin) return codesVus.has(code);
+      return declarations.some((x) => x.code === code && x.chemin.test(chemin));
+    },
+  };
+}
+
+// L'adresse que porte une ligne de console, quand le navigateur la donne.
+const adresseDeConsole = (m) => {
+  try { return ((m.location && m.location()) || {}).url || ''; } catch { return ''; }
+};
+
+// ── Les abandons de navigation qu'une ronde provoque exprès ──
+//
+// Un refus se déclare par son code ; un **abandon** n'en a pas. Un
+// téléchargement servi en pièce jointe se présente à un moniteur de requêtes
+// comme un `net::ERR_ABORTED` : le navigateur mène la fenêtre à l'adresse,
+// reçoit `Content-Disposition: attachment`, enregistre le fichier et
+// **abandonne la navigation**. Ce n'est pas une panne, c'est la signature du
+// geste réussi.
+//
+// Et c'est la signature du **bon** patron : depuis que les téléchargements
+// passent par une navigation plutôt que par une ancre fabriquée
+// (n° 5.f.71), toute ronde qui en exerce un voit cet abandon. RAMP l'avait
+// rencontré le premier, pour son générateur de tables ; PR le rencontre pour
+// ses trois exports. Le mécanisme vit donc ici, et non deux fois.
+//
+// Déclarer n'est pas taire : l'abandon déclaré est relevé, et un contrôle à part
+// exige qu'il ait bien eu lieu. Si le navigateur cessait d'abandonner — parce
+// qu'une route aurait perdu son `attachment`, et afficherait le fichier au lieu
+// de l'enregistrer —, la déclaration deviendrait un filtre muet. Ce contrôle
+// l'en empêche.
+// ── Le motif et le chemin se relèvent séparés, et c'est une correction ──
+//
+// La première version rangeait l'abandon vu comme une seule chaîne,
+// « <motif> <chemin> », puis éprouvait les déclarations **contre cette
+// chaîne**. Un champ nommé `chemin` était donc confronté au motif collé
+// devant : une déclaration ancrée au début du chemin — `/^mailto:/` — ne
+// pouvait jamais correspondre, alors que l'abandon avait bien eu lieu.
+//
+// Mesuré le 9 novembre 2026 : l'abandon figurait en clair dans `vus`, et le
+// contrôle le déclarait manquant. Les deux rondes qui s'en servaient déjà ne
+// l'avaient pas rencontré, leurs chemins commençant par un `/` au milieu de la
+// chaîne — leur motif n'était pas ancré, par chance et non par dessein.
+//
+// Les deux faces se relèvent désormais séparées, et chaque éprouve porte sur
+// celle qu'elle nomme. *Un garde qui rend impossible la forme la plus naturelle
+// de sa propre déclaration est un garde qui ment sur ce qu'il mesure.*
+function abandonsAttendus(declarations) {
+  const vus = [];
+  return {
+    // Vrai si cet abandon est l'un de ceux déclarés ; il est alors relevé.
+    attendu(motif, chemin) {
+      if (!declarations.some((x) => x.motif.test(motif) && x.chemin.test(chemin))) return false;
+      vus.push({ motif: String(motif), chemin });
+      return true;
+    },
+    // Combien de fois un chemin déclaré a été abandonné.
+    compte(chemin) { return vus.filter((x) => chemin.test(x.chemin)).length; },
+    // Le contrôle : chaque abandon déclaré doit être venu au moins une fois.
+    verifier(ecran) {
+      const manquants = declarations.filter((x) => !vus.some((v) => x.chemin.test(v.chemin)));
+      verifier(`chaque abandon de navigation que la ronde de ${ecran} a déclaré attendre est bien venu`,
+        declarations.length > 0 && manquants.length === 0,
+        `attendus ${declarations.length}, manquants ${manquants.length} : `
+        + `${manquants.map((x) => String(x.chemin)).join(', ') || 'aucun'}`
+        + ` · vus ${JSON.stringify(vus.map((v) => `${v.motif} ${v.chemin}`.slice(0, 90)))}`);
+    },
+    vus,
+  };
+}
+
 // ── Où vit un fichier du socle, pendant la conversion ──
 //
 // Le socle passe en TypeScript un fichier à la fois (ADR-003, 5.b). Chaque
@@ -392,4 +601,8 @@ const urlSocle = (nom) => `/shared/${fs.existsSync(path.join(RACINE, 'frontend',
 
 module.exports = {
   demarrer, verifier, horsPortee, bilan, etat, cheminSocle, sourceSocle, urlSocle,
+  refusAttendus,
+  refusDeclares,
+  adresseDeConsole,
+  abandonsAttendus,
 };

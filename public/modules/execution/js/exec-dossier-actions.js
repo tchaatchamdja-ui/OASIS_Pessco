@@ -52,29 +52,36 @@ async function execSendRapportValidated(rapportId) {
     }
 }
 
+// ── « Exporter PDF » : le document de la fiche, et plus une route absente ──
+//
+// Ce geste n'a jamais téléchargé de PDF, et c'était mesuré : la route
+// `GET …/notifications/:id/pdf` **n'existe pas** — aucune n'est montée sous ce
+// chemin, et il n'y a pas de route générique qui l'attrape. L'appel rendait
+// donc toujours un 404, et le geste passait **toujours** par son repli :
+// l'aperçu dans le volet, et « imprimez avec Ctrl-P ». Son libellé promettait
+// ce qu'il ne faisait pas.
+//
+// La seconde branche était morte elle aussi : elle attendait un
+// `dossier.notification_pdf_path` que **rien n'écrit nulle part** dans le
+// dépôt, serveur compris.
+//
+// Le module n'a jamais produit de PDF au serveur. Sa convention est de composer
+// un document dans le client et de l'ouvrir en fenêtre, avec son impression —
+// `execDownloadRapport` pour le rapport, et désormais
+// `execExportFicheNotification` pour la fiche, dont le corps était déjà écrit
+// et n'attendait que d'être récupérable. (ADR-003, n° 5.f.74)
+//
+// Le nom de ce geste est conservé : c'est celui que le bouton appelle et que le
+// relevé suit. Il délègue.
 async function execGenerateNotificationPdf(dossierId) {
-    const dossier = EXEC_STATE.selectedDossier;
+    const dossier = EXEC_STATE.selectedDossier
+        || (EXEC_STATE.data.dossiers || []).find((d) => d.id === dossierId)
+        || null;
     if (!dossier || !dossier.notification_id) {
         _execToast(te('aucune_notification_dossier'), 'error');
         return;
     }
-    try {
-        const res = await api(`${EXEC_MODULE_API}/notifications/${dossier.notification_id}/pdf`);
-        if (res && res.path) {
-            const a = document.createElement('a');
-            a.href = res.path;
-            a.download = `notification_${dossier.notification_ref || dossier.notification_id}.pdf`;
-            a.click();
-        } else {
-            _execToast(te('pdf_indisponible'), 'info');
-        }
-    } catch (e) {
-        // Fallback: open the notification preview for printing
-        _execToast(te('imprimer_ctrl_p'), 'info');
-        if (dossier.notification_id) {
-            execPreviewNotification(dossier.notification_id);
-        }
-    }
+    await window.execExportFicheNotification(dossier.notification_id, true);
 }
 
 async function execReturnDossier(dossierId) {
@@ -207,11 +214,30 @@ function execFncOnSecteurChange() {
     execFncUpdateExigences(secteurId);
 }
 
-function execFncUpdateExigences(secteurId) {
+// Les exigences d'un secteur — la liste proposée à l'inspecteur pour nommer ce
+// qu'il oppose.
+//
+// La règle vit ici une seule fois : elle était écrite deux fois, à l'ouverture
+// du formulaire et à chaque changement de secteur, et les deux comparaient
+// l'identifiant choisi dans la liste déroulante au **code** que l'exigence
+// porte — deux chaînes qui ne pouvaient jamais correspondre.
+//
+// Ce que cela ne règle pas, et qu'il faut dire : sur le référentiel servi
+// aujourd'hui, les deux exigences nomment les secteurs `OPS-TAC` et `AIR-OMA`,
+// qui **n'existent plus** parmi les huit (`AMO, CAMO, CAT, STA, ATO, MED, ANP,
+// ADM`). La liste reste donc vide ici, pour une seconde raison, de données
+// celle-là — et le détecteur d'orphelins ne regarde pas les exigences. Mesuré
+// le 12 novembre 2026.
+function _execExigencesDuSecteur(secteurId) {
     const all = EXEC_STATE.data.exigences || [];
-    const filtered = secteurId
-        ? all.filter(e => e.secteur_id === secteurId && (e.statut || 'actif') !== 'inactif')
-        : all.filter(e => (e.statut || 'actif') !== 'inactif');
+    const actives = all.filter(e => (e.statut || 'actif') !== 'inactif');
+    if (!secteurId) return actives;
+    const cles = execClesDePortee([secteurId], EXEC_STATE.data.secteurs);
+    return actives.filter(e => cles.has(String(e.secteur_id)));
+}
+
+function execFncUpdateExigences(secteurId) {
+    const filtered = _execExigencesDuSecteur(secteurId);
     const list = document.getElementById('fnc_exig_list');
     if (!list) return;
     list.innerHTML = filtered.map(e =>
@@ -311,10 +337,9 @@ function execOpenFNCForm(dossierId, existingFnc) {
     const defSecteur = secteurs.find(s => s.id === defaultSecteurId);
     const defaultDomaineId = fnc.domaine_id || fnc.domaine || defSecteur?.domaine_id || '';
 
-    // Initial exigences
-    const initExig = defaultSecteurId
-        ? allExig.filter(e => e.secteur_id === defaultSecteurId && (e.statut || 'actif') !== 'inactif')
-        : allExig.filter(e => (e.statut || 'actif') !== 'inactif');
+    // Initial exigences — même règle qu'au changement de secteur, et un seul
+    // endroit qui la porte.
+    const initExig = _execExigencesDuSecteur(defaultSecteurId);
     const exigOptions = initExig.map(e =>
         `<option value="${_escAttr(e.reference)}" title="${_escAttr(e.libelle)}">${_esc(e.reference)} — ${_esc(e.libelle)}</option>`
     ).join('');
@@ -585,29 +610,46 @@ let _fncProofPendingName = '';
 async function execUploadFNCProof(files) {
     if (!files || files.length === 0) return;
     for (const file of files) {
-        const formData = new FormData();
-        formData.append('file', file);
         try {
-            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.status === 'ok') {
-                const container = document.getElementById('fnc_preuves_list');
-                if (container) {
-                    const div = document.createElement('div');
-                    div.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;';
-                    div.innerHTML = `${EXEC_ICONS.file} <span style="flex:1;">${_esc(data.filename)}</span>
-                        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
-                    div.dataset.path = data.path;
-                    container.appendChild(div);
-                }
+            const data = await execDeposerPiece(file);
+            const container = document.getElementById('fnc_preuves_list');
+            if (container) {
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;';
+                div.innerHTML = `${EXEC_ICONS.file} <span style="flex:1;">${_esc(data.filename)}</span>
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
+                div.dataset.path = data.path;
+                container.appendChild(div);
             }
         } catch (e) {
             console.error('Upload proof error:', e);
+            _execToast(`${file.name} : ${(e && e.message) || te('televersement_impossible')}`, 'error');
         }
     }
+}
+
+// ── Ce qu'une constatation notifiée ne laisse plus réécrire ──
+//
+// Une fois la constatation opposable, huit champs engagent l'organisme et ne se
+// changent que par l'ajustement — motivé, confirmé par mot de passe, tracé. La
+// route les écarte, et **rend leur liste** (`non_ecrits`).
+//
+// Elle ne la rendait pas, et l'écran disait « Constatation modifiée ». Le cas se
+// présente au seul compte d'administration, puisque c'est le seul à qui la table
+// laisse le crayon sur une constatation déjà opposable : il changeait la
+// description, lisait le succès, et rien n'avait bougé. Les libellés sont ceux
+// du formulaire lui-même ; un champ sans libellé se nomme par sa clé plutôt que
+// de disparaître du message.
+const EXEC_LIBELLE_CHAMP_OPPOSABLE = {
+    delai_solde: 'delai_solde', criticite: 'criticite', date_ouverture: 'date_ouverture',
+    description: 'description_constatation', ref_reglementaires: 'ref_reglementaires',
+    domaine_id: 'domaine', date_due_cloture: 'date_due', titre: 'titre_rapport',
+};
+
+function _execNommerChampsOpposables(noms) {
+    return (noms || [])
+        .map((n) => (EXEC_LIBELLE_CHAMP_OPPOSABLE[n] ? te(EXEC_LIBELLE_CHAMP_OPPOSABLE[n]) : n))
+        .join(', ');
 }
 
 async function execSaveFNC(dossierId, fncId) {
@@ -642,8 +684,15 @@ async function execSaveFNC(dossierId, fncId) {
 
     try {
         if (fncId) {
-            await api(`${EXEC_MODULE_API}/constatations/${fncId}`, { method: 'PUT', body: JSON.stringify(data) });
-            _execToast(te('constat_modifie_ok'), 'success');
+            const rep = await api(`${EXEC_MODULE_API}/constatations/${fncId}`,
+                { method: 'PUT', body: JSON.stringify(data) });
+            const ecartes = (rep && rep.non_ecrits) || [];
+            if (ecartes.length) {
+                _execToast(`${te('constat_champs_non_ecrits')} : ${_execNommerChampsOpposables(ecartes)}`,
+                    'warning');
+            } else {
+                _execToast(te('constat_modifie_ok'), 'success');
+            }
         } else {
             await api(`${EXEC_MODULE_API}/constatations`, { method: 'POST', body: JSON.stringify(data) });
             _execToast(te('constat_cree_ok'), 'success');
@@ -687,10 +736,56 @@ async function execDeleteConstatation(fncId) {
 }
 
 
+// ── Supprimer un dossier : la référence saisie, comme aux États ──
+//
+// Ce geste emporte plus que son nom ne dit : `DELETE /dossiers/:id` supprime le
+// dossier, **puis la notification et tous ses échanges** — l'activité redevient
+// « à notifier », et ce qui s'est dit entre l'AAC et l'organisme disparaît.
+//
+// Il ne demandait qu'un oui/non. Le même effet, offert par le menu « États »
+// (`execEtatsSupprimer`), exige de **saisir la référence** de l'activité : une
+// confirmation qu'on ne peut pas donner par réflexe. Mesuré le 8 novembre
+// 2026, les deux chemins ne se gardaient pas de la même façon, et celui-ci est
+// le moins gardé des deux.
+//
+// La page qui le porte — le tableau des dossiers — n'était dans aucune barre
+// jusqu'au 8 novembre 2026 (n° 5.f.73) : l'asymétrie n'avait donc jamais été
+// offerte à personne. Elle est fermée **avant** que la page ne s'ouvre.
+//
+// *La force d'une confirmation se mesure à ce que le geste détruit, non à
+// l'écran d'où on le lance.*
+//
+// Reste une asymétrie que le code ne décide pas : le serveur réserve ce chemin
+// aux **administrateurs** (`R.isAdmin`), là où la suppression des États est
+// réservée au **super-administrateur**. Deux autorités pour un même effet, et
+// c'est à la maîtrise d'ouvrage de dire laquelle vaut.
 async function execDeleteDossier(dossierId) {
-    if (!await oasisConfirmer(te('confirm_delete_activite'))) return;
+    const d = (EXEC_STATE.data.dossiers || []).find((x) => x.id === dossierId) || {};
+    const reference = String(d.reference || d.notification_ref || '').trim();
+    // Sans référence, rien à faire saisir : on refuse plutôt que de retomber
+    // sur le oui/non, qui est précisément ce qu'on vient de fermer.
+    if (!reference) {
+        oasisToast(te('suppression_impossible') || te('err_suppression'), 'error');
+        return;
+    }
+    const saisi = await execProcConfirmer({
+        titre: te('supprimer_dossier_titre'),
+        message: `${te('supprimer_dossier_message')} ${te('saisir_reference_pour_confirmer')
+            .replace('{ref}', reference)}`,
+        libelle: te('supprimer_definitivement'),
+        saisie: { label: te('reference_du_dossier'), placeholder: reference },
+    });
+    if (saisi === false) return;
+    if (String(saisi).trim() !== reference) {
+        oasisToast(te('reference_non_conforme'), 'error');
+        return;
+    }
     try {
         await api(`${EXEC_MODULE_API}/dossiers/${dossierId}`, { method: 'DELETE' });
+        // Le dossier supprimé était peut-être le dernier vu : l'écran le
+        // retient après la fermeture de son volet, et le rafraîchissement
+        // redemanderait au serveur ce qu'on vient de lui faire supprimer.
+        if (EXEC_STATE.selectedDossier?.id === dossierId) EXEC_STATE.selectedDossier = null;
         await execRefreshDynamic();
         execRenderPage();
     } catch (e) {
@@ -699,13 +794,7 @@ async function execDeleteDossier(dossierId) {
     }
 }
 
-async function execSendRapport(rapportId) {
-    try {
-        await api(`${EXEC_MODULE_API}/rapports/${rapportId}/send`, { method: 'PUT' });
-        await execRefreshDynamic();
-        execRenderPage();
-    } catch (e) {
-        console.error('Send rapport error:', e);
-        oasisToast(te('err_envoi'), 'error');
-    }
-}
+// `execSendRapport` a été retiré avec l'onglet mort qui seul l'appelait : même
+// route et même méthode que `execSendRapportValidated`, sans confirmation ni
+// message. Voir `exec-activites.js`, « L'onglet « Rapports » du volet a été
+// retiré ».

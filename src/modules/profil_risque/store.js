@@ -30,8 +30,51 @@ const COLLECTIONS = [
   'eval_reunions',
   'eval_reunions_prest',
   'documents',
+  // `indices` n'est pas une collection d'enregistrements mais le barème lui-même
+  // (un objet de six seuils) : il se lit par `load`, jamais par `list`, qui y
+  // appellerait `.filter`. Il figure ici parce que la liste nomme les clés du
+  // magasin, non parce qu'elle nomme des listes.
   'indices',
 ];
+
+// ── Les six seuils du barème, et les trois vocabulaires qui ne se parlaient pas ──
+//
+// `indices` portait un **tableau** de six paires `{cle, valeur}` — trois poids
+// et trois paliers. Personne ne les lisait : seul ce semis les écrivait.
+//
+// L'écran, lui, emploie un **objet** de six seuils, deux par axe, et ce sont
+// **eux** que six endroits du calcul lisent — `prSeuils` des profils, et quatre
+// calculs de la fiche d'évaluation (indices de conformité, de performance et
+// d'exposition). Comme la route rendait le tableau, chacune de ces lectures
+// retombait sur `|| 0.8` et `|| 0.5` ; et comme `PUT /api/indices` attendait un
+// tableau là où l'écran envoie un objet, la saisie était perdue en silence —
+// avec un « OK » à l'écran.
+//
+// Le barème qui classe un organisme en « Élevé » ou « Modéré » n'était donc pas
+// réglable, et la page prétendait le contraire. La maîtrise d'ouvrage a tranché
+// le 5 novembre 2026 : **le modèle de l'écran fait loi**, puisque c'est lui que
+// le calcul lit.
+const SEUILS = ['conf1', 'conf2', 'perf1', 'perf2', 'expo1', 'expo2'];
+// Les mêmes valeurs que les repliements du code : adopter le modèle ne change
+// aucun calcul tant que personne ne règle les seuils.
+const SEUILS_DEFAUT = {
+  conf1: 0.8, conf2: 0.5, perf1: 0.8, perf2: 0.5, expo1: 0.8, expo2: 0.5,
+};
+
+// Les instances déjà installées portent le tableau : on le convertit au
+// démarrage, plutôt que d'ouvrir une page de réglages sur six champs vides.
+// Les paires de l'ancien modèle ne sont pas reprises — elles ne disaient pas la
+// même chose, et personne ne les lisait.
+async function seedSeuils() {
+  await base.transformer((d) => {
+    const i = d.indices;
+    if (i && !Array.isArray(i) && SEUILS.every((c) => typeof i[c] === 'number')) {
+      return base.INCHANGE;
+    }
+    d.indices = { ...SEUILS_DEFAUT };
+    return d;
+  });
+}
 
 // Amorçage : une seule fois, et seulement si la collection est vide. `load` rend
 // `{}` quand elle n'existe pas — c'est cette absence de clé qu'on lit, et non un
@@ -49,16 +92,9 @@ async function seed() {
     eval_reunions: [],
     eval_reunions_prest: [],
     documents: [],
-    indices: [
-      { cle: 'poids_conformite', valeur: 0.5 },
-      { cle: 'poids_performance', valeur: 0.3 },
-      { cle: 'poids_complexite', valeur: 0.2 },
-      { cle: 'seuil_faible', valeur: 25 },
-      { cle: 'seuil_moyen', valeur: 50 },
-      { cle: 'seuil_eleve', valeur: 75 },
-    ],
+    indices: { ...SEUILS_DEFAUT },
     createdAt: new Date().toISOString(),
   });
 }
 
-module.exports = { ...base, COLLECTIONS, seed };
+module.exports = { ...base, COLLECTIONS, seed, seedSeuils, SEUILS, SEUILS_DEFAUT };

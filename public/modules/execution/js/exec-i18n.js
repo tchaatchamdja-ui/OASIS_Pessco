@@ -81,13 +81,12 @@ const EXEC_TR = {
         date_ouverture_court: "Date Ouv.",
         delai: "Délai",
         msg_libelle_requis: "Libellé requis",
-        televersement_refuse: 'Téléversement refusé',
         module_title: 'Exécution de la Surveillance et Suivi',
         dashboard: 'Tableau de Bord',
         plan_surveillance: 'Activites de Supervision',
         etats: 'Etats',
-        declenchement: 'Declenchement',
-        execution: 'Execution',
+        declenchement: 'Déclenchement',
+        execution: 'Exécution',
         prestataires: 'Dossiers',
         tab_plan_surveillance: 'Plan de Surveillance',
         tab_liste_activites: 'Liste des Activites',
@@ -680,8 +679,6 @@ const EXEC_TR = {
         download_pdf: 'Telecharger PDF',
         telecharger: 'Telecharger',
         rapports_closed_intro: 'Rapports clôturés accessibles au téléchargement.',
-        prestataire_home_title: 'Espace Prestataire',
-        prestataire_home_intro: 'Consultez vos notifications pour traiter vos plans d\'actions correctives.',
         mes_activites: 'Mes Activités',
         mes_utilisateurs: 'Mes Utilisateurs',
         notification_activite: "Notification d'activité",
@@ -739,7 +736,6 @@ const EXEC_TR = {
         confirm_delete_activite: 'Supprimer cette activite ? Les constatations et rapports associes seront egalement supprimes.',
         confirm_delete_constatation: 'Supprimer cette constatation ?',
         confirm_delete_rapport: 'Supprimer ce rapport ?',
-        envoyer_prestataire: 'Envoyer',
         ref_consta: 'Ref. CONSTA',
         aucune_checklist_selectionnee: 'Aucune checklist sélectionnée — utilisez le bouton ci-dessous pour en ajouter.',
         aucun_rapport_valide: 'Aucun rapport validé pour le moment.',
@@ -914,6 +910,21 @@ const EXEC_TR = {
         droits_tous: 'Tous',
         droits_n_sur: '{0} sur {1}',
         droits_aucun: 'Aucun',
+        // Vocabulaire des comptes de l'organisme. Il vivait en clés de la
+        // table du **portail** (`pt`), qui ne les porte pas : l'écran
+        // affichait « password_gen » et « confirm_admin_password » en clair
+        // (n° 5.f.76). Les replis français écrits à côté de chaque appel ne
+        // pouvaient pas servir — `pt` existe toujours, c'est la clé qui
+        // manquait.
+        champs_requis: 'Champs obligatoires manquants',
+        mot_de_passe: 'Mot de passe',
+        mot_de_passe_genere: 'Mot de passe généré',
+        // « réinitialis » fait teinter la confirmation en rouge : le socle
+        // déduit le caractère destructeur du message lui-même.
+        confirmer_reinit_mdp: 'Réinitialiser le mot de passe de ce compte ?',
+        confirmer_votre_mdp: 'Confirmer votre mot de passe',
+        confirmer_tout_court: 'Confirmer',
+        annuler_court: 'Annuler',
         pj_enregistrees: 'Pièces jointes enregistrées',
         err_enregistrement: 'Erreur lors de l\'enregistrement',
         indiquez_destinataire: 'Indiquez au moins un destinataire',
@@ -940,6 +951,7 @@ const EXEC_TR = {
         err_sauvegarde: 'Erreur lors de la sauvegarde',
         dossier_cloture_ok: 'Dossier clôturé avec succès',
         err_chargement: 'Erreur chargement',
+        constat_champs_non_ecrits: 'Ces champs engagent l’organisme depuis la notification et ne se changent que par un ajustement ; ils n’ont pas été écrits',
         constat_modifie_ok: 'Constatation modifiée avec succès',
         constat_cree_ok: 'Constatation créée avec succès',
         err_sauvegarde_constat: 'Erreur lors de la sauvegarde de la constatation',
@@ -951,6 +963,13 @@ const EXEC_TR = {
         processus_arrete: 'Processus arrêté',
         processus_repris: 'Processus repris',
         reference_non_conforme: 'Référence non conforme : suppression abandonnée',
+        supprimer_dossier_titre: 'Supprimer le dossier',
+        supprimer_dossier_message: 'Le dossier, la notification de l’activité et tous les '
+            + 'échanges qu’elle porte seront définitivement supprimés. L’activité redevient '
+            + '« à notifier ».',
+        saisir_reference_pour_confirmer: 'Saisissez « {ref} » pour confirmer.',
+        supprimer_definitivement: 'Supprimer définitivement',
+        reference_du_dossier: 'Référence du dossier',
         activite_supprimee: 'Activité supprimée',
         plan_desarchive: 'Plan désarchivé',
         activite_desarchivee: 'Activité désarchivée',

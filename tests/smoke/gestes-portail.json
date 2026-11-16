@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-03",
- "gestesNommes": 84,
- "occurrences": 129,
- "exerces": 67,
+ "releve": "2026-11-14",
+ "gestesNommes": 86,
+ "occurrences": 131,
+ "exerces": 68,
  "indecidables": 8,
  "gestes": [
   {
@@ -96,6 +96,7 @@
    "source": "${pdf}",
    "nom": "${}",
    "indecidable": true,
+   "raison": "sans nom",
    "exerce": null
   },
   {
@@ -143,6 +144,16 @@
    "source": "reset.onclick = portailViderRecherche",
    "id": null,
    "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/barre.ts",
+   "ligne": 99,
+   "forme": "propriété",
+   "evenement": "mousedown",
+   "source": "(e) => e.preventDefault()",
+   "id": null,
+   "nom": "((e) => e.preventDefault())",
+   "exerce": false
   },
   {
    "fichier": "frontend/portail/configuration.ts",
@@ -372,6 +383,16 @@
    "evenement": "click",
    "source": "ouvrirInstance()",
    "nom": "ouvrirInstance",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/portail/instances.ts",
+   "ligne": 186,
+   "forme": "propriété",
+   "evenement": "change",
+   "source": "(e): void => { void changerInstance((e.target as HTMLSelectElement).value); }",
+   "id": null,
+   "nom": "((e) => { void changerInstance(e.target.value); })",
    "exerce": true
   },
   {

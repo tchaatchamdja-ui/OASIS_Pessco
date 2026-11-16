@@ -878,6 +878,242 @@ async function courrielsSansSecret() {
   fs.rmSync(bacConfig, { recursive: true, force: true });
 }
 
+// ── Nommer un gestionnaire posé dans le balisage ──
+//
+// Le relevé des gestes compte la couverture d'un écran, et il la compte **par
+// nom**. Mal nommer un gestionnaire ne fait pas tomber une campagne : cela
+// déplace un chiffre, dans un rapport que personne ne recoupe. C'est le mode de
+// défaillance le plus coûteux de cet outil, et il s'est produit trois fois.
+//
+// Le dernier en date, mesuré le 11 novembre 2026 : le lien d'aperçu du courriel
+// de transmission porte `onclick="event.preventDefault();${_escAttr(repli)}"`.
+// Son contrôle est **vert** — le document est composé, la page n'est pas
+// quittée —, et le relevé comptait pourtant deux gestes « non exercés » :
+// `event.preventDefault`, qui est une garde, et `_escAttr`, qui est une fonction
+// de rendu. Le nom que le navigateur porte, lui, est `execDownloadRapport`.
+//
+// Ces contrôles éprouvent `classer`, **la** fonction que `relever` appelle. Un
+// garde-fou qui réécrirait la règle éprouverait sa propre version de la règle —
+// faute déjà payée trois fois sur le contrôle des noms de suites.
+function nommageDesGestes() {
+  // eslint-disable-next-line global-require
+  const { classer, aidesDeTexte, ligneDeFichier } = require(path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'));
+  const noms = (corps) => classer(corps).map((g) => g.nom);
+  const seul = (corps) => classer(corps)[0];
+
+  verifier('nommage : un gestionnaire ordinaire se nomme par son appel, valeur interpolée comprise',
+    noms("execFoo('${d.id}')").join() === 'execFoo'
+    && classer("execFoo('${d.id}')")[0].indecidable === undefined,
+    JSON.stringify(classer("execFoo('${d.id}')")));
+
+  verifier('nommage : une garde en tête ne nomme pas le geste — c\'est ce qu\'elle protège',
+    noms('event.preventDefault();execFoo()').join() === 'execFoo'
+    && noms('event.stopPropagation();event.preventDefault();execFoo()').join() === 'execFoo'
+    && noms("if(!event.target.closest('button'))execFoo('x')").join() === 'execFoo',
+    JSON.stringify([noms('event.preventDefault();execFoo()'),
+      noms("if(!event.target.closest('button'))execFoo('x')")]));
+
+  // Le cas qui a fait naître la branche interpolée : un ternaire qui **écrit**
+  // ses deux gestes. Les deux sont des gestes de l'écran, et les deux comptent.
+  const ternaire = "${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}";
+  verifier('nommage : un ternaire qui écrit ses deux gestes les nomme tous les deux',
+    noms(ternaire).join() === 'planUpdateActivity,planCreateActivity'
+    && classer(ternaire).every((g) => g.interpole === true),
+    JSON.stringify(noms(ternaire)));
+
+  // ── Le défaut du 11 novembre, et sa forme derrière une garde ──
+  const compose = 'event.preventDefault();${_escAttr(repli)}';
+  const composeGarde = "if(!event.target.closest('button'))${execEtatsOuvrir(l)}";
+  verifier('nommage : un gestionnaire composé au rendu est indécidable, et non « non exercé »',
+    seul(compose).indecidable === true && seul(compose).raison === 'composé au rendu'
+    && seul(composeGarde).indecidable === true
+    && seul(composeGarde).raison === 'composé au rendu'
+    // Et surtout : aucun des noms que la source donne n'est retenu. Ni la
+    // garde, ni la fonction qui assemble.
+    && !noms(compose).includes('_escAttr')
+    && !noms(compose).includes('event.preventDefault')
+    && !noms(composeGarde).includes('execEtatsOuvrir')
+    && !noms(composeGarde).includes('event.target.closest'),
+    JSON.stringify([classer(compose), classer(composeGarde)]));
+
+  // ── Sauf si le fichier **écrit** le gestionnaire ailleurs, d'un seul cran ──
+  //
+  // La doctrine ne bouge pas : on retient ce que l'interpolation écrit, non ce
+  // qui l'assemble. Ce qui change, c'est où l'on va le lire — une aide du même
+  // fichier dont le corps est un gabarit qui commence par un appel.
+  // `execEtatsOuvrir` n'est toujours **pas** retenu ; c'est ce qu'il écrit qui
+  // l'est.
+  const source = [
+    "const execEtatsOuvrir = (l) => `execOpenActiviteProcessus('${l.planId}','${l.activiteId}')`;",
+    'function rendu() { return `<tr onclick="${execEtatsOuvrir(l)}">`; }',
+  ].join('\n');
+  const aides = aidesDeTexte(source);
+  verifier('nommage : une aide du même fichier qui écrit un appel rend le geste nommable, et c’est l’appel qu’on retient — non l’aide',
+    aides.size === 1 && aides.has('execEtatsOuvrir')
+    && classer(composeGarde, aides).map((g) => g.nom).join() === 'execOpenActiviteProcessus'
+    && classer(composeGarde, aides)[0].interpole === true
+    && classer(composeGarde, aides)[0].indecidable === undefined
+    && !classer(composeGarde, aides).some((g) => g.nom === 'execEtatsOuvrir')
+    // Sans la carte des aides, rien ne change : l'indirection se lit dans le
+    // fichier, elle ne se devine pas.
+    && seul(composeGarde).indecidable === true,
+    JSON.stringify([[...aides.keys()], classer(composeGarde, aides)]));
+
+  // ── Et l'indirection ne se poursuit pas ──
+  //
+  // Une aide qui appelle une aide n'est plus quelque chose qu'on lit, c'est
+  // quelque chose qu'on exécute. *Une mesure qui se met à exécuter le code
+  // qu'elle mesure a changé de métier.*
+  const deuxCrans = [
+    'const b = (x) => `execCible(\'${x}\')`;',
+    'const a = (x) => `${b(x)}`;',
+  ].join('\n');
+  const aides2 = aidesDeTexte(deuxCrans);
+  verifier('nommage : l’indirection d’une aide ne se poursuit pas — deux crans restent indécidables',
+    aides2.has('b') && !aides2.has('a')
+    && classer('${a(l)}', aides2)[0].indecidable === true,
+    JSON.stringify([[...aides2.keys()], classer('${a(l)}', aides2)]));
+
+  // ── Une aide qui n'écrit pas un appel n'est pas une aide ──
+  verifier('nommage : un gabarit du même fichier qui n’écrit pas un appel ne sert pas à nommer',
+    aidesDeTexte('const etiquette = (x) => `<span>${x}</span>`;').size === 0
+    && aidesDeTexte("const chemin = (x) => `/api/m/execution/${x}`;").size === 0,
+    JSON.stringify([...aidesDeTexte('const etiquette = (x) => `<span>${x}</span>`;').keys()]));
+
+  // ── Et la ligne qui m'a trompé ──
+  //
+  // `exec-etats.js — 28/34 occurrences` taisait six indécidables. Elle les dit,
+  // et c'est éprouvé ici plutôt que relu : *il ne suffit pas qu'une mesure
+  // nomme son unité, il faut qu'elle dise ce qu'elle ne sait pas mesurer.*
+  const ligne = (o) => ligneDeFichier(o);
+  verifier('relevé : la ligne d’un fichier dit ses indécidables, et se tait quand il n’y en a pas',
+    ligne({ exercees: 28, occurrences: 34, indecidables: 6, nomsExerces: 2, noms: 5 })
+      === '28/34 occurrences, dont 6 indécidables, 2/5 noms'
+    && ligne({ exercees: 65, occurrences: 67, indecidables: 1, nomsExerces: 43, noms: 45 })
+      === '65/67 occurrences, dont 1 indécidable, 43/45 noms'
+    && ligne({ exercees: 34, occurrences: 34, indecidables: 0, nomsExerces: 25, noms: 25 })
+      === '34/34 occurrences, 25/25 noms',
+    JSON.stringify([ligne({ exercees: 28, occurrences: 34, indecidables: 6, nomsExerces: 2, noms: 5 }),
+      ligne({ exercees: 34, occurrences: 34, indecidables: 0, nomsExerces: 25, noms: 25 })]));
+
+  // ── Ce qu'un littéral **écrit**, en revanche, se pose ──
+  const defaut = "${ouvrir || 'rampOuvrirParam'}('${p.id}')";
+  verifier('nommage : un littéral seul dans l’interpolation tient sa place, et le texte qui suit complète l’appel',
+    noms(defaut).join() === 'rampOuvrirParam',
+    JSON.stringify(classer(defaut)));
+
+  // ── Et deux littéraux ne se collent pas ──
+  //
+  // `execAexecB` n'existe pas. *Une mesure qui invente un nom est pire qu'une
+  // mesure qui se tait* : le nom inventé compte « non exercé » pour toujours, et
+  // rien ne le rattache à un défaut réel.
+  const deux = "${c ? 'execA' : 'execB'}('${id}')";
+  verifier('nommage : deux littéraux ne se collent pas en un nom qui n’existe pas',
+    seul(deux).indecidable === true
+    && !noms(deux).some((n) => /execAexecB/.test(n)),
+    JSON.stringify(classer(deux)));
+
+  // ── Les deux silences se distinguent ──
+  //
+  // Ils ne se corrigent pas de la même façon : l'un demande de nommer le
+  // gestionnaire, l'autre de le poser sans l'assembler.
+  verifier('nommage : un gestionnaire venu d’ailleurs se dit « sans nom », un gestionnaire assemblé « composé au rendu »',
+    seul('${geste}').raison === 'sans nom'
+    && seul('${geste(a)}').raison === 'composé au rendu'
+    && seul('${geste}').indecidable === true,
+    JSON.stringify([seul('${geste}'), seul('${geste(a)}')]));
+}
+
+// ── 6 ter. L'adresse par laquelle un destinataire revient ──
+//
+// Un courriel d'OASIS ne porte jamais de pièce jointe : il annonce des liens, et
+// le destinataire les suit depuis son compte. **Ces liens sont donc le courriel
+// tout entier**, et une racine fausse ne se voit pas à l'envoi — elle se voit
+// chez le prestataire, qui clique sur `http://localhost:4750`.
+//
+// La règle était écrite **deux fois**, et les deux différaient : `src/email.js`
+// lisait `RENDER_EXTERNAL_URL`, `transmission.js` non. Mesuré le 11 novembre
+// 2026 sur un serveur portant cette seule variable — l'état exact d'un service
+// Render sans domaine propre : le courriel d'ouverture de compte portait la
+// bonne adresse, et le rapport transmis annonçait ses documents sur
+// `localhost`. Dans l'acte même qui engage l'Autorité.
+//
+// Ces contrôles tiennent les deux choses que la correction a établies : la règle
+// elle-même, et le fait qu'il n'y en ait **qu'une**.
+function racinePubliqueDesCourriels() {
+  const email = require('../../src/email');
+  const avant = { app: process.env.APP_URL, render: process.env.RENDER_EXTERNAL_URL };
+  const poser = (app, render) => {
+    if (app === undefined) delete process.env.APP_URL; else process.env.APP_URL = app;
+    if (render === undefined) delete process.env.RENDER_EXTERNAL_URL;
+    else process.env.RENDER_EXTERNAL_URL = render;
+  };
+  try {
+    // 1. Rien de posé : le poste de développement.
+    poser(undefined, undefined);
+    verifier('racine : sans variable, l’adresse est celle du poste de développement',
+      email.racinePublique() === 'http://localhost:4750'
+      && email.lienDeConnexion() === 'http://localhost:4750/login.html',
+      `${email.racinePublique()} · ${email.lienDeConnexion()}`);
+
+    // 2. Le cas qui a produit le défaut : l'hébergeur pose son adresse, et
+    //    personne ne renseigne APP_URL — ce que `.env.example` déclare suffisant.
+    poser(undefined, 'https://oasis-bj.onrender.com');
+    verifier('racine : l’adresse posée par l’hébergeur est lue, et « localhost » ne subsiste pas',
+      email.racinePublique() === 'https://oasis-bj.onrender.com'
+      && !/localhost/.test(email.lienDeConnexion()),
+      `${email.racinePublique()} · ${email.lienDeConnexion()}`);
+
+    // 3. APP_URL passe devant, et son suffixe `/login.html` — c'est ainsi que
+    //    `.env.example` l'écrit — ne se retrouve pas dans un lien de document.
+    poser('https://oasis.exemple.org/login.html', 'https://oasis-bj.onrender.com');
+    verifier('racine : APP_URL passe devant, et son « /login.html » n’entre pas dans la racine',
+      email.racinePublique() === 'https://oasis.exemple.org'
+      && email.lienDeConnexion() === 'https://oasis.exemple.org/login.html',
+      `${email.racinePublique()} · ${email.lienDeConnexion()}`);
+
+    // 4. Une barre oblique finale ne doit pas doubler celle du chemin.
+    poser('https://oasis.exemple.org/', undefined);
+    verifier('racine : une barre oblique finale ne double pas celle du chemin',
+      email.racinePublique() === 'https://oasis.exemple.org',
+      email.racinePublique());
+
+    // 5. **Une seule règle.** Le garde-fou de la source : `transmission.js` ne
+    //    recompose pas l'adresse, il appelle celle-ci. Un contrôle qui ne
+    //    regarderait que les valeurs rendues ici laisserait le second calcul
+    //    revenir sans rien dire — c'est exactement ce qui s'était produit.
+    const source = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'modules',
+      'execution', 'transmission.js'), 'utf8');
+    verifier('racine : la transmission appelle la règle commune, et n’en écrit pas une seconde',
+      /const racineApp = courriel\.racinePublique;/.test(source)
+      && !/process\.env\.(APP_URL|RENDER_EXTERNAL_URL)/.test(source),
+      source.match(/process\.env\.\w+/g)?.join(' · ') || 'aucune lecture d’environnement');
+
+    // 6. Et nul autre fichier du dépôt ne compose cette adresse de son côté.
+    //    Le relevé lit les sources : une troisième règle naîtrait silencieuse.
+    const racine = path.join(__dirname, '..', '..');
+    const parcourir = (dossier, trouves = []) => {
+      for (const e of fs.readdirSync(dossier, { withFileTypes: true })) {
+        const chemin = path.join(dossier, e.name);
+        if (e.isDirectory()) parcourir(chemin, trouves);
+        else if (e.name.endsWith('.js')) {
+          const t = fs.readFileSync(chemin, 'utf8');
+          if (/process\.env\.(APP_URL|RENDER_EXTERNAL_URL)/.test(t)) {
+            trouves.push(path.relative(racine, chemin));
+          }
+        }
+      }
+      return trouves;
+    };
+    const lecteurs = parcourir(path.join(racine, 'src'));
+    verifier('racine : un seul fichier du socle lit APP_URL ou l’adresse de l’hébergeur',
+      lecteurs.length === 1 && lecteurs[0] === path.join('src', 'email.js'),
+      lecteurs.join(' · ') || 'aucun');
+  } finally {
+    poser(avant.app, avant.render);
+  }
+}
+
 // ── 6 bis. La sonde des sauvegardes ──
 //
 // ADR-001 a différé la bascule vers PostgreSQL en écrivant ce que cela coûte :
@@ -905,6 +1141,52 @@ async function courrielsSansSecret() {
 // Les contrôles ci-dessous sont le garde de ces règles. Un nommeur qui se
 // trompe ne fait pas tomber une suite d'écran : il **déplace un dénominateur**,
 // en silence, et c'est le pire des défauts d'un instrument de mesure.
+// ── Le relevé figé dit-il encore ce que le script produit ? ──
+//
+// Les `tests/smoke/gestes-<écran>.json` sont **figés** : ils servent de
+// référence à la couverture déclarée, et personne ne les recalcule à chaque
+// campagne — le relevé demande cinq suites de navigateur et vingt minutes.
+//
+// Rien ne disait donc qu'ils correspondaient encore au script. Toucher au
+// nommeur et oublier de refiger, c'est porter au dépôt un relevé qui décrit une
+// règle qui n'existe plus — et la couverture déclarée s'appuie dessus. Le cas
+// s'est présenté le 13 novembre, et il a fallu le vérifier à la main.
+//
+// Ce qui se compare est la **structure** : fichier, ligne, événement, nom,
+// indécidabilité, raison. L'état d'exercice, lui, vient des journaux du
+// navigateur et n'a rien à faire ici. `relever` est pur — il lit des fichiers
+// et rend une liste —, le contrôle ne coûte donc que des millisecondes.
+function releveFige() {
+  // eslint-disable-next-line global-require
+  const { relever, ECRANS } = require(path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'));
+  const perimes = [];
+  const comptes = [];
+  Object.entries(ECRANS).forEach(([quoi, e]) => {
+    const chemin = path.join(__dirname, `gestes-${quoi}.json`);
+    if (!fs.existsSync(chemin)) return;
+    const fige = JSON.parse(fs.readFileSync(chemin, 'utf8'));
+    if (fige.sansSuite || !Array.isArray(fige.gestes)) return;
+    const sources = typeof e.sources === 'function' ? e.sources() : e.sources;
+    const frais = relever(Array.isArray(sources) ? sources : [sources]);
+    const cle = (g) => [g.fichier, g.ligne, g.evenement, g.nom,
+      g.indecidable === true, g.raison || ''].join('|');
+    const a = frais.map(cle).sort();
+    const b = fige.gestes.map(cle).sort();
+    comptes.push(`${quoi} : ${a.length}`);
+    if (a.length !== b.length) {
+      perimes.push(`${quoi} : ${b.length} occurrences figées, ${a.length} au relevé frais`);
+      return;
+    }
+    const ecart = a.findIndex((x, i) => x !== b[i]);
+    if (ecart >= 0) perimes.push(`${quoi} : figé « ${b[ecart]} », frais « ${a[ecart]} »`);
+  });
+  verifier('chaque relevé figé décrit encore ce que le nommeur produit aujourd’hui',
+    perimes.length === 0,
+    perimes.length
+      ? `${perimes.join(' · ')} — refiger avec \`node scripts/relever-gestes.js <écran>\``
+      : comptes.join(', '));
+}
+
 function nommeurDeGestes() {
   // eslint-disable-next-line global-require
   // `nomDuGeste` est l'entrée : c'est elle que les deux côtés appellent, et
@@ -937,6 +1219,12 @@ function nommeurDeGestes() {
   // geste : les interpolations se normalisent avant de nommer.
   cas('une interpolation ne multiplie pas les gestes',
     "planUpdateActivity('${actId}')", 'planUpdateActivity');
+  // Une déclaration en tête n'est pas le geste : on nomme ce qui suit, et
+  // l'interpolation qu'elle porte ne fabrique plus deux noms (n° 5.f.99).
+  cas('une déclaration en tête se saute, et l’on nomme ce qui suit',
+    "const r=document.getElementById('${id}');r.style.display='';this.classList.toggle('x');", 'r.style.display');
+  cas('une déclaration seule se nomme par l’appel qui l’initialise',
+    "const x=ouvrir('a')", 'ouvrir');
 
   // ── La symétrie elle-même, gardée par la forme ──
   //
@@ -952,6 +1240,26 @@ function nommeurDeGestes() {
     !/\.map\(nomDuGestionnaire\)/.test(source)
     && /exerces\.enLigne\.map\(nomDuGeste\)/.test(source),
     'le côté du mouchard doit appeler nomDuGeste, comme le côté de la source');
+
+  // ── Une flèche posée en propriété : le même texte, deux écritures ──
+  //
+  // La source l'écrit à sa façon ; le navigateur rend `String(fn)`, réimprimé
+  // par esbuild pour un écran TypeScript. Les deux doivent donner la même clé,
+  // sans quoi le geste pressé compterait pour non exercé (n° 5.f.98).
+  const { formeDeFleche: fleche } = require('../../scripts/relever-gestes');
+  const ecrite = "(e) => { if (e.key === 'Enter') ok(); }";
+  const servie = '(e) => {\n    if (e.key === "Enter") ok();\n  }';
+  verifier('nommeur : une flèche écrite et la même servie par esbuild ont une seule clé',
+    fleche(ecrite, 'ts') !== null && fleche(ecrite, 'ts') === fleche(servie),
+    `${fleche(ecrite, 'ts')} · ${fleche(servie)}`);
+  verifier('nommeur : un commentaire dans le corps ne change pas la clé',
+    fleche('() => /* x */ go()') === fleche('() => go()'), fleche('() => /* x */ go()'));
+  verifier('nommeur : deux flèches qui ne diffèrent que par ce qu’elles appellent restent deux',
+    fleche('() => ouvrir(a)') !== fleche('() => fermer(a)'), fleche('() => ouvrir(a)'));
+  verifier('nommeur : les deux côtés mettent une flèche en forme par la même fonction',
+    /formeDeFleche\(fleche, /.test(source)
+    && /formeDeFleche\(String\(v\.source/.test(source),
+    'la source et le mouchard doivent passer par formeDeFleche');
 }
 
 function sondeDesSauvegardes() {
@@ -1273,6 +1581,462 @@ function barreDeRamp() {
       { disponible: false, courante: 'Togo', locale: 'Bénin' }) === 'Togo');
 }
 
+// ── Le barème de risque : la conversion d'une instance déjà installée ──
+//
+// `indices` portait un tableau de six paires `{cle, valeur}` que personne ne
+// lisait, quand les six lectures du calcul interrogent un objet
+// `{conf1…expo2}`. Adopter le modèle de l'écran (n° 5.f.69) laisse donc, sur
+// toute instance installée avant ce jour, une clé au mauvais format.
+//
+// `seedSeuils` la convertit au démarrage. Deux règles y tiennent, et aucune des
+// deux ne se voit par HTTP : elle convertit ce qui doit l'être, et elle ne
+// touche **pas** un barème déjà réglé — un semis qui écraserait les seuils de
+// l'AAC à chaque redémarrage refondrait le barème de la surveillance en
+// silence, ce qui est exactement le défaut qu'on vient de corriger.
+//
+// La suite écrit dans la vraie collection `profil_risque` du bac, que les
+// suites de PR lisent : elle rend donc son état d'avant, quoi qu'il advienne.
+async function baremeDeRisque() {
+  const db = require('../../src/modules/profil_risque/store');
+  const avant = await db.load();
+  try {
+    // 1. L'ancien modèle : le tableau de paires, converti.
+    await db.save({ ...avant, indices: [{ cle: 'poids_conformite', valeur: 0.4 }] });
+    await db.seedSeuils();
+    const converti = (await db.load()).indices;
+    verifier('barème : le tableau de paires de l’ancien modèle devient l’objet à six seuils',
+      !!converti && !Array.isArray(converti)
+      && db.SEUILS.every((c) => converti[c] === db.SEUILS_DEFAUT[c]),
+      JSON.stringify(converti));
+
+    // 2. Un barème réglé par l'AAC : intouché. C'est la règle qui compte.
+    const regle = { ...db.SEUILS_DEFAUT, conf1: 0.9, conf2: 0.35 };
+    await db.save({ ...(await db.load()), indices: regle });
+    await db.seedSeuils();
+    const apres = (await db.load()).indices;
+    verifier('barème : un barème déjà réglé n’est pas réécrit par le semis',
+      apres.conf1 === 0.9 && apres.conf2 === 0.35,
+      JSON.stringify(apres));
+
+    // 3. Un barème incomplet — un seuil manquant — est refait en entier : mieux
+    // vaut un barème entier aux défauts qu'un `undefined` au milieu d'un calcul
+    // de niveau de risque.
+    const ampute = { ...db.SEUILS_DEFAUT };
+    delete ampute.expo2;
+    await db.save({ ...(await db.load()), indices: ampute });
+    await db.seedSeuils();
+    const refait = (await db.load()).indices;
+    verifier('barème : un barème incomplet est refait, jamais laissé troué',
+      db.SEUILS.every((c) => typeof refait[c] === 'number'),
+      JSON.stringify(refait));
+
+    // 4. Et le domaine complète ce que le magasin ne dit pas : la lecture rend
+    // six nombres même si la clé est absente.
+    await db.save({ ...(await db.load()), indices: undefined });
+    const D = require('../../src/modules/profil_risque/domaine');
+    const lu = await D.sharedIndices();
+    verifier('barème : la lecture du domaine rend six nombres même sans clé en magasin',
+      db.SEUILS.every((c) => lu[c] === db.SEUILS_DEFAUT[c]),
+      JSON.stringify(lu));
+  } finally {
+    await db.save(avant);
+  }
+}
+
+// ── Les téléchargements que le navigateur suit lui-même ──
+//
+// Trois règles vivent dans `src/telechargement.js`, et aucune des trois ne se
+// voit depuis une ronde de navigateur : le nom d'une pièce dans l'en-tête, la
+// page qu'un refus affiche, et le dépôt des pièces préparées. La première parce
+// qu'un navigateur normalise ce qu'il enregistre ; la deuxième parce qu'il
+// faudrait un compte sans privilège ; la troisième parce qu'elle vit en mémoire
+// du serveur.
+// ══════════════════════════════════════════════════════════════════════════
+//  Le verrou d'une campagne : elle ne double pas une autre
+// ══════════════════════════════════════════════════════════════════════════
+//
+// Chaque suite a son port depuis le 10 novembre 2026, de sorte que deux suites
+// différentes tournent ensemble. Deux **campagnes** ne peuvent pas : elles
+// jouent les mêmes seize ports, dans le même ordre. Lancée par-dessus une
+// campagne en cours, la seconde rougissait sur « le port 48xx répond déjà : un
+// autre serveur le tient » — un message qui décrit un **orphelin d'un passage
+// interrompu** là où il n'y a que le passage en cours. Fait deux jours de
+// suite, et cherché dans le code avant d'être trouvé dans mon impatience.
+//
+// Le verrou reprend la leçon de `src/verrou.js` : *un verrou qui bloque après un
+// arrêt brutal est pire que pas de verrou du tout.* Il demande au système si le
+// tenant vit encore, et reprend la place s'il est mort.
+//
+// Il s'éprouve sur un chemin à lui : celui de la campagne est tenu par la
+// campagne qui joue ce contrôle.
+function verrouDeCampagne() {
+  const V = require('./verrou-campagne');
+  const chemin = path.join(BAC, 'essai-verrou-campagne.json');
+  const sans = { chemin, poserLesSignaux: false };
+  fs.rmSync(chemin, { force: true });
+
+  // ── 1. La place libre se prend, et rien n'est « repris » ──
+  const premier = V.prendre(sans);
+  verifier('campagne : le verrou se prend quand la place est libre, et ne reprend rien',
+    !premier.refus && premier.repris === '' && fs.existsSync(chemin),
+    JSON.stringify({ refus: premier.refus || null, repris: premier.repris }));
+
+  // ── 2. Un tenant vivant la refuse, et le refus nomme le remède ──
+  const refuse = V.prendre({ ...sans, pid: 999999 });
+  verifier('campagne : un tenant vivant refuse la seconde, en nommant son numéro et le remède',
+    !!refuse.refus
+    && refuse.refus.includes(String(process.pid))
+    && /attendre sa fin/.test(refuse.refus) && !/suite seule/.test(refuse.refus)
+    && /OASIS_SMOKE_VERROU=0/.test(refuse.refus),
+    (refuse.refus || '').slice(0, 120));
+
+  // ── 3. Un tenant mort ne bloque pas, et la reprise se dit ──
+  //
+  // C'est le cas qui compte : un verrou qui survit à un Ctrl-C rendrait la
+  // campagne inlançable, et l'on prendrait l'habitude de l'effacer à la main —
+  // après quoi il ne garderait plus rien.
+  fs.writeFileSync(chemin, JSON.stringify({ pid: 999999, machine: os.hostname(), depuis: 'hier' }));
+  const repris = V.prendre(sans);
+  verifier('campagne : un verrou laissé par une campagne morte est repris, et la reprise est annoncée',
+    !repris.refus && /ne vit plus/.test(repris.repris || ''),
+    JSON.stringify({ refus: repris.refus || null, repris: repris.repris }));
+
+  // ── 4. On ne relâche que le sien ──
+  fs.writeFileSync(chemin, JSON.stringify({ pid: 424242, machine: os.hostname(), depuis: 'hier' }));
+  repris.relacher();
+  verifier('campagne : une campagne qui s’arrête n’emporte pas le verrou d’une autre, repris entre-temps',
+    fs.existsSync(chemin) === true);
+
+  // ── 5. Et il se lève en connaissance de cause ──
+  const avant = process.env.OASIS_SMOKE_VERROU;
+  process.env.OASIS_SMOKE_VERROU = '0';
+  const leve = V.prendre(sans);
+  if (avant === undefined) delete process.env.OASIS_SMOKE_VERROU;
+  else process.env.OASIS_SMOKE_VERROU = avant;
+  verifier('campagne : OASIS_SMOKE_VERROU=0 le lève, et ne touche pas au fichier en place',
+    !leve.refus && leve.leve === true, JSON.stringify({ leve: leve.leve }));
+
+  // ── 6. Une suite seule consulte, sans prendre (n° 5.f.91) ──
+  //
+  // Le tenant vivant est le parent de ce processus — `npm`, qui vit tant que
+  // ce contrôle tourne. Un mort ne refuse rien ; et consulter n'écrit jamais.
+  fs.writeFileSync(chemin, JSON.stringify({ pid: process.ppid, machine: os.hostname(), depuis: 'maintenant' }));
+  const empreinteAvant = fs.readFileSync(chemin, 'utf-8');
+  const vue = V.consulter({ chemin });
+  const intacte = fs.readFileSync(chemin, 'utf-8') === empreinteAvant;
+  fs.writeFileSync(chemin, JSON.stringify({ pid: 999999, machine: os.hostname(), depuis: 'hier' }));
+  const morte = V.consulter({ chemin });
+  const restee = JSON.parse(fs.readFileSync(chemin, 'utf-8')).pid === 999999;
+  fs.rmSync(chemin, { force: true });
+  const libre = V.consulter({ chemin });
+  verifier('campagne : une suite seule refuse de partir sur une campagne vivante, et ne touche jamais au verrou',
+    !!vue.refus && vue.refus.includes(String(process.ppid)) && /tous les ports/.test(vue.refus)
+    && intacte && !morte.refus && restee && !libre.refus && !fs.existsSync(chemin),
+    JSON.stringify({ vue: (vue.refus || '').slice(0, 60), intacte, morte: morte.refus || null,
+      restee, libre: libre.refus || null }));
+  fs.rmSync(chemin, { force: true });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  La table des suites : un port par suite, et pas deux
+// ══════════════════════════════════════════════════════════════════════════
+//
+// Sept suites tenaient le port 4797 — `ramp` en HTTP et les six suites de
+// navigateur. La campagne les joue l'une après l'autre, de sorte que cela
+// marchait ; mais **deux ne pouvaient pas tourner ensemble**, et rien ne le
+// disait. On ne pouvait donc ni rejouer une suite seule pendant une campagne,
+// ni lancer une contre-épreuve sans attendre la fin de l'essai précédent.
+//
+// Chacune a désormais son port. Ce contrôle est ce qui l'empêche de régresser :
+// *un partage de port est une dépendance invisible entre deux suites, et une
+// suite est indépendante ou elle ne l'est pas.*
+//
+// Il lit `suites.js`, qui ne porte que des chaînes — nom, port, fichier. La
+// table était dans le lanceur, construite avec des `require` : la lire chargeait
+// les vingt suites, puppeteer compris, et aucun contrôle ne pouvait l'éprouver.
+// ── Un refus déclaré, et sa trace en console qui arrive la première ──
+//
+// Le 15 novembre 2026, `surv-parametres` a rougi une fois en campagne sur
+// « Failed to load resource : … 400 » — le 400 qu'elle provoque exprès sur
+// l'import d'un classeur sans en-tête. La réponse était déclarée ; la ligne de
+// console, arrivée **avant** que Puppeteer ne rende la réponse, ne l'était pas
+// encore. Ces contrôles jouent les deux ordres, sans navigateur : un retour à la
+// dispense par code seul fait rougir le premier.
+function refusEtConsole() {
+  const { refusDeclares } = require('./harness');
+  const DECL = [{ code: 400, methode: 'POST', chemin: /\/checklists\/[^/]+\/import-xlsx$/ }];
+  const TRACE = 'Failed to load resource: the server responded with a status of 400 (Bad Request)';
+  const URL_REFUS = 'http://localhost:4807/api/m/execution/checklists/CL-1/import-xlsx';
+
+  // L'ordre de la campagne rouge : la console d'abord, la réponse ensuite.
+  const a = refusDeclares(DECL);
+  const consoleDabord = a.console(TRACE, URL_REFUS);
+  const reponseEnsuite = a.reponse(400, 'POST', '/api/m/execution/checklists/CL-1/import-xlsx');
+  verifier('refus déclaré : sa trace en console est dispensée même si elle précède la réponse',
+    consoleDabord === true && reponseEnsuite === true,
+    JSON.stringify({ consoleDabord, reponseEnsuite }));
+
+  // L'ordre habituel reste dispensé.
+  const b = refusDeclares(DECL);
+  const r1 = b.reponse(400, 'POST', '/api/m/execution/checklists/CL-1/import-xlsx');
+  const c1 = b.console(TRACE, URL_REFUS);
+  verifier('refus déclaré : l’ordre habituel, la réponse puis la console, reste dispensé',
+    r1 === true && c1 === true, JSON.stringify({ r1, c1 }));
+
+  // La dispense n'est pas plus large que la déclaration : un 400 ailleurs,
+  // même après le refus déclaré, garde sa trace — l'ancienne règle le taisait.
+  const autre = b.console(TRACE, 'http://localhost:4807/api/m/execution/exec-checklist-items');
+  const autreCode = b.console(TRACE.replace('400 (Bad Request)', '409 (Conflict)'), URL_REFUS);
+  const autreMethode = b.reponse(400, 'PUT', '/api/m/execution/checklists/CL-1/import-xlsx');
+  verifier('refus déclaré : un autre chemin, un autre code ou une autre méthode restent des incidents',
+    autre === false && autreCode === false && autreMethode === false,
+    JSON.stringify({ autre, autreCode, autreMethode }));
+
+  // Sans adresse, la seule règle disponible : le code d'une réponse déjà vue.
+  const c = refusDeclares(DECL);
+  const sansAdresseAvant = c.console(TRACE, '');
+  c.reponse(400, 'POST', '/api/m/execution/checklists/CL-1/import-xlsx');
+  const sansAdresseApres = c.console(TRACE, '');
+  verifier('refus déclaré : sans adresse en console, on retombe sur le code d’une réponse déjà vue',
+    sansAdresseAvant === false && sansAdresseApres === true && c.console('autre erreur', '') === false,
+    JSON.stringify({ sansAdresseAvant, sansAdresseApres }));
+}
+
+function tableDesSuites() {
+  const { SUITES, choisir } = require('./suites');
+
+  verifier('suites : la table en porte trente-trois, et chacune dit son nom, son port et son fichier',
+    SUITES.length === 33
+    && SUITES.every((s) => typeof s.nom === 'string' && s.nom.length > 2
+      && Number.isInteger(s.port) && typeof s.fichier === 'string'),
+    `${SUITES.length} suites`);
+
+  // ── Aucun port partagé ──
+  const avecPort = SUITES.filter((s) => s.port !== 0);
+  const parPort = new Map();
+  avecPort.forEach((s) => {
+    if (!parPort.has(s.port)) parPort.set(s.port, []);
+    parPort.get(s.port).push(s.nom);
+  });
+  const partages = [...parPort.entries()].filter(([, noms]) => noms.length > 1)
+    .map(([port, noms]) => `${port} : ${noms.join(', ')}`);
+  verifier('suites : aucune suite ne partage son port avec une autre',
+    partages.length === 0, partages.join(' · '));
+
+  // ── Les noms sont uniques, et ceux que le relevé lance sont sans équivoque ──
+  //
+  // Le filtre de `npm run smoke -- <mot>` retient les suites dont le nom
+  // **contient** le mot. Qu'un nom en contienne un autre est donc voulu :
+  // `-- ramp` joue les deux suites du module, HTTP et navigateur, et c'est
+  // commode.
+  //
+  // ── Ce que j'ai cru garder, et ce qu'il faut garder ──
+  //
+  // Premier jet : « aucun nom n'est contenu dans un autre ». Il a rougi sur
+  // cinq paires **voulues** — `ramp` dans `ramp-navigateur`, et quatre comme
+  // elle. L'assertion était écrite par analogie avec le commentaire du lanceur,
+  // non depuis la règle.
+  //
+  // La règle est plus étroite : `scripts/relever-gestes.js` lance la suite d'un
+  // écran **par son nom**, et attend d'en jouer une seule. Ce sont donc les
+  // noms qu'il nomme qui doivent être sans équivoque — chacun ne doit
+  // sélectionner que lui-même. *Un contrôle écrit par analogie éprouve
+  // l'analogie, non la règle.*
+  //
+  // ── Et le même contrôle avait failli se tromper une seconde fois ──
+  //
+  // Il décidait de l'équivoque par **sa propre** règle — « le nom est contenu
+  // dans un seul » —, quand le lanceur a la sienne. Le découpage de SURV a
+  // séparé les deux : `surv` est contenu dans `surv-pieces`, et le lanceur
+  // donne pourtant la priorité au nom exact, de sorte que `-- surv` ne désigne
+  // qu'une suite. Le contrôle aurait rougi sur un lanceur juste.
+  //
+  // Il appelle donc `choisir`, **la** fonction du lanceur. Une règle, un
+  // endroit.
+  const noms = SUITES.map((s) => s.nom);
+  verifier('suites : les noms sont uniques',
+    new Set(noms).size === noms.length, noms.join(','));
+  // Les noms que le relevé emploie, lus dans l'outil plutôt que recopiés : une
+  // liste recopiée se tairait le jour où l'outil en nommerait un autre. Lus
+  // dans sa **table**, et non par un motif sur sa source : `suite` accepte
+  // désormais une liste, et une expression régulière cherchant `suite: '…'`
+  // n'aurait plus rien trouvé — le dénominateur se serait tu.
+  // eslint-disable-next-line global-require
+  const { ECRANS } = require(path.join(__dirname, '..', '..', 'scripts', 'relever-gestes.js'));
+  const lances = [...new Set(Object.values(ECRANS)
+    .flatMap((e) => (Array.isArray(e.suite) ? e.suite : [e.suite]))
+    .filter(Boolean))];
+  verifier('suites : tous les noms que le relevé lance sont dans la table',
+    lances.length >= 7 && lances.every((n) => noms.includes(n)),
+    `${lances.length} : ${lances.join(', ')}`);
+  const equivoques = lances.filter((n) => choisir(SUITES, n).length !== 1);
+  verifier('suites : chaque nom que le relevé lance ne sélectionne que sa propre suite',
+    equivoques.length === 0,
+    equivoques.map((n) => `${n} → ${choisir(SUITES, n).map((s) => s.nom).join('+')}`).join(' · '));
+  // ── Et la règle du lanceur elle-même : l'exact l'emporte ──
+  //
+  // Sans elle, `-- surv` lancerait les deux suites de SURV et le relevé des
+  // gestes écraserait le journal de la première. Avec elle, une famille se
+  // lance toujours par un fragment commun.
+  verifier('suites : un nom exact désigne sa seule suite, un fragment désigne la famille',
+    choisir(SUITES, 'surv').length === 1
+    && choisir(SUITES, 'surv')[0].nom === 'surv'
+    && choisir(SUITES, 'surv-pieces').length === 1
+    && choisir(SUITES, 'navigateur').length >= 5
+    && choisir(SUITES, '').length === SUITES.length,
+    `surv → ${choisir(SUITES, 'surv').map((s) => s.nom).join('+')}`
+    + ` · navigateur → ${choisir(SUITES, 'navigateur').length}`);
+
+  // ── Les ports restent hors de ce qui est déjà pris ──
+  //
+  // 4750 est le serveur de développement, 4850 et au-delà la passerelle de
+  // `scripts/passerelle.js` — y empiéter ferait rougir une suite pour une
+  // raison qui n'est pas la sienne.
+  const horsPlage = avecPort.filter((s) => s.port < 4790 || s.port > 4849);
+  verifier('suites : les ports tiennent dans 4790–4849 — ni le serveur de développement, ni la passerelle',
+    horsPlage.length === 0, horsPlage.map((s) => `${s.nom}:${s.port}`).join(', '));
+
+  // ── Chaque fichier déclaré existe ──
+  const absents = SUITES.filter((s) => !fs.existsSync(
+    path.join(__dirname, `${s.fichier.replace(/^\.\//, '')}.js`)));
+  verifier('suites : chaque fichier déclaré existe',
+    absents.length === 0, absents.map((s) => s.fichier).join(', '));
+
+  // ── Et aucun fichier de suite n'est absent de la table ──
+  //
+  // Une suite écrite et jamais inscrite ne tourne nulle part. Le relevé des
+  // gestes a connu l'inverse — un écran ajouté sans suite —, et c'est la même
+  // faute dans l'autre sens.
+  const declares = new Set(SUITES.map((s) => `${s.fichier.replace(/^\.\//, '')}.js`));
+  const surLeDisque = fs.readdirSync(__dirname).filter((f) => f.endsWith('.smoke.js'));
+  const orphelins = surLeDisque.filter((f) => !declares.has(f));
+  verifier('suites : aucun fichier de suite n’est absent de la table',
+    orphelins.length === 0, orphelins.join(', '));
+}
+
+function telechargements() {
+  const T = require('../../src/telechargement');
+
+  // ── 1. Le nom, dans les deux formes de la RFC 6266 ──
+  //
+  // Un nom hors de l'ASCII ne tient pas dans un `filename="…"`. Le dépôt
+  // portait une **troisième** forme, hybride et fausse —
+  // `filename="${encodeURIComponent(nom)}"` —, qui faisait enregistrer
+  // « Rapport%20d%27audit » au lieu de « Rapport d'audit ».
+  const accentue = T.dispositionDe('Rapport d’audit — été 2026.pdf');
+  const encode = accentue.split("UTF-8''")[1];
+  verifier('pièce : le nom accentué se rend dans les deux formes, et la forme encodée est réversible',
+    /^attachment; filename="[\x20-\x7e]+"; filename\*=UTF-8''/.test(accentue)
+    && decodeURIComponent(encode) === 'Rapport d’audit — été 2026.pdf'
+    // Aucun caractère hors ASCII dans le repli : c'est tout son objet.
+    && !/[^\x20-\x7e]/.test(accentue.split('"')[1]),
+    accentue);
+
+  // L'apostrophe sépare les champs de `filename*` (`UTF-8''valeur`) : laissée
+  // telle quelle par `encodeURIComponent`, elle y est pourtant interdite — et un
+  // nom de fichier français en porte souvent une.
+  verifier('pièce : l’apostrophe et les caractères que la RFC 5987 interdit sont encodés',
+    !/UTF-8''[^;]*['()*!~]/.test(T.dispositionDe("Rapport d'audit (2026)~!.pdf")),
+    T.dispositionDe("Rapport d'audit (2026)~!.pdf"));
+
+  // Un guillemet refermerait le repli ; un saut de ligne ouvrirait un second
+  // en-tête. Les deux sortent.
+  const hostile = T.dispositionDe('a"b\r\nSet-Cookie: x=1');
+  verifier('pièce : un guillemet et un saut de ligne ne sortent pas de l’en-tête',
+    !/["\r\n]/.test(hostile.split('filename="')[1].split('";')[0])
+    && !/[\r\n]/.test(hostile),
+    hostile);
+
+  verifier('pièce : un nom vide retombe sur « document », et `inline` se dit',
+    /^attachment; filename="document"/.test(T.dispositionDe(''))
+    && /^inline; /.test(T.dispositionDe('a.pdf', { inline: true })),
+    `${T.dispositionDe('')} | ${T.dispositionDe('a.pdf', { inline: true })}`);
+
+  // ── 2. La page qu'un refus affiche ──
+  //
+  // Quand le navigateur suit l'ancre, il **affiche** la réponse : un
+  // `{"error":"privilege_insuffisant"}` dans un onglet nu n'est pas une réponse
+  // à un agent qui attendait un fichier. Le discriminant est l'en-tête du socle,
+  // qu'un appel d'API pose toujours et qu'une navigation ne porte jamais.
+  const fausseReq = (entetes) => ({ entetes, get(k) { return this.entetes[k]; } });
+  const fausseRes = (statut) => ({
+    statusCode: statut, entetes: {}, corps: null,
+    setHeader(k, v) { this.entetes[k] = v; },
+    send(b) { this.corps = b; return this; },
+    json(b) { this.corps = b; return this; },
+  });
+  const refus = (statut, corps, entetes = {}) => {
+    const req = fausseReq(entetes);
+    const res = fausseRes(statut);
+    T.pageDeRefus(req, res, () => {});
+    res.json(corps);
+    return res;
+  };
+
+  const vueNavigation = refus(403, { error: 'privilege_insuffisant' });
+  verifier('refus : une navigation reçoit une page lisible, qui dit le cas et garde le code brut',
+    /text\/html/.test(vueNavigation.entetes['Content-Type'] || '')
+    && /<!doctype html>/i.test(vueNavigation.corps)
+    && /droit de télécharger/.test(vueNavigation.corps)
+    && /403 privilege_insuffisant/.test(vueNavigation.corps),
+    String(vueNavigation.corps).slice(0, 160));
+
+  const vueApi = refus(403, { error: 'privilege_insuffisant' }, { 'X-OASIS-Request': '1' });
+  verifier('refus : un appel de l’application garde son JSON, que l’écran traduit déjà',
+    typeof vueApi.corps === 'object' && vueApi.corps.error === 'privilege_insuffisant'
+    && !vueApi.entetes['Content-Type'],
+    JSON.stringify(vueApi.corps));
+
+  // Une réponse de succès ne doit pas être touchée : le middleware est posé sur
+  // des routes qui servent **aussi** du JSON de succès.
+  const succes = refus(200, { ok: true });
+  verifier('refus : une réponse de succès n’est pas mise en page',
+    typeof succes.corps === 'object' && succes.corps.ok === true,
+    JSON.stringify(succes.corps));
+
+  // Les cinq phrases tiennent au **statut**, non au code du refus : les codes
+  // normalisés ont leurs phrases dans les trois langues du côté du socle, et
+  // recopier cette table ici en ferait une seconde, qui divergerait.
+  const phrases = [401, 403, 404, 413, 500, 418]
+    .map((s) => String(refus(s, { error: 'x' }).corps).match(/<p>([^<]*)<\/p>/)[1]);
+  verifier('refus : chaque statut a sa phrase, le serveur a la sienne, et un statut inattendu ne reste pas muet',
+    new Set(phrases.slice(0, 5)).size === 5 && phrases.every((p) => p.length > 20)
+    && /session a expiré/.test(phrases[0]) && /serveur n’a pas pu/.test(phrases[4]),
+    phrases.join(' | ').slice(0, 220));
+
+  // ── 3. Le dépôt des pièces préparées ──
+  //
+  // Un POST ne peut pas être une navigation : le garde d'origine (SEC-06)
+  // refuse une écriture sans `X-OASIS-Request`, en-tête qu'un formulaire de
+  // navigation ne peut pas poser. Le POST dépose donc, et la page navigue.
+  const jeton = T.deposer({
+    contenu: Buffer.from('classeur'), nom: 'a.xlsx', type: 'app/x', utilisateur: 'moi@anac.bj',
+  });
+  const autre = fausseRes(200);
+  verifier('pièce préparée : un jeton ne sert pas à un autre compte',
+    T.servir(autre, jeton, 'toi@anac.bj') === false && autre.corps === null);
+
+  const mienne = fausseRes(200);
+  verifier('pièce préparée : elle se sert au compte qui l’a déposée, avec son nom',
+    T.servir(mienne, jeton, 'moi@anac.bj') === true
+    && String(mienne.corps) === 'classeur'
+    && /filename="a\.xlsx"/.test(mienne.entetes['Content-Disposition'] || ''),
+    JSON.stringify(mienne.entetes));
+
+  verifier('pièce préparée : elle ne se sert qu’une fois, et un jeton inconnu ne sert rien',
+    T.servir(fausseRes(200), jeton, 'moi@anac.bj') === false
+    && T.servir(fausseRes(200), 'jeton-qui-n-existe-pas', 'moi@anac.bj') === false);
+
+  // Un jeton de seize octets, tiré au hasard : deux dépôts ne se rencontrent pas.
+  const jetons = new Set();
+  for (let i = 0; i < 50; i += 1) {
+    jetons.add(T.deposer({ contenu: Buffer.alloc(1), nom: 'x', type: 'x', utilisateur: 'u' }));
+  }
+  verifier('pièce préparée : les jetons ne se répètent pas et ne se devinent pas',
+    jetons.size === 50 && [...jetons].every((j) => /^[0-9a-f]{32}$/.test(j)),
+    `${jetons.size} jetons distincts`);
+}
+
 module.exports = async function unitairesSmoke() {
   console.log('\n── Unitaires : la logique pure ──');
   try {
@@ -1290,6 +2054,9 @@ module.exports = async function unitairesSmoke() {
     bornes();
     traces();
     await courrielsSansSecret();
+    racinePubliqueDesCourriels();
+    nommageDesGestes();
+    releveFige();
     verrouDuRepertoire();
     await vecteursDeMigration();
     conservation();
@@ -1302,6 +2069,11 @@ module.exports = async function unitairesSmoke() {
     await facadeDuMagasin();
     sondeDesSauvegardes();
     nommeurDeGestes();
+    await baremeDeRisque();
+    telechargements();
+    refusEtConsole();
+    tableDesSuites();
+    verrouDeCampagne();
   } finally {
     // Ce que les contrôles ont écrit s'efface **dans le bac, et nulle part
     // ailleurs**. Ce nettoyage balayait aussi le vrai `data/` — façon de vivre

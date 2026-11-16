@@ -9,13 +9,19 @@
 // publication, pas de calcul. Dès le chargement du socle, avant tout rendu, la
 // page part dans la langue de l'agent sans attendre qu'il actionne la bascule.
 //
-// Il ne **déclare** rien : les neuf signatures vivent dans `../commun`.
+// Il ne **déclare** rien : les dix signatures vivent dans `../commun`.
+//
+// Dix depuis le 12 novembre 2026 : `oasisTelecharger` est venu d'`oasis-utils`,
+// que SURV ne charge pas — ses cinq appels levaient « oasisTelecharger is not
+// defined », et aucun de ses téléchargements ne partait. Il vit ici, que les
+// six écrans chargent.
 import {
   appliquerTheme, champRequis, charger, esc, json, langue, messageErreur,
-  poserLangue, saisieDifferee,
+  poserLangue, saisieDifferee, telecharger,
 } from '../commun';
 
 
+window.oasisTelecharger = telecharger;
 window.oasisCharger = charger;
 window.oasisLangue = langue;
 window.oasisPoserLangue = poserLangue;

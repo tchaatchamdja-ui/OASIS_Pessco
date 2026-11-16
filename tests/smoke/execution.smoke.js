@@ -116,6 +116,50 @@ module.exports = async function executionSmoke(port) {
       verifier('clôture refusée avant transmission du rapport',
         (await PUT(`${M}/dossiers/${dossierId}/close`)).statut === 400);
 
+      // ── Et la garde ci-dessus ne se contourne pas par le PUT générique ──
+      //
+      // `PUT /dossiers/:id` sert l'enregistrement du contenu — réalisation,
+      // rédaction, annexes. Il recopiait tout ce qu'on lui donnait, cycle de vie
+      // compris : mesuré le 8 novembre 2026, `{ statut: 'cloture' }` rendait 200
+      // sur le dossier que `/close` venait de refuser à la ligne précédente.
+      // *Toutes les gardes de transition étaient facultatives.*
+      //
+      // Et clôturer n'est pas une formalité : `/close` rend du même geste les
+      // constatations **opposables** à l'organisme. Clôturer par le PUT
+      // générique sautait cette moitié, et laissait des constatations
+      // inopposables pour toujours.
+      //
+      // Les trois contrôles se tiennent ensemble : le refus, le magasin qui n'a
+      // pas bougé, et le contenu qui passe encore. Sans le troisième, on aurait
+      // pu fermer la route entière et croire l'avoir gardée.
+      {
+        const refus = await PUT(`${M}/dossiers/${dossierId}`, { statut: 'cloture', current_step: 'cloture' });
+        const apres = (await srv.appel(`${M}/dossiers/${dossierId}`)).corps || {};
+        verifier('le cycle de vie d’un dossier ne s’écrit pas par le PUT générique',
+          refus.statut === 400 && (refus.corps || {}).error === 'champs_reserves'
+          && (((refus.corps || {}).champs) || []).includes('statut')
+          && apres.statut !== 'cloture',
+          JSON.stringify({ statut: refus.statut, corps: refus.corps, enBase: apres.statut }));
+
+        const refusArchive = await PUT(`${M}/dossiers/${dossierId}`, {
+          archive: 1, archive_par: 'personne', date_archivage: '1970-01-01',
+        });
+        const apresArchive = (await srv.appel(`${M}/dossiers/${dossierId}`)).corps || {};
+        verifier('ni le drapeau d’archivage, ni son auteur, ni sa date',
+          refusArchive.statut === 400
+          && Number(apresArchive.archive || 0) !== 1
+          && !apresArchive.archive_par,
+          JSON.stringify({ statut: refusArchive.statut,
+            champs: (refusArchive.corps || {}).champs,
+            archive: apresArchive.archive, par: apresArchive.archive_par }));
+
+        const contenu = await PUT(`${M}/dossiers/${dossierId}`, { conclusion: 'Conclusion de la ronde.' });
+        const apresContenu = (await srv.appel(`${M}/dossiers/${dossierId}`)).corps || {};
+        verifier('et le contenu du dossier s’écrit toujours par cette route',
+          contenu.statut === 200 && apresContenu.conclusion === 'Conclusion de la ronde.',
+          JSON.stringify({ statut: contenu.statut, conclusion: apresContenu.conclusion }));
+      }
+
       const renvoi = await PUT(`${M}/dossiers/${dossierId}/return`, { observations: 'Préciser la synthèse.' });
       verifier('renvoi pour correction', renvoi.statut === 200);
       const v2 = await PUT(`${M}/dossiers/${dossierId}/submit`);
@@ -133,6 +177,63 @@ module.exports = async function executionSmoke(port) {
       // ramène au brouillon, le rapport qui la portait n'étant plus validé.
       verifier('constatation opposable après validation',
         (await srv.appel(`${M}/constatations/${fnc.corps.id}`)).corps.statut === 'ouvert');
+
+      // ── Un champ écarté doit être dit, et non retiré en silence ──
+      //
+      // Huit champs engagent l'organisme dès la notification de la constatation
+      // et ne se changent plus que par l'ajustement — motivé, confirmé par mot
+      // de passe, tracé. Cette route les **écarte**, à bon droit ; elle le
+      // faisait **sans un mot**, et répondait « ok ».
+      //
+      // L'écran, lui, offre le geste : la table du dossier remplace « Modifier »
+      // par « Consulter » dès qu'un rapport est validé — *sauf pour le compte
+      // qui gouverne le module*, seul à garder le crayon. Mesuré le 11 novembre
+      // 2026 : cet administrateur changeait la description et la criticité,
+      // lisait « Constatation modifiée », et rien n'avait bougé. Les champs non
+      // opposables du formulaire suffisaient à éviter le 400 « aucun champ à
+      // mettre à jour », seul signe qui aurait pu alerter.
+      //
+      // La route rend donc `non_ecrits`. Elle **n'échoue pas** : le formulaire
+      // réémet tous ses champs, et refuser un envoi qui ne fait que renvoyer des
+      // valeurs inchangées empêcherait d'enregistrer ce qui a vraiment changé à
+      // côté. D'où le second contrôle, qui est le plus important des deux :
+      // *l'avertissement ne doit pas se déclencher quand rien ne change.*
+      {
+        const avant = (await srv.appel(`${M}/constatations/${fnc.corps.id}`)).corps || {};
+        const tentative = await PUT(`${M}/constatations/${fnc.corps.id}`, {
+          description: 'Description réécrite après la validation du rapport.',
+          criticite: avant.criticite === 'majeur' ? 'mineur' : 'majeur',
+          date_due_cloture: '2027-01-01',
+          recommandation: 'Recommandation écrite après la validation.',
+        });
+        const apres = (await srv.appel(`${M}/constatations/${fnc.corps.id}`)).corps || {};
+        verifier('modifier une constatation opposable nomme les champs écartés, et ne les écrit pas',
+          tentative.statut === 200
+          && Array.isArray(tentative.corps.non_ecrits)
+          && ['description', 'criticite', 'date_due_cloture']
+            .every((c) => tentative.corps.non_ecrits.includes(c))
+          && apres.description === avant.description
+          && apres.criticite === avant.criticite
+          && apres.date_due_cloture === avant.date_due_cloture
+          // Ce qui n'engage pas l'organisme, lui, est bien écrit.
+          && apres.recommandation === 'Recommandation écrite après la validation.',
+          JSON.stringify({ ecartes: tentative.corps.non_ecrits,
+            description: [avant.description, apres.description],
+            criticite: [avant.criticite, apres.criticite],
+            recommandation: apres.recommandation }));
+
+        const inchangee = await PUT(`${M}/constatations/${fnc.corps.id}`, {
+          description: apres.description,
+          criticite: apres.criticite,
+          date_due_cloture: apres.date_due_cloture,
+          delai_solde: apres.delai_solde,
+          domaine_id: apres.domaine_id,
+          recommandation: 'Seconde recommandation.',
+        });
+        verifier('renvoyer ces mêmes champs inchangés n’avertit de rien : seul ce qui diverge est nommé',
+          inchangee.statut === 200 && inchangee.corps.non_ecrits === undefined,
+          JSON.stringify(inchangee.corps));
+      }
       verifier('amendement du rapport validé',
         (await PUT(`${M}/rapports/${rapportV2}/amend`, { observations: 'Reprise du chapitre 3' })).statut === 200);
       verifier('constatation remise en brouillon par l’amendement',
@@ -142,6 +243,30 @@ module.exports = async function executionSmoke(port) {
       const rapportV3 = (v3.corps || {}).rapport_id;
       verifier('nouvelle version après amendement', v3.statut === 200 && !!rapportV3);
       verifier('rapport revalidé', (await PUT(`${M}/rapports/${rapportV3}/validate`)).statut === 200);
+
+      // ── `/send` ouvre les constatations restées en brouillon, comme ses sœurs ──
+      //
+      // Son commentaire l'affirmait ; le code ne le faisait pas. La validation
+      // ouvre celles qui existent alors, de sorte que la fenêtre est étroite —
+      // mais une constatation relevée **entre** la validation et l'envoi restait
+      // `brouillon`, donc inopposable, le rapport étant parti chez l'organisme.
+      // C'est précisément ce que la route sœur `/transmit` écrit vouloir éviter
+      // (n° 5.f.78).
+      const tardive = await P(`${M}/constatations`, {
+        dossier_id: dossierId, domaine_id: 'AIR', criticite: 'mineur',
+        titre: 'Écart relevé après la validation',
+        description: 'Posée entre la validation du rapport et son envoi.',
+      });
+      verifier('une constatation relevée après la validation du rapport naît en brouillon',
+        tardive.statut === 201 && tardive.corps.statut === 'brouillon');
+      const envoiSimple = await PUT(`${M}/rapports/${rapportV3}/send`);
+      const tardiveApres = await srv.appel(`${M}/constatations/${tardive.corps.id}`);
+      verifier('l’envoi simple du rapport la rend opposable, et ne laisse rien en brouillon',
+        envoiSimple.statut === 200
+        && (tardiveApres.corps || {}).statut === 'ouvert',
+        JSON.stringify({ envoi: envoiSimple.statut,
+          statut: (tardiveApres.corps || {}).statut }));
+      await srv.appel(`${M}/constatations/${tardive.corps.id}`, { method: 'DELETE' });
 
       verifier('transmission refusée sans les deux signatures',
         (await PUT(`${M}/rapports/${rapportV3}/transmit`)).statut === 400);
@@ -174,6 +299,277 @@ module.exports = async function executionSmoke(port) {
       const revenu = (await srv.appel(`${M}/dossiers`)).corps.find((d) => d.id === dossierId) || {};
       verifier('dossier revenu parmi les clôturés', !Number(revenu.archive));
 
+      // ── L'autorité des gestes destructeurs : une seule règle, et sa portée ──
+      //
+      // Cinq routes du module détruisent. Elles se gardaient de **trois** façons
+      // différentes, mesuré le 8 novembre 2026 :
+      //
+      // | Route | Garde |
+      // |---|---|
+      // | `/dossiers/:id`, `/constatations/:id`, `/rapports/:id`, `/activites/:id` | gestionnaire du module, **toutes portées confondues** |
+      // | `/activites-en-cours/:id` | rôle portail **SUPERADMIN**, **aucune portée** |
+      // | `/activites-en-cours/:id/reinitialiser` | gestionnaire **et** validateur de la portée |
+      //
+      // Conséquence du premier patron : un gestionnaire dont la portée est un
+      // secteur pouvait détruire dans tous les autres. La maîtrise d'ouvrage a
+      // tranché — **gestionnaire du module, dans la portée de l'objet**, le rôle
+      // portail hors jeu — et les cinq routes tiennent désormais cette règle
+      // (ADR-003, n° 5.f.75).
+      //
+      // Ce bloc l'éprouve sur un compte réel, dont la portée se déplace : hors
+      // de la portée le geste est refusé, dans la portée il passe, et le refus
+      // **nomme la portée** plutôt que le privilège.
+      {
+        const COMPTE = 'm.ahoyo@anac.bj';
+        const DROITS = `/api/m/droits/SURV/users/${encodeURIComponent(COMPTE)}`;
+        // ── Deux sessions tenues, et non vingt reconnexions ──
+        //
+        // Ce bloc alterne nécessairement entre le compte qui **pose** la portée
+        // — le super-administrateur — et celui qui l'**éprouve**. Chaque
+        // `connexion()` est une tentative d'authentification, et le serveur en
+        // compte vingt par quart d'heure : mesuré le 11 novembre 2026, les
+        // bascules de ce bloc ont fait rendre **429** à la suite entière, sur un
+        // code sans défaut. Les deux témoins sont donc ouverts une fois, puis
+        // reposés à volonté (`srv.session`, n° 5.f.80).
+        const jetonAac = srv.session();
+        await srv.connexion(COMPTE);
+        const jetonCompte = srv.session();
+        srv.session(jetonAac);
+        const enAac = () => srv.session(jetonAac);
+        const enCompte = () => srv.session(jetonCompte);
+        const refs = (await srv.appel('/api/m/droits/refs')).corps || {};
+        const secteurs = refs.secteurs || [];
+        const d = (await srv.appel(`${M}/dossiers/${dossierId}`)).corps || {};
+        const sienSecteur = d.secteur_id || '';
+        const autre = secteurs.find((x) => x.id && x.id !== sienSecteur) || {};
+        const sien = secteurs.find((x) => x.id === sienSecteur) || {};
+        verifier('le jeu d’essai offre deux secteurs distincts, et le dossier en porte un',
+          !!sienSecteur && !!autre.id && autre.id !== sienSecteur,
+          JSON.stringify({ dossier: sienSecteur, autre: autre.id, secteurs: secteurs.length }));
+
+        const poser = async (secteur) => (await srv.appel(DROITS, {
+          method: 'PUT',
+          body: JSON.stringify({
+            // Privilège de base **lecteur** : sans cela le compte serait
+            // gestionnaire partout, et la portée ne déciderait de rien.
+            privilege: 'LECTEUR',
+            scopes: secteur
+              ? [{ domaine_id: secteur.domaine_id || '', secteur_id: secteur.id, privilege: 'GESTIONNAIRE' }]
+              : [],
+          }),
+        })).statut;
+
+        // ── 1. Hors de sa portée : refusé, et le refus nomme la portée ──
+        verifier('le privilège se pose sur un seul secteur', await poser(autre) === 200);
+        enCompte();
+        const refuse = await srv.appel(`${M}/dossiers/${dossierId}`, {
+          method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+        });
+        enAac();
+        const toujoursLa = ((await srv.appel(`${M}/dossiers`)).corps || [])
+          .some((x) => x.id === dossierId);
+        verifier('un gestionnaire hors de sa portée ne détruit pas un dossier, et le refus nomme la portée',
+          refuse.statut === 403
+          // `reserve()` rend `{ error: 'reserve', role: <code> }` : c'est `role`
+          // qui porte le vocabulaire, et le socle le traduit.
+          && (refuse.corps || {}).role === 'gestionnaire_portee'
+          && toujoursLa === true,
+          JSON.stringify({ statut: refuse.statut, corps: refuse.corps, present: toujoursLa }));
+
+        // ── 2. Un rapport transmis ne se supprime pas, même dans la portée ──
+        verifier('le privilège se déplace sur le secteur du dossier', await poser(sien) === 200);
+        enCompte();
+        const transmis = await srv.appel(`${M}/rapports/${rapportV3}`, {
+          method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+        });
+        // ── 3. Et dans la portée, une version dépassée part — avec son auteur ──
+        const ancienne = await srv.appel(`${M}/rapports/${rapportId}`, {
+          method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+        });
+        enAac();
+        const restants = (await srv.appel(`${M}/rapports`)).corps || [];
+        const trace = ((await srv.appel(`${M}/rapports/${rapportId}`)).corps) || {};
+        verifier('un rapport transmis refuse d’être supprimé, et il est toujours là',
+          transmis.statut === 409
+          && (transmis.corps || {}).error === 'rapport_transmis'
+          && restants.some((r) => r.id === rapportV3),
+          JSON.stringify({ statut: transmis.statut, corps: transmis.corps,
+            present: restants.some((r) => r.id === rapportV3) }));
+        verifier('une version dépassée se retire dans la portée, disparaît des listes, et retient son auteur',
+          ancienne.statut === 200
+          && !restants.some((r) => r.id === rapportId),
+          JSON.stringify({ statut: ancienne.statut,
+            encoreListe: restants.some((r) => r.id === rapportId),
+            relecture: trace.error || trace.statut || 'absent' }));
+
+        // ── 4. La cinquième route destructrice, restée ouverte cinq tours ──
+        //
+        // `DELETE /notifications/:id` s'adossait à `R.isAdmin` — gestionnaire
+        // **quelque part**, toutes portées confondues. C'était le dernier
+        // survivant du patron que les quatre routes ci-dessus ont quitté le
+        // 8 novembre 2026 (n° 5.f.75), et l'ADR le nommait comme « ce qui reste
+        // ouvert ». Mesuré le 11 novembre : un gestionnaire du secteur CAMO
+        // **détruisait** le brouillon d'une activité du secteur AMO — 200, et la
+        // notification n'était plus là. Son voisin `PUT /notifications/:id`
+        // refusait exactement cela. *Une route qui modifie gardait ce qu'une
+        // route qui détruit laissait passer* (n° 5.f.80).
+        const plansPortee = (await srv.appel(`${M}/plans-valides`)).corps || [];
+        const planPortee = (plansPortee || []).find((x) => (x.activites || []).length);
+        const actPortee = planPortee ? planPortee.activites[0] : null;
+        const notifDe = async (corps) => (await P(`${M}/notifications`, {
+          objet: 'Portée — brouillon de la ronde', type_supervision: 'Audit',
+          date_debut_prevue: '2026-09-01', date_fin_prevue: '2026-09-03',
+          lieu: 'Siège', perimetre: 'Ensemble des processus', ...corps,
+        }));
+        const existeNotif = async (id) => ((await srv.appel(`${M}/notifications`)).corps || [])
+          .some((x) => x.id === id);
+        if (actPortee) {
+          // Le secteur de l'activité, et celui qui ne l'est pas.
+          const sectActivite = (((await srv.appel('/api/referentiels/prestataires')).corps || [])
+            .find((x) => x.id === actPortee.prestataire_id) || {}).secteur_id || '';
+          const sienAct = secteurs.find((x) => x.id === sectActivite) || {};
+          const autreAct = secteurs.find((x) => x.id && x.id !== sectActivite) || {};
+          verifier('le jeu d’essai offre un secteur pour l’activité, et un autre qui ne l’est pas',
+            !!sienAct.id && !!autreAct.id && sienAct.id !== autreAct.id,
+            JSON.stringify({ activite: sienAct.id, autre: autreAct.id }));
+
+          const brouillon = await notifDe({
+            activite_id: actPortee.id, plan_id: planPortee.id,
+            prestataire_id: actPortee.prestataire_id,
+          });
+          verifier('un brouillon de notification est ouvert par le super-administrateur',
+            brouillon.statut === 201 && !!brouillon.corps.id);
+          const nid = brouillon.corps.id;
+
+          // Hors de sa portée : refusé, et le refus nomme les deux qualités.
+          verifier('le privilège se pose sur un secteur qui n’est pas celui de l’activité',
+            await poser(autreAct) === 200);
+          enCompte();
+          const refusNotif = await srv.appel(`${M}/notifications/${nid}`, {
+            method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+          });
+          enAac();
+          const encoreLa = await existeNotif(nid);
+          verifier('un gestionnaire hors de sa portée ne détruit pas le brouillon d’un autre, et le refus nomme la portée',
+            refusNotif.statut === 403
+            && (refusNotif.corps || {}).error === 'reserve'
+            && (refusNotif.corps || {}).role === 'initiateur_ou_gestionnaire_portee'
+            && encoreLa === true,
+            JSON.stringify({ statut: refusNotif.statut, corps: refusNotif.corps,
+              present: encoreLa }));
+
+          // Dans sa portée : le geste passe, et la notification n'est plus là.
+          verifier('le privilège se déplace sur le secteur de l’activité',
+            await poser(sienAct) === 200);
+          enCompte();
+          const prisNotif = await srv.appel(`${M}/notifications/${nid}`, {
+            method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+          });
+          enAac();
+          verifier('dans sa portée, le gestionnaire détruit le brouillon, et le serveur ne le porte plus',
+            prisNotif.statut === 200 && (await existeNotif(nid)) === false,
+            JSON.stringify({ statut: prisNotif.statut, corps: prisNotif.corps }));
+
+          // ── 5. L'initiateur garde son brouillon, même si sa portée s'en va ──
+          //
+          // Il l'a ouvert, il peut le refermer : la portée ne lui est pas
+          // opposée. *Premier jet : le compte était laissé **sans portée du
+          // tout** pour isoler la clause de l'initiateur. Il a rougi sur la
+          // création — `403` : ouvrir une notification exige d'être
+          // contributeur de la portée, de sorte qu'un lecteur sans portée n'a
+          // pas de brouillon à retirer. Le montage éprouvait une situation qui
+          // n'existe pas.*
+          //
+          // La clause s'isole autrement, et mieux : le compte ouvre son
+          // brouillon **dans** sa portée, puis sa portée **se déplace
+          // ailleurs**. Il n'est plus gestionnaire de rien qui le concerne, et
+          // il le retire tout de même — parce qu'il en est l'initiateur, et
+          // pour cette raison seule.
+          verifier('le privilège se pose sur le secteur de l’activité, le temps d’ouvrir un brouillon',
+            await poser(sienAct) === 200);
+          enCompte();
+          const sien = await notifDe({
+            activite_id: actPortee.id, plan_id: planPortee.id,
+            prestataire_id: actPortee.prestataire_id,
+            objet: 'Portée — brouillon de son initiateur',
+          });
+          const sienId = (sien.corps || {}).id;
+          enAac();
+          verifier('le compte d’essai ouvre son propre brouillon dans sa portée',
+            sien.statut === 201 && !!sienId, JSON.stringify({ creation: sien.statut }));
+          verifier('puis sa portée s’en va ailleurs', await poser(autreAct) === 200);
+          enCompte();
+          const retireSien = sienId ? await srv.appel(`${M}/notifications/${sienId}`, {
+            method: 'DELETE', headers: { 'X-OASIS-Request': '1' },
+          }) : { statut: 0 };
+          enAac();
+          verifier('l’initiateur retire son brouillon alors que sa portée a quitté l’activité',
+            retireSien.statut === 200 && (await existeNotif(sienId)) === false,
+            JSON.stringify({ retrait: retireSien.statut, corps: retireSien.corps }));
+
+          // ── 6. Une activité hors plan est rattachée au secteur qu'elle nomme ──
+          //
+          // Elle porte elle-même son année, son domaine et son secteur, faute
+          // d'activité planifiée pour les lui donner. Les gardes de portée ne
+          // regardaient que l'organisme surveillé : mesuré, une notification
+          // hors plan déclarant CAMO sur un organisme rattaché à AMO s'écrivait
+          // sous la portée **AMO**. La restriction par processus, elle, prenait
+          // déjà le secteur déclaré — le module se contredisait d'une garde à
+          // l'autre sur le même objet. Tranché le 11 novembre 2026 : le secteur
+          // déclaré fait autorité, l'organisme ne sert qu'à défaut.
+          const horsPlan = await notifDe({
+            hors_plan: true, prestataire_id: actPortee.prestataire_id, annee: '2026',
+            domaine_id: autreAct.domaine_id || '', secteur_id: autreAct.id,
+            objet: 'Portée — activité hors plan de la ronde',
+          });
+          const hid = (horsPlan.corps || {}).id;
+          const horsPlanRelu = hid
+            ? ((await srv.appel(`${M}/notifications/${hid}`)).corps || {}) : {};
+          verifier('une notification hors plan porte en base le secteur et le domaine qu’elle déclare',
+            horsPlan.statut === 201
+            && horsPlanRelu.secteur_id === autreAct.id
+            && horsPlanRelu.secteur_id !== sectActivite,
+            JSON.stringify({ statut: horsPlan.statut, declare: horsPlanRelu.secteur_id,
+              organisme: sectActivite }));
+
+          // Gestionnaire du secteur de l'organisme : il n'est pas celui du secteur déclaré.
+          verifier('le privilège se pose sur le secteur de l’organisme, non sur celui déclaré',
+            await poser(sienAct) === 200);
+          enCompte();
+          const modifHP = await srv.appel(`${M}/notifications/${hid}`, {
+            method: 'PUT', headers: { 'X-OASIS-Request': '1' },
+            body: JSON.stringify({ lieu: 'Déplacé par un autre secteur' }),
+          });
+          enAac();
+          const lieuHP = ((await srv.appel(`${M}/notifications/${hid}`)).corps || {}).lieu_activite;
+          verifier('la portée d’une activité hors plan est celle qu’elle déclare : le gestionnaire de l’organisme est refusé',
+            modifHP.statut === 403 && lieuHP === 'Siège',
+            JSON.stringify({ statut: modifHP.statut, lieu: lieuHP }));
+
+          // Gestionnaire du secteur déclaré : le geste passe.
+          verifier('le privilège se déplace sur le secteur que la notification déclare',
+            await poser(autreAct) === 200);
+          enCompte();
+          const admisHP = await srv.appel(`${M}/notifications/${hid}`, {
+            method: 'PUT', headers: { 'X-OASIS-Request': '1' },
+            body: JSON.stringify({ lieu: 'Déplacé par le secteur déclaré' }),
+          });
+          enAac();
+          const lieuHP2 = ((await srv.appel(`${M}/notifications/${hid}`)).corps || {}).lieu_activite;
+          verifier('le gestionnaire du secteur déclaré écrit sur l’activité hors plan, et le serveur le porte',
+            admisHP.statut === 200 && lieuHP2 === 'Déplacé par le secteur déclaré',
+            JSON.stringify({ statut: admisHP.statut, lieu: lieuHP2 }));
+          // La ronde ne laisse rien.
+          await srv.appel(`${M}/notifications/${hid}`, { method: 'DELETE' });
+          verifier('la ronde de portée ne laisse aucune notification derrière elle',
+            (await existeNotif(hid)) === false);
+        }
+
+        // Le compte est rendu à ce qu'il était : une portée laissée posée
+        // changerait ce que les blocs suivants mesurent.
+        verifier('le compte d’essai est rendu à sa portée d’origine', await poser(null) === 200);
+      }
+
       // ── Constatation hors activités : commentaires de validation ──
       // Le valideur annote champ par champ ; la décision fige la version,
       // et le motif du renvoi en découle.
@@ -186,6 +582,35 @@ module.exports = async function executionSmoke(port) {
       verifier('constatation hors activité créée',
         directe.statut === 201 && directe.corps.statut === 'direct_brouillon',
         JSON.stringify(directe.corps).slice(0, 120));
+      // ── Le titre et le type de cas sont deux champs, et la création garde
+      //    les deux ──
+      //
+      // Elle n'en gardait aucun des deux comme tel : `titre` n'était pas porté
+      // par l'enregistrement — le formulaire l'écrivait, le PUT l'acceptait, la
+      // création le jetait —, et le repli `cas_type: … || d.titre` le logeait
+      // dans un `<select>` de types de cas dont aucune option ne vaut une
+      // phrase libre. Mesuré le 9 novembre 2026 : créée avec un titre, la
+      // constatation relue ne portait **aucune clé** `titre`, et son champ
+      // « Titre » rendait « — » (n° 5.f.77).
+      const relueTitre = await srv.appel(`${M}/constatations/${directe.corps.id}`);
+      verifier('la création garde le titre, et ne le loge pas dans le type de cas',
+        (relueTitre.corps || {}).titre === 'Écart hors activité'
+        && ((relueTitre.corps || {}).cas_type || '') === '',
+        JSON.stringify({ titre: (relueTitre.corps || {}).titre,
+          cas_type: (relueTitre.corps || {}).cas_type }));
+      // Le type de cas donné reste le type de cas, et n'emporte pas le titre.
+      const avecCas = await P(`${M}/constatations`, {
+        direct: true, prestataire_id: directe.corps.prestataire_id || undefined,
+        domaine_id: 'AIR', criticite: 'majeur',
+        titre: 'Le titre', cas_type: 'isole', description: 'Les deux à la fois.',
+      });
+      const relueCas = await srv.appel(`${M}/constatations/${avecCas.corps.id}`);
+      verifier('titre et type de cas donnés ensemble restent distincts',
+        (relueCas.corps || {}).titre === 'Le titre'
+        && (relueCas.corps || {}).cas_type === 'isole',
+        JSON.stringify({ titre: (relueCas.corps || {}).titre,
+          cas_type: (relueCas.corps || {}).cas_type }));
+      await srv.appel(`${M}/constatations/${avecCas.corps.id}`, { method: 'DELETE' });
       verifier('commentaires refusés avant soumission',
         (await PUT(`${M}/constatations/${directe.corps.id}/commentaires-validation`, {
           entrees: [{ cible: 'titre', texte: 'Préciser' }],
@@ -402,6 +827,107 @@ module.exports = async function executionSmoke(port) {
       });
     }
 
+    // ══ Le périmètre des routes est celui de la liste ══
+    //
+    // Le contrôle ci-dessus — « comptes restreints au prestataire et au
+    // module » — porte sur la **liste**. Les routes, elles, ne regardaient que
+    // le rattachement : `cible()` omettait le filtre d'accès au module que la
+    // liste applique. Les deux périmètres divergeaient donc, au rebours de
+    // l'invariant écrit en tête de `src/comptes_prestataire.js`.
+    //
+    // Mesuré le 9 novembre 2026 sur un compte créé depuis SURV puis rattaché au
+    // seul module RAMP : absent de la liste de SURV, et pourtant, depuis SURV,
+    // réinitialiser son mot de passe rendait **200**, le révéler en clair
+    // **200**, modifier ses droits **200**, le détruire **200**.
+    //
+    // Ce que cela ouvrait : le droit « utilisateurs » est propre à chaque module
+    // (`droits_surv` ici, un autre champ pour RAMP). Un agent à qui l'on confie
+    // les comptes dans un module seul pouvait saisir le mot de passe d'un
+    // collègue qui n'a jamais eu accès qu'à l'autre.
+    //
+    // La ronde déplace l'accès au module **entre deux requêtes**, et exige que
+    // les trois routes passent de 200 à 404 — un compte hors du périmètre
+    // n'existe pas (ADR-003 n° 5.f.76).
+    const HORS = 'hors.module@test.int';
+    const ne = await srv.appel(`${M}/mes-utilisateurs`, {
+      method: 'POST',
+      body: JSON.stringify({ email: HORS, nom: 'Hors', prenom: 'Module', role: 'PRESTATAIRE' }),
+    });
+    const dansLaListe = async () => ((await srv.appel(`${M}/mes-utilisateurs`)).corps.utilisateurs || [])
+      .some((u) => u.id === HORS);
+    verifier('un compte créé depuis SURV naît avec l’accès à SURV, et paraît dans la liste',
+      ne.statut === 201 && !!ne.corps.temp_password && await dansLaListe(),
+      JSON.stringify({ statut: ne.statut, dansLaListe: await dansLaListe() }));
+
+    // Les trois routes, tant que le compte a l'accès au module.
+    const troisRoutes = async () => ({
+      reset: (await srv.appel(`${M}/mes-utilisateurs/${HORS}/reset-password`, { method: 'POST' })).statut,
+      reveal: (await srv.appel(`${M}/mes-utilisateurs/${HORS}/reveal-password`, {
+        method: 'POST', body: JSON.stringify({ admin_password: 'Aerosup@2026!Uemoa' }),
+      })).statut,
+      maj: (await PUT(`${M}/mes-utilisateurs/${HORS}`, { nom: 'Touche' })).statut,
+    });
+    const avecAcces = await troisRoutes();
+    verifier('tant qu’il a l’accès au module, les trois routes agissent sur lui',
+      avecAcces.reset === 200 && avecAcces.reveal === 200 && avecAcces.maj === 200,
+      JSON.stringify(avecAcces));
+
+    // On lui retire l'accès à SURV par la gestion des comptes du portail.
+    const horsSurv = await PUT(`/api/users/${HORS}`, { action: 'set-modules', modules: ['RAMP'] });
+    verifier('l’accès à SURV retiré, le compte quitte la liste de SURV',
+      horsSurv.statut === 200 && (await dansLaListe()) === false,
+      JSON.stringify({ statut: horsSurv.statut, dansLaListe: await dansLaListe() }));
+
+    const sansAcces = await troisRoutes();
+    verifier('hors du module, les trois routes ne le trouvent plus — 404, et non 403',
+      sansAcces.reset === 404 && sansAcces.reveal === 404 && sansAcces.maj === 404,
+      JSON.stringify(sansAcces));
+
+    // ── Et la route qui détruisait un compte n'existe plus ──
+    //
+    // Elle détruisait réellement le compte du portail (mesuré : sept comptes
+    // puis six), alors qu'aucun des deux écrans ne l'offrait — les deux n'ont
+    // qu'un bouton « Désactiver ». Et elle n'avait rien de la cérémonie que le
+    // portail exige pour le même geste : mot de passe du demandeur, fiche du
+    // répertoire du personnel, sessions fermées, entrée au journal d'audit.
+    //
+    // Le contrôle porte sur la **propriété**, non sur le code de réponse : le
+    // compte survit à la tentative.
+    //
+    // ── Et il faut lui rendre l'accès au module d'abord ──
+    //
+    // La première version de ce contrôle passait **pour une mauvaise raison**,
+    // et la contre-épreuve l'a dit : route remise, il restait vert. Le compte
+    // venait d'être sorti de SURV par le contrôle précédent ; la route, remise,
+    // ne le trouvait donc pas — le périmètre la masquait. Deux gardes en série,
+    // dont le second n'était pas éprouvé.
+    //
+    // L'accès est rendu avant la tentative : il ne reste alors, entre la requête
+    // et un compte détruit, que l'absence de la route.
+    //
+    // *Un contrôle qui passe pour une autre raison que celle qu'il annonce ne
+    // garde rien — et seule la contre-épreuve le dit.*
+    const rendu = await PUT(`/api/users/${HORS}`, { action: 'set-modules', modules: ['SURV'] });
+    verifier('l’accès à SURV rendu, le compte reparaît dans la liste',
+      rendu.statut === 200 && await dansLaListe(),
+      JSON.stringify({ statut: rendu.statut, dansLaListe: await dansLaListe() }));
+    const comptesAvant = ((await srv.appel('/api/users')).corps || []).length;
+    const detruire = await srv.appel(`${M}/mes-utilisateurs/${HORS}`, { method: 'DELETE' });
+    const comptesApres = ((await srv.appel('/api/users')).corps || []).length;
+    verifier('aucune route du module ne détruit un compte du portail',
+      detruire.statut !== 200 && comptesApres === comptesAvant && comptesAvant > 0,
+      JSON.stringify({ statut: detruire.statut, comptes: [comptesAvant, comptesApres] }));
+
+    // Le bac rendu : l'effacement passe par le portail et sa cérémonie — c'est
+    // précisément ce que la route retirée ne faisait pas.
+    const efface = await srv.appel(`/api/users/${HORS}`, {
+      method: 'DELETE', body: JSON.stringify({ adminPassword: 'Aerosup@2026!Uemoa' }),
+    });
+    verifier('le portail, lui, efface — sur mot de passe du demandeur, et en le tracant',
+      efface.statut === 200 && efface.corps.efface === HORS
+      && ((await srv.appel('/api/users')).corps || []).length === comptesAvant - 1,
+      JSON.stringify({ statut: efface.statut, corps: efface.corps }));
+
     const retour = await PUT(`${M}/vue`, { vue: 'aac' });
     verifier('retour en vue AAC', retour.statut === 200 && retour.corps.vue === 'aac');
     verifier('rôle AAC rétabli',
@@ -485,15 +1011,125 @@ module.exports = async function executionSmoke(port) {
         JSON.stringify({ statut: parUrl.statut, type: parUrl.entetes['content-type'],
           disposition: (parUrl.entetes['content-disposition'] || '').slice(0, 60),
           taille: String(parUrl.corps).length }));
-      // La seconde voie, celle des listes trop longues pour une adresse : le
-      // même classeur, demandé par le corps de la requête.
-      const parCorps = await P(XLSX, { ids: idsFnc, titre: 'Essai', filtres: 'aucun' });
-      verifier('le même export s’obtient par le corps de la requête, pour une liste trop longue',
-        parCorps.statut === 200
-        && /spreadsheet|excel|octet-stream/i.test(parCorps.entetes['content-type'] || '')
-        && String(parCorps.corps).length > 200,
-        JSON.stringify({ statut: parCorps.statut, type: parCorps.entetes['content-type'],
-          taille: String(parCorps.corps).length }));
+      // ── La seconde voie : un POST qui **prépare**, et non qui sert ──
+      //
+      // Une liste trop longue pour une adresse passe par un POST. Or un POST ne
+      // peut pas être une navigation : le garde d'origine (SEC-06) refuse une
+      // écriture sans `X-OASIS-Request`, en-tête qu'un formulaire de navigation
+      // ne peut pas poser. L'écran devait donc fabriquer son téléchargement —
+      // le patron qui échoue sans bruit quand la préparation prend quelques
+      // secondes, ce qui est le cas d'une liste assez longue pour arriver ici.
+      //
+      // Le POST dépose désormais la pièce sous un jeton et rend l'adresse d'un
+      // GET que le navigateur suit (n° 5.f.71).
+      const prepare = await P(XLSX, { ids: idsFnc, titre: 'Essai', filtres: 'aucun' });
+      const jetonFnc = (prepare.corps || {}).jeton || '';
+      const servi = jetonFnc
+        ? await srv.appel(`${M}/constatations/fichier/${jetonFnc}`) : { statut: 0 };
+      const rejoue = jetonFnc
+        ? await srv.appel(`${M}/constatations/fichier/${jetonFnc}`) : { statut: 0 };
+      verifier('une liste trop longue se prépare par un POST et se retire par une navigation, une seule fois',
+        prepare.statut === 200
+        && /^[0-9a-f]{32}$/.test(jetonFnc)
+        && (prepare.corps || {}).url === `${M}/constatations/fichier/${jetonFnc}`
+        && (prepare.corps || {}).lignes === idsFnc.length
+        // Le POST ne sert plus le classeur : il ne rend que de quoi le chercher.
+        && !/spreadsheet/i.test(prepare.entetes['content-type'] || '')
+        // Et le GET le sert, en pièce jointe.
+        && servi.statut === 200
+        && /spreadsheet|excel|octet-stream/i.test(servi.entetes['content-type'] || '')
+        && /^attachment;/.test(servi.entetes['content-disposition'] || '')
+        && String(servi.corps).length > 200
+        // À usage unique : un jeton rejoué ne rend plus rien.
+        && rejoue.statut === 404,
+        JSON.stringify({ prepare: { statut: prepare.statut, corps: prepare.corps },
+          servi: servi.statut, rejoue: rejoue.statut }));
+
+      verifier('un jeton de pièce préparée inventé ne rend rien',
+        (await srv.appel(`${M}/constatations/fichier/0123456789abcdef0123456789abcdef`))
+          .statut === 404);
+
+      // ── Le nom de la pièce, dans les deux formes de la RFC 6266 ──
+      //
+      // Une navigation nomme le fichier par l'en-tête, non par la page : c'est
+      // le serveur qui décide, et un nom hors de l'ASCII ne tient pas dans un
+      // `filename="…"`.
+      verifier('la pièce se nomme dans les deux formes que la RFC 6266 prévoit',
+        /filename="[\x20-\x7e]+"/.test(parUrl.entetes['content-disposition'] || '')
+        && /filename\*=UTF-8''/.test(parUrl.entetes['content-disposition'] || ''),
+        parUrl.entetes['content-disposition']);
+
+      // ── Un refus devient une page, puisque le navigateur l'affiche ──
+      //
+      // Une navigation ne porte pas `X-OASIS-Request` : c'est à cela que le
+      // serveur la reconnaît. Un `{"error":"…"}` dans un onglet nu n'est pas une
+      // réponse à un agent qui attendait un fichier.
+      const refusEnPage = await srv.appel(
+        `${M}/constatations/fichier/0123456789abcdef0123456789abcdef`,
+        { headers: { 'X-OASIS-Request': '' } },
+      );
+      verifier('le refus d’un téléchargement suivi par le navigateur est une page lisible, non un objet JSON',
+        refusEnPage.statut === 404
+        && /text\/html/.test(refusEnPage.entetes['content-type'] || '')
+        && /<!doctype html>/i.test(String(refusEnPage.corps))
+        && /n’existe plus/.test(String(refusEnPage.corps))
+        && /404 piece_expiree/.test(String(refusEnPage.corps)),
+        JSON.stringify({ statut: refusEnPage.statut,
+          type: refusEnPage.entetes['content-type'],
+          extrait: String(refusEnPage.corps).slice(0, 90) }));
+    }
+
+    // ── Les trois classeurs de paramétrage, servis en pièce jointe ──
+    //
+    // Ces trois exports passaient par `await fetch` puis une ancre fabriquée ;
+    // ils passent désormais par une navigation (n° 5.f.71). La ronde de
+    // navigateur de SURV **ne les exerce pas** — aucun des cinq exports de ce
+    // module n'est à son relevé —, de sorte que c'est ici, et seulement ici,
+    // que la moitié serveur de la conversion se mesure : le type, la pièce
+    // jointe, et le nom dans les deux formes.
+    {
+      // `exec-checklists`, et non `checklists` : ma première rédaction s'est
+      // trompée de route, et le corps du 404 **est une chaîne** — dont
+      // `.length` valait quinze, de sorte que le garde « aucune checklist dans
+      // le bac » ne s'est pas déclenché et que l'identifiant exercé était un
+      // caractère. *Un garde qui lit `.length` ne distingue pas une liste d'une
+      // phrase ; `Array.isArray` le fait.*
+      const liste = (await srv.appel(`${M}/exec-checklists`)).corps;
+      const checklists = Array.isArray(liste) ? liste : [];
+      if (!checklists.length) {
+        horsPortee('les classeurs de paramétrage se servent en pièce jointe',
+          'aucune checklist dans le bac');
+      } else {
+        const cl = checklists[0];
+        const brutsDossiers = (await srv.appel(`${M}/dossiers`)).corps;
+        const dossiers = Array.isArray(brutsDossiers) ? brutsDossiers : [];
+        const chemins = [
+          [`${M}/checklists/${cl.id}/export-xlsx`, 'items d’une checklist'],
+          [`${M}/checklists/${cl.id}/sous-themes/export-xlsx`, 'sous-thèmes'],
+          ...(dossiers.length
+            ? [[`${M}/checklist-fill/${dossiers[0].id}/${cl.id}/export-xlsx`, 'checklist renseignée']]
+            : []),
+        ];
+        const servis = [];
+        for (const [chemin, quoi] of chemins) {
+          // eslint-disable-next-line no-await-in-loop
+          const r = await srv.appel(chemin);
+          servis.push({
+            quoi,
+            statut: r.statut,
+            piece: /^attachment;/.test(r.entetes['content-disposition'] || ''),
+            deuxFormes: /filename="[\x20-\x7e]+"/.test(r.entetes['content-disposition'] || '')
+              && /filename\*=UTF-8''/.test(r.entetes['content-disposition'] || ''),
+            classeur: /spreadsheet|excel|octet-stream/i.test(r.entetes['content-type'] || ''),
+            taille: String(r.corps).length,
+          });
+        }
+        verifier(`les ${servis.length} classeurs de paramétrage se servent en pièce jointe, nommée dans les deux formes`,
+          servis.length >= 2
+          && servis.every((x) => x.statut === 200 && x.piece && x.deuxFormes
+            && x.classeur && x.taille > 200),
+          JSON.stringify(servis));
+      }
     }
 
     // ── Transmettre une constatation sans serveur de messagerie ──
@@ -538,6 +1174,73 @@ module.exports = async function executionSmoke(port) {
     await srv.connexion();
     verifier('et reste disponible pour celui qui l’a déposé',
       (await srv.appel(`${DOC}/${(aMoi.corps || {}).jeton}`)).statut === 200);
+
+    // ── Le dépôt d'une pièce jointe : ce que la route nomme, et ce qu'elle refuse ──
+    //
+    // `POST …/upload` est la porte par laquelle **huit écrans** du module versent
+    // leurs fichiers, et aucun contrôle ne la regardait. Sa convention est
+    // écrite dans la route : « le nom d'origine ne ressort pas : c'est
+    // l'intitulé qui nomme la pièce ». Autrement dit **le champ `nom` du
+    // formulaire décide**, et sans lui la pièce s'appelle `piece-jointe`.
+    //
+    // Quatre des huit écrans ne l'envoyaient pas. Mesuré le 11 novembre 2026 :
+    // trois PDF versés dans les annexes d'un rapport donnaient trois
+    // `piece-jointe.pdf` — indiscernables dans le document produit comme dans le
+    // courriel qui les annonce à l'organisme. Les huit l'envoient désormais, par
+    // une seule fonction (`execDeposerPiece`) ; ces contrôles tiennent le
+    // contrat sur lequel elle s'appuie.
+    {
+      // Le dépôt est multipart : il ne passe pas par `srv.appel`, qui pose
+      // `content-type: application/json`.
+      const deposer = async (nomFichier, type, intitule) => {
+        const fd = new FormData();
+        fd.append('file', new Blob([new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34, 0x0a])],
+          { type }), nomFichier);
+        if (intitule !== undefined) fd.append('nom', intitule);
+        const r = await fetch(`${srv.base}${M}/upload`, {
+          method: 'POST',
+          body: fd,
+          headers: { 'X-OASIS-Request': '1', cookie: srv.session() },
+        });
+        let corps = null;
+        try { corps = JSON.parse(await r.text()); } catch { corps = null; }
+        return { statut: r.status, corps: corps || {} };
+      };
+
+      const nomme = await deposer('rapport-de-visite.pdf', 'application/pdf', 'rapport-de-visite.pdf');
+      verifier('la pièce déposée porte l’intitulé transmis, et son chemin est servi par le module',
+        nomme.statut === 201 && nomme.corps.status === 'ok'
+        && nomme.corps.filename === 'rapport-de-visite.pdf'
+        && /^\/api\/m\/execution\/uploads\/[0-9a-f]+\.pdf$/.test(nomme.corps.path || '')
+        && nomme.corps.size === 9,
+        JSON.stringify(nomme));
+
+      // Sans intitulé, la route replie sur un nom générique : c'est **le piège**
+      // dans lequel quatre écrans tombaient, et ce contrôle le nomme pour que
+      // personne ne le prenne pour un hasard.
+      const anonyme = await deposer('rapport-de-visite.pdf', 'application/pdf', undefined);
+      verifier('sans intitulé, la pièce s’appelle « piece-jointe » : le nom du fichier ne sort pas de lui-même',
+        anonyme.statut === 201 && anonyme.corps.filename === 'piece-jointe.pdf',
+        JSON.stringify(anonyme.corps));
+
+      // L'intitulé ne désigne pas un chemin, et il ne choisit pas l'extension :
+      // celle du fichier réel est réappliquée.
+      const malicieux = await deposer('rapport.pdf', 'application/pdf', '../../etc/passwd.exe');
+      verifier('un intitulé qui ressemble à un chemin est désarmé, et l’extension réelle est réappliquée',
+        malicieux.statut === 201
+        && !/[\\/]/.test(malicieux.corps.filename || '')
+        && /\.pdf$/.test(malicieux.corps.filename || ''),
+        JSON.stringify(malicieux.corps));
+
+      // Et le refus, que cinq écrans avalaient en silence. Sa phrase est
+      // traduite dans le socle : elle était prête, elle n'arrivait nulle part.
+      const refuse = await deposer('notes-de-terrain.txt', 'text/plain', 'notes-de-terrain.txt');
+      const sansExtension = await deposer('notes', 'text/plain', 'notes');
+      verifier('un type de fichier hors de la liste est refusé, et sans extension aussi',
+        refuse.statut === 400 && /non autoris/i.test(refuse.corps.error || '')
+        && sansExtension.statut === 400,
+        JSON.stringify([refuse.corps, sansExtension.corps]));
+    }
 
     // ── Privilège « Prestataire » attribué dans Gestion des Droits ──
     // Contrairement à la bascule, il n'est pas réversible depuis le module :

@@ -108,13 +108,19 @@ function execExportPlansPdf() {
         w.document.open();
         w.document.write(html);
         w.document.close();
-        // Wait for DOM to settle, then trigger print
-        w.onload = () => {
-            setTimeout(() => { try { w.focus(); w.print(); } catch (e) { console.error(e); } }, 200);
+        // L'impression part une fois, et une seule. Deux chemins y mènent — le
+        // chargement de la fenêtre, et un secours au cas où il serait déjà
+        // passé —, et les deux passaient : la boîte d'impression s'ouvrait deux
+        // fois de suite. Le premier arrivé ferme la porte à l'autre.
+        let imprime = false;
+        const imprimer = () => {
+            if (imprime) return;
+            imprime = true;
+            try { w.focus(); w.print(); } catch (e) { console.error(e); }
         };
-        // Fallback if onload already fired
+        w.onload = () => { setTimeout(imprimer, 200); };
         setTimeout(() => {
-            try { if (w.document.readyState === 'complete') { w.focus(); w.print(); } } catch (e) { /* noop */ }
+            try { if (w.document.readyState === 'complete') imprimer(); } catch (e) { /* noop */ }
         }, 600);
     } catch (e) {
         console.error('execExportPlansPdf error:', e);
@@ -544,109 +550,9 @@ async function execStartNotification(planId, activiteId) {
     });
 }
 
-// Historique : chronological list of every action on the activity, from
-// triggering to closure. Built from the data already present in EXEC_STATE
-// (plan validation, notification lifecycle, dossier lifecycle, rapports, etc.).
-function execShowActiviteHistorique(activiteId, planId) {
-    const plans = EXEC_STATE.data.plansValidesPlanif || EXEC_STATE.data.plansValides || [];
-    const plan = plans.find(p => p.id === planId);
-    const act = plan ? (plan.activites || []).find(a => a.id === activiteId) : null;
-    if (!act) return;
-
-    const notifs = EXEC_STATE.data.notifications || [];
-    const notif = notifs.find(n => n.activite_id === activiteId) || null;
-    const dossiers = EXEC_STATE.data.dossiers || [];
-    const dossier = notif ? dossiers.find(d => d.notification_id === notif.id) : null;
-    const rapports = EXEC_STATE.data.rapports || [];
-    const actRapports = rapports.filter(r =>
-        (r.dossier_id && dossier && r.dossier_id === dossier.id) ||
-        (r.activite_id && r.activite_id === activiteId));
-
-    // Résolution acteur : id utilisateur -> "Prénom Nom"
-    const _userMap = {};
-    (EXEC_STATE.data.inspecteurs || []).forEach(u => {
-        _userMap[u.id] = `${u.prenom || ''} ${u.nom || ''}`.trim();
-    });
-    (EXEC_STATE.data.users || []).forEach(u => {
-        _userMap[u.id] = `${u.prenom || ''} ${u.nom || ''}`.trim();
-    });
-    const _cu = EXEC_STATE.user || {};
-    if (_cu.id) _userMap[_cu.id] = `${_cu.prenom || ''} ${_cu.nom || ''}`.trim() || _cu.nom || _cu.id;
-    const _actor = a => a ? (_userMap[a] || a) : '';
-
-    // Each event: { date, label, actor }
-    const events = [];
-    const pushEvt = (date, label, actor) => { if (label) events.push({ date: date || '', label, actor: _actor(actor) }); };
-
-    // Planification → validated plan
-    pushEvt(plan?.date_validation || plan?.date_mise_a_jour, `${te('plan')} validé : ${_esc(plan?.titre || '')}`, plan?.valide_par || '');
-
-    if (notif) {
-        pushEvt(notif.date_creation || notif.created_at, 'Notification créée', notif.created_by || notif.auteur_nom);
-        if (notif.date_soumission) pushEvt(notif.date_soumission, 'Notification soumise', notif.soumis_par || '');
-        if (notif.date_validation) pushEvt(notif.date_validation, 'Notification validée', notif.valideur_id || notif.valide_par || '');
-        if (notif.date_rejet) pushEvt(notif.date_rejet, 'Notification rejetée', notif.rejete_par || '');
-        if (notif.date_envoi) pushEvt(notif.date_envoi, 'Notification envoyée', notif.envoye_par || '');
-        if (notif.date_acte) pushEvt(notif.date_acte, 'Notification actée (accusé de réception)', notif.acte_par || '');
-    }
-
-    if (dossier) {
-        pushEvt(dossier.date_ouverture || dossier.date_creation, 'Dossier ouvert', dossier.created_by || '');
-        if (dossier.realisation_date_debut || dossier.date_debut_execution)
-            pushEvt(dossier.realisation_date_debut || dossier.date_debut_execution, 'Réalisation — début terrain', dossier.created_by || '');
-        if (dossier.date_fin_execution)
-            pushEvt(dossier.date_fin_execution, 'Réalisation — clôture terrain', dossier.created_by || '');
-        if (dossier.date_soumission)
-            pushEvt(dossier.date_soumission, 'Rapport soumis pour validation', dossier.created_by || '');
-        if (dossier.statut === 'cloture') {
-            pushEvt(dossier.date_maj, 'Dossier clôturé', dossier.created_by || '');
-        } else {
-            const _sl = DOSSIER_WORKFLOW_STEPS.find(x => x.id === (dossier.current_step || ''));
-            if (_sl) pushEvt(dossier.date_maj, `Étape en cours : ${_sl.label}`, dossier.created_by || '');
-        }
-    }
-
-    (actRapports || []).forEach(r => {
-        if (r.date_creation) pushEvt(r.date_creation, `Rapport ${_esc(r.reference || r.titre || '')} créé`, r.auteur_nom || r.created_by || '');
-        if (r.date_validation) pushEvt(r.date_validation, `Rapport ${_esc(r.reference || '')} validé`, r.valide_par || '');
-    });
-
-    // Sort chronologically (empty dates sink to the top as 'planned')
-    events.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-
-    // Couleur dégradée vert → bleu selon la position de l'étape.
-    const _histColor = (i, n) => {
-        const g = [34, 197, 94], b = [37, 99, 235];
-        const t = n <= 1 ? 0 : i / (n - 1);
-        const c = g.map((v, k) => Math.round(v + (b[k] - v) * t));
-        return `rgb(${c[0]},${c[1]},${c[2]})`;
-    };
-    const _n = events.length;
-    const bodyHtml = `
-    <div style="padding:1.5rem 1.25rem;background:#f4f5f7;min-height:100%;">
-        <div style="text-align:center;margin-bottom:1.75rem;">
-            <div style="font-size:0.68rem;letter-spacing:0.22em;text-transform:uppercase;color:#94a3b8;">${_esc(act.objet || act.description || '')}</div>
-            <div style="font-size:0.74rem;color:#94a3b8;margin-top:0.35rem;">${_esc(act.prestataire_nom || '')} · ${_formatDate(act.date_debut)} – ${_formatDate(act.date_fin)}</div>
-        </div>
-        ${_n === 0 ? `<p style="color:#94a3b8;text-align:center;padding:1.5rem 0;">${te('no_data')}</p>` : `
-        <div style="display:flex;flex-direction:column;">
-            ${events.map((e, i) => {
-                const col = _histColor(i, _n);
-                const last = i === _n - 1;
-                return `<div style="display:flex;gap:0.9rem;align-items:stretch;">
-                <div style="position:relative;width:48px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;">
-                    ${!last ? `<div style="position:absolute;top:23px;bottom:-6px;width:7px;background:${col};border-radius:4px;"></div>` : ''}
-                    <div style="position:relative;width:46px;height:46px;border-radius:50%;background:#fff;border:3px solid ${col};display:flex;align-items:center;justify-content:center;font-weight:800;color:${col};font-size:0.92rem;box-shadow:0 2px 7px rgba(0,0,0,0.13);">${String(i + 1).padStart(2, '0')}</div>
-                </div>
-                <div style="flex:1;min-width:0;padding-top:0.35rem;padding-bottom:${last ? '0' : '1.5rem'};">
-                    <div style="font-size:0.92rem;font-weight:700;color:${col};">${e.label}</div>
-                    <div style="font-size:0.78rem;color:#94a3b8;margin-top:0.15rem;">${_formatDatetime ? _formatDatetime(e.date) : _formatDate(e.date)}${e.actor ? ' · ' + _esc(e.actor) : ''}</div>
-                </div>
-            </div>`;
-            }).join('')}
-        </div>`}
-    </div>`;
-
-    execShowSlider(`${EXEC_ICONS.clock} ${te('historique')}`, bodyHtml, '', 'third');
-}
+// L'historique d'une activité du plan s'ouvre dans l'écran du circuit
+// (`execProcHistorique`, exec-processus.js), auquel `execShowActiviteHistorique`
+// renvoie. L'écran hérité de PESSCO vivait ici : chargé avant exec-processus.js,
+// il était écrasé par ce renvoi et ne s'exécutait jamais — cent lignes que rien
+// n'appelait, et qu'on aurait corrigées pour rien (ADR-003, n° 5.f.90).
 

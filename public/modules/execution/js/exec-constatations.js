@@ -286,29 +286,27 @@ async function execExporterConstatationsXlsx() {
         ids: ids.join(','), titre: _execTitreSousMenu(), filtres: _execFiltresLisibles(),
     });
     const url = `${EXEC_MODULE_API}/constatations/export-xlsx?${parametres}`;
-    if (url.length < 6000) { window.location.href = url; return; }
+    if (url.length < 6000) {
+        oasisTelecharger(url);
+        return;
+    }
 
-    // Liste trop longue pour une URL : on repasse par le corps de requête.
+    // ── Liste trop longue pour une adresse : préparer, puis naviguer ──
+    //
+    // Le recours passait par un POST, lisait le blob et fabriquait un clic —
+    // le patron qui **échoue sans bruit** quand la préparation prend quelques
+    // secondes, ce qui est précisément le cas d'une sélection assez longue pour
+    // qu'on arrive ici. Un POST ne peut pas être une navigation (le garde
+    // d'origine, SEC-06, refuse une écriture sans `X-OASIS-Request`), de sorte
+    // qu'il ne **sert** plus le fichier : il le dépose sous un jeton et rend
+    // l'adresse d'un GET que le navigateur suit.
     try {
-        const reponse = await fetch(`${EXEC_MODULE_API}/constatations/export-xlsx`, {
+        const r = await api(`${EXEC_MODULE_API}/constatations/export-xlsx`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-OASIS-Request': '1' },
             body: JSON.stringify({ ids, titre: _execTitreSousMenu(), filtres: _execFiltresLisibles() }),
         });
-        // 404 : la route d'export n'est pas montée — serveur à redémarrer.
-        if (reponse.status === 404) throw new Error(te('export_route_absente'));
-        if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
-        const blob = await reponse.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `constatations-${oasisJour()}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        oasisTelecharger(r.url || `${EXEC_MODULE_API}/constatations/fichier/${r.jeton}`);
     } catch (e) {
-        console.error('Export xlsx :', e);
         _execToast((e && e.message) || te('err_export'), 'error');
     }
 }
@@ -1294,18 +1292,19 @@ async function execCdUploadProof(files) {
     const list = document.getElementById('cd_preuves_list');
     for (const f of files) {
         try {
-            const fd = new FormData();
-            fd.append('file', f);
-            const res = await api(`${EXEC_MODULE_API}/upload`, { method: 'POST', body: fd, isFormData: true });
-            const path = (res && (res.path || res.filepath || res.url)) || '';
-            const filename = f.name;
+            const res = await execDeposerPiece(f);
+            const path = (res && res.path) || '';
+            const filename = (res && res.filename) || f.name;
             const row = document.createElement('div');
             row.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;';
             row.dataset.path = path;
             row.innerHTML = `${EXEC_ICONS.file} <span style="flex:1;">${_esc(filename)}</span>
                 <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
             list.appendChild(row);
-        } catch (e) { console.error('Upload proof error:', e); }
+        } catch (e) {
+            console.error('Upload proof error:', e);
+            _execToast(`${f.name} : ${(e && e.message) || te('televersement_impossible')}`, 'error');
+        }
     }
 }
 

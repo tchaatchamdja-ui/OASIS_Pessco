@@ -313,7 +313,6 @@ function _buildStepNotification(dossier, dossierId) {
         }
     } catch(e) {}
 
-    const pdfPath = dossier.notification_pdf_path || '';
 
     return `
     ${_execFormSection('A', 'section_a_prestataire', `
@@ -416,8 +415,11 @@ function _buildStepNotification(dossier, dossierId) {
     <div style="margin-top:1rem;">
         <label style="font-weight:600;">${te('fiche_notification')}</label>
         <div style="margin-top:0.35rem;">
-            ${pdfPath ? `<a href="${_escAttr(_execDl(pdfPath))}" download class="btn btn-primary btn-sm" style="text-decoration:none;">${EXEC_ICONS.pdf} Exporter PDF</a>` :
-            `<button class="btn btn-primary btn-sm" onclick="execGenerateNotificationPdf('${dossierId}')">${EXEC_ICONS.pdf} Exporter PDF</button>`}
+            <!-- Une branche a été retirée ici : elle servait une ancre vers
+                 le champ notification_pdf_path, que rien n'écrit nulle part
+                 dans le dépôt — elle ne s'est donc jamais rendue.
+                 ADR-003, n° 5.f.74. -->
+            <button class="btn btn-primary btn-sm" onclick="execGenerateNotificationPdf('${dossierId}')">${EXEC_ICONS.pdf} Exporter PDF</button>
         </div>
     </div>`;
 }
@@ -648,29 +650,26 @@ function _execRealisationPjRow(pj, canEdit) {
     </div>`;
 }
 
-// Téléverse une ou plusieurs pièces jointes et les ajoute à la liste de la Réalisation.
+// Téléverse une ou plusieurs pièces jointes et les ajoute à la liste de la
+// Réalisation. Le dépôt est celui du module (`execDeposerPiece`) : la pièce
+// garde le nom du fichier choisi, et un refus se dit.
 async function execUploadRealisationPj(files) {
     if (!files || !files.length) return;
     const container = document.getElementById('realisation_pj_list');
     if (!container) return;
     for (const file of files) {
-        const fd = new FormData();
-        fd.append('file', file);
         try {
-            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
-                method: 'POST',
-                body: fd
-            });
-            const data = await res.json();
-            if (data.status === 'ok') {
-                container.insertAdjacentHTML('beforeend', _execRealisationPjRow({
-                    filename: data.filename || file.name,
-                    orig_name: data.filename || file.name,
-                    description: '',
-                    path: data.path || ''
-                }, true));
-            }
-        } catch (e) { console.error('Upload PJ error:', e); }
+            const data = await execDeposerPiece(file);
+            container.insertAdjacentHTML('beforeend', _execRealisationPjRow({
+                filename: data.filename || file.name,
+                orig_name: data.filename || file.name,
+                description: '',
+                path: data.path || ''
+            }, true));
+        } catch (e) {
+            console.error('Upload PJ error:', e);
+            _execToast(`${file.name} : ${(e && e.message) || te('televersement_impossible')}`, 'error');
+        }
     }
 }
 
@@ -1027,16 +1026,8 @@ async function execCourrielAjouterFichiers(input) {
     const conteneur = document.getElementById('courriel_pieces');
     if (!conteneur || !input.files || !input.files.length) return;
     for (const fichier of [...input.files]) {
-        const formData = new FormData();
-        formData.append('file', fichier);
-        formData.append('nom', fichier.name);
         try {
-            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
-                method: 'POST',
-                body: formData,
-            });
-            const data = await res.json();
-            if (data.status !== 'ok') throw new Error(oasisMessageErreur(data, res.status, te('televersement_refuse')));
+            const data = await execDeposerPiece(fichier);
             const ligne = document.createElement('div');
             ligne.className = 'exec-piece';
             ligne.dataset.path = data.path;
@@ -1200,7 +1191,6 @@ function _buildDossierTabContent(tab, dossier, dossierId, canEdit, defaults) {
         </div>`;
     }
     if (tab === 'annexes') return _dossierOngletAnnexes(dossier, canEdit);
-    if (tab === 'rapports') return _dossierOngletRapports(dossier);
     return '';
 }
 
@@ -1461,64 +1451,45 @@ function _dossierOngletAnnexes(dossier, canEdit) {
     </button>` : ''}`;
 }
 
-// Onglet « Rapports » : les rapports du dossier et leurs gestes.
-function _dossierOngletRapports(dossier) {
-    const rapports = dossier.rapports || [];
-    return `
-    ${rapports.length === 0 ? `<p style="color:var(--text-muted);font-size:0.85rem;">${te('no_data')}</p>` : `
-    <table class="exec-data-table">
-        <thead><tr>
-            <th>${te('ref_rapport')}</th>
-            <th>${te('titre_rapport')}</th>
-            <th>${te('date_emission')}</th>
-            <th>${te('statut_validation')}</th>
-            <th>${te('actions')}</th>
-        </tr></thead>
-        <tbody>
-            ${rapports.map(r => `<tr>
-                <td><strong>${_esc(r.reference || '')}</strong></td>
-                <td>${_esc(r.titre || '')}</td>
-                <td>${_formatDate(r.date_creation)}</td>
-                <td>${_execStatusBadge(r.statut)}</td>
-                <td><div class="exec-cellule-boutons serre plie">
-                    <button class="btn btn-sm btn-outline" onclick="execPreviewRapport('${r.id}')">
-                        ${EXEC_ICONS.eye} ${te('apercu')}
-                    </button>
-                    ${_execCanContribute() && r.statut !== 'transmis' ? `
-                    <button class="btn btn-sm btn-accent" onclick="execSendRapport('${r.id}')">
-                        ${EXEC_ICONS.send} ${te('envoyer_prestataire')}
-                    </button>` : ''}
-                </div></td>
-            </tr>`).join('')}
-        </tbody>
-    </table>`}`;
-}
+// ── L'onglet « Rapports » du volet a été retiré, et pourquoi ──
+//
+// Il rendait une table des rapports du dossier avec deux gestes : l'aperçu, et
+// « Envoyer au prestataire ». **Rien ne pouvait l'afficher.**
+// `_buildDossierTabContent` n'est appelé qu'avec les six sections déclarées par
+// `REDACTION_SUBTABS` ; sa branche `tab === 'rapports'` n'était atteinte par
+// aucun appel du dépôt, et aucun écran n'ouvrait le volet sur cet onglet.
+//
+// Ce que cette table morte portait est la raison de la retirer plutôt que de
+// lui ouvrir un chemin : son bouton appelait `execSendRapport`, **jumeau sans
+// cérémonie** de `execSendRapportValidated`. Même route, même méthode — et ni
+// confirmation, ni message de résultat. Remettre un rapport à l'organisme
+// surveillé est un acte de surveillance ; l'offrir d'un clic sec, sans un mot,
+// n'est pas un manque de confort, c'est un défaut.
+//
+// La fonction jumelle est partie avec la table (`exec-dossier-actions.js`), et
+// l'envoi ne se fait plus que depuis l'étape Validation, qui demande et dit.
+// Un garde de forme (`taille.smoke.js`) refuse qu'une branche de
+// `_buildDossierTabContent` désigne un onglet que `REDACTION_SUBTABS` ne
+// déclare pas : c'est ainsi qu'une table morte reparaîtrait.
 
 async function execUploadDossierFile(files, type) {
     if (!files || files.length === 0) return;
     for (const file of files) {
-        const formData = new FormData();
-        formData.append('file', file);
         try {
-            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.status === 'ok') {
-                const listId = type === 'checklist' ? 'dossier_checklists_list' : 'dossier_annexes_list';
-                const container = document.getElementById(listId);
-                if (container) {
-                    const div = document.createElement('div');
-                    div.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;';
-                    div.innerHTML = `${EXEC_ICONS.file} <span style="flex:1;">${_esc(data.filename)}</span>
-                        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
-                    div.dataset.path = data.path;
-                    container.appendChild(div);
-                }
+            const data = await execDeposerPiece(file);
+            const listId = type === 'checklist' ? 'dossier_checklists_list' : 'dossier_annexes_list';
+            const container = document.getElementById(listId);
+            if (container) {
+                const div = document.createElement('div');
+                div.style.cssText = 'display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;';
+                div.innerHTML = `${EXEC_ICONS.file} <span style="flex:1;">${_esc(data.filename)}</span>
+                    <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
+                div.dataset.path = data.path;
+                container.appendChild(div);
             }
         } catch (e) {
             console.error('Upload error:', e);
+            _execToast(`${file.name} : ${(e && e.message) || te('televersement_impossible')}`, 'error');
         }
     }
 }
@@ -1549,24 +1520,17 @@ async function execUploadAnnexeFile(input) {
     const filesContainer = annexeItem?.querySelector('.annexe-files');
     if (!filesContainer) return;
     for (const file of input.files) {
-        const formData = new FormData();
-        formData.append('file', file);
         try {
-            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.status === 'ok') {
-                const span = document.createElement('span');
-                span.style.cssText = 'display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.5rem;background:var(--bg);border-radius:4px;font-size:0.8rem;';
-                span.dataset.path = data.path;
-                span.dataset.filename = data.filename;
-                span.innerHTML = `${EXEC_ICONS.file} ${_esc(data.filename)} <button class="btn btn-sm" style="padding:0;color:#ef4444;" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
-                filesContainer.appendChild(span);
-            }
+            const data = await execDeposerPiece(file);
+            const span = document.createElement('span');
+            span.style.cssText = 'display:inline-flex;align-items:center;gap:0.25rem;padding:0.2rem 0.5rem;background:var(--bg);border-radius:4px;font-size:0.8rem;';
+            span.dataset.path = data.path;
+            span.dataset.filename = data.filename;
+            span.innerHTML = `${EXEC_ICONS.file} ${_esc(data.filename)} <button class="btn btn-sm" style="padding:0;color:#ef4444;" onclick="this.parentElement.remove()">${EXEC_ICONS.x}</button>`;
+            filesContainer.appendChild(span);
         } catch (e) {
             console.error('Annexe upload error:', e);
+            _execToast(`${file.name} : ${(e && e.message) || te('televersement_impossible')}`, 'error');
         }
     }
     input.value = '';

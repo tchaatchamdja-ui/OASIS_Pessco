@@ -164,7 +164,6 @@ const EXEC_ETATS = { sub: 'a_declencher', delais: { ...EXEC_ETATS_DELAIS_DEFAUT 
 // rôles portail SUPERADMIN et ADMIN AAC seuls, dans leur portée (le serveur
 // vérifie le domaine et le secteur).
 const execEtatsPeutAdministrer = () => _execAdministreParc();
-const execEtatsEstSuperadmin = () => (EXEC_STATE.user || {}).role === 'SUPERADMIN';
 
 // ── Dates ──
 const execEtatsJour = () => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; };
@@ -534,7 +533,18 @@ function execEtatsPanEn_cours(R) {
 // son historique, on arrête un circuit qui ne peut pas se poursuivre, on
 // archive ce qui est arrêté, et le super-administrateur peut supprimer.
 function execEtatsPanEn_vie(R) {
-  const superadmin = execEtatsEstSuperadmin();
+  // ── Qui voit la suppression définitive ──
+  //
+  // `execEtatsEstSuperadmin()` jusqu'au 8 novembre 2026, parce que la route
+  // l'exigeait. Elle demande désormais le **gestionnaire du module, dans la
+  // portée de l'activité** (n° 5.f.75) : la garde d'écran suit, sans quoi la
+  // maîtrise d'ouvrage aurait confié un droit que rien n'offre.
+  //
+  // *Elle reste grossière, et c'est le partage que ce module a choisi* : le
+  // client ne connaît que le meilleur privilège, jamais les portées — « le
+  // serveur revérifie ». Un gestionnaire verra donc le geste sur une activité
+  // hors de sa portée, et recevra un refus qui nomme la portée.
+  const peutDetruire = _execIsAdmin();
   const administre = execEtatsPeutAdministrer();
   const lignes = R.enVie.map((l) => {
     const n = l.notif || {};
@@ -561,7 +571,7 @@ function execEtatsPanEn_vie(R) {
                  title="${te('archiver_activite')}" aria-label="${te('archiver_activite')}">${EXEC_ICONS.folder || ''}</button>`
             : `<button class="btn btn-sm btn-icon-only exec-btn-rejet" onclick="execEtatsArreter('${n.id}')"
                  title="${te('arreter_processus')}" aria-label="${te('arreter_processus')}">${EXEC_ICONS.close || '✕'}</button>`) : ''}
-          ${superadmin ? `<button class="btn btn-sm btn-icon-only exec-btn-rejet" onclick="execEtatsSupprimer('${n.id}')"
+          ${peutDetruire ? `<button class="btn btn-sm btn-icon-only exec-btn-rejet" onclick="execEtatsSupprimer('${n.id}')"
             title="${te('supprimer_activite_btn')}" aria-label="${te('supprimer_activite_btn')}">${EXEC_ICONS.delete || EXEC_ICONS.trash || '🗑'}</button>` : ''}
         </td>
       </tr>`;

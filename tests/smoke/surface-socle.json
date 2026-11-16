@@ -48,7 +48,8 @@
   "oasisLangue:function",
   "oasisMessageErreur:function",
   "oasisPoserLangue:function",
-  "oasisSaisieDifferee:function"
+  "oasisSaisieDifferee:function",
+  "oasisTelecharger:function"
  ],
  "oasis-utils": [
   "ICONS:object",

@@ -29,7 +29,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const puppeteer = require('puppeteer');
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, bilan, refusAttendus, abandonsAttendus } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'profil_risque', 'js', 'pr-shell.js');
@@ -52,11 +52,12 @@ const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';
 //
 // La page est donc **déclarée** ici, avec ce que la mesure en sait, et le
 // contrôle refuse toute page sans chemin qui ne le serait pas.
-const PAGES_SANS_CHEMIN = {
-  plans: 'la vue « Plans » de PR — `renderPlans()` dans pr-plans.js, 121 lignes,'
-    + ' 8 gestes nommés. Rendue par l’aiguillage, ouverte par rien. Le module PLAN'
-    + ' a son propre écran depuis ; question posée à la maîtrise d’ouvrage.',
-};
+// La table reste **vide, et déclarée** : c'est elle qui a dénoncé la page
+// « Plans » — rendue par l'aiguillage de PR et ouverte par rien —, et la
+// maîtrise d'ouvrage a décidé le 4 novembre 2026 de retirer la page plutôt que
+// de lui rendre une entrée de menu. Le mécanisme doit survivre à son premier
+// occupant : sans lui, la prochaine page orpheline ne serait dénoncée par rien.
+const PAGES_SANS_CHEMIN = {};
 
 // Les pages **et leurs sous-vues**, lues dans la source.
 function navDeclaree() {
@@ -89,49 +90,57 @@ function aiguillageEtChemins() {
   return { rendues, ouvrables: [...ouvrables] };
 }
 
-// ── Trois gestes que rien n'ouvre : la mesure, et non l'affirmation ──
+// ── Trois gestes retirés, et le garde qui l'atteste ──
 //
 // `openReunionEvaluateursList`, `openReunionEvaluateursForm` et
-// `saveReunionEval` composent un cycle de fenêtres. Le contrôle retire du
-// fichier le corps de ces trois fonctions, puis cherche leurs appels dans ce
-// qui reste **et dans tous les autres fichiers de l'écran**. Zéro appel dehors,
-// c'est un cycle fermé : du code que l'écran n'ouvre plus.
-function gestesOrphelinsDeLaReunion() {
+// `saveReunionEval` composaient un cycle de fenêtres fermé sur lui-même : la
+// liste n'était appelée que par le formulaire, le formulaire que par la liste.
+// Le chemin en ligne de l'onglet les avait remplacés sans qu'on les retire, et
+// un garde a mesuré l'orphelinage avant qu'on en décide — il retirait du
+// fichier le corps des trois fonctions, puis cherchait leurs appels dans ce qui
+// restait et dans tous les autres fichiers de l'écran. Zéro.
+//
+// La maîtrise d'ouvrage a tranché le 4 novembre 2026 : **supprimer**. Le garde
+// se retourne donc, et c'est le point qui compte — *un garde qui exige qu'un
+// orphelin existe devient faux le jour où on le supprime, et l'on est tenté de
+// le retirer avec le code, perdant la garantie qu'il ne revient pas.* Il exige
+// maintenant l'inverse : que les trois noms n'apparaissent **nulle part** dans
+// l'écran, et que le chemin qui les a remplacés y soit toujours.
+function cheminParFenetreRetire() {
   const js = path.join(RACINE, 'public', 'modules', 'profil_risque', 'js');
-  const fiche = path.join(js, 'pr-evaluation-fiche.js');
-  const texte = fs.readFileSync(fiche, 'utf8');
   const noms = ['openReunionEvaluateursList', 'openReunionEvaluateursForm', 'saveReunionEval'];
-
-  // Le corps d'une fonction, de sa signature à l'accolade qui la referme.
-  const corpsDe = (nom) => {
-    const i = texte.indexOf(`async function ${nom}(`);
-    if (i < 0) throw new Error(`refus : ${nom} n’est plus déclarée dans pr-evaluation-fiche.js.`);
-    let solde = 0;
-    let ouverte = false;
-    for (let k = i; k < texte.length; k += 1) {
-      if (texte[k] === '{') { solde += 1; ouverte = true; } else if (texte[k] === '}') solde -= 1;
-      if (ouverte && solde === 0) return texte.slice(i, k + 1);
-    }
-    throw new Error(`refus : le corps de ${nom} ne se lit plus.`);
-  };
-
-  const corps = noms.map(corpsDe);
-  let dedans = 0;
-  corps.forEach((c) => {
-    noms.forEach((n) => { dedans += (c.match(new RegExp(`${n}\\(`, 'g')) || []).length - (c.indexOf(`function ${n}(`) >= 0 ? 1 : 0); });
-  });
-
-  // Ce qui reste du fichier, plus les autres fichiers de l'écran.
-  let dehorsTexte = texte;
-  corps.forEach((c) => { dehorsTexte = dehorsTexte.replace(c, ''); });
-  fs.readdirSync(js).filter((f) => f.endsWith('.js') && f !== 'pr-evaluation-fiche.js')
-    .forEach((f) => { dehorsTexte += fs.readFileSync(path.join(js, f), 'utf8'); });
-  const dehors = noms.filter((n) => new RegExp(`${n}\\(`).test(dehorsTexte));
-
+  let texte = '';
+  fs.readdirSync(js).filter((f) => f.endsWith('.js'))
+    .forEach((f) => { texte += fs.readFileSync(path.join(js, f), 'utf8'); });
+  const page = path.join(RACINE, 'public', 'modules', 'profil_risque', 'index.html');
+  if (fs.existsSync(page)) texte += fs.readFileSync(page, 'utf8');
   return {
-    dehors,
-    dedans,
-    enLigne: (dehorsTexte.match(/reunionEvalEditInline\(/g) || []).length,
+    restants: noms.filter((n) => texte.includes(n)),
+    // Le chemin en ligne, qui les a remplacés : deux boutons de l'onglet, plus
+    // sa déclaration. S'il disparaissait, l'écran n'aurait plus de chemin du
+    // tout vers ses comptes-rendus, et ce garde le dirait.
+    enLigne: (texte.match(/reunionEvalEditInline\(/g) || []).length,
+  };
+}
+
+// ── La page « Plans », retirée ──
+//
+// Rendue par l'aiguillage, ouverte par rien, et déclarée sans chemin depuis la
+// première suite de PR. Retirée le 4 novembre 2026 sur décision. Le garde
+// atteste sa disparition **de ses trois côtés** — le fichier, le cas de
+// l'aiguillage, la balise de script — parce qu'en laisser un seul derrière
+// soi, c'est laisser revenir la page sans que rien ne le dise.
+function pagePlansRetiree() {
+  const racine = path.join(RACINE, 'public', 'modules', 'profil_risque');
+  const shell = fs.readFileSync(path.join(racine, 'js', 'pr-shell.js'), 'utf8');
+  const page = fs.readFileSync(path.join(racine, 'index.html'), 'utf8');
+  const js = fs.readdirSync(path.join(racine, 'js')).filter((f) => f.endsWith('.js'));
+  return {
+    fichier: js.includes('pr-plans.js'),
+    cas: /case 'plans'/.test(shell),
+    script: /pr-plans\.js/.test(page),
+    facette: js.some((f) => fs.readFileSync(path.join(racine, 'js', f), 'utf8')
+      .includes('_planFilters')),
   };
 }
 
@@ -156,41 +165,46 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
     let pr = false;
     let etape = 'montage';
 
-    // ── Un refus que la ronde attend, déclaré et vérifié ──
+    // Le mécanisme des refus déclarés vit dans le harnais (n° 5.f.60) : il sert
+    // à plusieurs suites, et une copie par suite aurait divergé.
+    const refusDeclares = refusAttendus();
+
+    // ── Les trois téléchargements de PR, et l'abandon qui les signe ──
     //
-    // Le collecteur ci-dessous prend tout 4xx pour un défaut, et il le faut : un
-    // 403 passé inaperçu est une règle qu'on croit tenue. Mais une règle qui
-    // **refuse** ne se mesure qu'en la provoquant, et la provoquer fait rougir
-    // le collecteur. La ronde déclare donc, autour du seul geste qui le
-    // provoque, le refus qu'elle attend — son code et un fragment de son
-    // adresse. Le refus déclaré n'entre pas aux incidents ; il est **marqué
-    // rencontré**, et un contrôle exige qu'il l'ait été. Une déclaration qui
-    // cesse de correspondre fait donc rougir elle aussi, au lieu de masquer.
-    const attendus = [];
-    // La fenêtre est ouverte par la déclaration et refermée par la ronde juste
-    // après le geste : hors d'elle, un 4xx reste un défaut, et le message que le
-    // navigateur écrit à la console reste un incident.
-    let fenetreRefus = false;
-    const declarerRefus = (statut, url) => {
-      const a = { statut, url, rencontre: false };
-      attendus.push(a);
-      fenetreRefus = true;
-      return a;
-    };
-    const cloreRefus = () => { fenetreRefus = false; };
-    const estAttendu = (statut, url) => {
-      if (!fenetreRefus) return false;
-      const a = attendus.find((x) => x.statut === statut && url.includes(x.url) && !x.rencontre);
-      if (!a) return false;
-      a.rencontre = true;
-      return true;
-    };
-    // Le navigateur dit le même fait deux fois : la réponse, et une ligne de
-    // console pour la ressource. Dans la fenêtre, la seconde ne compte pas.
-    const bruitDeRefus = (texte) => fenetreRefus && /Failed to load resource/.test(texte);
+    // Depuis que les téléchargements passent par une **navigation** plutôt que
+    // par une ancre fabriquée (n° 5.f.71), chacun se présente au moniteur de
+    // requêtes comme un `net::ERR_ABORTED` : le navigateur mène la fenêtre à
+    // l'adresse, reçoit `Content-Disposition: attachment`, enregistre le fichier
+    // et abandonne la navigation. *C'est la signature du geste réussi, non d'une
+    // panne* — et c'est la raison pour laquelle le contrôle des incidents a
+    // rougi au premier passage après la conversion.
+    //
+    // Les trois sont donc déclarés, et un contrôle exige que les trois soient
+    // venus : si une route perdait son `attachment`, le navigateur
+    // **afficherait** le fichier au lieu de l'enregistrer, l'abandon
+    // n'arriverait plus, et la déclaration deviendrait un filtre muet.
+    const abandons = abandonsAttendus([
+      {
+        motif: /ERR_ABORTED/, chemin: /\/indicateurs\/export/,
+        pourquoi: 'le classeur des indicateurs est servi en pièce jointe par'
+          + ' une navigation. Contrôle « le classeur des indicateurs s’exporte'
+          + ' sans l’entité retirée » (n° 5.f.68).',
+      },
+      {
+        motif: /ERR_ABORTED/, chemin: /\/evaluations\/[^/]+\/export-excel/,
+        pourquoi: 'le classeur d’une évaluation, même geste. Contrôle'
+          + ' « l’aller-retour du classeur des notes » (n° 5.f.52).',
+      },
+      {
+        motif: /ERR_ABORTED/, chemin: /\/api\/documents\/[^/]+\/download/,
+        pourquoi: 'une pièce de la bibliothèque, même geste. Contrôle « le'
+          + ' document téléchargé rend exactement les octets déposés »'
+          + ' (n° 5.f.70).',
+      },
+    ]);
 
     page.on('console', (m) => {
-      if (pr && m.type() === 'error' && !bruitDeRefus(m.text())) {
+      if (pr && m.type() === 'error' && !refusDeclares.bruit(m.text())) {
         incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
       }
     });
@@ -198,11 +212,15 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
       if (pr) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
     });
     page.on('requestfailed', (r) => {
-      if (pr) incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
+      if (!pr) return;
+      const chemin = r.url().replace(srv.base, '');
+      const motif = String(((r.failure() || {}).errorText) || '');
+      if (abandons.attendu(motif, chemin)) return;
+      incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
     });
     page.on('response', (r) => {
       if (!pr || r.status() < 400) return;
-      if (estAttendu(r.status(), r.url())) return;
+      if (refusDeclares.attendu(r.status(), r.url())) return;
       incidents.push(`[${etape}] ${r.status()} ${r.url().replace(srv.base, '').slice(0, 120)}`);
     });
 
@@ -1127,7 +1145,8 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
     etape = 'circuit de l’évaluation';
     const MOTIF_RENVOI = 'Motif du renvoi — observations à compléter ' + Date.now();
     const COMMENTAIRE = 'Commentaire d’indicateur posé à la soumission';
-    const circuit = await page.evaluate(async (motif, commentaire) => {
+    const COMMENTAIRE_ACCEPTATION = 'Acceptée par la ronde, réunion à convoquer';
+    const circuit = await page.evaluate(async (motif, commentaire, commentaireAcceptation) => {
       const a = (ms) => new Promise((r) => setTimeout(r, ms));
       const o = {};
       const essai = async (nom, f) => {
@@ -1314,21 +1333,68 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         d.resoumise = await oui(4000);
         await rouvrir();
         d.statutSoumise = statut();
-        // ── « Accepter » ne demande **rien** ──
+        // ── « Accepter » demandait **rien**, et demande désormais les deux ──
         //
         // Mon premier jet attendait une invite de confirmation, comme pour le
-        // renvoi et le rejet : il n'en vient aucune. `decisionDirecteur` ne
-        // confirme que `rejeter`, `renvoyer` et `cloturer`, et ne demande de
-        // commentaire pour toute décision **sauf** `accepter`. L'acceptation
-        // part donc d'un seul clic, sans rien à relire — le contrôle le relève
-        // plutôt que de le supposer, et la question est posée à la maîtrise
-        // d'ouvrage : c'est une décision d'autorité.
+        // renvoi et le rejet : il n'en venait aucune. L'acceptation partait d'un
+        // seul clic, sans rien à relire — alors qu'elle ouvre l'onglet de la
+        // réunion prestataire et que le circuit ne revient pas en arrière de
+        // lui-même. *Une invite qu'on attend et qui ne vient pas est une mesure,
+        // pas une panne* : le contrôle l'a relevée, la question est partie à la
+        // maîtrise d'ouvrage, et elle a tranché le 4 novembre 2026 — corriger.
+        //
+        // Le contrôle se retourne donc, et il exige les **deux** invites dans
+        // l'ordre : la confirmation d'abord, le commentaire ensuite. Un contrôle
+        // qui n'exigerait que la première laisserait retirer la seconde.
         geste(/decisionDirecteur\([^)]*'accepter'\)/)?.click();
         await a(1400);
-        d.aucuneInvite = !document.querySelector('.oasis-confirm-oui')
+        // ── Ce qui distingue une confirmation d'une invite de saisie ──
+        //
+        // Les deux dialogues du socle partagent leurs boutons
+        // (`.oasis-confirm-oui`, `.oasis-confirm-non`) : relever le bouton ne
+        // dirait pas **lequel** des deux est là, et le contrôle serait passé
+        // avec la seule invite de commentaire — c'est-à-dire sans la
+        // confirmation qu'il prétend exiger. Ce qui les sépare est le champ :
+        // `oasisConfirmer` n'en a pas, `oasisSaisir` en a un.
+        d.confirmation = !!document.querySelector('.oasis-confirm-oui')
           && !document.querySelector('.oasis-saisie-champ');
+        // Et le refus de la confirmation ne décide rien : on l'éprouve avant de
+        // l'accepter, sans quoi « elle confirme » ne dirait pas « elle retient ».
+        document.querySelector('.oasis-confirm-non')?.click();
+        await a(1600);
+        d.statutApresRefus = statut();
+        // ── L'assertion qui a mordu n'est pas celle que j'avais écrite pour ça ──
+        //
+        // Je l'avais posée pour dire « l'invite s'est bien refermée ». Le
+        // contre-essai qui pose la confirmation mais **ignore son refus** l'a
+        // fait tomber par elle, et non par le statut : refusé, le geste
+        // enchaînait sur l'invite de commentaire, et une seconde invite paraissait
+        // là où plus rien ne doit être demandé. C'est la meilleure lecture des
+        // deux — *après un refus, l'écran ne demande plus rien* — et je la dois
+        // au contre-essai, non à mon intention.
+        d.inviteFermee = !document.querySelector('.oasis-confirm-oui');
+        // Puis pour de bon.
+        geste(/decisionDirecteur\([^)]*'accepter'\)/)?.click();
+        await a(1400);
+        d.confirmationRouverte = !!document.querySelector('.oasis-confirm-oui')
+          && !document.querySelector('.oasis-saisie-champ');
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await a(1400);
+        // Le commentaire vient après la confirmation, et il est facultatif : le
+        // bouton n'est pas éteint sur un champ vide.
+        d.commentaire = !!document.querySelector('.oasis-saisie-champ');
+        d.commentaireFacultatif = !(document.querySelector('.oasis-confirm-oui') || {}).disabled;
+        const champAcceptation = document.querySelector('.oasis-saisie-champ');
+        if (champAcceptation) champAcceptation.value = commentaireAcceptation;
+        document.querySelector('.oasis-confirm-oui')?.click();
         await a(3600);
         d.statut = statut();
+        // Le serveur range le commentaire d'une décision sous deux noms
+        // (`motif_decision` et `commentaire_directeur`) : on exige les deux, car
+        // ce sont eux que la fiche et les rapports relisent.
+        const apres = ev() || {};
+        d.commentaireAuServeur = apres.motif_decision === commentaireAcceptation
+          && apres.commentaire_directeur === commentaireAcceptation;
         d.rouverte = await rouvrir();
         d.ongletsApres = onglets();
         d.reunionParue = d.ongletsApres.includes('reunion_prestataire');
@@ -1419,7 +1485,7 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         return d;
       });
       return o;
-    }, MOTIF_RENVOI, COMMENTAIRE);
+    }, MOTIF_RENVOI, COMMENTAIRE, COMMENTAIRE_ACCEPTATION);
 
     {
       const De = circuit.depart || {};
@@ -1460,14 +1526,21 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         && Re.rouverte === true
         && Re.piedRenvoyee.some((g) => /soumettreDirecteur/.test(g)),
         JSON.stringify({ ...Re, commentaire: undefined }).slice(0, 460));
-      verifier('l’acceptation fait naître l’onglet « Réunion prestataire », que les statuts précédents n’offraient pas',
+      verifier('l’acceptation demande une confirmation puis un commentaire, son refus ne décide rien, et elle fait naître l’onglet « Réunion prestataire »',
         Ac.resoumise === true && Ac.statutSoumise === 'soumis_directeur'
         && Ac.ongletsAvant.includes('reunion_prestataire') === false
-        // L'acceptation ne demande ni confirmation ni commentaire.
-        && Ac.aucuneInvite === true && Ac.statut === 'acceptee'
+        // La confirmation vient, et son refus laisse le circuit où il était.
+        && Ac.confirmation === true
+        && Ac.statutApresRefus === 'soumis_directeur' && Ac.inviteFermee === true
+        && Ac.confirmationRouverte === true
+        // Puis le commentaire, facultatif.
+        && Ac.commentaire === true && Ac.commentaireFacultatif === true
+        && Ac.statut === 'acceptee'
+        // Et le commentaire est parvenu au serveur.
+        && Ac.commentaireAuServeur === true
         && Ac.rouverte === true && Ac.reunionParue === true
         && Ac.ongletsApres.length === Ac.ongletsAvant.length + 1,
-        JSON.stringify(Ac).slice(0, 400));
+        JSON.stringify(Ac).slice(0, 460));
       verifier('le compte-rendu de la réunion prestataire s’enregistre au serveur, et c’est lui qui porte la clôture',
         Ru.zone === true && Ru.champs === 5
         && Ru.boutonEnregistrer === true
@@ -1544,7 +1617,7 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
     // `reunionEvalSaveFromTab`). Le contrôle l'atteste plutôt que de l'affirmer :
     // il compte les appels depuis la source.
     etape = 'réunions des évaluateurs';
-    const orphelinsReunion = gestesOrphelinsDeLaReunion();
+    const cheminRetire = cheminParFenetreRetire();
 
     // Le document composé par un export passe par `window.open` puis
     // `window.print`. En mode sans affichage, rien n'attend l'impression : on la
@@ -1957,12 +2030,10 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         // Et pas de consolidation : elle n'a aucun sens sur cette réunion.
         && !/consolidation/i.test(Dp.texte || '') && Dp.lignes === 0,
         JSON.stringify({ Ve, Dc, Dp }).slice(0, 560));
-      verifier('les trois gestes de l’ancien chemin par fenêtre ne sont ouverts par rien de l’écran, et le chemin en ligne l’est',
-        orphelinsReunion.dehors.length === 0
-        // Ils existent bien, et ne s'appellent qu'entre eux.
-        && orphelinsReunion.dedans === 4
-        && orphelinsReunion.enLigne >= 2,
-        JSON.stringify(orphelinsReunion));
+      verifier('les trois gestes de l’ancien chemin par fenêtre ont disparu de l’écran, et le chemin qui les a remplacés y est',
+        cheminRetire.restants.length === 0
+        && cheminRetire.enLigne >= 2,
+        JSON.stringify(cheminRetire));
     }
 
 
@@ -2169,7 +2240,7 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         return { introuvable: true };
       }, reunions.parent);
       // Le refus est déclaré **avant** le geste, et refermé juste après.
-      declarerRefus(409, '/import-excel');
+      refusDeclares.declarer(409, '/import-excel');
       const [selecteur] = await Promise.all([
         page.waitForFileChooser({ timeout: 20000 }),
         page.evaluate(() => {
@@ -2182,11 +2253,11 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
       refusImport.selecteur = true;
       await selecteur.accept([classeur.chemin]);
       await new Promise((r) => setTimeout(r, 6000));
-      cloreRefus();
+      refusDeclares.clore();
       refusImport.reponse = reponsesImport[reponsesImport.length - 1] || null;
-      refusImport.declare = attendus.map((x) => ({ ...x }));
+      refusImport.declare = refusDeclares.liste.map((x) => ({ ...x }));
     } catch (e) { refusImport.erreur = String((e && e.message) || e); }
-    finally { cloreRefus(); }
+    finally { refusDeclares.clore(); }
 
     try { fs.rmSync(dossierTelechargements, { recursive: true, force: true }); }
     catch { /* le répertoire a déjà disparu */ }
@@ -2232,13 +2303,1103 @@ module.exports = async function profilRisqueNavigateurSmoke(port) {
         JSON.stringify({ retour, refusImport }).slice(0, 560));
     }
 
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les facettes des quatre listes, et la coquille
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // Quatre barres de filtres, une par page de liste, et toutes de la même
+    // forme : des `<select>` qui écrivent dans un objet de `window`, une
+    // recherche différée par le socle, et un bouton qui remet l'objet à neuf.
+    // Dix-huit gestes nommés dormaient là — `window._dashFilters.domaine`,
+    // `window._evalFilters`, `window._indFilters.sa`… — parce que la ronde
+    // parcourait les pages sans toucher à leurs facettes.
+    //
+    // ── Ce qui se mesure, et ce qui ne se mesure pas ──
+    //
+    // Qu'une facette **restreigne** la liste n'est pas éprouvable ici sans
+    // supposer le jeu d'essai : selon ce que portent les données, un domaine
+    // peut ne rien retirer. Ce qui est éprouvable, et qui est la règle, c'est
+    // que **la facette parvienne à l'état et que la remise à zéro la vide** —
+    // le même contrat que la ronde de CARE éprouve sur sa barre (n° 5.f.22).
+    // Le nombre de lignes avant et après est relevé sans être exigé : il entre
+    // au détail, pour qu'une facette qui ne filtre **rien du tout** se voie.
+    etape = 'facettes et coquille';
+    //
+    // ── Trois barres, et non quatre ──
+    //
+    // `pr-plans.js` en porte une quatrième, `window._planFilters`. Elle est
+    // **inatteignable** : la page « Plans » est rendue par l'aiguillage et
+    // ouverte par rien — elle est déclarée à ce titre dans `PAGES_SANS_CHEMIN`,
+    // en tête de ce fichier. Mon premier jet la cherchait et rendait
+    // « introuvable » sur un écran qui marche. Le contrôle ci-dessous **lie les
+    // deux faits** : si la déclaration disparaissait — parce qu'on aurait rendu
+    // son entrée de menu à la page —, il rougirait, et la quatrième barre
+    // devrait alors rejoindre cette liste.
+    const LISTES = [
+      { objet: '_dashFilters', facettes: ['domaine', 'secteur', 'prestataire'] },
+      { objet: '_evalFilters', facettes: ['domaine', 'secteur'] },
+      { objet: '_indFilters', facettes: ['type', 'domaine', 'secteur', 'sa'] },
+    ];
+    const facettes = await page.evaluate(async (listes) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const lignes = () => document.querySelectorAll('#pageContent tbody tr, #pageContent .card').length;
+      // La barre d'une liste ne vit pas forcément sur la page d'accueil de son
+      // menu : on parcourt les pages **et leurs sous-vues** jusqu'à la trouver.
+      const trouverBarre = async (objet) => {
+        const selects = () => [...document.querySelectorAll(`select[onchange*="${objet}."]`)];
+        const pages = [...document.querySelectorAll('.nav-btn[data-page]')]
+          .map((b) => b.getAttribute('data-page'));
+        for (const p of pages) {
+          document.querySelector(`.nav-btn[data-page="${p}"]`)?.click();
+          await a(2600);
+          if (selects().length) return { page: p };
+          for (const s of [...document.querySelectorAll('.sub-nav-btn')]) {
+            s.click(); await a(2400);
+            if (selects().length) return { page: p, sousVue: (s.textContent || '').trim().slice(0, 24) };
+          }
+        }
+        return { introuvable: true };
+      };
+
+      for (const liste of listes) {
+        // eslint-disable-next-line no-await-in-loop
+        await essai(liste.objet, async () => {
+          const d = { facettes: {} };
+          d.ou = await trouverBarre(liste.objet);
+          if (d.ou.introuvable) return d;
+          d.lignesAvant = lignes();
+          for (const champ of liste.facettes) {
+            const sel = document.querySelector(`select[onchange*="${liste.objet}.${champ}"]`);
+            if (!sel) { d.facettes[champ] = { absente: true }; continue; }
+            // La première option non vide : c'est une valeur que la page offre,
+            // non une valeur inventée.
+            const valeur = [...sel.options].map((x) => x.value).find(Boolean) || '';
+            if (!valeur) { d.facettes[champ] = { aucuneValeur: true }; continue; }
+            sel.value = valeur;
+            sel.dispatchEvent(new Event('change'));
+            // eslint-disable-next-line no-await-in-loop
+            await a(2200);
+            d.facettes[champ] = {
+              posee: (window[liste.objet] || {})[champ] === valeur,
+              lignes: lignes(),
+            };
+          }
+          // La recherche, quand la barre en porte une : elle traverse le différé
+          // du socle avant d'atteindre l'état.
+          const champRecherche = document.querySelector('input[oninput*="_pesSearchInput"]');
+          d.recherche = !!champRecherche;
+          if (champRecherche) {
+            champRecherche.value = 'zzz-aucune-correspondance';
+            champRecherche.dispatchEvent(new Event('input'));
+            await a(2600);
+            d.rechercheDansEtat = (window[liste.objet] || {}).search === 'zzz-aucune-correspondance';
+            d.lignesRecherche = lignes();
+          }
+          // La remise à zéro : l'objet entier est remplacé.
+          const remise = [...document.querySelectorAll('button')]
+            .find((b) => (b.getAttribute('onclick') || '').includes(`window.${liste.objet}={`));
+          d.boutonRemise = !!remise;
+          if (!remise) return d;
+          remise.click();
+          await a(2600);
+          const etat = window[liste.objet] || {};
+          d.videe = liste.facettes.every((c) => !etat[c]) && !etat.search;
+          d.lignesApres = lignes();
+          return d;
+        });
+      }
+      return o;
+    }, LISTES);
+
+    // ── La coquille : thème, langue, barre, menu mobile, cloche ──
+    const coquille = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.APP_STATE || {};
+
+      await essai('theme', async () => {
+        const d = {};
+        const pastilles = [...document.querySelectorAll('.theme-dot[data-theme]')];
+        d.pastilles = pastilles.length;
+        d.depart = S().theme;
+        const autre = pastilles.find((p) => p.getAttribute('data-theme') !== d.depart);
+        if (!autre) return d;
+        const vise = autre.getAttribute('data-theme');
+        autre.click();
+        await a(1600);
+        d.pose = S().theme === vise;
+        // Le thème suit sur la racine du document : c'est là qu'il agit.
+        d.surLaRacine = document.documentElement.getAttribute('data-theme') === vise
+          || document.documentElement.classList.contains(`theme-${vise}`);
+        // Et la ronde le rend.
+        document.querySelector(`.theme-dot[data-theme="${d.depart}"]`)?.click();
+        await a(1600);
+        d.rendu = S().theme === d.depart;
+        return d;
+      });
+
+      await essai('langue', async () => {
+        const d = {};
+        const boutons = [...document.querySelectorAll('.lang-btn')];
+        d.boutons = boutons.length;
+        d.depart = S().lang;
+        const libellesAvant = [...document.querySelectorAll('.nav-btn[data-page]')]
+          .map((b) => b.textContent.trim()).join('|');
+        const autre = boutons.find((b) => !b.classList.contains('active'));
+        if (!autre) return d;
+        autre.click();
+        await a(2600);
+        d.changee = S().lang !== d.depart;
+        const libellesApres = [...document.querySelectorAll('.nav-btn[data-page]')]
+          .map((b) => b.textContent.trim()).join('|');
+        // Les libellés de la barre suivent : sinon la langue n'est qu'un drapeau.
+        d.libellesSuivent = libellesApres !== libellesAvant;
+        [...document.querySelectorAll('.lang-btn')]
+          .find((b) => b.textContent.trim().toLowerCase() === d.depart)?.click();
+        await a(2600);
+        d.rendue = S().lang === d.depart;
+        return d;
+      });
+
+      await essai('barre', async () => {
+        const d = {};
+        const repli = document.querySelector('[onclick*="toggleSidebar"]');
+        d.bouton = !!repli;
+        if (!repli) return d;
+        d.avant = !!S().sidebarCollapsed;
+        repli.click();
+        await a(1400);
+        d.apres = !!S().sidebarCollapsed;
+        d.classeSuit = document.querySelector('.app-sidebar')?.classList.contains('collapsed') === d.apres;
+        document.querySelector('[onclick*="toggleSidebar"]')?.click();
+        await a(1400);
+        d.rendue = !!S().sidebarCollapsed === d.avant;
+        // Le menu mobile : son bouton, et son fond qui le referme.
+        const menu = document.querySelector('[onclick*="toggleMobileSidebar"]');
+        d.menu = !!menu;
+        if (menu) {
+          menu.click();
+          await a(1200);
+          d.ouvert = document.querySelector('.app-sidebar')?.classList.contains('mobile-open')
+            || document.body.classList.contains('sidebar-open')
+            || !!document.querySelector('.sidebar-backdrop.visible');
+          // Le fond porte le même geste : c'est par lui qu'on referme.
+          const fond = document.querySelector('.sidebar-backdrop');
+          d.fond = !!fond && /toggleMobileSidebar/.test(fond.getAttribute('onclick') || '');
+          fond?.click();
+          await a(1200);
+        }
+        // La cloche des notifications : elle ouvre son panneau et le referme.
+        const cloche = document.querySelector('[onclick*="prToggleNotifPanel"]');
+        d.cloche = !!cloche;
+        if (cloche) {
+          cloche.click();
+          await a(1400);
+          d.panneau = !!document.querySelector('.pr-notif-panel, #prNotifPanel');
+          document.querySelector('[onclick*="prToggleNotifPanel"]')?.click();
+          await a(1200);
+          d.panneauFerme = !document.querySelector('.pr-notif-panel, #prNotifPanel');
+        }
+        return d;
+      });
+      return o;
+    });
+
+    {
+      // Une barre par liste, et le même contrat pour les quatre : chaque facette
+      // parvient à l'état, et la remise à zéro vide l'objet entier.
+      const verdict = (objet) => {
+        const b = facettes[objet] || {};
+        if (b.erreur || (b.ou || {}).introuvable) return { ok: false, b };
+        const champs = Object.values(b.facettes || {});
+        return {
+          ok: champs.length > 0
+            && champs.every((c) => c.posee === true)
+            && b.boutonRemise === true && b.videe === true
+            && (b.recherche ? b.rechercheDansEtat === true : true),
+          b,
+        };
+      };
+      const barres = LISTES.map((l) => ({ objet: l.objet, ...verdict(l.objet) }));
+      // Il y en avait une quatrième, sur la page « Plans ». Elle est partie avec
+      // elle, et le lien change de sens : le contrôle atteste désormais que la
+      // page n'est plus là, de ses quatre côtés. Si quelqu'un la rendait, il
+      // rougirait — et la barre devrait rejoindre cette liste.
+      const plans = pagePlansRetiree();
+      verifier('les trois barres de facettes de PR parviennent à l’état, chaque remise à zéro vide la sienne, et la quatrième est partie avec la page « Plans »',
+        barres.length === 3 && barres.every((x) => x.ok)
+        && plans.fichier === false && plans.cas === false
+        && plans.script === false && plans.facette === false,
+        JSON.stringify({ plans, echecs: barres.filter((x) => !x.ok).map((x) => ({ objet: x.objet, b: x.b })) }).slice(0, 560));
+      // Les trois barres qui portent une recherche la font traverser le différé
+      // du socle : trois sur quatre, le tableau de bord n'en a pas.
+      const avecRecherche = LISTES.filter((l) => (facettes[l.objet] || {}).recherche);
+      verifier('les barres de PR qui portent une recherche la font traverser le différé du socle',
+        // Deux des trois : le tableau de bord n'offre que ses trois facettes.
+        avecRecherche.length === 2
+        && avecRecherche.every((l) => facettes[l.objet].rechercheDansEtat === true),
+        JSON.stringify(avecRecherche.map((l) => ({
+          objet: l.objet, dansEtat: facettes[l.objet].rechercheDansEtat,
+          lignes: facettes[l.objet].lignesRecherche,
+        }))));
+
+      const Th = coquille.theme || {};
+      const La = coquille.langue || {};
+      const Ba = coquille.barre || {};
+      verifier('le thème et la langue de PR se changent par la coquille, suivent sur le document, et la ronde les rend',
+        Th.pastilles >= 2 && Th.pose === true && Th.surLaRacine === true && Th.rendu === true
+        && La.boutons === 3 && La.changee === true
+        // Les libellés de la barre suivent : sinon la langue n'est qu'un drapeau.
+        && La.libellesSuivent === true && La.rendue === true,
+        JSON.stringify({ Th, La }));
+      verifier('la barre latérale de PR se replie et se relève, son menu mobile se referme par son fond, et la cloche ouvre son panneau',
+        Ba.bouton === true && Ba.apres !== Ba.avant
+        && Ba.classeSuit === true && Ba.rendue === true
+        && Ba.menu === true && Ba.fond === true
+        && Ba.cloche === true && Ba.panneau === true && Ba.panneauFerme === true,
+        JSON.stringify(Ba));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les référentiels d'indicateurs : le cycle entier d'une entité,
+    //  et l'aller-retour de leur classeur
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `pr-parametres.js` — 13 gestes sur 21. Les huit qui restent tiennent en un
+    // seul parcours : ouvrir la fenêtre d'une entité, l'enregistrer, la rouvrir,
+    // la renommer, la supprimer ; puis imprimer la page, exporter le classeur
+    // des indicateurs et le réimporter.
+    //
+    // ── Pourquoi ce parcours, et dans cet ordre ──
+    //
+    // L'ordre n'est pas libre. Le classeur doit être exporté **après** le cycle
+    // de l'entité : exporté avant, il porterait l'indicateur d'essai, et le
+    // réimporter le recréerait après sa suppression — l'aller-retour ne dirait
+    // alors plus « relire ce qu'on vient d'écrire ne change rien », mais
+    // « réimporter ressuscite ce qu'on a retiré ».
+    //
+    // Et le bandeau d'import ne paraît qu'**après** un import : son bouton de
+    // fermeture (`this.parentNode.remove()`) n'existe pas avant.
+    etape = 'référentiels d’indicateurs';
+    const CODE_INDICATEUR = 'ESSAI' + String(Date.now()).slice(-5);
+    const dossierIndicateurs = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-pr-ind-'));
+    const cdpIndicateurs = await page.createCDPSession();
+    await cdpIndicateurs.send('Browser.setDownloadBehavior',
+      { behavior: 'allow', downloadPath: dossierIndicateurs });
+
+    // ── 1. Atteindre la page des indicateurs, et l'imprimer ──
+    const pageIndicateurs = await page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      // Les sous-menus des Paramètres de PR prennent la bande latérale du
+      // portail (`lateral: true` dans NAV_CONFIG) : on y entre par la page,
+      // puis par le sous-menu qui porte le geste qu'on cherche.
+      document.querySelector('.nav-btn[data-page="parametres"]')?.click();
+      await a(3000);
+      if (!bouton(/openEntityModal\('indicateurs_perf'\)/)) {
+        for (const s of [...document.querySelectorAll('.sub-nav-btn, [onclick*="navigateTo"]')]) {
+          s.click();
+          await a(2400);
+          if (bouton(/openEntityModal\('indicateurs_perf'\)/)) break;
+        }
+      }
+      d.barre = !!bouton(/openEntityModal\('indicateurs_perf'\)/);
+      d.imprimer = !!bouton(/printPage/);
+      d.exporter = !!bouton(/exportIndicateursExcel/);
+      d.importer = !!bouton(/indImportFile/);
+      d.champ = !!document.getElementById('indImportFile');
+      return d;
+    });
+
+    let documentImprime = {};
+    if (pageIndicateurs.imprimer) {
+      try {
+        documentImprime = await ouvrirDocument(() => {
+          const b = [...document.querySelectorAll('button')]
+            .find((x) => /printPage/.test(x.getAttribute('onclick') || ''));
+          if (!b) throw new Error('bouton d’impression introuvable');
+          b.click();
+        });
+      } catch (e) { documentImprime = { erreur: String((e && e.message) || e) }; }
+    }
+
+    // ── 2. Le cycle entier d'une entité ──
+    const entite = await page.evaluate(async (code) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      const perfs = () => window.api(`${MODULE_API}/indicateurs-perf`);
+      const poser = (id, valeur) => {
+        const el = document.getElementById(id);
+        if (!el) return false;
+        el.value = valeur;
+        // Les zones de texte du formulaire portent `auto-grow` : l'événement
+        // `input` est ce qui les fait grandir, et c'est un geste de la coquille.
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        return true;
+      };
+
+      await essai('creation', async () => {
+        const d = {};
+        d.avant = (await perfs()).length;
+        bouton(/openEntityModal\('indicateurs_perf'\)/)?.click();
+        await a(2400);
+        d.fenetre = !!document.getElementById('eCode');
+        if (!d.fenetre) return d;
+        d.champs = ['eCode', 'eLabel', 'eC1', 'eC2', 'eC3']
+          .filter((x) => !!document.getElementById(x)).length;
+        const zone = document.getElementById('eLabel');
+        poser('eCode', code);
+        poser('eLabel', 'Indicateur d’essai posé par la ronde, dont le libellé est '
+          + 'assez long pour que la zone grandisse d’au moins une ligne.');
+        poser('eC1', 'Niveau 1');
+        poser('eC2', 'Niveau 2');
+        poser('eC3', 'Niveau 3');
+        await a(900);
+        // ── L'auto-grandissement : la règle, non un écart de hauteur ──
+        //
+        // Mon premier jet comparait la hauteur avant et après : elles étaient
+        // égales, la fenêtre étant assez large en mode sans affichage pour que
+        // le libellé y tienne sur une ligne. *Comparer deux états ne dit rien
+        // quand le second peut légitimement égaler le premier.* Ce que
+        // l'écouteur fait, c'est poser la hauteur **à la hauteur du contenu** —
+        // et cela se vérifie quelle que soit la largeur.
+        d.zoneAutoGrandie = !!zone && zone.classList.contains('auto-grow');
+        d.hauteurPosee = zone ? zone.style.height : '';
+        d.hauteurSuitLeContenu = !!zone
+          && zone.style.height === `${zone.scrollHeight + 2}px`;
+        bouton(/saveEntity\('indicateurs_perf'/)?.click();
+        await a(3600);
+        d.fenetreFermee = !document.getElementById('eCode');
+        const apres = await perfs();
+        d.apres = apres.length;
+        const cree = apres.find((x) => x.code === code);
+        d.cree = !!cree;
+        if (!cree) return d;
+        o.identifiant = cree.id;
+        // ── Le serveur ne reprend pas l'identifiant que le client propose ──
+        //
+        // `saveEntity` envoie `id: itemId || code`. Mon premier jet en concluait
+        // que l'identifiant serait le code, et le contrôle est tombé. La vérité
+        // est meilleure, et elle est écrite dans `routes-partage.js` : « un
+        // enregistrement se borne : le socle retire les champs que le serveur
+        // seul écrit, **à commencer par l'identifiant** ». Un client ne choisit
+        // donc pas une clé — il ne peut ni en heurter une existante, ni se
+        // placer sur celle d'un autre. *Ce que le client propose n'est pas ce
+        // que le serveur retient, et c'est une propriété, non un détail.*
+        d.idNonImpose = cree.id !== code && !!cree.id;
+        // Le relevé est tronqué pour tenir au détail, mais **pas avant ce que
+        // l'assertion cherche** : coupé à 24, il s'arrêtait sur « posé » et le
+        // motif « posé par la ronde » ne trouvait rien. *Une troncature est un
+        // choix d'affichage ; elle ne doit pas décider du verdict.*
+        d.libelle = (cree.label || '').slice(0, 48);
+        d.criteres = [cree.c1, cree.c2, cree.c3].join('|');
+        return d;
+      });
+
+      await essai('reprise', async () => {
+        const d = {};
+        if (!o.identifiant) return d;
+        // Rouvrir **par son identifiant** : la fenêtre revient garnie.
+        [...document.querySelectorAll('button')]
+          .find((b) => (b.getAttribute('onclick') || '')
+            .includes(`openEntityModal('indicateurs_perf','${o.identifiant}')`))?.click();
+        await a(2600);
+        d.rouverte = !!document.getElementById('eCode');
+        if (!d.rouverte) return d;
+        d.codeRempli = document.getElementById('eCode').value === code;
+        d.libelleRempli = /posé par la ronde/.test(document.getElementById('eLabel').value || '');
+        poser('eLabel', 'Libellé révisé par la ronde.');
+        bouton(/saveEntity\('indicateurs_perf'/)?.click();
+        await a(3600);
+        const relu = (await perfs()).find((x) => x.id === o.identifiant) || {};
+        d.renomme = relu.label === 'Libellé révisé par la ronde.';
+        // Le code ne bouge pas : c'est lui que les évaluations retiennent.
+        d.codeInchange = relu.code === code;
+        return d;
+      });
+
+      await essai('retrait', async () => {
+        const d = {};
+        if (!o.identifiant) return d;
+        [...document.querySelectorAll('button')]
+          .find((b) => (b.getAttribute('onclick') || '')
+            .includes(`openEntityModal('indicateurs_perf','${o.identifiant}')`))?.click();
+        await a(2600);
+        const retirer = bouton(new RegExp(`deleteEntity\\('indicateurs_perf','${o.identifiant}'`));
+        d.bouton = !!retirer;
+        if (!retirer) return d;
+        retirer.click();
+        await a(1400);
+        d.confirmation = !!document.querySelector('.oasis-confirm-oui');
+        // Refusée, la suppression n'a pas lieu : on l'éprouve avant de l'accepter.
+        document.querySelector('.oasis-confirm-non')?.click();
+        await a(2600);
+        d.resteApresRefus = (await perfs()).some((x) => x.id === o.identifiant);
+        // Puis pour de bon.
+        [...document.querySelectorAll('button')]
+          .find((b) => (b.getAttribute('onclick') || '')
+            .includes(`openEntityModal('indicateurs_perf','${o.identifiant}')`))?.click();
+        await a(2600);
+        bouton(new RegExp(`deleteEntity\\('indicateurs_perf','${o.identifiant}'`))?.click();
+        await a(1400);
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await a(3600);
+        d.parti = !(await perfs()).some((x) => x.id === o.identifiant);
+        d.lignePartie = ![...document.querySelectorAll('button')]
+          .some((b) => (b.getAttribute('onclick') || '').includes(`'${o.identifiant}'`));
+        return d;
+      });
+      return o;
+    }, CODE_INDICATEUR);
+
+    // ── 3. L'aller-retour du classeur des indicateurs ──
+    //
+    // Exporté **après** le cycle de l'entité, pour que relire ce qu'on vient
+    // d'écrire ne ressuscite pas ce qu'on vient de retirer.
+    const classeurInd = {};
+    try {
+      await page.evaluate(() => {
+        const b = [...document.querySelectorAll('button')]
+          .find((x) => /exportIndicateursExcel/.test(x.getAttribute('onclick') || ''));
+        if (!b) throw new Error('bouton « Exporter Excel » introuvable');
+        b.click();
+      });
+      const debut = Date.now();
+      let fichier = null;
+      while (Date.now() - debut < 20000 && !fichier) {
+        const f = fs.readdirSync(dossierIndicateurs)
+          .filter((n) => n.endsWith('.xlsx') && !n.endsWith('.crdownload'));
+        if (f.length) {
+          const chemin = path.join(dossierIndicateurs, f[0]);
+          const taille = fs.statSync(chemin).size;
+          // eslint-disable-next-line no-await-in-loop
+          await new Promise((r) => setTimeout(r, 400));
+          if (fs.statSync(chemin).size === taille && taille > 0) fichier = { nom: f[0], chemin, taille };
+        }
+        // eslint-disable-next-line no-await-in-loop
+        if (!fichier) await new Promise((r) => setTimeout(r, 400));
+      }
+      classeurInd.fichier = !!fichier;
+      if (fichier) {
+        classeurInd.nom = fichier.nom;
+        classeurInd.taille = fichier.taille;
+        // eslint-disable-next-line global-require
+        const XLSX = require('xlsx');
+        const wb = XLSX.readFile(fichier.chemin);
+        classeurInd.feuilles = wb.SheetNames;
+        classeurInd.lignes = {};
+        wb.SheetNames.forEach((n) => {
+          classeurInd.lignes[n] = XLSX.utils.sheet_to_json(wb.Sheets[n], { defval: '' }).length;
+        });
+        const perf = XLSX.utils.sheet_to_json(wb.Sheets.Performance || {}, { defval: '' });
+        classeurInd.enTetes = Object.keys(perf[0] || {}).join(',');
+        // L'indicateur d'essai a été retiré : il ne doit pas être au classeur.
+        classeurInd.sansEssai = !perf.some((r) => String(r.Code) === CODE_INDICATEUR);
+        classeurInd.chemin = fichier.chemin;
+      }
+    } catch (e) { classeurInd.erreur = String((e && e.message) || e); }
+
+    // Le même classeur, réimporté par le vrai sélecteur de fichiers.
+    const retourInd = {};
+    try {
+      const avant = await page.evaluate(async () => {
+        const n = async (c) => (await window.api(`${MODULE_API}/${c}`)).length;
+        return { conf: await n('indicateurs-conf'), perf: await n('indicateurs-perf'),
+          complex: await n('indicateurs-complex') };
+      });
+      const [selecteur] = await Promise.all([
+        page.waitForFileChooser({ timeout: 20000 }),
+        page.evaluate(() => {
+          const b = [...document.querySelectorAll('button')]
+            .find((x) => (x.getAttribute('onclick') || '').includes("indImportFile'"));
+          if (!b) throw new Error('bouton « Importer » introuvable');
+          b.click();
+        }),
+      ]);
+      retourInd.selecteur = true;
+      await selecteur.accept([classeurInd.chemin]);
+      // ── Le bandeau s'efface tout seul, et il faut le lire avant ──
+      //
+      // J'attendais sept secondes : le bandeau de succès se retire **au bout de
+      // six** (`delay = state === 'success' ? 6000 : 12000`). Le contrôle
+      // relevait donc son absence et concluait qu'il n'avait pas paru. *Un
+      // relevé sur un élément qui se retire seul se fait dans sa fenêtre de vie,
+      // et cette fenêtre est écrite dans le code.*
+      await new Promise((r) => setTimeout(r, 3500));
+      Object.assign(retourInd, await page.evaluate(async (av) => {
+        const d = {};
+        const n = async (c) => (await window.api(`${MODULE_API}/${c}`)).length;
+        d.avant = av;
+        d.apres = { conf: await n('indicateurs-conf'), perf: await n('indicateurs-perf'),
+          complex: await n('indicateurs-complex') };
+        // **Relire ce qu'on vient d'écrire ne change rien** : ni ajout, ni perte.
+        d.identique = d.apres.conf === av.conf && d.apres.perf === av.perf
+          && d.apres.complex === av.complex;
+        // ── Le bandeau d'import, et son bouton de fermeture ──
+        //
+        // Il ne paraît qu'après un import : son geste de fermeture
+        // (`this.parentNode.remove()`) n'existe pas avant, et c'est pourquoi il
+        // est le dernier de ce fichier à être exercé.
+        const bandeau = document.querySelector('.pr-import-banner');
+        d.bandeau = !!bandeau;
+        d.texteBandeau = bandeau ? (bandeau.textContent || '').replace(/\s+/g, ' ').slice(0, 90) : '';
+        const fermer = bandeau ? bandeau.querySelector('.pr-import-close') : null;
+        d.boutonFermer = !!fermer;
+        d.geste = fermer ? (fermer.getAttribute('onclick') || '') : '';
+        fermer?.click();
+        await new Promise((r) => setTimeout(r, 600));
+        d.bandeauFerme = !document.querySelector('.pr-import-banner');
+        return d;
+      }, avant));
+    } catch (e) { retourInd.erreur = String((e && e.message) || e); }
+
+    try { fs.rmSync(dossierIndicateurs, { recursive: true, force: true }); }
+    catch { /* le répertoire a déjà disparu */ }
+
+    {
+      const Pi = pageIndicateurs || {};
+      const Cr = entite.creation || {};
+      const Rp = entite.reprise || {};
+      const Rt = entite.retrait || {};
+      verifier('la page des indicateurs porte ses quatre gestes, et son impression compose un document',
+        Pi.barre === true && Pi.imprimer === true
+        && Pi.exporter === true && Pi.importer === true && Pi.champ === true
+        // Le document est **lu**, non seulement ouvert : l'en-tête de l'autorité
+        // et au moins un indicateur y figurent.
+        && !documentImprime.erreur
+        && /Aviation Civile/i.test(documentImprime.texte || '')
+        && (documentImprime.texte || '').length > 200,
+        JSON.stringify({ Pi, document: { erreur: documentImprime.erreur,
+          texte: (documentImprime.texte || '').slice(0, 120) } }));
+      verifier('un indicateur s’ajoute par sa fenêtre, le serveur ne reprend pas l’identifiant proposé, et ses zones grandissent à la saisie',
+        Cr.fenetre === true && Cr.champs === 5
+        // L'écouteur d'auto-grandissement de la coquille, exercé par la saisie :
+        // il pose la hauteur à celle du contenu, ce qui se vérifie quelle que
+        // soit la largeur de la fenêtre.
+        && Cr.zoneAutoGrandie === true && !!Cr.hauteurPosee
+        && Cr.hauteurSuitLeContenu === true
+        && Cr.fenetreFermee === true && Cr.apres === Cr.avant + 1
+        && Cr.cree === true && Cr.idNonImpose === true
+        && /posé par la ronde/.test(Cr.libelle || '')
+        && Cr.criteres === 'Niveau 1|Niveau 2|Niveau 3',
+        JSON.stringify(Cr));
+      verifier('la fenêtre se rouvre garnie sur l’indicateur, le renommage part au serveur, et le code ne bouge pas',
+        Rp.rouverte === true && Rp.codeRempli === true && Rp.libelleRempli === true
+        && Rp.renomme === true
+        // Le code est ce que les évaluations retiennent : un renommage ne le
+        // touche pas, sans quoi les notes perdraient leur indicateur.
+        && Rp.codeInchange === true,
+        JSON.stringify(Rp));
+      verifier('le retrait d’un indicateur demande confirmation, son refus ne retire rien, et accepté il l’ôte du serveur comme de la page',
+        Rt.bouton === true && Rt.confirmation === true
+        && Rt.resteApresRefus === true
+        && Rt.parti === true && Rt.lignePartie === true,
+        JSON.stringify(Rt));
+      verifier('le classeur des indicateurs s’exporte sans l’entité retirée, et le réimporter ne change rien — le bandeau le dit, et se ferme par son geste',
+        classeurInd.fichier === true && classeurInd.nom === 'indicateurs.xlsx'
+        && classeurInd.taille > 2000
+        && (classeurInd.feuilles || []).join(',') === 'Conformite,Performance,Complexite'
+        && classeurInd.enTetes === 'Code,Label,Critere 1,Critere 2,Critere 3'
+        && (classeurInd.lignes || {}).Performance > 0
+        // L'entité retirée n'y est pas : le classeur dit l'état d'après.
+        && classeurInd.sansEssai === true
+        // Et l'aller-retour ne change rien.
+        && retourInd.selecteur === true && retourInd.identique === true
+        // Le bandeau paraît, dit ce qui s'est passé, et se ferme par son bouton.
+        && retourInd.bandeau === true && !!retourInd.texteBandeau
+        && retourInd.boutonFermer === true
+        && /parentNode\.remove/.test(retourInd.geste || '')
+        && retourInd.bandeauFerme === true,
+        JSON.stringify({ classeurInd: { ...classeurInd, chemin: undefined }, retourInd }).slice(0, 560));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les six seuils du barème — la page qui disait « OK » sans rien régler
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `saveIndices` était le dernier geste non exercé de `pr-parametres.js`.
+    // L'exercer a montré pourquoi personne ne l'avait remarqué : il
+    // **réussissait**. La page affichait « OK », et rien n'était enregistré.
+    //
+    // Trois vocabulaires pour une même chose :
+    //   · le magasin semait `indices: [{ cle, valeur }, …]` — lu par personne ;
+    //   · l'écran lit et envoie `{ conf1, conf2, perf1, perf2, expo1, expo2 }`,
+    //     et c'est **cet objet** que six endroits du calcul interrogent
+    //     (`pr-profils.js:prSeuils` et quatre lectures de la fiche) ;
+    //   · la route `PUT` n'acceptait qu'un tableau, et retombait sinon sur
+    //     `d.indices` — c'est-à-dire ne changeait rien — en répondant `ok`.
+    //
+    // Conséquence : tous les niveaux de risque de l'application se calculaient
+    // sur 0,80 et 0,50 repliés dans le code, et le privilège de Gestionnaire
+    // qui gardait la page ne gardait rien. Décision de la maîtrise d'ouvrage :
+    // le modèle de l'écran fait loi (n° 5.f.69).
+    //
+    // Le contrôle ne se contente pas du `GET` : il **recharge la page**, et
+    // relit `APP_STATE.data.indices`. Car c'est cet état-là que les six
+    // lectures du calcul consultent, et `loadAllData` le compose de deux
+    // sources : l'amorce du portail (`PESSCO.sharedData.indices`) quand le
+    // module est monté dans la coquille, et `GET /api/indices` sinon. La ronde
+    // monte l'écran seul : `sharedData` y est absent, et c'est donc la route
+    // qui alimente le calcul. Le contrôle vérifie l'état, non la source — les
+    // deux chemins y mènent, et c'est l'état qui décide des niveaux de risque.
+    etape = 'les six seuils du barème';
+
+    const allerAuxSeuils = () => page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelector('.nav-btn[data-page="parametres"]')?.click();
+      await a(2200);
+      const entree = [...document.querySelectorAll('.cfg-sidebar-item')]
+        .find((b) => /currentSub='indices'/.test(b.getAttribute('onclick') || ''));
+      if (entree) { entree.click(); await a(1400); }
+      const champ = (id) => (document.getElementById(id) || {}).value;
+      return {
+        page: !!document.getElementById('idxConf1'),
+        champs: ['idxConf1', 'idxConf2', 'idxPerf1', 'idxPerf2', 'idxExpo1', 'idxExpo2']
+          .filter((x) => !!document.getElementById(x)).length,
+        lus: {
+          conf1: champ('idxConf1'), conf2: champ('idxConf2'),
+          perf1: champ('idxPerf1'), perf2: champ('idxPerf2'),
+          expo1: champ('idxExpo1'), expo2: champ('idxExpo2'),
+        },
+      };
+    });
+
+    const ecrireSeuils = (valeurs) => page.evaluate(async (v) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const ids = {
+        conf1: 'idxConf1', conf2: 'idxConf2', perf1: 'idxPerf1',
+        perf2: 'idxPerf2', expo1: 'idxExpo1', expo2: 'idxExpo2',
+      };
+      Object.entries(v).forEach(([c, x]) => {
+        const el = document.getElementById(ids[c]);
+        if (el) el.value = String(x);
+      });
+      document.querySelectorAll('.oasis-toast-fond').forEach((n) => n.remove());
+      const bouton = [...document.querySelectorAll('button')]
+        .find((b) => /saveIndices/.test(b.getAttribute('onclick') || ''));
+      if (!bouton) return { bouton: false };
+      bouton.click();
+      await a(1800);
+      const toast = document.querySelector('.oasis-toast-fond');
+      return {
+        bouton: true,
+        toast: toast ? (toast.className || '') : '',
+        texte: toast ? (toast.innerText || '').trim().slice(0, 120) : '',
+        enBase: await window.api('/api/indices'),
+        enPage: { ...(window.APP_STATE.data.indices || {}) },
+      };
+    }, valeurs);
+
+    const seuilsAtteints = await allerAuxSeuils();
+    let Sa = {}; let Sr = {}; let Sb = {}; let Sz = {};
+    if (seuilsAtteints.page) {
+      // ── 1. Ce que le magasin porte, et ce que la page en lit ──
+      Sa = await page.evaluate(async () => {
+        const lu = await window.api('/api/indices');
+        return {
+          objet: !!lu && !Array.isArray(lu) && typeof lu === 'object',
+          tableau: Array.isArray(lu),
+          clefs: Object.keys(lu || {}).sort().join(','),
+          nombres: ['conf1', 'conf2', 'perf1', 'perf2', 'expo1', 'expo2']
+            .every((c) => typeof (lu || {})[c] === 'number'),
+          valeurs: lu,
+        };
+      });
+
+      // ── 2. L'enregistrement, et sa trace jusqu'à l'amorce ──
+      Sb = await ecrireSeuils({
+        conf1: 0.77, conf2: 0.33, perf1: 0.8, perf2: 0.5, expo1: 0.8, expo2: 0.5,
+      });
+      await page.reload({ waitUntil: 'networkidle2' });
+      await new Promise((r) => setTimeout(r, 4000));
+      const apresRechargement = await allerAuxSeuils();
+      Sb.apresRechargement = apresRechargement.lus;
+      Sb.amorce = await page.evaluate(() => ({
+        page: ((window.APP_STATE.data || {}).indices || {}).conf1,
+        // Nul dans une ronde qui monte l'écran seul : on le relève pour que la
+        // trace dise par quel chemin l'état a été alimenté.
+        coquille: !!((window.PESSCO || {}).sharedData || {}).indices,
+      }));
+
+      // ── 3. Les deux refus : hors des bornes, et le barème renversé ──
+      //
+      // Un seuil hors de [0,1] n'a pas de sens ; un seuil haut sous le seuil
+      // bas renverse le barème sans qu'une ligne du calcul ne s'en plaigne.
+      // Les deux sont refusés par la route, non par l'écran : `min`/`max` d'un
+      // `<input number="">` ne retiennent rien d'une valeur posée par le code.
+      refusDeclares.declarer(400, '/api/indices');
+      refusDeclares.declarer(400, '/api/indices');
+      try {
+        Sr = await ecrireSeuils({
+          conf1: 1.5, conf2: 0.33, perf1: 0.8, perf2: 0.5, expo1: 0.8, expo2: 0.5,
+        });
+        Sz = await ecrireSeuils({
+          conf1: 0.2, conf2: 0.33, perf1: 0.8, perf2: 0.5, expo1: 0.8, expo2: 0.5,
+        });
+      } finally { refusDeclares.clore(); }
+
+      // ── 4. Rendre le barème à ses valeurs d'origine ──
+      await ecrireSeuils({
+        conf1: 0.8, conf2: 0.5, perf1: 0.8, perf2: 0.5, expo1: 0.8, expo2: 0.5,
+      });
+
+      verifier('le barème se lit comme un objet de six seuils nombres, et non comme la collection de paires que personne ne lisait',
+        seuilsAtteints.champs === 6
+        && Sa.objet === true && Sa.tableau === false && Sa.nombres === true
+        && Sa.clefs === 'conf1,conf2,expo1,expo2,perf1,perf2',
+        JSON.stringify([seuilsAtteints.champs, Sa]).slice(0, 400));
+
+      verifier('un seuil modifié est enregistré, et le rechargement le rend à la page — c’est l’amorce que les six lectures du calcul consultent',
+        Sb.bouton === true && /succes|success/.test(Sb.toast)
+        // La route le dit…
+        && (Sb.enBase || {}).conf1 === 0.77 && (Sb.enBase || {}).conf2 === 0.33
+        // …la page vivante aussi…
+        && (Sb.enPage || {}).conf1 === 0.77
+        // …et après rechargement, l'état que lisent les six places du calcul
+        // le porte — c'est lui qui décide des niveaux de risque.
+        && (Sb.amorce || {}).page === 0.77
+        && (Sb.apresRechargement || {}).conf1 === '0.77'
+        && (Sb.apresRechargement || {}).conf2 === '0.33',
+        JSON.stringify(Sb).slice(0, 560));
+
+      verifier('un seuil hors de [0,1] est refusé, et un barème renversé aussi — dans les deux cas rien n’est enregistré et l’écran le dit',
+        /erreur|error/.test(Sr.toast) && /erreur|error/.test(Sz.toast)
+        // Le refus nomme l'objet : l'écran compose la phrase dans la langue.
+        && !!Sr.texte && !!Sz.texte
+        // Et la valeur refusée n'est pas entrée : celle d'avant tient.
+        && (Sr.enBase || {}).conf1 === 0.77 && (Sz.enBase || {}).conf1 === 0.77,
+        JSON.stringify([Sr, Sz]).slice(0, 560));
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  La bibliothèque documentaire — le dépôt, le retrait, et deux
+    //  autorités qui ne se parlaient pas
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `pr-bibliotheque.js` — 1 geste exercé sur 6, et le seul exercé
+    // (`triggerFileUpload`) ne faisait qu'ouvrir le sélecteur de fichiers. Les
+    // cinq autres forment un cycle : choisir un fichier, le nommer, le déposer,
+    // le télécharger, le retirer.
+    //
+    // ── Ce que le cycle éprouve, et qui n'est pas « le bouton répond » ──
+    //
+    // La propriété forte est l'**identité de l'aller-retour** : les octets
+    // téléchargés sont ceux qui ont été déposés. Le fichier voyage en base64
+    // dans du JSON, est rangé tel quel dans l'enregistrement, et ressort en
+    // `Buffer.from(contenu, 'base64')`. Trois conversions ; une seule mesure
+    // les dit toutes.
+    //
+    // Et la règle que la liste doit tenir : **le contenu n'y voyage jamais**.
+    // `publicDoc` l'ôte de chaque enregistrement rendu, et seule la route de
+    // téléchargement le restitue. Une liste qui porterait les base64 ferait de
+    // chaque ouverture de page le transfert de toute la bibliothèque.
+    etape = 'bibliothèque documentaire';
+    const dossierBiblio = fs.mkdtempSync(path.join(os.tmpdir(), 'oasis-pr-doc-'));
+    const cdpBiblio = await page.createCDPSession();
+    await cdpBiblio.send('Browser.setDownloadBehavior',
+      { behavior: 'allow', downloadPath: dossierBiblio });
+
+    // ── Le fichier d'épreuve, et son nom ──
+    //
+    // Le nom porte un guillemet et une apostrophe à dessein. `handleDocFileSelected`
+    // posait le nom du fichier **en clair** dans l'attribut `value` du champ :
+    // un guillemet le refermait, et ce qui suivait devenait du balisage. Le
+    // champ ne portait plus que la moitié du nom. C'est le même défaut que
+    // celui déjà corrigé dans `downloadDoc`, à ceci près qu'il porte sur une
+    // valeur que l'agent ne compose pas — il la reçoit avec le fichier.
+    const NOM_FICHIER = 'preuve "d’audit’s".txt';
+    const OCTETS_PREUVE = Buffer.from(
+      `Pièce d'épreuve de la ronde PR — ${Date.now()}\n`
+      + 'Deux lignes, des accents, et un octet nul évité pour rester lisible.\n',
+      'utf8',
+    );
+    const cheminPreuve = path.join(dossierBiblio, NOM_FICHIER);
+    fs.writeFileSync(cheminPreuve, OCTETS_PREUVE);
+    // Au-dessus de la borne du client (3 500 000 octets) comme de celle du
+    // serveur : le refus doit venir du client, sans requête.
+    const cheminTropGros = path.join(dossierBiblio, 'trop-gros.txt');
+    fs.writeFileSync(cheminTropGros, Buffer.alloc(3_700_000, 0x41));
+    const NOM_DOCUMENT = `Dossier de la ronde ${String(Date.now()).slice(-6)}`;
+
+    const allerALaBibliotheque = () => page.evaluate(async () => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      document.querySelector('.nav-btn[data-page="bibliotheque"]')?.click();
+      await a(2600);
+      return {
+        page: !!document.querySelector('[onclick*="triggerFileUpload"]'),
+        champ: !!document.getElementById('docFileInput'),
+        lignes: document.querySelectorAll('.data-table tbody tr').length,
+      };
+    });
+
+    const choisirFichier = async (chemin) => {
+      const [selecteur] = await Promise.all([
+        page.waitForFileChooser({ timeout: 20000 }),
+        page.evaluate(() => {
+          const b = document.querySelector('[onclick*="triggerFileUpload"]');
+          if (!b) throw new Error('bouton « Téléverser » introuvable');
+          b.click();
+        }),
+      ]);
+      await selecteur.accept([chemin]);
+      await new Promise((r) => setTimeout(r, 2200));
+    };
+
+    const pageBiblio = await allerALaBibliotheque();
+    let Bg = {}; let Bd = {}; let Bt = {}; let Br = {}; let Bp = {};
+    if (pageBiblio.page) {
+      // ── 1. La borne de taille, opposée par le client ──
+      await choisirFichier(cheminTropGros);
+      Bg = await page.evaluate(async () => {
+        const toast = document.querySelector('.oasis-toast-fond');
+        return {
+          // Le refus vient du client : aucune fenêtre ne s'ouvre.
+          fenetre: !!document.getElementById('docName'),
+          toast: toast ? (toast.className || '') : '(aucun)',
+          dit: toast ? (toast.innerText || '').trim().slice(0, 120) : '',
+          // Et le champ est rendu vide, sans quoi le même fichier ne pourrait
+          // plus être rechoisi — ni un autre, le navigateur ne rejouant pas
+          // `change` pour une valeur identique.
+          champRendu: (document.getElementById('docFileInput') || {}).value === '',
+          documents: (await window.api('/api/documents')).length,
+        };
+      });
+
+      // ── 2. Le dépôt d'un vrai fichier, nommé dans la fenêtre ──
+      await choisirFichier(cheminPreuve);
+      Bd = await page.evaluate(async (nomFichier, nomDocument) => {
+        const a = (ms) => new Promise((r) => setTimeout(r, ms));
+        const d = {};
+        const base = nomFichier.replace(/\.[^.]+$/, '');
+        d.fenetre = !!document.getElementById('docName');
+        if (!d.fenetre) return d;
+        // Le nom du fichier, entier, dans le champ : c'est la mesure de
+        // l'échappement. Non échappé, le guillemet refermait l'attribut et le
+        // champ ne portait que « preuve ».
+        d.nomPropose = (document.getElementById('docName') || {}).value || '';
+        d.nomEntier = d.nomPropose === base;
+        d.typePropose = (document.getElementById('docType') || {}).value || '';
+        d.avant = (await window.api('/api/documents')).length;
+        document.getElementById('docName').value = nomDocument;
+        [...document.querySelectorAll('.modal-footer .btn-primary, .modal-footer button')]
+          .find((b) => /uploadDocWithFile/.test(b.getAttribute('onclick') || ''))?.click();
+        await a(4000);
+        d.fenetreFermee = !document.getElementById('docName');
+        const liste = await window.api('/api/documents');
+        d.apres = liste.length;
+        const pose = liste.find((x) => x.nom === nomDocument) || null;
+        d.cree = !!pose;
+        if (pose) {
+          d.identifiant = pose.id;
+          d.type = pose.type;
+          d.taille = pose.taille;
+          d.mime = pose.mime;
+          d.auteur = pose.uploade_par;
+          // ── La règle que la liste doit tenir ──
+          // Le base64 ne voyage pas : `publicDoc` l'ôte, et seul /download le rend.
+          d.sansContenu = !('contenu' in pose);
+        }
+        // Et la ligne paraît dans la table, avec sa taille en kilooctets.
+        const lignes = [...document.querySelectorAll('.data-table tbody tr')]
+          .map((r) => (r.innerText || '').replace(/\s+/g, ' '));
+        d.ligne = lignes.find((x) => x.includes(nomDocument)) || '';
+        return d;
+      }, NOM_FICHIER, NOM_DOCUMENT);
+
+      // ── 3. L'aller-retour : les octets rendus sont ceux déposés ──
+      if (Bd.identifiant) {
+        try {
+          await page.evaluate((id) => {
+            const b = [...document.querySelectorAll('button')]
+              .find((x) => (x.getAttribute('onclick') || '').includes(`downloadDoc('${id}')`));
+            if (!b) throw new Error('bouton de téléchargement introuvable');
+            b.click();
+          }, Bd.identifiant);
+          const debut = Date.now();
+          let recu = null;
+          while (Date.now() - debut < 20000 && !recu) {
+            const f = fs.readdirSync(dossierBiblio)
+              .filter((n) => n.startsWith('Dossier de la ronde') && !n.endsWith('.crdownload'));
+            if (f.length) {
+              const chemin = path.join(dossierBiblio, f[0]);
+              const taille = fs.statSync(chemin).size;
+              // eslint-disable-next-line no-await-in-loop
+              await new Promise((r) => setTimeout(r, 400));
+              if (fs.statSync(chemin).size === taille && taille > 0) recu = { nom: f[0], chemin };
+            }
+            // eslint-disable-next-line no-await-in-loop
+            if (!recu) await new Promise((r) => setTimeout(r, 400));
+          }
+          Bt.fichier = !!recu;
+          if (recu) {
+            Bt.nom = recu.nom;
+            const octets = fs.readFileSync(recu.chemin);
+            // L'ancre porte `download = nom` : le fichier reçu prend le nom du
+            // **document**, non celui du fichier d'origine.
+            Bt.nomDuDocument = recu.nom.startsWith(NOM_DOCUMENT);
+            Bt.identiques = octets.equals(OCTETS_PREUVE);
+            Bt.octets = octets.length;
+          }
+        } catch (e) { Bt.erreur = String((e && e.message) || e); }
+      }
+
+      // ── 4. Le retrait : refusé, puis consenti ──
+      if (Bd.identifiant) {
+        Br = await page.evaluate(async (id) => {
+          const a = (ms) => new Promise((r) => setTimeout(r, ms));
+          const d = {};
+          const bouton = () => [...document.querySelectorAll('button')]
+            .find((x) => (x.getAttribute('onclick') || '').includes(`deleteDoc('${id}')`));
+          d.bouton = !!bouton();
+          if (!d.bouton) return d;
+          bouton().click();
+          await a(1400);
+          d.confirmation = !!document.querySelector('.oasis-confirm-oui');
+          document.querySelector('.oasis-confirm-non')?.click();
+          await a(2200);
+          d.resteApresRefus = (await window.api('/api/documents')).some((x) => x.id === id);
+          bouton()?.click();
+          await a(1400);
+          document.querySelector('.oasis-confirm-oui')?.click();
+          await a(3600);
+          d.parti = !(await window.api('/api/documents')).some((x) => x.id === id);
+          d.lignePartie = ![...document.querySelectorAll('button')]
+            .some((x) => (x.getAttribute('onclick') || '').includes(`deleteDoc('${id}')`));
+          return d;
+        }, Bd.identifiant);
+      }
+
+      // ── 5. Les deux boutons suivent le privilège du module ──
+      //
+      // Le compte de la ronde est super-administrateur **et** gestionnaire : les
+      // deux autorités y concordent, et aucun écart ne s'y observerait. C'est
+      // la **règle de rendu** qu'on mesure donc, en posant tour à tour chacun
+      // des privilèges dans l'état que la page lit — ce qui est exactement ce
+      // que la correction change, et rien de plus. Le privilège réel est
+      // ensuite relu du serveur, pour ne pas laisser la page dans un état faux.
+      Bp = await page.evaluate(async () => {
+        const a = (ms) => new Promise((r) => setTimeout(r, ms));
+        const vu = async (privilege) => {
+          window.APP_STATE.access = { hasAccess: true, privilege, secteurs: {} };
+          window.renderPage();
+          await a(900);
+          return {
+            deposer: !!document.querySelector('[onclick*="triggerFileUpload"]'),
+            retirer: !!document.querySelector('[onclick*="deleteDoc("]'),
+          };
+        };
+        const d = {};
+        d.lecteur = await vu('LECTEUR');
+        d.contributeur = await vu('CONTRIBUTEUR');
+        d.validateur = await vu('VALIDATEUR');
+        d.gestionnaire = await vu('GESTIONNAIRE');
+        d.sansAcces = await (async () => {
+          window.APP_STATE.access = { hasAccess: false, privilege: '', secteurs: {} };
+          window.renderPage();
+          await a(900);
+          return {
+            deposer: !!document.querySelector('[onclick*="triggerFileUpload"]'),
+            retirer: !!document.querySelector('[onclick*="deleteDoc("]'),
+          };
+        })();
+        window.APP_STATE.access = await window.api('/api/m/droits/PLAN/my-access');
+        window.renderPage();
+        await a(900);
+        d.rendu = (window.APP_STATE.access || {}).privilege || '';
+        return d;
+      });
+
+      try { fs.rmSync(dossierBiblio, { recursive: true, force: true }); }
+      catch { /* le répertoire a déjà disparu */ }
+
+      verifier('la page de la bibliothèque porte son dépôt, et un fichier au-delà de la borne est refusé par le client sans qu’aucune requête ne parte',
+        pageBiblio.page === true && pageBiblio.champ === true
+        // Aucune fenêtre : le refus précède le dépôt.
+        && Bg.fenetre === false
+        && /erreur|error/.test(Bg.toast) && /3[.,]5/.test(Bg.dit || '')
+        // Le champ rendu vide, sans quoi aucun autre fichier ne serait relu.
+        && Bg.champRendu === true,
+        JSON.stringify([pageBiblio, Bg]).slice(0, 460));
+
+      verifier('un fichier choisi propose son nom entier — guillemet compris — et son dépôt écrit un document que la liste rend sans son contenu',
+        Bd.fenetre === true
+        // La mesure de l'échappement : le nom entier, non sa moitié.
+        && Bd.nomEntier === true && /d’audit/.test(Bd.nomPropose || '')
+        && Bd.typePropose === 'TXT'
+        && Bd.fenetreFermee === true && Bd.apres === Bd.avant + 1 && Bd.cree === true
+        && Bd.type === 'TXT' && Bd.mime === 'text/plain'
+        && Bd.taille === OCTETS_PREUVE.length
+        && Bd.auteur === IDENTIFIANT
+        // Le base64 ne voyage pas dans la liste.
+        && Bd.sansContenu === true
+        && Bd.ligne.includes(NOM_DOCUMENT) && /Ko/.test(Bd.ligne),
+        JSON.stringify(Bd).slice(0, 520));
+
+      // ── Ce que ce contrôle prouve, et ce qu'il ne peut pas prouver ──
+      //
+      // Il prouve l'aller-retour des octets. Il **ne prouve pas** que le
+      // téléchargement survive à une réponse lente : contre-essayé en
+      // détachant l'ancre du document, le fichier arrive quand même. La règle
+      // du dépôt — « un clic fabriqué après un `await` échoue sans bruit » —
+      // porte sur l'épuisement de l'activation utilisateur pendant l'attente
+      // du serveur, et 122 octets n'épuisent rien. *Un contre-essai qui ne
+      // mord pas dit quelque chose du contrôle, non du code.*
+      verifier('le document téléchargé porte le nom du document et rend exactement les octets déposés',
+        !Bt.erreur && Bt.fichier === true
+        && Bt.nomDuDocument === true
+        // Trois conversions — base64 à l’aller, rangement, décodage au retour —
+        // et une seule mesure les dit toutes.
+        && Bt.identiques === true && Bt.octets === OCTETS_PREUVE.length,
+        JSON.stringify({ ...Bt, attendu: OCTETS_PREUVE.length }).slice(0, 400));
+
+      verifier('le retrait d’un document demande confirmation, son refus ne retire rien, et accepté il l’ôte du serveur comme de la table',
+        Br.bouton === true && Br.confirmation === true
+        && Br.resteApresRefus === true
+        && Br.parti === true && Br.lignePartie === true,
+        JSON.stringify(Br).slice(0, 400));
+
+      verifier('les deux gestes de la bibliothèque suivent le privilège du module, et non le rôle du portail : lecteur ne dépose pas, contributeur ne retire pas',
+        // Lecteur : ni l'un ni l'autre. C'est le privilège **par défaut**, donc
+        // celui d'un administrateur à qui l'on n'a rien accordé.
+        (Bp.lecteur || {}).deposer === false && (Bp.lecteur || {}).retirer === false
+        // Contributeur et validateur déposent, et ne retirent pas : la route du
+        // retrait exige `GESTIONNAIRE`, que `can` n'accorde à nul autre.
+        && (Bp.contributeur || {}).deposer === true && (Bp.contributeur || {}).retirer === false
+        && (Bp.validateur || {}).deposer === true && (Bp.validateur || {}).retirer === false
+        && (Bp.gestionnaire || {}).deposer === true && (Bp.gestionnaire || {}).retirer === true
+        // Sans accès au module, rien.
+        && (Bp.sansAcces || {}).deposer === false && (Bp.sansAcces || {}).retirer === false
+        // Et le privilège réel est rendu à la page.
+        && Bp.rendu === 'GESTIONNAIRE',
+        JSON.stringify(Bp).slice(0, 460));
+    }
+
     verifier('aucune erreur de console ni requête échouée sur PR',
       incidents.length === 0, incidents.slice(0, 4).join(' · '));
-    // Un refusImport déclaré et jamais venu est une règle qui ne tient plus — ou une
+    // Un refus déclaré et jamais venu est une règle qui ne tient plus — ou une
     // déclaration devenue fausse. Les deux doivent rougir.
-    verifier('chaque refusImport que la ronde a déclaré attendre est bien venu',
-      attendus.length > 0 && attendus.every((a) => a.rencontre),
-      JSON.stringify(attendus));
+    refusDeclares.verifier('PR');
+    // Et chaque abandon déclaré : un téléchargement qui cesserait d'abandonner
+    // afficherait son fichier au lieu de l'enregistrer.
+    abandons.verifier('PR');
   } finally {
     if (process.env.OASIS_MOUCHARD && navigateur) {
       const vu = { enLigne: [], ecouteurs: [], propriete: [], jsx: [], barre: [], poses: 0, pages: 0 };

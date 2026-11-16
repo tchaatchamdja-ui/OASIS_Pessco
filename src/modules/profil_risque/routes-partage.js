@@ -6,7 +6,8 @@ const instances = require('../../instances');
 const db = require('./store');
 const D = require('./domaine');
 const { enregistrement } = require('../../valider');
-const { inconnu, requis, tropVolumineux, reserve } = require('../../erreurs');
+const { introuvable, inconnu, requis, tropVolumineux, reserve } = require('../../erreurs');
+const telechargement = require('../../telechargement');
 
 // Collections du module servies par le CRUD générique.
 const CRUD = {
@@ -64,14 +65,47 @@ module.exports = function register(app, deps, M) {
   // Les indices commandent le calcul de tous les profils de risque : les
   // réécrire, c'est refaire le barème de la surveillance. Réservé au
   // Gestionnaire — la route n'opposait jusqu'ici aucun refus.
+  // ── Elle attendait un tableau, l'écran envoyait un objet ──
+  //
+  // Le corps n'étant ni un tableau ni `{ indices: [...] }`, la route retombait
+  // sur `d.indices` — c'est-à-dire **ne changeait rien** — et répondait
+  // `{ ok: true }`. L'écran affichait « OK » sur une saisie perdue, et le barème
+  // de la surveillance restait aux valeurs repliées dans le code. Corrigé le
+  // 5 novembre 2026 sur décision de la maîtrise d'ouvrage : le modèle de
+  // l'écran fait loi, puisque c'est lui que le calcul lit (n° 5.f.69).
+  //
+  // Les bornes sont ici et non dans l'écran : un seuil hors de [0,1] n'a pas de
+  // sens, et un seuil haut sous le seuil bas renverserait le barème sans qu'une
+  // ligne du calcul ne s'en plaigne.
   app.put('/api/indices', requireAuth, gerer, asynchrone(async (req, res) => {
-    const apres = await db.transformer((d) => {
-      d.indices = Array.isArray(req.body) ? req.body : (req.body && req.body.indices) || d.indices;
+    const corps = req.body || {};
+    const seuils = {};
+    for (const cle of db.SEUILS) {
+      if (corps[cle] === '' || corps[cle] === null || corps[cle] === undefined) {
+        return requis(res, 'seuil');
+      }
+      const v = Number(corps[cle]);
+      if (!Number.isFinite(v) || v < 0 || v > 1) {
+        return inconnu(res, 'seuil', { champ: cle, attendu: ['0', '1'] });
+      }
+      seuils[cle] = v;
+    }
+    const paires = [['conf1', 'conf2'], ['perf1', 'perf2'], ['expo1', 'expo2']];
+    const renverse = paires.find(([haut, bas]) => seuils[haut] <= seuils[bas]);
+    if (renverse) {
+      return inconnu(res, 'seuil', { champ: renverse[0], attendu: [String(seuils[renverse[1]])] });
+    }
+    let avant = null;
+    await db.transformer((d) => {
+      avant = d.indices;
+      d.indices = seuils;
       return d;
     });
-    const indices = apres.indices || [];
-    await audit.log(req.user.username, 'PR_INDICES_MODIFIES', { nb: indices.length });
-    res.json({ ok: true, indices });
+    // Le journal porte l'avant **et** l'après : refaire le barème de la
+    // surveillance est un acte d'autorité, et « modifié » sans dire de quoi vers
+    // quoi ne se relit pas. L'ancienne trace ne disait que `{ nb: 6 }`.
+    await audit.log(req.user.username, 'PR_INDICES_MODIFIES', { avant, apres: seuils });
+    res.json({ ok: true, indices: seuils });
   }));
 
   app.get('/api/aac', requireAuth, (req, res) => {
@@ -93,7 +127,17 @@ module.exports = function register(app, deps, M) {
     if (!nom) return res.status(400).json({ error: 'nom_requis' });
     const contenu = String(fileB64 || '').split(',').pop();
     if (!contenu) return requis(res, 'fichier');
-    const taille = Math.round((contenu.length * 3) / 4);
+    // ── La taille du fichier, et non celle de son encodage ──
+    //
+    // `Math.round((contenu.length * 3) / 4)` rend la longueur du base64
+    // **bourrée** : un base64 a toujours une longueur multiple de quatre, et le
+    // bourrage (`=`, `==`) y compte. La taille rendue dépassait donc la vraie de
+    // zéro à deux octets — mesuré le 5 novembre 2026 : 122 octets déposés,
+    // 123 annoncés. Deux octets ne font pas un défaut d'exploitation, mais une
+    // colonne qui s'appelle « Taille » doit dire la taille, et c'est le même
+    // nombre que la borne des 3,5 Mo compare.
+    const bourrage = contenu.endsWith('==') ? 2 : (contenu.endsWith('=') ? 1 : 0);
+    const taille = Math.max(0, ((contenu.length / 4) * 3) - bourrage);
     if (taille > MAX_DOC_BYTES) return tropVolumineux(res, 3.5);
     const rec = await db.insert('documents', {
       nom, type: type || '', mime: mime || 'application/octet-stream', taille, contenu,
@@ -103,14 +147,26 @@ module.exports = function register(app, deps, M) {
     return res.json(publicDoc(rec));
   }));
 
-  app.get('/api/documents/:id/download', requireAuth, lecture, asynchrone(async (req, res) => {
-    const doc = await db.get('documents', req.params.id);
-    if (!doc || !doc.contenu) return res.status(404).json({ error: 'not_found' });
-    const buf = Buffer.from(doc.contenu, 'base64');
-    res.setHeader('Content-Type', doc.mime || 'application/octet-stream');
-    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(doc.nom)}"`);
-    return res.send(buf);
-  }));
+  // ── L'en-tête qui mélangeait les deux formes ──
+  //
+  // `filename="${encodeURIComponent(nom)}"` est une **troisième** forme, qui
+  // n'est ni l'une ni l'autre : le pour-cent-encodage n'a pas cours dans un
+  // `filename` entre guillemets, de sorte qu'une pièce nommée « Rapport
+  // d'audit » s'enregistrait sous « Rapport%20d%27audit ». Le socle rend les
+  // deux formes que la RFC 6266 prévoit (`src/telechargement.js`).
+  //
+  // Et `pageDeRefus` : une vraie ancre mène ici, et le navigateur **affiche**
+  // ce qu'il reçoit. Un `{"error":"introuvable"}` dans un onglet nu n'est pas
+  // une réponse à un agent qui attendait un fichier.
+  app.get('/api/documents/:id/download', requireAuth, telechargement.pageDeRefus, lecture,
+    asynchrone(async (req, res) => {
+      const doc = await db.get('documents', req.params.id);
+      if (!doc || !doc.contenu) return introuvable(res, 'fichier');
+      return telechargement.piece(res, {
+        nom: doc.nom,
+        type: doc.mime || 'application/octet-stream',
+      }, Buffer.from(doc.contenu, 'base64'));
+    }));
 
   // Retirer une pièce de la bibliothèque est définitif : réservé au
   // Gestionnaire. Toute session pouvait jusqu'ici vider la bibliothèque.

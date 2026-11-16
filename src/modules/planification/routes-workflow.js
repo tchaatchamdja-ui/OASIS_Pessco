@@ -19,6 +19,34 @@ const TRANSITIONS = {
   archiver: 'archive',
 };
 
+// ── Le statut d'où chaque transition part ──
+//
+// Les sept transitions passent par un seul gestionnaire, qui ne vérifiait
+// **pas** le statut d'origine : `transmettre` aurait transmis un brouillon,
+// `valider` validé un plan jamais soumis. L'écran seul tenait l'ordre du
+// circuit — vu en rendant accessibles l'approbation du directeur et la
+// transmission (ADR-003, n° 5.f.100), corrigé sur décision de la maîtrise
+// d'ouvrage (n° 5.f.103).
+//
+// Les origines sont celles que l'écran offre, relevées dans ses gabarits :
+// on soumet un brouillon ou un plan rejeté, on décide d'un plan soumis, le
+// directeur approuve un plan validé, on transmet un plan approuvé. L'archivage
+// est offert depuis la liste des plans quel que soit leur statut : il reste
+// permis depuis tout statut, sauf « archivé ». `en_revue` n'est produit par
+// aucune transition, mais l'écran le traite comme un plan soumis : il est admis
+// où l'est « soumis ».
+const ORIGINES = {
+  soumettre: ['brouillon', 'rejete'],
+  valider: ['soumis', 'en_revue'],
+  'approuver-dg': ['valide'],
+  transmettre: ['approuve_dg'],
+  rejeter: ['soumis', 'en_revue'],
+  'rejeter-annuler': ['soumis', 'en_revue'],
+};
+const permise = (route, statut) => (route === 'archiver'
+  ? statut !== 'archive'
+  : (ORIGINES[route] || []).includes(statut));
+
 module.exports = function register(app, deps, M) {
   const { requireAuth, auth, audit } = deps;
   const nomComplet = D.nomComplet(auth);
@@ -70,13 +98,36 @@ module.exports = function register(app, deps, M) {
       const body = req.body || {};
       const commentaire = body.commentaire || body.motif || '';
       const champ = route.replace(/-/g, '_');
+      // ── La lettre de transmission, que l'écran demande et que rien ne gardait ──
+      //
+      // L'approbation du directeur la saisit (`planApprouverDG`), et la
+      // transmission la dit « enregistrée » avant de partir. Ce gestionnaire ne
+      // retenait que le motif et le commentaire : la lettre arrivait, et se
+      // perdait. Mesuré le 14 novembre 2026, le jour où les deux actes sont
+      // devenus accessibles à l'écran (ADR-003, n° 5.f.100). Elle est gardée
+      // sur le plan et dans son circuit — et refusée si ce n'est pas un texte
+      // raisonnable, plutôt que tronquée en silence.
+      const lettre = route === 'approuver-dg' ? body.lettre_transmission : undefined;
+      if (lettre !== undefined && lettre !== null
+        && (typeof lettre !== 'string' || lettre.length > 4000)) {
+        return res.status(400).json({ error: 'lettre_transmission_invalide' });
+      }
+      const avecLettre = route === 'approuver-dg' ? { lettre_transmission: lettre || '' } : {};
 
       let rec = null;
+      let horsCircuit = null;
       await db.transformer((d) => {
         rec = null;
+        horsCircuit = null;
         const plans = d.plans || [];
         const i = plans.findIndex((p) => p.id === req.params.id);
         if (i < 0) return db.INCHANGE;
+        // Lu **dans** la transaction : deux décisions simultanées sur un même
+        // plan ne passent pas toutes deux sur la foi d'une lecture d'avant.
+        if (!permise(route, plans[i].statut)) {
+          horsCircuit = { statut: plans[i].statut };
+          return db.INCHANGE;
+        }
         plans[i] = {
           ...plans[i],
           statut,
@@ -90,6 +141,7 @@ module.exports = function register(app, deps, M) {
           // sur l'état qu'on écrit, et non par une seconde lecture d'avant.
           commentaire_rejet: ['rejeter', 'rejeter-annuler'].includes(route) ? commentaire
             : (route === 'soumettre' ? '' : plans[i].commentaire_rejet),
+          ...avecLettre,
           updatedAt: new Date().toISOString(),
         };
         rec = plans[i];
@@ -107,10 +159,17 @@ module.exports = function register(app, deps, M) {
         d.activites = acts;
 
         if (route === 'valider' && rec.parent_plan_id) retirerAncetres(d, rec, req.user.username);
-        D.inscrireWf(d, rec.id, route, req.user.username, { motif: body.motif || '', commentaire });
+        D.inscrireWf(d, rec.id, route, req.user.username,
+          { motif: body.motif || '', commentaire, ...avecLettre });
         return d;
       });
 
+      if (horsCircuit) {
+        return res.status(409).json({
+          error: 'transition_invalide', transition: route, statut: horsCircuit.statut,
+          attendu: route === 'archiver' ? 'tout statut sauf archive' : ORIGINES[route],
+        });
+      }
       if (!rec) return res.status(404).json({ error: 'not_found' });
       await audit.log(req.user.username, `PLAN_${route.toUpperCase().replace(/-/g, '_')}`, { id: rec.id });
       return res.json(rec);

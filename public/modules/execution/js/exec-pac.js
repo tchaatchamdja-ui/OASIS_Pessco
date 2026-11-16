@@ -1204,18 +1204,11 @@ async function execHandlePACProofUpload(files, containerId) {
         // L'intitulé est demandé avant l'envoi : renoncer n'envoie rien.
         const saisie = await _execPreuveModal(file.name);
         if (!saisie) continue;
-        const formData = new FormData();
-        formData.append('file', file);
-        // Le serveur enregistre la pièce sous cet intitulé, non sous le nom
-        // du fichier choisi sur le poste.
-        formData.append('nom', saisie.intitule);
         try {
-            const res = await fetch(`${EXEC_MODULE_API}/upload`, {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data.status === 'ok' && container) {
+            // Le serveur enregistre la pièce sous cet intitulé, non sous le nom
+            // du fichier choisi sur le poste.
+            const data = await execDeposerPiece(file, saisie.intitule);
+            if (container) {
                 container.insertAdjacentHTML('beforeend', _execPreuveHtml({
                     filename: data.filename, path: data.path,
                     intitule: saisie.intitule, commentaire: saisie.commentaire,

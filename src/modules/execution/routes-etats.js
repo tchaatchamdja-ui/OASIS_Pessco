@@ -306,8 +306,12 @@ module.exports = function register(app, deps, M) {
   app.put(`${A}/:id/reinitialiser`, requireAuth, asynchrone(async (req, res) => {
     const n = await notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
-    if (!R.isAdmin(req.user, referentiels)
-      || !R.canValidate(req.user, perimetreActivite(n), referentiels)) {
+    // Cette route tenait déjà la bonne règle, à une nuance près : « gestionnaire
+    // quelque part **et** validateur de la portée ». `peutDetruire` demande
+    // « gestionnaire **de** la portée », ce qui est plus strict sur l'axe du
+    // privilège — nul n'y gagne un droit. Deux règles presque identiques côte à
+    // côte sont la divergence que ce tour supprime (n° 5.f.75).
+    if (!R.peutDetruire(req.user, perimetreActivite(n), referentiels)) {
       return reserve(res, 'gestionnaire_portee');
     }
     const dossier = (await db.list('dossiers')).find((d) => d.notification_id === n.id);
@@ -330,15 +334,36 @@ module.exports = function register(app, deps, M) {
     res.json({ status: 'ok' });
   }));
 
-  // Suppression définitive : le super-administrateur du portail seul en
-  // répond. Tout ce qui a été produit pour l'activité disparaît avec elle.
+  // ── Suppression définitive : la règle unique du module ──
+  //
+  // Elle était réservée au **super-administrateur du portail**, sans aucune
+  // vérification de portée — un super-administrateur pouvait donc détruire
+  // n'importe quelle activité, et personne d'autre aucune. Les quatre autres
+  // routes destructrices du module demandaient l'inverse : un gestionnaire,
+  // mais toutes portées confondues (n° 5.f.75).
+  //
+  // Trois patrons pour un même ordre de geste, donc, et un seul endroit du
+  // module — `reinitialiser`, juste au-dessus — tenait déjà la bonne règle.
+  //
+  // La maîtrise d'ouvrage a tranché le 8 novembre 2026, et deux fois : d'abord
+  // sur la mesure que j'avais mal relevée — j'avais décrit cette route comme
+  // exigeant « SUPERADMIN ou ADMIN et le privilège du module », ce qui était
+  // faux —, puis sur la mesure corrigée. La réponse n'a pas changé : **le
+  // gestionnaire du module, dans la portée de l'activité**, et le rôle portail
+  // n'entre pas en ligne de compte.
+  //
+  // C'est donc un **élargissement** de cette route-ci, et il est cohérent :
+  // supprimer le dossier de l'activité emporte déjà la même cascade, et cette
+  // suppression-là était ouverte au gestionnaire. Deux gardes subsistent, et
+  // elles ne sont pas de niveau : une constatation reprise par « Mesures
+  // d'Application » rend l'activité indestructible, et l'écran exige la
+  // référence saisie.
   app.delete(`${A}/:id`, requireAuth, asynchrone(async (req, res) => {
-    const reel = req.userReel || req.user;
-    if (!reel || reel.role !== 'SUPERADMIN') {
-      return reserve(res, 'super_admin');
-    }
     const n = await notifDeLActivite(req.params.id);
     if (!n) return introuvable(res, 'activite');
+    if (!R.peutDetruire(req.user, perimetreActivite(n), referentiels)) {
+      return reserve(res, 'gestionnaire_portee');
+    }
     const dossier = (await db.list('dossiers')).find((d) => d.notification_id === n.id);
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
     // été décidé : l'activité qui la porte ne se supprime plus.

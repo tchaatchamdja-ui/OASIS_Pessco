@@ -21,6 +21,24 @@
 // Les noms publiés sont ceux que les écrans appellent, non ceux de la source :
 // `_pesSearchInput` garde son tiret bas, `ICONS` son orthographe anglaise. Les
 // renommer en passant serait une migration déguisée en conversion.
+// ── `oasisTelecharger` n'est plus publié ici, et pourquoi ──
+//
+// Les six noms qui restent sont la surface héritée de PESSCO : `api`, `ICONS`,
+// `escapeHtml`, `formatDate`, `showToast`, `_pesSearchInput`. Trois écrans
+// seulement chargent ce fichier, les trois qui s'en servent encore.
+//
+// `oasisTelecharger` n'en est pas : son nom porte le préfixe du socle, et
+// **cinq gestes de SURV l'appellent** — un écran qui ne charge pas ce
+// fichier-ci. Ils levaient « oasisTelecharger is not defined », et rien ne
+// partait : l'export d'une checklist, celui de ses sous-thèmes, celui d'une
+// checklist renseignée, et les deux téléchargements d'une constatation.
+//
+// Le charger dans SURV aurait réglé le symptôme en y posant `api` et
+// `_pesSearchInput`, que le module redéfinit — un nom global déclaré deux fois
+// sur le même écran, que le garde-fou de taille refuse à bon droit. Le nom
+// rejoint donc `oasis-commun`, que **toute page qui charge celui-ci charge
+// déjà**, et trois autres avec. *Un outil du socle vit dans le fichier que ses
+// appelants chargent, non dans celui où l'histoire l'avait laissé.*
 import {
   ICONES, api, escapeHtml, formatDate, pesSearchInput, showToast,
 } from '../utils';

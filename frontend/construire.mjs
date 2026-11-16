@@ -91,6 +91,10 @@ const ecrans = readdirSync(ICI, { withFileTypes: true })
 const SORTIE_SAS = {
   socle: join('shared', 'app'),
   portail: 'app',
+  // Le premier écran de module converti fichier par fichier, comme le portail
+  // l'a été : ses sas sortent à côté de ses scripts restés en JavaScript, sous
+  // `app/` au lieu de `js/` (ADR-003, n° 5.f.101).
+  planification: join('modules', 'planification', 'app'),
 };
 
 const ensembles = readdirSync(ICI, { withFileTypes: true })

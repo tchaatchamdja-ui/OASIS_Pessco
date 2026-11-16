@@ -30,13 +30,41 @@ module.exports = function register(app, deps, M) {
     return { domaine_id: p.domaine_id || s.domaine_id || '', secteur_id: p.secteur_id || '', prestataire_id: prestataireId || '' };
   };
 
+  // ── La portée d'une notification est celle qu'elle déclare ──
+  //
+  // Une activité **hors plan** porte elle-même son année, son domaine et son
+  // secteur, faute d'activité planifiée pour les lui donner. Les gardes de
+  // portée, elles, ne regardaient que l'organisme surveillé : mesuré le
+  // 11 novembre 2026, une notification hors plan déclarant le secteur CAMO,
+  // posée sur un organisme rattaché au secteur AMO, s'écrivait sous la portée
+  // **AMO** — le gestionnaire de CAMO, dont l'activité relève, ne pouvait rien,
+  // et celui d'AMO, qu'elle ne concerne pas, pouvait tout.
+  //
+  // La restriction par processus, elle, prenait déjà le secteur déclaré
+  // (`contexteActivite` ci-dessous, inchangé depuis l'origine) : le module se
+  // contredisait d'une garde à l'autre sur le même objet.
+  //
+  // La maîtrise d'ouvrage a tranché le 11 novembre 2026 : **le secteur et le
+  // domaine que la notification déclare font autorité**, et l'organisme ne sert
+  // qu'à défaut. Une activité hors plan est rattachée au secteur qu'elle nomme.
+  // Les deux gardes lisent donc la même portée, et c'est celle-ci.
+  const porteeDe = (objet) => {
+    const o = objet || {};
+    const perim = perimetrePrestataire(o.prestataire_id);
+    return {
+      domaine_id: o.domaine_id || perim.domaine_id || '',
+      secteur_id: o.secteur_id || perim.secteur_id || '',
+      prestataire_id: o.prestataire_id || '',
+    };
+  };
+
   // Restriction par processus : l'étape n'est franchie que par les
   // intervenants qui y sont désignés (voir acteurs.js pour les garde-fous).
   const contexteActivite = async (n) => {
-    const perim = perimetrePrestataire(n.prestataire_id);
+    const p = porteeDe(n);
     return {
-      secteur_id: n.secteur_id || perim.secteur_id || '',
-      domaine_id: n.domaine_id || perim.domaine_id || '',
+      secteur_id: p.secteur_id,
+      domaine_id: p.domaine_id,
       dossier: (await db.list('dossiers')).find((d) => d.notification_id === n.id) || null,
     };
   };
@@ -195,9 +223,9 @@ module.exports = function register(app, deps, M) {
     const tous = refs();
     // L'État qui ouvre la référence est celui de l'instance regardée.
     const aac = instances.aac(req.userReel || req.user, loadConfig);
-    const perim = perimetrePrestataire(d.prestataire_id) || {};
-    const secteur = (tous.secteurs || []).find((x) => x.id === (d.secteur_id || perim.secteur_id)) || {};
-    const domaine = (tous.domaines || []).find((x) => x.id === (d.domaine_id || perim.domaine_id || secteur.domaine_id)) || {};
+    const perim = porteeDe(d);
+    const secteur = (tous.secteurs || []).find((x) => x.id === perim.secteur_id) || {};
+    const domaine = (tous.domaines || []).find((x) => x.id === (perim.domaine_id || secteur.domaine_id)) || {};
     const prestataire = (tous.prestataires || []).find((x) => x.id === d.prestataire_id) || {};
     return {
       // Code État : le bigramme du portail (Organisation → Détails sur
@@ -272,7 +300,9 @@ module.exports = function register(app, deps, M) {
 
   app.post(`${M}/notifications`, requireAuth, valider(SCHEMA_NOTIFICATION), asynchrone(async (req, res) => {
     const d = req.body || {};
-    const perim = perimetrePrestataire(d.prestataire_id);
+    // La portée se lit sur ce que la demande déclare : une activité hors plan
+    // nomme son secteur, et c'est sous celui-là qu'elle s'ouvre.
+    const perim = porteeDe(d);
     if (!R.canContribute(req.user, perim, referentiels)) return refuser(res);
     if (d.hors_plan && refusDates(res, d.annee,
       d.date_debut_prevue || d.date_activite, d.date_fin_prevue || d.date_fin_effective)) return undefined;
@@ -345,7 +375,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id`, requireAuth, asynchrone(async (req, res) => {
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
+    if (!R.canContribute(req.user, porteeDe(n), referentiels)) return refuser(res);
     const patch = {};
     Object.entries(req.body || {}).forEach(([k, v]) => {
       const cle = CHAMPS[k] || k;
@@ -364,7 +394,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id/submit`, requireAuth, asynchrone(async (req, res) => {
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
+    if (!R.canContribute(req.user, porteeDe(n), referentiels)) return refuser(res);
     if (n.statut !== 'brouillon') return statutRequis(res, 'notification', 'brouillon');
     if (await refusProcessus(req, res, n, 'notification:soumission')) return undefined;
     await db.update('notifications', n.id, {
@@ -376,7 +406,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id/validate`, requireAuth, asynchrone(async (req, res) => {
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
+    if (!R.canValidate(req.user, porteeDe(n), referentiels)) return refuser(res);
     if (n.statut !== 'soumis') return statutRequis(res, 'notification', 'soumis');
     if (await refusProcessus(req, res, n, 'notification:validation')) return undefined;
     await db.update('notifications', n.id, { statut: 'valide', validateur_id: req.user.username, date_validation: db.now() });
@@ -386,7 +416,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id/reject`, requireAuth, asynchrone(async (req, res) => {
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canValidate(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
+    if (!R.canValidate(req.user, porteeDe(n), referentiels)) return refuser(res);
     if (n.statut !== 'soumis') return statutRequis(res, 'notification', 'soumis');
     if (await refusProcessus(req, res, n, 'notification:validation')) return undefined;
     await db.update('notifications', n.id, { statut: 'brouillon', motif_rejet: (req.body || {}).motif || '', date_rejet: db.now() });
@@ -396,7 +426,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id/send`, requireAuth, asynchrone(async (req, res) => {
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
+    if (!R.canContribute(req.user, porteeDe(n), referentiels)) return refuser(res);
     if (n.statut !== 'valide') return statutRequis(res, 'notification', 'valide');
     if (await refusProcessus(req, res, n, 'notification:transmission')) return undefined;
     await db.update('notifications', n.id, { statut: 'envoye', date_envoi: db.now(), envoye_par: req.user.username });
@@ -416,12 +446,30 @@ module.exports = function register(app, deps, M) {
     res.json({ status: 'ok', statut: 'envoye' });
   }));
 
+  // ── Détruire un brouillon : son initiateur, ou le gestionnaire **de sa portée** ──
+  //
+  // La règle s'adossait à `R.isAdmin`, qui répond « ce compte est gestionnaire
+  // quelque part » — toutes portées confondues, comme `meilleurPrivilege` le dit
+  // de lui-même. C'était la **cinquième** route destructrice de ce patron ; les
+  // quatre autres ont été corrigées le 8 novembre 2026 (n° 5.f.75), et celle-ci
+  // est restée, nommée à l'ADR comme « ce qui reste ouvert ».
+  //
+  // Mesuré le 11 novembre 2026 : un gestionnaire dont la portée est le secteur
+  // CAMO **détruit** le brouillon d'une activité du secteur AMO — 200, et la
+  // notification n'est plus là. Son voisin, `PUT /notifications/:id`, refusait
+  // exactement cela : 403. Une route qui modifie gardait ce qu'une route qui
+  // détruit laissait passer.
+  //
+  // La règle est désormais celle des quatre autres — gestionnaire du module,
+  // dans la portée de l'objet — à quoi s'ajoute l'initiateur, qui garde son
+  // brouillon quel que soit son privilège : il l'a ouvert, il peut le refermer.
   app.delete(`${M}/notifications/:id`, requireAuth, asynchrone(async (req, res) => {
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
     if (n.statut !== 'brouillon') return statutRequis(res, 'notification', 'brouillon');
-    if (n.created_by !== req.user.username && !R.isAdmin(req.user, referentiels)) {
-      return refuser(res, "Seul l'initiateur peut supprimer ce brouillon");
+    if (n.created_by !== req.user.username
+      && !R.peutDetruire(req.user, porteeDe(n), referentiels)) {
+      return reserve(res, 'initiateur_ou_gestionnaire_portee');
     }
     await db.removeWhere('echanges', (e) => e.notification_id === n.id);
     await db.remove('notifications', n.id);
@@ -431,7 +479,7 @@ module.exports = function register(app, deps, M) {
   app.put(`${M}/notifications/:id/cancel`, requireAuth, asynchrone(async (req, res) => {
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
+    if (!R.canContribute(req.user, porteeDe(n), referentiels)) return refuser(res);
     await db.update('notifications', n.id, {
       statut: 'brouillon', motif_rejet: (req.body || {}).motif || 'Annulation', date_rejet: db.now(),
     });
@@ -458,7 +506,7 @@ module.exports = function register(app, deps, M) {
     if (!R.compteA(req.user, 'echanges', auth)) return refuser(res, 'Droit non confié à ce compte');
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
+    if (!R.canContribute(req.user, porteeDe(n), referentiels)) return refuser(res);
     const d = req.body || {};
     const rec = await db.insert('echanges', {
       id: db.uid('ech'),
@@ -554,7 +602,7 @@ module.exports = function register(app, deps, M) {
     if (R.estPrestataire(req.user)) return refuser(res, "Action réservée à l'AAC");
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    if (!R.canContribute(req.user, perimetrePrestataire(n.prestataire_id), referentiels)) return refuser(res);
+    if (!R.canContribute(req.user, porteeDe(n), referentiels)) return refuser(res);
     if (!['envoye', 'acte'].includes(n.statut)) {
       return res.status(400).json({ error: 'La confirmation n’est pas ouverte à ce stade' });
     }
@@ -576,7 +624,7 @@ module.exports = function register(app, deps, M) {
     if (R.estPrestataire(req.user)) return refuser(res, "Action réservée à l'AAC");
     const n = await db.get('notifications', req.params.id);
     if (!n) return introuvable(res, 'notification');
-    const perim = perimetrePrestataire(n.prestataire_id);
+    const perim = porteeDe(n);
     if (!R.canContribute(req.user, perim, referentiels)) return refuser(res);
     if (n.statut !== 'envoye') return statutRequis(res, 'notification', 'envoye');
     if (await refusProcessus(req, res, n, 'confirmation')) return undefined;

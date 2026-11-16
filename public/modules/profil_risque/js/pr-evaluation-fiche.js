@@ -1280,75 +1280,7 @@ async function saveEvalScores(evalId) {
 }
 
 
-
-
 // ── Phase 3 — Réunions des évaluateurs (Chap. 4 §4.2.2.e) ──
-async function openReunionEvaluateursList(evalId) {
-    // Sans cette garde, un échec de chargement faisait afficher « aucune
-    // réunion » : l'écran affirmait qu'il n'y en avait pas, au lieu de dire
-    // qu'il n'avait pas pu le savoir.
-    let rows = [];
-    try { rows = await api(`${MODULE_API}/eval-reunions?eval_id=${evalId}`); }
-    catch (e) { showToast(t('chargement_impossible', e.message), 'error'); return; }
-    const list = rows.length ? rows.map(r => `
-        <div style="border:1px solid var(--border);border-radius:6px;padding:0.5rem 0.75rem;margin-bottom:0.4rem;">
-            <div style="display:flex;justify-content:space-between;font-weight:600;font-size:0.88rem;">
-                <span>📅 ${r.date || '(sans date)'}</span>
-                <button class="btn btn-outline btn-sm" onclick="openReunionEvaluateursForm('${evalId}','${r.id}')">${t('edit')}</button>
-            </div>
-            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem;">Participants : ${(r.participants || []).length}</div>
-            ${r.compte_rendu ? `<div style="font-size:0.82rem;margin-top:0.3rem;white-space:pre-wrap;">${_genEsc(r.compte_rendu)}</div>` : ''}
-        </div>`).join('') : `<div class="text-muted" style="padding:1rem;text-align:center;">${t('no_meeting')}</div>`;
-    const body = `${list}
-        <hr style="margin:1rem 0;">
-        <button class="btn btn-primary" onclick="openReunionEvaluateursForm('${evalId}','')">${t('new_meeting_btn')}</button>`;
-    const footer = `<button class="btn btn-outline" onclick="closeModal()">${t('close_btn')}</button>`;
-    showModal(`Réunions des évaluateurs (§4.2.2.e)`, body, footer, 'modal-lg');
-}
-
-async function openReunionEvaluateursForm(evalId, rid) {
-    let cur = { eval_id: evalId };
-    if (rid) {
-        try {
-            const all = await api(`${MODULE_API}/eval-reunions?eval_id=${evalId}`);
-            cur = all.find(r => r.id === rid) || cur;
-        } catch (e) {
-            // Ouvrir le formulaire vide sur une réunion qu'on n'a pas su lire,
-            // c'est offrir de l'écraser par des champs blancs.
-            showToast(t('chargement_impossible', e.message), 'error');
-            return;
-        }
-    }
-    const today = oasisJour();
-    const body = `
-        <div class="form-group"><label>${t('date')}</label><input type="date" id="reDate" value="${cur.date || today}"></div>
-        <div class="form-group"><label>${t('participants_one_per_line')}</label>
-            <textarea id="reParts" rows="3" style="width:100%;">${(cur.participants || []).join('\n')}</textarea></div>
-        <div class="form-group"><label>${t('agenda')}</label>
-            <textarea id="reOdj" rows="2" style="width:100%;">${cur.ordre_du_jour || ''}</textarea></div>
-        <div class="form-group"><label>Compte rendu</label>
-            <textarea id="reCr" rows="5" style="width:100%;">${cur.compte_rendu || ''}</textarea></div>`;
-    const footer = `
-        <button class="btn btn-outline" onclick="openReunionEvaluateursList('${evalId}')">${t('back_arrow')}</button>
-        <button class="btn btn-primary" onclick="saveReunionEval('${evalId}','${rid || ''}')">${ICONS.check} Enregistrer</button>`;
-    showModal(`Réunion évaluateurs`, body, footer, 'modal-lg');
-}
-
-async function saveReunionEval(evalId, rid) {
-    const data = {
-        eval_id: evalId,
-        date: document.getElementById('reDate').value,
-        participants: document.getElementById('reParts').value.split('\n').map(s => s.trim()).filter(Boolean),
-        ordre_du_jour: document.getElementById('reOdj').value,
-        compte_rendu: document.getElementById('reCr').value
-    };
-    try {
-        if (rid) await api(`${MODULE_API}/eval-reunions/${rid}`, { method: 'PUT', body: JSON.stringify(data) });
-        else await api(`${MODULE_API}/eval-reunions`, { method: 'POST', body: JSON.stringify(data) });
-        closeModal();
-        showToast(t('meeting_saved'));
-    } catch (e) { showToast(e.message, 'error'); }
-}
 
 
 // Compte-rendu de réunion en PDF. Aucun endpoint serveur ne génère de PDF :
@@ -1689,8 +1621,23 @@ async function decisionDirecteur(evalId, decision) {
     if (requiresMotif && decision === 'rejeter' && !await oasisConfirmer(t('confirmer_rejet_evaluation'))) return;
     if (requiresMotif && decision === 'renvoyer' && !await oasisConfirmer(t('confirmer_renvoi_observations'))) return;
     if (decision === 'cloturer' && !await oasisConfirmer(t('confirmer_cloture_reunion'))) return;
-    const commentaire = (requiresMotif || decision !== 'accepter')
-        ? ((await oasisSaisir(promptByDecision[decision], { requis: requiresMotif })) || '') : '';
+    // ── « Accepter » ne demandait rien ──
+    //
+    // Le renvoi, le rejet et la clôture demandaient chacun une confirmation
+    // **et** un texte ; l'acceptation partait d'un seul clic, sans rien à
+    // relire. C'est pourtant une décision d'autorité : elle ouvre l'onglet de
+    // la réunion prestataire, et le circuit ne revient pas en arrière de
+    // lui-même. Relevé par la ronde du 3 novembre 2026 — *une invite qu'on
+    // attend et qui ne vient pas est une mesure, pas une panne* — et corrigé
+    // sur décision de la maîtrise d'ouvrage le 4 novembre.
+    //
+    // Elle est alignée sur la clôture, son plus proche voisin : une
+    // confirmation qui dit ce que l'acte entraîne, et un commentaire
+    // facultatif. Le motif reste obligatoire pour les deux seules décisions qui
+    // arrêtent ou reculent le circuit.
+    if (decision === 'accepter' && !await oasisConfirmer(t('confirmer_acceptation_evaluation'))) return;
+    const commentaire = (await oasisSaisir(promptByDecision[decision],
+        { requis: requiresMotif })) || '';
     if (requiresMotif && !commentaire.trim()) {
         showToast(t('reason_required_for', decision), 'error'); return;
     }
@@ -1791,19 +1738,21 @@ async function deleteEval(evalId) {
 
 
 // ── Evaluation Export/Import ──
-async function exportEvalExcel(evalId) {
-    try {
-        // Jeton mort retiré (rien n'écrit `pr_token`), et l'ancre attachée
-        // avant d'être cliquée : détachée, après un `await`, elle ne télécharge
-        // rien et ne dit rien. Même correction qu'à la bibliothèque.
-        const res = await fetch(`${MODULE_API}/evaluations/${evalId}/export-excel`, { credentials: 'same-origin' });
-        if (!res.ok) throw new Error('Export failed');
-        const blob = await res.blob();
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `evaluation_${evalId}.xlsx`;
-        document.body.appendChild(a); a.click(); a.remove();
-    } catch (e) { showToast(e.message, 'error'); }
+// ── Un téléchargement passe par une navigation, jamais par un clic fabriqué ──
+//
+// `oasisTelecharger` mène la fenêtre à l'adresse ; le navigateur reçoit
+// `Content-Disposition: attachment` et enregistre le fichier sans quitter la
+// page. Le patron qu'elle remplace — `await fetch`, `await blob`, puis une ancre
+// fabriquée qu'on clique — **échoue sans bruit**, l'attente du serveur épuisant
+// l'activation utilisateur qui autorise l'enregistrement (socle,
+// `frontend/socle/utils.ts`).
+//
+// Il n'y a donc **rien à attendre ici, et rien à lire** : pas de `async`, pas de
+// `try`, pas de toast de réussite sur un fichier qu'on n'a pas vu arriver. Le
+// nom de la pièce vient de l'en-tête, et un refus est affiché par le navigateur
+// en page lisible (`src/telechargement.js`).
+function exportEvalExcel(evalId) {
+    oasisTelecharger(`${MODULE_API}/evaluations/${evalId}/export-excel`);
 }
 
 // Même rapport que « Exporter PDF » de la liste : fenêtre d'impression

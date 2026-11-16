@@ -110,6 +110,46 @@ const EXEC_ICONS = {
 const EXEC_NAV = {
     dashboard: { labelKey: 'dashboard', icon: 'dashboard' },
     plan_surveillance: { labelKey: 'plan_surveillance', icon: 'plans' },
+    // ── Une page rendue par l'aiguillage, et ouverte par rien ──
+    //
+    // `declenchement` manquait à cette table. La page existait — 1 125 lignes,
+    // vingt-six gestes, quatre onglets —, l'aiguillage la rendait
+    // (`case 'declenchement'`), le sas la déclarait, et **aucun bouton ne la
+    // montrait** : ni entrée de barre, ni appel de `execNavigateTo`. C'est ce
+    // qui explique que `exec-notifications.js` fût le fichier le moins couvert
+    // du module, à trois gestes exercés sur vingt-six.
+    //
+    // Le menu « Processus » couvre le même circuit par une autre vue, ce qui a
+    // masqué l'absence. Mais le volet des contacts de l'organisme — dirigeant,
+    // point focal, contacts additionnels — n'a **pas d'autre porte**, et il
+    // édite cinq champs que le référentiel du portail n'édite pas. Rendue à la
+    // barre le 7 novembre 2026 sur décision de la maîtrise d'ouvrage
+    // (n° 5.f.72).
+    //
+    // Réservée à qui contribue : les routes de la page exigent `CONTRIBUTEUR`
+    // pour créer, soumettre et transmettre. Une entrée offerte à un lecteur ne
+    // mènerait qu'à des 403.
+    declenchement: { labelKey: 'declenchement', icon: 'trigger', reserve: 'contribue' },
+    // ── Deux écrans rendus à la barre le 8 novembre 2026 (n° 5.f.73) ──
+    //
+    // `execution` est le tableau des dossiers, avec ses quatre filtres ;
+    // `prestataires` suit les mêmes dossiers groupés par organisme et par
+    // domaine, en trois onglets — en cours, clôturés, archivés — avec tri par
+    // colonne. Ni l'un ni l'autre n'avait d'entrée de menu, ni le moindre appel
+    // de `execNavigateTo` : l'aiguillage les rendait, et rien ne les montrait.
+    //
+    // Chacun porte un geste qu'aucun autre écran n'offre, et c'est ce qui a
+    // décidé de les rendre plutôt que de les effacer : la **suppression** d'un
+    // dossier pour le premier, l'**archivage** d'un dossier clos pour le
+    // second. Les deux ont été corrigés avant que la porte ne s'ouvre — la
+    // suppression demande désormais la référence saisie, comme celle des
+    // États, et l'archivage écrit `archive` au lieu d'écraser le statut.
+    //
+    // Les deux pages lisent, et leurs gestes destructeurs sont déjà réservés
+    // aux administrateurs par `_execIsAdmin()` à l'intérieur : aucune réserve
+    // ici, qui en fermerait la consultation à ceux qui ont le droit de lire.
+    execution: { labelKey: 'execution', icon: 'execution' },
+    prestataires: { labelKey: 'prestataires', icon: 'prestataires' },
     etats: { labelKey: 'etats', icon: 'folder' },
     constatations: { labelKey: 'constatations', icon: 'constatations' },
     rapports: { labelKey: 'rapports', icon: 'rapports' },
@@ -492,8 +532,13 @@ async function execRefreshDynamic() {
                 const fullDossier = await api(`${EXEC_MODULE_API}/dossiers/${did}`);
                 if (fullDossier && fullDossier.id) EXEC_STATE.selectedDossier = fullDossier;
             } catch (e) {
+                // Un 404 dit que le dossier n'existe plus — supprimé par un
+                // autre, ou par les États. Le garder, c'était le redemander à
+                // chaque rafraîchissement, un 404 de plus chaque fois. Une
+                // panne passagère, elle, ne fait rien oublier.
                 const fresh = dossiers.find(d => d.id === did);
                 if (fresh) EXEC_STATE.selectedDossier = fresh;
+                else if (e && e.statut === 404) EXEC_STATE.selectedDossier = null;
             }
         }
     } catch (e) {
@@ -749,12 +794,6 @@ function execToggleMobileSidebar() {
     document.querySelector('.sidebar-backdrop')?.classList.toggle('show');
 }
 
-function execLogout() {
-    localStorage.removeItem('pr_token');
-    localStorage.removeItem('pr_user');
-    window.location.href = '/login';
-}
-
 // ── Champ de recherche des barres de filtres ──
 // Le re-rendu est différé de 300 ms, puis le focus et la position du curseur
 // sont rendus au champ, que le rendu a recréé. La fonction vient du socle
@@ -805,6 +844,10 @@ function execRenderApp() {
     } else {
         for (const [key, config] of Object.entries(EXEC_NAV)) {
             if (config.reserve === 'admin' && !_execPeutProcessus()) continue;
+            // Deuxième réserve : les pages dont tous les gestes exigent
+            // `CONTRIBUTEUR` côté serveur. Une entrée qu'un lecteur voit et qui
+            // ne lui rend que des refus est un bouton qui ment.
+            if (config.reserve === 'contribue' && !_execCanContribute()) continue;
             navHtml += `<button class="nav-btn ${S.currentPage === key ? 'active' : ''}" data-page="${key}" onclick="execNavigateTo('${key}')" title="${te(config.labelKey)}">
                 ${EXEC_ICONS[config.icon] || ''} <span>${te(config.labelKey)}</span>
             </button>`;
@@ -859,7 +902,7 @@ function execRenderApp() {
                         <span>${((S.user?.prenom || '') + ' ' + (S.user?.nom || '')).trim()}</span>
                         <span class="role-badge">${_userM3Role()}</span>
                     </div>
-                    <button class="btn-logout" onclick="execLogout()">${EXEC_ICONS.logout} ${te('logout')}</button>
+                    <button class="btn-logout">${EXEC_ICONS.logout} ${te('logout')}</button>
                 </div>
             </header>
             <main class="main-content" id="exec-content"></main>
@@ -887,7 +930,6 @@ function execRenderPage() {
         case 'etats': content = execRenderEtats(); break;
         case 'processus': content = execRenderProcessus(); break;
         case 'parametres': content = execRenderParametres(); break;
-        case 'prestataire_home': content = execRenderPrestataireHome(); break;
         case 'prestataire_notifications': content = execRenderPrestataireNotifications(); break;
         case 'mes_utilisateurs': content = execRenderMesUtilisateurs(); break;
         default: content = `<div class="text-center">${te('no_data')}</div>`;
@@ -898,23 +940,17 @@ function execRenderPage() {
     if (EXEC_STATE.currentPage === 'dashboard') execGanttAujourdhui();
 }
 
-function execRenderPrestataireHome() {
-    const user = EXEC_STATE.user || {};
-    const prests = EXEC_STATE.data.prestataires || [];
-    const myPrest = prests.find(p => p.id === user.prestataire_id);
-    const myName = myPrest ? (myPrest.nom || myPrest.trigramme) : '';
-    return `
-    <div class="page-content">
-        <div class="page-header">
-            <h2>${te('prestataire_home_title')}</h2>
-            ${myName ? `<p style="color:var(--text-muted);">${_esc(myName)}</p>` : ''}
-        </div>
-        <div class="card" style="text-align:center;padding:2rem;">
-            <div style="font-size:3rem;color:var(--text-muted);">${EXEC_ICONS.bell || ''}</div>
-            <p style="color:var(--text-muted);margin-top:1rem;">${te('prestataire_home_intro')}</p>
-        </div>
-    </div>`;
-}
+// ── « Espace Prestataire » : la page supprimée le 8 novembre 2026 ──
+//
+// `execRenderPrestataireHome` rendait 148 caractères et **aucun geste** : un
+// titre, le nom de l'organisme, une icône de cloche et une phrase d'accueil.
+// `EXEC_NAV_PRESTATAIRE` ouvre `dashboard` à sa place, et depuis toujours.
+//
+// Les deux autres pages qu'aucun chemin n'ouvrait portaient chacune une
+// capacité qu'on aurait perdue à les effacer. Celle-ci n'en portait aucune :
+// la rendre à la barre aurait demandé de la garnir d'abord. Décision de la
+// maîtrise d'ouvrage, n° 5.f.73 — avec son cas d'aiguillage et ses deux
+// traductions, `prestataire_home_title` et `prestataire_home_intro`.
 
 // ── "Notification d'activité" page (Mes Activités > prestataire_notifications) ─────
 // Shows only sent notifications addressed to the connected prestataire.

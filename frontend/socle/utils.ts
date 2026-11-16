@@ -134,3 +134,4 @@ export async function api(chemin: string, options: RequestInit = {}): Promise<un
   if (!res.ok) throw new Error(window.oasisMessageErreur(donnees as DonneesErreur, res.status));
   return donnees;
 }
+

@@ -222,7 +222,7 @@ async function execSaveMesUser(userId) {
         droits: [...document.querySelectorAll('.mu-droit:checked')].map(c => c.value),
     };
     if (!data.email) {
-        shellShowToast((typeof pt === 'function' ? pt('required_field') : 'Champs obligatoires manquants'), 'error');
+        shellShowToast(te('champs_requis'), 'error');
         return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
@@ -239,7 +239,7 @@ async function execSaveMesUser(userId) {
                 method: 'POST', body: JSON.stringify(data)
             });
             if (res.temp_password) {
-                shellShowToast(`${(typeof pt === 'function' ? pt('password_gen') : 'Mot de passe')}: ${res.temp_password}`, 'warning');
+                shellShowToast(`${te('mot_de_passe_genere')} : ${res.temp_password}`, 'warning');
             }
         }
         shellCloseModal();
@@ -250,10 +250,10 @@ async function execSaveMesUser(userId) {
 }
 
 async function execResetMesUserPw(userId) {
-    if (!await oasisConfirmer((typeof pt === 'function' ? pt('confirm_action') : 'Confirmer ?'))) return;
+    if (!await oasisConfirmer(te('confirmer_reinit_mdp'))) return;
     try {
         const res = await api(`${EXEC_MODULE_API}/mes-utilisateurs/${userId}/reset-password`, { method: 'POST' });
-        shellShowToast(`${(typeof pt === 'function' ? pt('password_gen') : 'Mot de passe')}: ${res.new_password}`, 'warning');
+        shellShowToast(`${te('mot_de_passe_genere')} : ${res.new_password}`, 'warning');
         const user = _mesUtilisateursCache.find(u => u.id === userId);
         if (user?.email) {
             const subject = encodeURIComponent('Réinitialisation de mot de passe - PESSCO');
@@ -268,11 +268,23 @@ async function execResetMesUserPw(userId) {
 
 
 function execRevealMesUserPassword(userId) {
+    // ── Les libellés viennent de la table du module, non de celle du portail ──
+    //
+    // Ces quatre-là passaient par `pt`, la table de 15 libellés que le portail
+    // prête à la coquille. Six des sept clés que ce fichier lui demandait n'y
+    // sont pas : il les avait reprises de PR, dont la table les porte. `pt`
+    // rendant la clé quand elle manque, l'écran affichait « password »,
+    // « confirm_admin_password », et un mot de passe annoncé par
+    // « password_gen ». Le repli français écrit à côté de chaque appel ne
+    // pouvait jamais servir — `pt` est toujours une fonction ; c'est la **clé**
+    // qui manquait, et un repli sur l'absence de la fonction ne garde pas de
+    // cela. Mesuré le 9 novembre 2026, en exerçant l'écran pour la première
+    // fois (n° 5.f.76).
     const L = {
-        title: (typeof pt === 'function' ? pt('confirm_admin_password') : 'Confirmer mot de passe'),
-        pw: (typeof pt === 'function' ? pt('password') : 'Mot de passe'),
-        cancel: (typeof pt === 'function' ? pt('cancel') : 'Annuler'),
-        confirm: (typeof pt === 'function' ? pt('confirm_password_label') : 'Confirmer')
+        title: te('confirmer_votre_mdp'),
+        pw: te('mot_de_passe'),
+        cancel: te('annuler_court'),
+        confirm: te('confirmer_tout_court'),
     };
     shellShowModal(L.title, `
         <div class="shell-form-group">
@@ -286,7 +298,7 @@ function execRevealMesUserPassword(userId) {
 
 async function execDoRevealMesUserPassword(userId) {
     const adminPw = document.getElementById('mesAdminPwConfirm')?.value || '';
-    if (!adminPw) { shellShowToast((typeof pt === 'function' ? pt('required_field') : te('requis')), 'error'); return; }
+    if (!adminPw) { shellShowToast(te('champs_requis'), 'error'); return; }
     try {
         const res = await api(`${EXEC_MODULE_API}/mes-utilisateurs/${userId}/reveal-password`, {
             method: 'POST', body: JSON.stringify({ admin_password: adminPw })

@@ -184,7 +184,9 @@ api(`${EXEC_MODULE_API}/vue`)
 api(`${EXEC_MODULE_API}/instance`)
   .then((etat) => { execInstanceActive = etat; execDessinerActions(); })
   .catch(() => {});
+// L'étape du compte n'est pas d'ici : attendre `EXEC_BOOT` ne suffisait pas,
+// cette attente-ci étant servie **avant** celle de la page, qui pose le compte.
+// C'est la page qui redessine, une fois le compte posé (`index.html`).
 window.addEventListener('DOMContentLoaded', () => {
   execDessinerActions();
-  window.EXEC_BOOT && window.EXEC_BOOT.then(execDessinerActions).catch(() => {});
 });

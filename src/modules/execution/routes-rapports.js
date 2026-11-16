@@ -57,6 +57,20 @@ module.exports = function register(app, deps, M) {
     return { domaine_id: p.domaine_id || s.domaine_id || '', secteur_id: p.secteur_id || '', prestataire_id: prestataireId || '' };
   };
 
+  // La portée d'un objet : son secteur, et le domaine de ce secteur ; à défaut,
+  // celle de l'organisme surveillé. Même notion que dans `routes-dossiers.js` et
+  // dans les « États » — les cinq routes destructrices se gardent sur la même
+  // portée (n° 5.f.75).
+  const perimetreDe = (objet) => {
+    const sid = (objet && objet.secteur_id) || '';
+    if (!sid) return perimetrePrestataire(objet && objet.prestataire_id);
+    const s = parId('secteurs', sid) || {};
+    return {
+      domaine_id: (objet && objet.domaine_id) || s.domaine_id || '',
+      secteur_id: sid,
+    };
+  };
+
   // Restriction par processus, sur les étapes décisives du rapport.
   const refusProcessus = async (req, res, r, cle) => {
     const perim = perimetrePrestataire(r.prestataire_id);
@@ -301,6 +315,22 @@ module.exports = function register(app, deps, M) {
   // Transmission simple : le rapport validé passe à « transmis » et ouvre les
   // constatations restées en brouillon. La remise par courriel, avec ses liens
   // de téléchargement, se fait par POST /transmettre.
+  //
+  // ── Ce que ce commentaire affirmait sans que le code le fasse ──
+  //
+  // Il annonçait l'ouverture des constatations ; la route ne touchait que le
+  // rapport et la date du dossier. Ses trois sœurs — `/transmit`,
+  // `/transmettre`, et la clôture du dossier — le font d'un seul geste, pour la
+  // raison que l'une d'elles écrit : « un rapport transmis dont les
+  // constatations ne le sont pas encore laisse le prestataire sans objet à
+  // traiter ». Celle-ci est la seule que l'écran appelle
+  // (`execSendRapportValidated`), et c'était la seule à ne pas le faire.
+  //
+  // La fenêtre était étroite — la validation du rapport ouvre déjà celles qui
+  // existent alors — mais réelle : mesuré le 10 novembre 2026, une constatation
+  // relevée **entre** la validation et l'envoi restait `brouillon` au travers
+  // de `/send`, donc inopposable, le rapport étant parti. Le geste est désormais
+  // unique, comme chez les trois autres (n° 5.f.78).
   app.put(`${M}/rapports/:id/send`, requireAuth, asynchrone(async (req, res) => {
     const r = await db.get('rapports', req.params.id);
     if (!r) return introuvable(res, 'rapport');
@@ -308,8 +338,24 @@ module.exports = function register(app, deps, M) {
     if (r.statut !== 'valide') return statutRequis(res, 'rapport', 'valide');
     if (await refusProcessus(req, res, r, 'transmission')) return undefined;
     const maintenant = db.now();
-    await db.update('rapports', r.id, { statut: 'transmis', date_transmission: maintenant, transmis_par: req.user.username });
-    if (r.dossier_id) await db.update('dossiers', r.dossier_id, { date_maj: maintenant });
+    await db.transformer((etat) => {
+      const rapports = etat.rapports || [];
+      const i = rapports.findIndex((x) => x.id === r.id);
+      if (i >= 0) {
+        rapports[i] = {
+          ...rapports[i], statut: 'transmis', date_transmission: maintenant,
+          transmis_par: req.user.username,
+        };
+      }
+      if (r.dossier_id) {
+        const dossiers = etat.dossiers || [];
+        const j = dossiers.findIndex((x) => x.id === r.dossier_id);
+        if (j >= 0) dossiers[j] = { ...dossiers[j], date_maj: maintenant };
+      }
+      etat.constatations = (etat.constatations || []).map((c) => (c.dossier_id === r.dossier_id && c.statut === 'brouillon'
+        ? { ...c, statut: 'ouvert' } : c));
+      return etat;
+    });
     res.json({ status: 'ok', statut: 'transmis' });
   }));
 
@@ -371,19 +417,59 @@ module.exports = function register(app, deps, M) {
     return res.json({ status: 'ok', statut: 'transmis', destinataires: remise.destinataires, envoye: remise.envoye });
   }));
 
+  // ── Un rapport transmis ne se supprime pas ──
+  //
+  // Cette route n'avait **aucune garde de statut** : un rapport `transmis` —
+  // l'acte envoyé à l'organisme surveillé — s'effaçait comme un brouillon, et
+  // par `db.remove`, qui ne retient pas son auteur. Mesuré le 8 novembre 2026,
+  // et tranché par la maîtrise d'ouvrage le même jour (n° 5.f.75) : les versions
+  // antérieures et les brouillons restent supprimables, le rapport transmis
+  // non.
+  //
+  // Et l'effacement **marque** au lieu de détruire, par le geste que le magasin
+  // porte depuis le 3 octobre 2026 : l'enregistrement reçoit `retire_le` et
+  // `retire_par`, disparaît de toutes les listes, et ne se détruit pas. La
+  // politique de conservation le dit du magasin entier — « actes de
+  // surveillance […] l'effacement reste une décision de l'autorité » : une
+  // décision, donc, mais qui laisse sa trace.
+  //
+  // *Une inconséquence reste, et elle est volontaire* : `removeDossier` détruit
+  // les rapports d'un dossier qu'on efface, et son commentaire en donne la
+  // raison — on efface alors le dossier entier, et plus rien n'y renvoie. Ici
+  // on retire **un** rapport d'un dossier qui vit : ce n'est pas le même geste.
   app.delete(`${M}/rapports/:id`, requireAuth, asynchrone(async (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
-    if (!await db.get('rapports', req.params.id)) return introuvable(res, 'rapport');
-    await db.remove('rapports', req.params.id);
+    const r = await db.get('rapports', req.params.id);
+    if (!r) return introuvable(res, 'rapport');
+    const d = r.dossier_id ? await db.get('dossiers', r.dossier_id) : null;
+    if (!R.peutDetruire(req.user, perimetreDe(d || r), referentiels)) {
+      // `gestionnaire_portee` et non `administrateurs` : le refus doit dire la
+      // **portée**, sinon un gestionnaire qui en détient une se croit sans
+      // privilège. Le socle traduit déjà ce code — « au gestionnaire du module,
+      // sur sa portée » —, et `reinitialiser` des « États » l'employait seul.
+      return reserve(res, 'gestionnaire_portee');
+    }
+    if (r.statut === 'transmis') {
+      return res.status(409).json({
+        error: 'rapport_transmis',
+        message: 'Un rapport transmis à l’organisme ne se supprime pas :'
+          + ' c’est un acte de surveillance déjà remis.',
+      });
+    }
+    await db.retirer('rapports', r.id, req.user.username);
     res.json({ status: 'ok' });
   }));
 
   // Une activité supprimée redevient « à notifier » : notification, dossier,
   // constatations et rapports associés disparaissent.
   app.delete(`${M}/activites/:id`, requireAuth, asynchrone(async (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
     const notif = (await db.list('notifications')).find((n) => n.activite_id === req.params.id);
+    // Sans notification, il n'y a rien à détruire et donc aucune portée à
+    // vérifier : la route rend « ok » comme avant. Avec, c'est la portée de
+    // l'activité qui décide.
     if (notif) {
+      if (!R.peutDetruire(req.user, perimetreDe(notif), referentiels)) {
+        return reserve(res, 'gestionnaire_portee');
+      }
       const dossier = (await db.list('dossiers')).find((d) => d.notification_id === notif.id);
       // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
       // été décidé : l'acte qui la porte ne se défait plus.

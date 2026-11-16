@@ -14,8 +14,23 @@ const { magasinDeModule } = require('../../magasin_module');
 
 const base = magasinDeModule('planification');
 
+// ── Une septième collection, et pourquoi elle existe ──
+//
+// `profils_directs` porte les profils de risque **écrits depuis cet écran**.
+// Le producteur normal d'un profil est le module PR : il le **dérive** d'une
+// évaluation validée (`PR.riskProfiles` est une projection, non une table), et
+// le bus de services est à sens unique. L'écran de PLAN portait pourtant un
+// formulaire qui en fabriquait un, dont l'enregistrement postait vers une route
+// qui n'existait pas — un geste mort depuis l'origine.
+//
+// La maîtrise d'ouvrage a tranché le 4 novembre 2026 : écrire la route. Un
+// profil ainsi posé n'a derrière lui ni évaluation, ni instance, ni validation,
+// et il alimente les plans au même titre que ceux qui en ont une. Il porte donc
+// `origine: 'plan'`, son auteur et sa date : *dans un dispositif audité, un
+// acte d'autorité se distingue de celui qu'un circuit a fondé.*
 const VIDE = {
   plans: [], activites: [], workflow: [], versions: [], commentaires: [], cycles: [],
+  profils_directs: [],
 };
 
 async function seed() {

@@ -15,7 +15,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const puppeteer = require('puppeteer');
-const { demarrer, verifier, bilan } = require('./harness');
+const { demarrer, verifier, bilan, refusAttendus } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'mesures', 'js', 'mes-app.js');
@@ -73,8 +73,15 @@ module.exports = async function mesuresNavigateurSmoke(port) {
 
     let care = false;
     let etape = 'montage';
+
+    // Le mécanisme des refus déclarés vit dans le harnais (n° 5.f.60) : une
+    // règle qui **refuse** ne se mesure qu'en la provoquant, et la provoquer
+    // ferait rougir le collecteur ci-dessous si rien ne l'avait déclarée.
+    const refusDeclares = refusAttendus();
     page.on('console', (m) => {
-      if (care && m.type() === 'error') incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
+      if (care && m.type() === 'error' && !refusDeclares.bruit(m.text())) {
+        incidents.push(`[${etape}] console : ${m.text().slice(0, 160)}`);
+      }
     });
     page.on('pageerror', (e) => {
       if (care) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
@@ -84,6 +91,7 @@ module.exports = async function mesuresNavigateurSmoke(port) {
     });
     page.on('response', (r) => {
       if (!care || r.status() < 400) return;
+      if (refusDeclares.attendu(r.status(), r.url())) return;
       incidents.push(`[${etape}] ${r.status()} ${r.url().replace(srv.base, '').slice(0, 120)}`);
     });
 
@@ -1788,6 +1796,826 @@ module.exports = async function mesuresNavigateurSmoke(port) {
         && Sm.pied === false && Sm.badge === true && Sm.ajouts === 0
         && Sm.champs >= 6 && Sm.tousFermes === true && Sm.nomTenu === 'DIALLO',
         JSON.stringify({ piecesInv, Sv, Sm }).slice(0, 480));
+    }
+
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Les quatre référentiels des Paramètres, et deux refus
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `mes-parametres.js` — 17 gestes nommés, cinq exercés. Les quatre listes de
+    // référence du module : catégories de mesure, types de mesure, types
+    // d'investigation, comités. Chacune a la même forme — « Ajouter » ouvre une
+    // fenêtre, « Enregistrer » la rend au serveur, le crayon rouvre un rang,
+    // la corbeille le retire après confirmation.
+    //
+    // ── Les deux règles que l'écran ne dit pas ──
+    //
+    //  1. **Un référentiel en usage ne se supprime pas.** Un comité qui a siégé,
+    //     un type qu'une mesure porte : le retrait les orphelinerait. Le refus
+    //     est rendu **dans la transformation** qui allait écrire, et non avant —
+    //     un emploi survenu entre la vérification et le retrait passerait
+    //     inaperçu (`supprimer()`, routes-parametres.js).
+    //  2. **Deux libellés qui donnent le même code ne font pas deux rangs.** Le
+    //     `code` est ce que les mesures retiennent, précisément pour qu'un
+    //     renommage ne les orpheline pas ; deux rangs sous un même code
+    //     rendraient la mesure ambiguë. Même endroit, même raison.
+    //
+    // Ces deux règles **refusent**, et un refus ne se mesure qu'en le
+    // provoquant : la ronde le déclare autour du geste, et un contrôle exige
+    // qu'il soit venu (mécanisme du harnais, n° 5.f.60).
+    etape = 'référentiels des paramètres';
+    const REFERENTIELS = [
+      { cle: 'Comite', champ: 'mesCoLib', route: 'comites' },
+      { cle: 'TypeInvestigation', champ: 'mesTiLib', route: 'types-investigation' },
+      { cle: 'Categorie', champ: 'mesCatLib', route: 'categories' },
+    ];
+    const MARQUE = String(Date.now()).slice(-6);
+
+    // Le chemin d'entrée des quatre listes, écrit **une fois** et remis aux
+    // trois relevés qui en ont besoin. Les deux derniers ne l'avaient pas et
+    // cherchaient leur bouton sur la liste où la ronde venait de s'arrêter.
+    const ALLER_A_LA_LISTE = `async (geste) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const trouve = () => [...document.querySelectorAll('button')]
+        .find((b) => new RegExp(geste).test(b.getAttribute('onclick') || ''));
+      if (trouve()) return { deja: true };
+      window.mesFermerSlider();
+      document.querySelector('.nav-btn[data-page="parametres"]')?.click();
+      await a(3000);
+      if (trouve()) return { page: 'parametres' };
+      const sousMenus = [...document.querySelectorAll('[onclick^="mesParamSousMenu"]')];
+      for (const s of sousMenus) {
+        s.click();
+        await a(2400);
+        if (trouve()) return { sousMenu: (s.textContent || '').trim().slice(0, 28) };
+      }
+      return { introuvable: true, sousMenus: sousMenus.length };
+    }`;
+
+    const referentiels = await page.evaluate(async (listes, marque) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      const modal = () => document.querySelector('.mes-modal-fond');
+      // ── Où vivent les quatre listes, et comment on y entre ──
+      //
+      // Les sous-menus des Paramètres de CARE ne sont **pas** des `.sub-nav-btn`
+      // comme ailleurs : ils prennent la bande latérale du portail, et leurs
+      // boutons portent `mesParamSousMenu`. Mon premier jet cherchait les
+      // sous-vues des autres pages et rendait « introuvable » sur un écran qui
+      // marche — la leçon de 5.f.52, encore : *ce qui s'ouvre se prend là où il
+      // vit.* Et le volet du traitement, laissé ouvert par la ronde précédente,
+      // couvre la page : on le referme d'abord.
+      const ouvrirListe = async (cle) => {
+        const geste = new RegExp(`mesOuvrir${cle}\\(\\)`);
+        if (bouton(geste)) return { deja: true };
+        window.mesFermerSlider();
+        document.querySelector('.nav-btn[data-page="parametres"]')?.click();
+        await a(3000);
+        if (bouton(geste)) return { page: 'parametres' };
+        const sousMenus = [...document.querySelectorAll('[onclick^="mesParamSousMenu"]')];
+        for (const s of sousMenus) {
+          s.click();
+          await a(2400);
+          if (bouton(geste)) {
+            return { page: 'parametres', sousMenu: (s.textContent || '').trim().slice(0, 28) };
+          }
+        }
+        return { introuvable: true, sousMenus: sousMenus.length };
+      };
+
+      for (const r of listes) {
+        // eslint-disable-next-line no-await-in-loop
+        await essai(r.cle, async () => {
+          const d = {};
+          const libelle = `Essai ${r.cle} ${marque}`;
+          d.ou = await ouvrirListe(r.cle);
+          if (d.ou.introuvable) return d;
+          const avant = (await window.mesApi('/parametres'))[
+            r.route.replace(/-/g, '_')] || [];
+          d.avant = avant.length;
+          // ── Ajouter : la fenêtre, le champ, l'enregistrement ──
+          bouton(new RegExp(`mesOuvrir${r.cle}\\(\\)`))?.click();
+          await a(1600);
+          d.fenetre = !!modal();
+          const champ = document.getElementById(r.champ);
+          d.champ = !!champ;
+          if (!champ) return d;
+          // Un libellé vide est refusé **sans partir** : l'erreur est posée dans
+          // la fenêtre, et rien ne va au serveur.
+          champ.value = '';
+          bouton(new RegExp(`mesEnregistrer${r.cle}\\(\\)`))?.click();
+          await a(1200);
+          d.videRefuse = !!modal() && !!(document.querySelector('.mes-erreur')
+            && document.querySelector('.mes-erreur').textContent.trim());
+          champ.value = libelle;
+          bouton(new RegExp(`mesEnregistrer${r.cle}\\(\\)`))?.click();
+          await a(3000);
+          d.fermee = !modal();
+          const apres = (await window.mesApi('/parametres'))[
+            r.route.replace(/-/g, '_')] || [];
+          d.apres = apres.length;
+          const cree = apres.find((x) => x.libelle === libelle);
+          d.cree = !!cree;
+          if (!cree) return d;
+          o[`${r.cle}_id`] = cree.id;
+          d.code = cree.code;
+          // ── Rouvrir le rang : la fenêtre revient garnie ──
+          [...document.querySelectorAll('button')]
+            .find((b) => (b.getAttribute('onclick') || '')
+              .includes(`mesOuvrir${r.cle}('${cree.id}')`))?.click();
+          await a(1600);
+          d.rouverte = !!modal();
+          d.champRempli = (document.getElementById(r.champ) || {}).value === libelle;
+          // Et le renommage ne touche pas le code : une décision rendue le porte.
+          const champ2 = document.getElementById(r.champ);
+          if (champ2) champ2.value = `${libelle} (révisé)`;
+          bouton(new RegExp(`mesEnregistrer${r.cle}\\(\\)`))?.click();
+          await a(3000);
+          const relu = ((await window.mesApi('/parametres'))[r.route.replace(/-/g, '_')] || [])
+            .find((x) => x.id === cree.id) || {};
+          d.renomme = relu.libelle === `${libelle} (révisé)`;
+          d.codeInchange = relu.code === d.code;
+          return d;
+        });
+      }
+      return o;
+    }, REFERENTIELS, MARQUE);
+
+    // ── Un libellé déjà pris : refusé, et l'erreur reste dans la fenêtre ──
+    //
+    // Le refus est un 409 `existant`, rendu **dans la transformation** qui allait
+    // écrire : deux créations du même libellé parties ensemble la passeraient
+    // toutes deux et poseraient deux rangs sous le même `code` — or c'est `code`
+    // que les mesures retiennent, pour qu'un renommage ne les orpheline pas.
+    refusDeclares.declarer(409, '/parametres/comites');
+    const doublon = await page.evaluate(async (marque, source) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      // eslint-disable-next-line no-eval
+      d.ou = await eval(source)('mesOuvrirComite\\(\\)');
+      // ── Ce qui fait le doublon est le **code**, non le libellé ──
+      //
+      // Mon premier jet reprenait le libellé renommé — « … (révisé) ». Il est
+      // passé : son code, dérivé de *ce* libellé, était libre. Or le rang
+      // renommé garde le code qu'il avait à sa création (« le code ne suit pas
+      // le libellé : une décision déjà rendue le porte »), de sorte que le
+      // libellé **d'origine** collisionne alors qu'aucun rang ne le porte plus.
+      // C'est cela qu'on éprouve : renommer ne libère pas le code.
+      const libelle = `Essai Comite ${marque}`;
+      const avant = ((await window.mesApi('/parametres')).comites || []).length;
+      bouton(/mesOuvrirComite\(\)/)?.click();
+      await a(1600);
+      const champ = document.getElementById('mesCoLib');
+      d.fenetre = !!champ;
+      if (!champ) return d;
+      champ.value = libelle;
+      bouton(/mesEnregistrerComite\(\)/)?.click();
+      await a(3000);
+      // La fenêtre reste ouverte, et porte la raison.
+      d.fenetreOuverte = !!document.querySelector('.mes-modal-fond');
+      const err = document.getElementById('mesCoErreur');
+      d.message = err ? (err.textContent || '').trim().slice(0, 60) : '';
+      d.apres = ((await window.mesApi('/parametres')).comites || []).length;
+      d.rienCree = d.apres === avant;
+      document.querySelector('[onclick*="mesFermerModal"]')?.click();
+      await a(1200);
+      d.fermee = !document.querySelector('.mes-modal-fond');
+      return d;
+    }, MARQUE, ALLER_A_LA_LISTE);
+    refusDeclares.clore();
+
+    // ── Un référentiel en usage ne se supprime pas ──
+    //
+    // La ronde des mesures arrêtées a enregistré une mesure portant un type :
+    // retirer ce type l'orphelinerait, et le refus est relu **sur l'état qu'on
+    // va écrire** — un emploi survenu entre la vérification et le retrait
+    // passerait inaperçu. Celui que la ronde vient de créer, lui, n'est employé
+    // par rien : il part.
+    const employe = await page.evaluate(async () => {
+      const d = {};
+      // ── L'emploi se lit là où les mesures vivent ──
+      //
+      // Mon premier jet interrogeait `/mesures`, la collection historique : elle
+      // est vide, car **aucune route ne l'alimente plus**. La mesure se décide à
+      // l'étape « Qualification et Mesures » et vit dans le traitement de sa
+      // carence. C'est ce défaut de lecture qui a fait voir que trois des quatre
+      // gardes d'emploi du serveur regardaient au même mauvais endroit.
+      const constats = await window.mesApi('/constatations');
+      const codes = [];
+      for (const c of (constats || [])) {
+        const t = await window.mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`)
+          .catch(() => null);
+        ((t || {}).qualification || {}).mesures?.forEach((m) => {
+          if (m.type_mesure) codes.push(m.type_mesure);
+        });
+      }
+      d.codesEmployes = [...new Set(codes)];
+      const types = (await window.mesApi('/parametres')).types || [];
+      const cible = types.find((t) => d.codesEmployes.includes(t.code));
+      d.cible = cible ? { id: cible.id, code: cible.code } : null;
+      return d;
+    });
+    if (employe.cible) refusDeclares.declarer(409, `/parametres/types/${employe.cible.id}`);
+    const suppression = await page.evaluate(async (cible, comiteId, source) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const d = {};
+      // eslint-disable-next-line no-eval
+      const allerA = eval(source);
+      const oui = async (ms) => {
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await a(ms);
+      };
+      // 1. Celui qu'une mesure porte : refusé, et il reste.
+      if (cible) {
+        d.ouTypes = await allerA('mesSupprimerType');
+        const geste = [...document.querySelectorAll('button')]
+          .find((b) => (b.getAttribute('onclick') || '')
+            .includes(`mesSupprimerType('${cible.id}')`));
+        d.boutonEmploye = !!geste;
+        if (geste) {
+          geste.click();
+          await a(1200);
+          d.confirmation = !!document.querySelector('.oasis-confirm-oui');
+          await oui(3200);
+          const types = (await window.mesApi('/parametres')).types || [];
+          d.typeReste = types.some((t) => t.id === cible.id);
+        }
+      }
+      // 2. Celui que la ronde a créé, qui n'est employé par rien : il part.
+      d.ouComites = await allerA('mesSupprimerComite');
+      const geste = [...document.querySelectorAll('button')]
+        .find((b) => (b.getAttribute('onclick') || '')
+          .includes(`mesSupprimerComite('${comiteId}')`));
+      d.boutonLibre = !!geste;
+      if (!geste) return d;
+      geste.click();
+      await a(1200);
+      d.confirmationLibre = !!document.querySelector('.oasis-confirm-oui');
+      await oui(3200);
+      const comites = (await window.mesApi('/parametres')).comites || [];
+      d.comiteParti = !comites.some((c) => c.id === comiteId);
+      d.lignePartie = ![...document.querySelectorAll('button')]
+        .some((b) => (b.getAttribute('onclick') || '').includes(`mesSupprimerComite('${comiteId}')`));
+      return d;
+    }, employe.cible, referentiels.Comite_id, ALLER_A_LA_LISTE);
+    refusDeclares.clore();
+
+    {
+      const trois = REFERENTIELS.map((r) => ({ cle: r.cle, d: referentiels[r.cle] || {} }));
+      verifier('les trois référentiels de CARE s’ajoutent, se rouvrent garnis et se renomment sans que leur code bouge',
+        trois.length === 3 && trois.every(({ d }) => !d.erreur
+          && !(d.ou || {}).introuvable
+          && d.fenetre === true && d.champ === true
+          // Un libellé vide est refusé **sans partir** : l'erreur reste dans la
+          // fenêtre, et rien ne va au serveur.
+          && d.videRefuse === true
+          && d.fermee === true && d.apres === d.avant + 1 && d.cree === true
+          && !!d.code
+          // Rouvrir rend la fenêtre garnie du rang qu'on vient de créer.
+          && d.rouverte === true && d.champRempli === true
+          // Et le renommage ne touche pas le code : une décision rendue le porte.
+          && d.renomme === true && d.codeInchange === true),
+        JSON.stringify(trois).slice(0, 560));
+      verifier('un libellé dont le code est déjà pris est refusé — renommer ne libère pas le code —, la fenêtre garde la raison, et rien n’est créé',
+        doublon.fenetre === true && doublon.fenetreOuverte === true
+        && !!doublon.message && doublon.rienCree === true && doublon.fermee === true,
+        JSON.stringify(doublon));
+      verifier('un référentiel qu’une mesure porte ne se supprime pas, et celui que rien n’emploie part',
+        // L'emploi est mesuré, non supposé : la ronde lit les mesures du serveur.
+        employe.codesEmployes.length > 0 && !!employe.cible
+        && suppression.boutonEmploye === true && suppression.confirmation === true
+        // Refusé : il reste.
+        && suppression.typeReste === true
+        // Et le comité que la ronde a créé, employé par rien, part — du serveur
+        // comme de la table.
+        && suppression.boutonLibre === true && suppression.confirmationLibre === true
+        && suppression.comiteParti === true && suppression.lignePartie === true,
+        JSON.stringify({ employe, suppression }));
+      refusDeclares.verifier('CARE');
+    }
+
+    // ══════════════════════════════════════════════════════════════════
+    //  Le circuit du recours : la seule étape de l'application qui recule
+    // ══════════════════════════════════════════════════════════════════
+    //
+    // `mes-suivi.js` — 329 lignes, 6 gestes nommés, un exercé — et les cinq
+    // gestes de recours de `mes-qualification.js`. Ce ne sont pas deux poches :
+    // c'est **un seul circuit**, et il faut le parcourir dans l'ordre.
+    //
+    // ── Pourquoi le recours n'était pas atteignable ──
+    //
+    // Le volet « Recours » ne s'offre que s'il y a un recours à examiner
+    // (`mesQualARecours`), et un recours naît au **suivi** d'une mesure. Or le
+    // suivi lui-même n'existe que sur un dossier dont la qualification a
+    // **conclu** : `mesQualSuivi()` exige une infraction constituée, et
+    // `creerLesMesures` inscrit alors les mesures arrêtées au registre — c'est
+    // ce registre que le suivi lit, et non la qualification.
+    //
+    // La ronde construit donc son dossier jusqu'à la qualification par l'API,
+    // puis **tout le reste passe par les gestes de l'écran** : l'infraction
+    // constituée, une mesure arrêtée qui demande le suivi, la conclusion, le
+    // suivi, la contestation, le recul du fil, et l'examen de l'instance.
+    //
+    // ── Les six règles éprouvées ──
+    //
+    //  1. **La conclusion de la qualification remplit le registre.** Les mesures
+    //     arrêtées reçoivent une référence (`MES-….`) et le fil passe au suivi.
+    //  2. **Le suivi écrit sur les mesures du registre**, non sur une copie : le
+    //     menu « Mesures » lit aussitôt ce qui est saisi là.
+    //  3. **Une contestation suspend le suivi.** Cocher « recours intenté » met
+    //     le statut à « recours » **et éteint le choix du statut** ; décocher
+    //     rend la main.
+    //  4. **Les deux actions de l'étape s'excluent.** La contestation arme
+    //     « Action de recours » et éteint « Clôturer » — et le serveur refuse la
+    //     clôture par un 409 même si l'on force le geste (refus déclaré).
+    //  5. **Le fil recule.** L'action de recours ramène le dossier à la
+    //     qualification — le seul endroit de l'application où une étape revient
+    //     en arrière — et le volet « Recours » paraît, qu'aucun état précédent
+    //     n'offrait.
+    //  6. **L'instance décide, et la conclusion applique sa décision** : annulée,
+    //     la mesure sort du suivi ; modifiée, elle reprend les termes arrêtés.
+    etape = 'circuit du recours';
+    const DOSSIER_RECOURS = 'Défaut de contrôle à l’embarquement (contrôle ' + Date.now() + ')';
+
+    const recours = await page.evaluate(async (titre) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.MES_STATE || {};
+      const T = () => S().traitement || {};
+      const Q = () => (T().qualification || {});
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      const chevron = (cle) => [...document.querySelectorAll('.mes-proc-step')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+      const volet = (cle) => [...document.querySelectorAll('[onclick*="mesQualVoirVolet("]')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+      const oui = async (ms) => {
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await a(ms);
+      };
+
+      // ── 0. Le dossier, mené à la qualification par l'API ──
+      await essai('dossier', async () => {
+        const d = {};
+        window.mesFermerSlider();
+        const cree = await window.mesApi('/constatations', {
+          method: 'POST',
+          body: JSON.stringify({
+            titre, description: 'Passagers embarqués sans contrôle documentaire',
+            origine_libelle: 'Inspection inopinée', date_ouverture: '2026-10-20',
+          }),
+        });
+        d.cree = !!(cree && cree.id);
+        if (!d.cree) return d;
+        o.carence = cree.id;
+        const p = (chemin, methode, corps) => window.mesApi(chemin, {
+          method: methode, ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        const racine = `/constatations/${encodeURIComponent(cree.id)}`;
+        await p(`${racine}/traitement`, 'PUT', { informations: 'Constats recueillis' });
+        await p(`${racine}/decision`, 'POST', { decision: 'mesures' });
+        d.etape = (await p(`${racine}/traitement`, 'GET') || {}).etape;
+        await window.mesLoadData();
+        window.mesRenderPage();
+        await a(2200);
+        document.querySelector('.nav-btn[data-page="critiques"]')?.click();
+        await a(2600);
+        const ouvrir = [...document.querySelectorAll('[onclick*="mesMesureDepuisConstatation("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(o.carence));
+        d.bouton = !!ouvrir;
+        ouvrir?.click();
+        await a(3200);
+        d.volet = !!document.getElementById('mesQualComite');
+        return d;
+      });
+
+      // ── 1. Une mesure arrêtée qui demande le suivi, puis la conclusion ──
+      await essai('conclusion', async () => {
+        const d = {};
+        // L'infraction constituée : c'est elle qui ouvre les mesures.
+        document.getElementById('mesQualConstituee')?.click();
+        await a(2400);
+        d.constituee = !!Q().infraction_constituee;
+        volet('mesures')?.click();
+        await a(2400);
+        bouton(/mesQualAjouterMesure/)?.click();
+        await a(2600);
+        d.mesures = (Q().mesures || []).length;
+        if (!d.mesures) return d;
+        // ── Le type n'a pas de gestionnaire, et c'est ce qui compte ici ──
+        //
+        // Mon premier jet cherchait un `onchange="mesQualTypeMesure(…)"` : il
+        // n'existe pas — je l'avais inventé. Le `<select>` du type est un champ
+        // `data-champ="type_mesure"`, que `mesCollecterQualification` relève
+        // **à l'enregistrement**. Sa valeur ne parvient donc à l'état qu'au
+        // moment de la sauvegarde, et la lire juste après l'avoir posée rendrait
+        // vide. *On relève la valeur là où elle arrive, non là où on la pose.*
+        const choix = document.querySelector('[data-champ="type_mesure"]');
+        const valeur = choix ? [...choix.options].map((x) => x.value).find(Boolean) : '';
+        d.typeOffert = !!valeur;
+        if (choix && valeur) choix.value = valeur;
+        // Le suivi est attendu par défaut : c'est lui qui ouvrira l'étape. Celui-ci
+        // vient de `mesQualAjouterMesure`, donc il est déjà dans l'état.
+        d.suiviRequis = !!((Q().mesures || [])[0] || {}).suivi_requis;
+        bouton(/mesEnregistrerQualification/)?.click();
+        await a(3000);
+        // Et le type, relu **après** l'enregistrement, qui l'a relevé.
+        d.type = ((Q().mesures || [])[0] || {}).type_mesure || '';
+        // ── La conclusion : « Valider » ouvre le suivi ──
+        const conclure = bouton(/mesQualSuivi/);
+        d.boutonConclure = !!conclure;
+        d.conclureArme = !!(conclure && !conclure.disabled);
+        // Et la clôture directe reste éteinte : une mesure demande le suivi.
+        const clore = bouton(/mesQualCloturer/);
+        d.cloturerEteint = !clore || !!clore.disabled;
+        if (!conclure) return d;
+        conclure.click();
+        await a(1400);
+        d.confirmation = !!document.querySelector('.oasis-confirm-oui')
+          || !!document.querySelector('#mesConfirmCase');
+        document.getElementById('mesConfirmCase')?.click();
+        await a(600);
+        document.getElementById('mesConfirmValider')?.click();
+        await oui(4200);
+        d.etape = T().etape;
+        // Le registre a reçu la mesure, avec sa référence.
+        const registre = T().mesures || [];
+        d.auRegistre = registre.length;
+        d.reference = (registre[0] || {}).reference || '';
+        d.issueDe = (registre[0] || {}).issue_de || '';
+        return d;
+      });
+
+      // ── 2. L'étape du suivi, qui écrit sur les mesures du registre ──
+      await essai('suivi', async () => {
+        const d = {};
+        d.vue = S().etapeVue || '';
+        d.sections = document.querySelectorAll('.mes-section').length;
+        const blocs = () => [...document.querySelectorAll('#mesSuiviMesures .mes-bloc')];
+        d.blocs = blocs().length;
+        if (!d.blocs) return d;
+        // Le titre du bloc est la **référence** de la mesure au registre : c'est
+        // elle que le prestataire verra notifiée.
+        d.titre = (blocs()[0].querySelector('.mes-bloc-titre') || {}).textContent || '';
+        const statut = blocs()[0].querySelector('[data-champ="suivi_statut"]');
+        d.statutOffert = !!statut && !statut.disabled;
+        d.statutsOfferts = statut ? [...statut.options].length : 0;
+        // Un statut choisi par son geste : il redessine, car l'aide qui
+        // l'accompagne suit le choix.
+        const choix = statut ? [...statut.options].map((x) => x.value)
+          .find((v) => v && v !== statut.value) : '';
+        d.autreStatut = choix || '';
+        if (choix) {
+          statut.value = choix;
+          statut.dispatchEvent(new Event('change'));
+          await a(2600);
+        }
+        d.statutDansEtat = ((T().mesures || [])[0] || {}).suivi_statut || '';
+        // Le commentaire de suivi, et l'enregistrement relu sur le serveur.
+        const bloc = blocs()[0];
+        const commentaire = bloc.querySelector('[data-champ="suivi_commentaire"]');
+        d.champCommentaire = !!commentaire;
+        if (commentaire) commentaire.value = 'Mise en œuvre engagée par l’organisme.';
+        const general = document.getElementById('mesSuiviCommentaire');
+        d.champGeneral = !!general;
+        if (general) general.value = 'Suivi ouvert, premières pièces attendues.';
+        const pied = document.querySelector('.mes-slider-footer button');
+        d.pied = !!pied;
+        d.geste = pied ? (pied.getAttribute('onclick') || '') : '';
+        pied?.click();
+        await a(3200);
+        const relu = await window.mesApi(
+          `/constatations/${encodeURIComponent(o.carence)}/traitement`);
+        const m = ((relu || {}).mesures || [])[0] || {};
+        d.auServeur = {
+          statut: m.suivi_statut || '',
+          commentaire: (m.suivi_commentaire || '').slice(0, 32),
+          general: (((relu || {}).suivi || {}).commentaire_general || '').slice(0, 24),
+        };
+        // ── Le suivi écrit sur le **registre**, non sur une copie ──
+        //
+        // Le menu « Mesures » lit la même mesure : ce qui est saisi ici y paraît
+        // aussitôt. On le relève chez le serveur, par l'autre porte.
+        const registre = await window.mesApi('/mesures');
+        const mr = (registre || []).find((x) => x.id === m.id) || {};
+        d.memeMesure = mr.suivi_statut === m.suivi_statut
+          && (mr.suivi_commentaire || '') === (m.suivi_commentaire || '');
+        return d;
+      });
+
+      // ── 3. La contestation suspend le suivi ──
+      await essai('contestation', async () => {
+        const d = {};
+        const bloc = () => document.querySelector('#mesSuiviMesures .mes-bloc');
+        const statut = () => bloc().querySelector('[data-champ="suivi_statut"]');
+        const case_ = () => bloc().querySelector('[data-champ="recours_intente"]');
+        d.caseOfferte = !!case_();
+        if (!d.caseOfferte) return d;
+        d.statutAvant = statut().value;
+        d.statutOuvertAvant = !statut().disabled;
+        case_().click();
+        await a(2600);
+        // Le statut passe à « recours » **et cesse de se choisir**.
+        d.statutApres = statut() ? statut().value : '';
+        d.statutEteint = !!(statut() && statut().disabled);
+        d.etatConteste = !!((T().mesures || [])[0] || {}).recours_intente;
+        // ── Décocher rend la main, et le vide se lit dans l'état ──
+        //
+        // `mesSuiviRecours` remet le statut à **chaîne vide** quand il valait
+        // « recours ». Mon premier jet le relevait dans le `<select>`, et lisait
+        // « attendu » : reconstruit, le menu retombe sur sa première option,
+        // faute d'en avoir une qui porte le vide. *Quand le document ne peut pas
+        // montrer un vide, c'est l'état qui le dit* — la leçon de n° 5.f.56,
+        // ici pour la seconde fois.
+        case_().click();
+        await a(2600);
+        d.statutRenduDansEtat = ((T().mesures || [])[0] || {}).suivi_statut || '';
+        d.statutAfficheApres = statut() ? statut().value : '';
+        d.statutOuvertApres = !!(statut() && !statut().disabled);
+        d.etatRendu = !((T().mesures || [])[0] || {}).recours_intente;
+        // Puis pour de bon : la suite du circuit en dépend.
+        case_().click();
+        await a(2600);
+        d.contestee = !!((T().mesures || [])[0] || {}).recours_intente;
+        return d;
+      });
+
+      // ── 4. Les deux issues s'excluent, et le serveur refuse la clôture ──
+      await essai('issues', async () => {
+        const d = {};
+        const action = (motif) => [...document.querySelectorAll('.mes-proc-actions button')]
+          .find((b) => motif.test(b.getAttribute('onclick') || ''));
+        const recoursBtn = action(/mesSuiviActionRecours/);
+        const cloreBtn = action(/mesSuiviCloturer/);
+        d.deuxActions = !!recoursBtn && !!cloreBtn;
+        if (!d.deuxActions) return d;
+        // La contestation arme l'une et éteint l'autre.
+        d.recoursArme = !recoursBtn.disabled;
+        d.clotureEteinte = !!cloreBtn.disabled;
+        return d;
+      });
+      return o;
+    }, DOSSIER_RECOURS);
+
+    // ── Le refus du serveur, provoqué : la clôture d'un dossier contesté ──
+    //
+    // Le bouton est éteint, et c'est déjà une règle. Mais une règle tenue par le
+    // seul écran n'est pas tenue : le serveur la repose, et **c'est elle qui
+    // compte** — un appel direct ne passe pas par un bouton. On la provoque donc.
+    //
+    // ── Et elle se provoque **après** que la contestation soit enregistrée ──
+    //
+    // Mon premier jet l'appelait aussitôt : la case était cochée dans l'état,
+    // pas au serveur, qui a donc légitimement **clôturé le dossier** — et tout
+    // ce qui suivait est tombé avec, le fil ne pouvant plus reculer depuis un
+    // suivi clos. *Une sonde qui mesure un refus doit d'abord mettre le serveur
+    // dans l'état où il refuse ; sinon elle ne mesure pas un refus, elle fait
+    // ce qu'elle voulait interdire.*
+    await page.evaluate(async () => {
+      document.querySelector('.mes-slider-footer button')?.click();
+      await new Promise((r) => setTimeout(r, 3200));
+    });
+    refusDeclares.declarer(409, '/suivi/cloturer');
+    const clotureRefusee = await page.evaluate(async (carence) => {
+      try {
+        await window.mesApi(`/constatations/${encodeURIComponent(carence)}/suivi/cloturer`,
+          { method: 'POST' });
+        return { refuse: false };
+      } catch (e) { return { refuse: true, message: String((e && e.message) || e).slice(0, 80) }; }
+    }, recours.carence);
+    refusDeclares.clore();
+
+    // ── 5 et 6. Le fil recule, et l'instance examine ──
+    const examen = await page.evaluate(async (carence) => {
+      const a = (ms) => new Promise((r) => setTimeout(r, ms));
+      const o = {};
+      const essai = async (nom, f) => {
+        try { o[nom] = await f(); }
+        catch (e) { o[nom] = { erreur: String((e && e.message) || e) }; }
+      };
+      const S = () => window.MES_STATE || {};
+      const T = () => S().traitement || {};
+      const Q = () => (T().qualification || {});
+      const bouton = (motif) => [...document.querySelectorAll('button')]
+        .find((b) => motif.test(b.getAttribute('onclick') || ''));
+      const volet = (cle) => [...document.querySelectorAll('[onclick*="mesQualVoirVolet("]')]
+        .find((b) => (b.getAttribute('onclick') || '').includes(`'${cle}'`));
+
+      // ── Le fil recule : le seul endroit de l'application où cela arrive ──
+      await essai('recul', async () => {
+        const d = {};
+        d.voletAvant = !!volet('recours');
+        const action = [...document.querySelectorAll('.mes-proc-actions button')]
+          .find((b) => /mesSuiviActionRecours/.test(b.getAttribute('onclick') || ''));
+        d.bouton = !!action;
+        if (!action) return d;
+        action.click();
+        await a(1600);
+        // La fenêtre d'aveu **nomme le recul** : « Suivi des Mesures » →
+        // « Qualification et Mesures ». C'est la seule qui pointe en arrière.
+        d.fenetre = !!document.querySelector('.mes-confirm-fond');
+        d.fil = [...document.querySelectorAll('.mes-confirm-etape')]
+          .map((e) => (e.textContent || '').trim());
+        d.validerEteint = !!(document.getElementById('mesConfirmValider') || {}).disabled;
+        document.getElementById('mesConfirmCase')?.click();
+        await a(600);
+        document.getElementById('mesConfirmValider')?.click();
+        await a(4600);
+        d.etape = T().etape;
+        // La trace du recul : sa date et son auteur. Elles existaient au
+        // serveur et n'étaient pas exposées — la réponse portait toutes les
+        // autres paires `*_le / *_par` et oubliait celle-ci. Corrigé en
+        // cherchant à l'éprouver.
+        d.recoursOuvert = !!T().recours_ouvert_le && !!T().recours_ouvert_par;
+        // La marque est portée sur la **mesure arrêtée**, par son rang : c'est
+        // là que le volet « Recours » ira la lire.
+        d.marqueSurLArretee = !!((Q().mesures || [])[0] || {}).recours_intente;
+        d.voletApres = !!volet('recours');
+        return d;
+      });
+
+      // ── L'instance examine, et décide ──
+      await essai('instance', async () => {
+        const d = {};
+        volet('recours')?.click();
+        await a(2600);
+        const bloc = () => document.querySelector('#mesRecoursBlocs .mes-bloc');
+        d.bloc = !!bloc();
+        if (!bloc()) return d;
+        // Les quatre champs du volet, bornés au bloc : `data-champ="commentaire"`
+        // existe **aussi** dans le bloc de mesure, et une requête non bornée
+        // aurait pris celui-là.
+        const champ = (nom) => bloc().querySelector(`[data-champ="${nom}"]`);
+        d.champs = ['intente_texte', 'instance_code', 'commentaire', 'decision']
+          .filter((n) => !!champ(n)).length;
+        champ('intente_texte').value = 'L’organisme contexte la durée de la sanction.';
+        champ('commentaire').value = 'Instance réunie, pièces examinées.';
+        // Un membre de l'instance de recours s'ajoute, et se retire.
+        const membres = () => bloc().querySelectorAll('.mes-recours-membres tbody tr[data-rang]');
+        d.membresAvant = membres().length;
+        bouton(/mesRecoursAjouterMembre/)?.click();
+        await a(2600);
+        d.membresApres = membres().length;
+        const ligne = membres()[0];
+        if (ligne) {
+          const nom = ligne.querySelector('[data-champ="nom"]');
+          if (nom) nom.value = 'SOGLO';
+        }
+        // Un second, puis le retrait du second : le premier garde sa saisie.
+        bouton(/mesRecoursAjouterMembre/)?.click();
+        await a(2600);
+        d.deuxMembres = membres().length;
+        d.premierTenu = ((membres()[0] || {}).querySelector
+          ? (membres()[0].querySelector('[data-champ="nom"]') || {}).value : '') || '';
+        [...document.querySelectorAll('[onclick*="mesRecoursRetirerMembre"]')][1]?.click();
+        await a(2600);
+        d.apresRetrait = membres().length;
+        // ── La décision : elle redessine, car la note qui l'explique en dépend ──
+        const decision = bloc().querySelector('[data-champ="decision"]');
+        d.decisionsOffertes = decision ? [...decision.options].filter((x) => x.value).length : 0;
+        if (decision) {
+          decision.value = 'annuler';
+          decision.dispatchEvent(new Event('change'));
+          await a(2600);
+        }
+        d.decisionDansEtat = (((Q().mesures || [])[0] || {}).recours || {}).decision || '';
+        d.noteParue = /annul/i.test((document.querySelector('#mesRecoursBlocs') || {}).textContent || '');
+        // Enregistré, puis relu sur le serveur.
+        bouton(/mesEnregistrerQualification/)?.click();
+        await a(3200);
+        const relu = await window.mesApi(
+          `/constatations/${encodeURIComponent(carence)}/traitement`);
+        const r = (((relu || {}).qualification || {}).mesures || [])[0] || {};
+        d.auServeur = {
+          decision: (r.recours || {}).decision || '',
+          membres: ((r.recours || {}).membres || []).length,
+          texte: ((r.recours || {}).intente_texte || '').slice(0, 24),
+        };
+        return d;
+      });
+
+      // ── La conclusion applique la décision de l'instance ──
+      await essai('application', async () => {
+        const d = {};
+        const conclure = bouton(/mesQualSuivi/);
+        d.bouton = !!conclure;
+        if (!conclure) return d;
+        conclure.click();
+        await a(1600);
+        document.getElementById('mesConfirmCase')?.click();
+        await a(600);
+        document.getElementById('mesConfirmValider')?.click();
+        await a(1400);
+        document.querySelector('.oasis-confirm-oui')?.click();
+        await a(4600);
+        // Annulée : la mesure sort du suivi, et la contestation est close.
+        const registre = await window.mesApi('/mesures');
+        const m = (registre || []).find((x) => x.constatation_id === carence) || {};
+        d.statut = m.statut || '';
+        d.suivi = m.suivi_statut || '';
+        d.contestationClose = m.recours_intente === false;
+        d.dateCloture = !!m.date_cloture;
+        return d;
+      });
+      return o;
+    }, recours.carence);
+
+    {
+      const Do = recours.dossier || {};
+      const Co = recours.conclusion || {};
+      const Su = recours.suivi || {};
+      const Ct = recours.contestation || {};
+      const Is = recours.issues || {};
+      const Re = examen.recul || {};
+      const In = examen.instance || {};
+      const Ap = examen.application || {};
+      verifier('la conclusion de la qualification inscrit la mesure arrêtée au registre, avec sa référence, et ouvre le suivi',
+        Do.cree === true && Do.etape === 'qualification' && Do.volet === true
+        && Co.constituee === true && Co.mesures === 1
+        && Co.typeOffert === true && !!Co.type
+        // Le suivi est attendu par défaut : c'est lui qui ouvre l'étape.
+        && Co.suiviRequis === true
+        // La conclusion s'offre, la clôture directe reste éteinte.
+        && Co.boutonConclure === true && Co.conclureArme === true
+        && Co.cloturerEteint === true && Co.confirmation === true
+        && Co.etape === 'suivi'
+        // Le registre a reçu la mesure, avec sa référence et son origine.
+        && Co.auRegistre === 1 && /^MES-\d+$/.test(Co.reference || '')
+        && Co.issueDe === 'qualification',
+        JSON.stringify({ Do, Co }).slice(0, 460));
+      verifier('le suivi écrit sur la mesure du registre, et le menu « Mesures » lit la même',
+        Su.vue === '' && Su.sections === 2 && Su.blocs === 1
+        // Le titre du bloc est la référence notifiée au prestataire.
+        && /^MES-\d+$/.test((Su.titre || '').trim())
+        && Su.statutOffert === true && Su.statutsOfferts >= 3
+        && !!Su.autreStatut && Su.statutDansEtat === Su.autreStatut
+        && Su.champCommentaire === true && Su.champGeneral === true
+        && Su.pied === true && /mesEnregistrerSuivi/.test(Su.geste || '')
+        && Su.auServeur.statut === Su.autreStatut
+        && /Mise en œuvre/.test(Su.auServeur.commentaire || '')
+        && /Suivi ouvert/.test(Su.auServeur.general || '')
+        // **Pas de copie** : la même mesure, lue par l'autre porte.
+        && Su.memeMesure === true,
+        JSON.stringify(Su).slice(0, 460));
+      verifier('une contestation suspend le suivi : le statut passe à « recours » et cesse de se choisir, et le décochage rend la main',
+        Ct.caseOfferte === true && Ct.statutOuvertAvant === true
+        && Ct.statutApres === 'recours' && Ct.statutEteint === true
+        && Ct.etatConteste === true
+        // Décocher libère le statut et le laisse indéterminé **dans l'état** ;
+        // le menu, lui, retombe sur sa première option, faute d'en avoir une
+        // pour le vide. Les deux sont relevés : le second est le fait, non la
+        // règle.
+        && Ct.statutRenduDansEtat === '' && !!Ct.statutAfficheApres
+        && Ct.statutOuvertApres === true
+        && Ct.etatRendu === true
+        && Ct.contestee === true,
+        JSON.stringify(Ct));
+      verifier('la contestation arme « Action de recours » et éteint « Clôturer », et le serveur repose la règle par un refus',
+        Is.deuxActions === true
+        && Is.recoursArme === true && Is.clotureEteinte === true
+        // Le bouton éteint est une règle de l'écran ; celle qui compte est celle
+        // du serveur, qu'un appel direct ne contourne pas.
+        && clotureRefusee.refuse === true,
+        JSON.stringify({ Is, clotureRefusee }));
+      verifier('l’action de recours fait reculer le fil à la qualification — le seul endroit de l’application où une étape revient en arrière',
+        Re.voletAvant === false && Re.bouton === true
+        && Re.fenetre === true && Re.validerEteint === true
+        // La fenêtre nomme le recul : deux étapes, et la seconde est antérieure.
+        && Re.fil.length === 2 && !!Re.fil[0] && !!Re.fil[1] && Re.fil[0] !== Re.fil[1]
+        && Re.etape === 'qualification' && Re.recoursOuvert === true
+        // La marque est portée sur la mesure **arrêtée**, par son rang : c'est
+        // là que le volet « Recours » va la lire.
+        && Re.marqueSurLArretee === true
+        && Re.voletApres === true,
+        JSON.stringify(Re));
+      verifier('l’instance examine le recours, ses membres s’ajoutent sans perdre ce qui précède, et sa décision parvient au serveur',
+        In.bloc === true && In.champs === 4
+        && In.membresAvant === 0 && In.membresApres === 1 && In.deuxMembres === 2
+        && In.premierTenu === 'SOGLO' && In.apresRetrait === 1
+        // Les trois décisions : maintenir, modifier, annuler.
+        && In.decisionsOffertes === 3
+        && In.decisionDansEtat === 'annuler' && In.noteParue === true
+        && In.auServeur.decision === 'annuler' && In.auServeur.membres === 1
+        && /conteste|contexte/i.test(In.auServeur.texte || ''),
+        JSON.stringify(In).slice(0, 460));
+      verifier('la conclusion applique la décision de l’instance : annulée, la mesure sort du suivi et la contestation est close',
+        Ap.bouton === true
+        && Ap.statut === 'annulee' && Ap.suivi === 'sans_suite'
+        && Ap.contestationClose === true && Ap.dateCloture === true,
+        JSON.stringify(Ap));
     }
 
     verifier('aucune erreur de console ni requête échouée sur CARE',

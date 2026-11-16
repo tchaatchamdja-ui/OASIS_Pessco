@@ -864,18 +864,28 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Écran | Lignes | État |
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
-           | portail (`public/js`) | **0 — le dossier n'existe plus** | **84 gestes nommés, 66 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 949 | non mesuré |
-           | CARE (`mesures`) | 6 428 | non mesuré |
-           | PR (`profil_risque`) | 7 315 | non mesuré |
-           | RAMP | 12 470 | non mesuré |
-           | SURV (`execution`) | 23 731 | non mesuré |
+           | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 12 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.108) ; reste `pl-shell.js` |
+           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
+           | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
+           | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
+           | SURV (`execution`) | 24 162 | **323 gestes nommés, 320 exercés** (99 %) — tous les décidables —, 512 occurrences sur 518 dont 6 indécidables — mesuré par **treize** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers`, `surv-barre`, `surv-constatations`, `surv-prestataire` et `surv-fenetres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.98) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 59 sur 60, les activités à 66 sur 67 — leurs restes indécidables —, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. **Plus aucun nom décidable n'est sans ronde.** `execViewFNC` et `execAccuserReception`, qu'on disait ici hors de portée — offerts au seul compte qui ne gouverne pas —, le sont en vue Prestataire, que la barre offre au super-administrateur (n° 5.f.97, qui corrige cette phrase). `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). La remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire sont exercés, `exec-dashboard.js` 29 sur 29 (n° 5.f.96) ; l'accusé de réception et la consultation d'une constatation, du côté de l'organisme, le sont aussi — et le dernier « non exercé », `e`, était un paramètre que le relevé lisait comme un nom (n° 5.f.97). Les fonctions fléchées posées en propriété, que le relevé laissait dehors — seize, et non sept —, sont nommées par leur texte des deux côtés ; les cinq renoncements qu'aucune suite ne pressait le sont par `surv-fenetres` (n° 5.f.98). |
 
-           « Non mesuré » est à prendre au mot : on ne sait pas, pour ces cinq écrans, quelles
-           vues sont ouvertes par la suite « parcours » ni quels gestes y sont exercés. Le
-           portail a été mesuré avant d'être touché, et la mesure a dit qu'un écran de 4 217
-           lignes était couvert par « trois vues se remplissent ». Il n'y a aucune raison
-           d'espérer mieux des cinq autres, et chacun aura donc sa suite n° 0.
+           ── Ce tableau a dit « non mesuré » pendant un mois de trop ──
+
+           Il portait « non mesuré » pour les cinq écrans de module, daté du 6 octobre
+           2026, alors que chacun a reçu sa suite de navigateur entre le 13 octobre et le
+           3 novembre. *Un tableau d'état qui ne suit pas l'état devient un piège : on le
+           lit, on le croit, et l'on refait ce qui est fait.* Remis d'accord le 5 novembre
+           2026, à partir des relevés figés eux-mêmes (`tests/smoke/gestes-<écran>.json`)
+           et non de la mémoire du chantier.
+
+           Ce que la mesure a dit, et qui justifie rétrospectivement de l'avoir faite
+           avant de toucher aux écrans : le portail, 4 217 lignes, était couvert par
+           « trois vues se remplissent ». Aucun des cinq autres ne valait mieux au départ.
+           Les six suites de navigateur qui garnissent aujourd'hui ce tableau sont nées de
+           ce constat, et chacune des entrées 5.f ci-dessous nomme ce qu'elle y a trouvé —
+           des défauts qu'aucune relecture n'avait vus, dans du code qui passait pour sain.
 
            5.c.0 [x] **Éprouver le portail avant de le réécrire — reprise du 7 octobre 2026,
                et mon relevé de la veille était faux d'un facteur trois.**
@@ -9037,3 +9047,5107 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            l'en-tête du classeur amputé ; le verrou de la validée levé des deux
            côtés ; la cellule vide rendue à son état d'avant la correction ; et le
            rapport ne nommant plus le prestataire.
+
+       5.f.61 [x] **Cinq gestes de déconnexion, morts par construction — retirés** — fait le 3 novembre 2026.
+
+           Chacun des cinq écrans de module portait un bouton de déconnexion, et
+           les cinq relevés les comptaient « non exercés ». Ils n'étaient pas
+           *non couverts* : ils étaient **inexerçables**. Le socle remplace le
+           nœud `.btn-logout` par « Retour au portail » —
+           `logout.replaceWith(btn)`, `frontend/socle/chrome.ts` —, et remplacer
+           un nœud détruit son gestionnaire en ligne. Aucune ronde ne pouvait les
+           atteindre, et aucune ne le pourra.
+
+           | écran | geste | ligne |
+           |---|---|---|
+           | SURV | `execLogout` | 862 |
+           | PLAN | `planLogout` | 348 |
+           | RAMP | `rampDeconnexion` | 958 |
+           | CARE | `mesDeconnexion` | 380 |
+           | PR | `handleLogout` | 296 |
+
+           Je les croyais trois — `rampDeconnexion` traînait depuis des semaines
+           dans mes questions ouvertes comme un cas isolé. La mesure en a trouvé
+           cinq, et un cas général.
+
+           ── Ce qu'un geste mort devient quand rien ne le mesure ──
+
+           **Trois des cinq ne déconnectaient pas.** PR, SURV et PLAN effaçaient
+           `pr_token` et `pr_user` du stockage local puis allaient à `/login`,
+           *sans appeler `/api/logout`* : la session restait ouverte côté
+           serveur. Les deux autres le faisaient correctement, et avaient même
+           reçu une correction soignée — « `fetch` ne lève pas sur une réponse
+           d'erreur, et le refus passait inaperçu ». On a donc réparé avec soin
+           un bouton que personne ne pouvait cliquer, et laissé trois faux
+           boutons de déconnexion ailleurs. *Un geste mort n'est mesuré par rien,
+           et c'est pourquoi il peut être à la fois soigné et faux.*
+
+           La leçon de ces commentaires survit au code qu'ils expliquaient, parce
+           qu'elle vaut partout : **un `try` autour d'un `fetch` ne garde rien
+           tant qu'on ne lit pas la réponse.** `fetch` ne rejette que sur une
+           panne de réseau ; un 4xx ou un 5xx traverse le `catch` sans un mot.
+
+           ── La lettre de la consigne, et ce qu'elle aurait cassé ──
+
+           La décision était « retirer les cinq fonctions et leur balisage ».
+           Retirer le **nœud** aurait ôté « Retour au portail » des cinq écrans :
+           c'est l'ancre que le socle cherche, et sans elle il ne crée rien
+           (`if (logout && !document.querySelector('.oasis-back-btn'))`). Les
+           suites l'exigent déjà — `retour === 1 && mort === 0` — et m'auraient
+           arrêté ; mais un garde qui arrête n'est pas une raison de ne pas
+           réfléchir. Les cinq fonctions et leurs cinq `onclick` sont donc
+           partis ; **le nœud reste, sans gestionnaire**, et c'est écrit.
+
+           ── Le garde, qui tient les deux côtés ──
+
+           Un garde qui n'exigerait que l'absence du gestionnaire laisserait
+           supprimer l'ancre ; un garde qui n'exigerait que l'ancre laisserait
+           revenir le gestionnaire. Il exige donc les deux, et qu'aucun écran de
+           module ne redéclare une fonction dont le nom porte « logout » ou
+           « deconnexion ». Trois contre-essais, trois fois rouge, chacun nommant
+           sa cause : un `onclick` remis sur l'ancre de PR ; l'ancre de CARE
+           renommée ; une `planLogout` redéclarée dans PLAN.
+
+           Les cinq relevés ont été refigés : cinq dénominateurs baissent d'un,
+           et cinq lignes « non exercé » qui ne pouvaient pas changer
+           disparaissent de l'inventaire.
+
+       5.f.62 [x] **Les facettes et la coquille de PR, les référentiels de CARE — et trois gardes qui regardaient où les données n'étaient plus** — fait le 3 novembre 2026.
+
+           Huit contrôles de plus : PR 37 → **41**, CARE 29 → **33**. Et, au
+           milieu, un défaut du serveur que seule la ronde pouvait trouver.
+
+           ── Le mécanisme des refus, remonté dans le harnais ──
+
+           Écrit pour PR au pas précédent, il sert maintenant à deux suites et en
+           servira six. `refusAttendus()` vit dans `tests/smoke/harness.js`, et
+           les deux rondes l'appellent. Une copie par suite aurait divergé : ce
+           dépôt a payé cette leçon deux fois — la liste d'événements du
+           mouchard, recopiée dans la page et divergente au premier ajout, et le
+           nommeur de gestes appelé par deux côtés qui ont fini par nommer
+           différemment (n° 5.f.60).
+
+           ── PR : les facettes, et la quatrième barre qu'on ne peut pas atteindre ──
+
+           Trois barres de filtres éprouvées sur un même contrat : chaque facette
+           parvient à l'état, la remise à zéro vide l'objet entier, et la
+           recherche traverse le différé du socle. Un choix est nommé dans le
+           code : **qu'une facette restreigne la liste n'est pas éprouvable** sans
+           supposer le jeu d'essai — selon les données, un domaine peut ne rien
+           retirer. Le nombre de lignes avant et après est donc relevé au détail
+           sans être exigé.
+
+           Trois, et non quatre. `pr-plans.js` en porte une quatrième,
+           inatteignable : la page « Plans » est rendue par l'aiguillage et
+           **ouverte par rien**, et elle est déclarée à ce titre dans
+           `PAGES_SANS_CHEMIN` depuis la première suite de PR. Mon premier jet la
+           cherchait et rendait « introuvable » sur un écran qui marche. Le
+           contrôle **lie désormais les deux faits** : il exige que la
+           déclaration existe. Si l'on rendait son entrée de menu à la page, les
+           deux contrôles réclameraient attention ensemble — celui de
+           l'atteignabilité, et celui-ci, qui devrait alors grandir d'une barre.
+           Contre-essayé en retirant la déclaration : les deux rougissent.
+
+           La coquille, enfin : les pastilles de thème (et le thème qui suit sur
+           la racine du document), les trois langues (et les libellés de la barre
+           qui suivent — sans quoi la langue n'est qu'un drapeau), le repli de la
+           barre latérale, le menu mobile refermé **par son fond**, et la cloche
+           des notifications.
+
+           ── CARE : les référentiels, et ce que « renommer » ne libère pas ──
+
+           Les quatre listes de référence du module, ajoutées, rouvertes,
+           renommées, supprimées par leurs propres gestes. Deux règles s'y
+           mesurent, et toutes deux **refusent** :
+
+           **Le code ne suit pas le libellé**, et c'est le code qui fait le
+           doublon. Mon premier jet reprenait le libellé renommé pour provoquer
+           le refus : il est passé, car son code était libre. Le rang renommé
+           garde le code qu'il avait à sa création — « une décision déjà rendue le
+           porte » —, de sorte que le libellé **d'origine** collisionne alors
+           qu'aucun rang ne le porte plus. *Renommer ne libère pas le code*, et
+           c'est cela que le contrôle éprouve.
+
+           **Un référentiel qu'un dossier porte ne se supprime pas.** C'est ici
+           que la ronde a trouvé le défaut.
+
+           ── Trois gardes qui regardaient où les données n'étaient plus ──
+
+           Quatre gardes d'emploi interdisent de retirer un référentiel qu'un
+           dossier porte, et leurs commentaires le disent tous les quatre : « Un
+           comité qui a siégé ne se retire pas : la mesure perdrait l'instance
+           qui l'a décidée. » **Trois d'entre eux ne regardaient que la
+           collection `mesures`.**
+
+           ── Et j'ai d'abord écrit ce constat trop grand ──
+
+           Mon premier jet affirmait qu'aucune route n'alimente plus cette
+           collection et que les trois gardes ne pouvaient *jamais* refuser.
+           C'était faux : mon grep avait manqué `creerLesMesures`. Le constat
+           exact est plus étroit, et plus intéressant.
+
+           Une mesure entre au registre, mais **tard** : à la conclusion de la
+           qualification — ouverture du suivi, ou clôture directe du dossier.
+           Entre l'arrêt des mesures par l'instance et cette conclusion, la
+           mesure ne vit que dans `traitements[].qualification.mesures`, et les
+           deux gardes de la catégorie et du type ne la voyaient pas. **C'est une
+           fenêtre aveugle, et c'est précisément celle où l'on ajuste les
+           référentiels** : l'instance délibère, quelqu'un renomme ou retire un
+           type, et la sanction arrêtée perd le sien.
+
+           Le cas du comité, lui, est plus net que ce que j'avais écrit :
+           `comite_code` vit sur la **qualification**, et `creerLesMesures` ne le
+           recopie pas sur la mesure. Le garde cherchait donc un champ
+           qu'**aucune mesure ne porte jamais** — il ne pouvait pas refuser, à
+           aucun moment du dossier. *Un garde qui interroge un champ qui n'existe
+           nulle part est muet, et son commentaire parle pour lui.*
+
+           Le quatrième — celui des types d'investigation, écrit plus tard —
+           regarde bien `traitements`. *Une leçon apprise sur un garde ne se
+           propage pas d'elle-même aux trois autres.*
+
+           Les deux emplacements sont désormais lus, et non l'un à la place de
+           l'autre : le registre porte les mesures conclues, la qualification
+           celles qui sont encore en délibéré, et un garde qui ne lirait que l'un
+           des deux laisserait un trou.
+
+           Le contre-essai est décisif : le garde rendu à son mauvais endroit, le
+           type porté par la sanction que la ronde vient d'arrêter — et dont la
+           qualification n'a pas encore conclu — **est supprimé**, et le 409
+           déclaré ne vient pas.
+
+           ── Et c'est un relevé faux de ma part qui l'a montré ──
+
+           Mon premier jet lisait l'emploi sur `/mesures`, la collection
+           historique : vide, donc aucune cible, donc le contrôle rouge. J'ai
+           d'abord cru mon contrôle mal écrit — il l'était —, et c'est en
+           cherchant où vivent vraiment les mesures que le défaut du serveur est
+           apparu. *Un contrôle qui cherche au mauvais endroit et un garde qui
+           garde au mauvais endroit se trompent de la même façon ; l'un des deux
+           finit par dénoncer l'autre.*
+
+           ── Et la leçon de 5.f.52, une sixième fois ──
+
+           Les sous-menus des Paramètres de CARE ne sont pas des `.sub-nav-btn`
+           comme ailleurs : ils prennent la bande latérale du portail, et leurs
+           boutons portent `mesParamSousMenu`. Mon premier jet cherchait les
+           sous-vues des autres pages. *Ce qui s'ouvre se prend là où il vit.*
+           Le chemin d'entrée est désormais écrit **une fois** et remis aux trois
+           relevés qui en ont besoin — mes deux derniers le cherchaient là où ils
+           se trouvaient, c'est-à-dire ailleurs.
+
+           Neuf contre-essais, neuf fois rouge : une facette qui n'écrit plus
+           dans l'état ; la recherche qui n'y parvient plus ; le thème qui ne suit
+           plus sur la racine ; le repli dont la classe ne suit plus ; la
+           déclaration « sans chemin » retirée ; la réouverture d'un comité vidée ;
+           le code qui suit le libellé au renommage ; le garde du doublon retiré ;
+           et le garde d'emploi rendu à son mauvais endroit.
+
+       5.f.63 [x] **187 lignes de code mort retirées — et deux gardes qui se retournent au lieu de disparaître** — fait le 4 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           Deux poches de code mort, mesurées avant d'être retirées. Le
+           dénominateur de PR tombe de 96 à **89** ; le compte des exercés ne
+           bouge pas — **65** —, puisque aucun des sept noms partis ne l'était.
+           *Retirer du code mort nettoie un dénominateur ; il ne couvre rien.*
+
+           | ce qui part | |
+           |---|---|
+           | les trois gestes de l'ancien chemin par fenêtre | 66 lignes |
+           | la page « Plans » | 121 lignes, un cas d'aiguillage, une balise de script, et la barre de facettes qui n'existait que là |
+
+           Ni l'un ni l'autre n'a été supprimé sur une impression. Les trois
+           gestes avaient été mesurés par un garde qui retirait du fichier le
+           corps des trois fonctions puis cherchait leurs appels dans ce qui
+           restait et dans tous les autres fichiers de l'écran — zéro (5.f.59).
+           La page était déclarée dans `PAGES_SANS_CHEMIN` depuis la première
+           suite de PR : rendue par l'aiguillage, ouverte par rien.
+
+           ── Le point du pas : un garde qui atteste du code mort ──
+
+           Ces deux gardes affirmaient que le code mort **existait** et qu'il
+           était orphelin. Le jour où l'on le supprime, un tel garde devient
+           faux : il tombe, et l'on est tenté de le retirer **avec** le code —
+           perdant du même coup la seule garantie qu'il ne revienne pas. *Un
+           garde qui accompagne une suppression doit changer de sens, non
+           disparaître avec son objet.*
+
+           Celui des trois gestes exige désormais que leurs noms n'apparaissent
+           **nulle part** dans l'écran, et que le chemin en ligne qui les a
+           remplacés y soit toujours — sans quoi l'écran n'aurait plus aucun
+           chemin vers ses comptes-rendus, et ce garde le dirait.
+
+           Celui de la page atteste sa disparition **de ses quatre côtés** : le
+           fichier, le cas de l'aiguillage, la balise de script, la facette. En
+           laisser un seul derrière soi, c'est laisser la page revenir sans que
+           rien ne le dise — et le contre-essai l'a montré : le seul cas
+           d'aiguillage remis fait tomber **deux** contrôles, celui-ci et celui
+           de l'atteignabilité.
+
+           Et `PAGES_SANS_CHEMIN` reste, **vide et déclarée**. C'est elle qui a
+           dénoncé cette page ; le mécanisme doit survivre à son premier
+           occupant, sans quoi la prochaine page orpheline ne serait dénoncée par
+           rien.
+
+           ── Six contre-essais, six fois rouge ──
+
+           Les deux gardes sont statiques : ils lisent le dépôt. Les cinq défauts
+           se posent donc dans l'arbre et se mesurent en quelques secondes, sans
+           navigateur — un des trois noms remis, le chemin en ligne renommé, le
+           fichier de la page recréé, son cas d'aiguillage remis, sa balise de
+           script remise. Chacun est détecté sur **son propre champ**, sans
+           contamination.
+
+           Mais une logique qui mord ne prouve pas qu'un contrôle la lise : le
+           sixième contre-essai repose donc le cas d'aiguillage et fait tourner
+           la ronde entière. Les deux contrôles tombent, chacun sur sa cause.
+           *Éprouver un garde statique demande les deux : sa logique, et son
+           câblage.*
+
+           ── Une décision rendue, et une question close ──
+
+           La cellule portant `0` à l'import d'un classeur d'évaluation : la
+           maîtrise d'ouvrage a tranché le 4 novembre 2026 — **elle pose un
+           zéro**. C'est le comportement en place depuis 5.f.60 : seule la
+           cellule **vide** est sautée, parce que `Number('')` vaut 0 et que le
+           vide n'est pas une note. La question posée là est donc close, et la
+           réponse est celle que le code tenait déjà.
+
+       5.f.64 [x] **« Accepter » demandait rien — elle demande désormais les deux** — fait le 4 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           Le renvoi, le rejet et la clôture demandaient chacun une confirmation
+           **et** un texte. L'acceptation partait d'un seul clic, sans rien à
+           relire — alors qu'elle ouvre l'onglet de la réunion prestataire et que
+           le circuit ne revient pas en arrière de lui-même. Relevé par la ronde
+           du 3 novembre (5.f.57) — *une invite qu'on attend et qui ne vient pas
+           est une mesure, pas une panne* —, la question est partie à la maîtrise
+           d'ouvrage, qui a tranché : corriger.
+
+           Elle est alignée sur la clôture, son plus proche voisin : une
+           confirmation qui **dit ce que l'acte entraîne** plutôt que « êtes-vous
+           sûr ? », puis un commentaire facultatif. Le motif reste obligatoire
+           pour les deux seules décisions qui arrêtent ou reculent le circuit.
+           Le libellé est écrit dans les trois langues.
+
+           ── Une inexactitude de mon compte rendu, corrigée ──
+
+           J'avais écrit « la seule décision d'autorité que rien ne confirme ».
+           C'est faux : **`valider` ne confirme pas non plus** — il demande
+           seulement un commentaire, facultatif. `accepter` était la seule à ne
+           demander *rien du tout*. Et `valider` est terminale : elle ferme le
+           volet, date l'évaluation et fonde le profil de risque que la
+           Planification consomme. La question reste donc ouverte pour elle, et
+           elle est posée.
+
+           ── Un défaut de mon propre contrôle, trouvé avant de le contre-essayer ──
+
+           `oasisConfirmer` et `oasisSaisir` **partagent leurs boutons**
+           (`.oasis-confirm-oui`, `.oasis-confirm-non`). Relever le bouton ne dit
+           donc pas lequel des deux dialogues est là : le contrôle aurait passé
+           avec la seule invite de commentaire, c'est-à-dire **sans la
+           confirmation qu'il prétend exiger**. Ce qui les sépare est le champ —
+           `oasisConfirmer` n'en a pas. *Deux dialogues qui partagent leurs
+           sélecteurs ne se distinguent que par ce que l'un porte et l'autre
+           pas.*
+
+           ── Et une assertion qui a mordu pour une autre raison que la sienne ──
+
+           `inviteFermee` était écrite pour dire « l'invite s'est bien
+           refermée ». Le contre-essai qui pose la confirmation mais **ignore son
+           refus** l'a fait tomber par elle, et non par le statut : refusé, le
+           geste enchaînait sur l'invite de commentaire, et une seconde invite
+           paraissait là où plus rien ne doit être demandé. C'est la meilleure
+           lecture des deux — *après un refus, l'écran ne demande plus rien* — et
+           je la dois au contre-essai, non à mon intention.
+
+           ── Ce que le contre-essai a montré d'autre, et qui reste ouvert ──
+
+           **Annuler l'invite de commentaire accepte quand même**, avec un
+           commentaire vide : `(await oasisSaisir(…)) || ''` ne distingue pas
+           « rien à dire » de « je renonce ». C'est vrai de `valider`, de
+           `cloturer` et désormais d'`accepter`. Le module PLAN a résolu le même
+           problème en **nommant le bouton** : « sans commentaire » plutôt qu'un
+           « Annuler » qui approuvait quand même (`planApprouverDG`). Question
+           posée, non corrigée de ma propre initiative.
+
+           Quatre contre-essais, quatre fois rouge : la confirmation retirée ;
+           son refus ignoré ; le commentaire rendu obligatoire ; et le
+           commentaire non envoyé au serveur.
+
+       5.f.65 [x] **La route qui manquait au profil de risque — et ce que « exercé » ne dit pas** — fait le 4 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           `planSaveRiskProfile` postait vers `POST /risk-profiles`, qu'**aucune
+           route ne servait**. Un geste mort depuis l'origine. Six contrôles de
+           plus à la suite HTTP de PLAN (65 → **71**), et sept contre-essais.
+
+           ── Trois faits que l'instruction a corrigés avant d'écrire ──
+
+           **Je portais « trois gestes de PLAN sans route serveur » depuis des
+           semaines ; deux l'avaient.** `planApprouverDG` et `planTransmettre`
+           sont produits par la table `TRANSITIONS` de `routes-workflow.js`, qui
+           compose `app.post(\`${M}/plans/:id/${route}\`)`. Mon grep cherchait un
+           littéral. *Un grep littéral ne mesure pas un dépôt qui compose ses
+           noms — il faut lire la table qui les engendre.* Troisième fois que
+           cette méthode m'a trompé en deux jours, avec le nommeur de gestes et
+           `creerLesMesures`.
+
+           **La cible n'existait pas.** `PR.riskProfiles` n'est pas une
+           collection : c'est une **projection** calculée sur les évaluations de
+           statut `valide`, et le bus de services est à sens unique. Écrire la
+           route demandait donc une collection — `profils_directs`, septième de
+           PLAN. Le magasin PostgreSQL d'ADR-002 étant documentaire (une table
+           `collections` indexée par nom), aucun schéma à ajouter.
+
+           **Le champ à remplir n'était pas celui qu'on croit.** Le formulaire
+           dit « niveau de risque », et c'est `niveau` que `D.ecartsRisques` lit
+           pour en faire le `risk_label` d'une activité — non `matrice`.
+           Contre-essayé en rangeant l'un dans l'autre.
+
+           ── Ce que la route tient ──
+
+           Le privilège de **validation** sur le domaine et le secteur du
+           prestataire : un profil engage la planification de la surveillance
+           d'un organisme. La traçabilité : `origine: 'plan'`, l'auteur, la date,
+           et une entrée au journal d'audit — *un profil sans évaluation derrière
+           lui doit rester reconnaissable.* La fin du cycle **déduite côté
+           serveur**, la même règle pour tous les appelants. Et **une seule
+           transformation** pour le profil et le cycle : le formulaire les saisit
+           d'un geste, et un profil posé sans son cycle laisserait la page des
+           prestataires incohérente.
+
+           ── La primauté, et son hypothèse écrite ──
+
+           L'union rend les dérivés **plus** les directs ; sur un même couple
+           prestataire + secteur, l'évaluation l'emporte. *Un profil écrit à la
+           main comble un vide, il ne recouvre pas une évaluation validée.*
+           L'hypothèse est écrite dans le code, et elle se renverse d'une ligne.
+
+           Mon premier contrôle n'en éprouvait qu'un côté — et il est tombé : le
+           prestataire qu'il avait pris était déjà couvert, et son profil direct
+           a été masqué, exactement comme la règle que j'avais écrite une page
+           plus haut. Mon deuxième jet cherchait un **organisme** que PR ne
+           couvre pas, n'en trouvait aucun, et déclarait le contrôle hors de
+           portée — abandonnant une moitié de la règle. Or la clé de l'union est
+           le **couple**, non l'organisme : le même organisme sur un autre
+           secteur est un couple libre, et le jeu d'essai en porte autant qu'il a
+           de secteurs. *Quand on ne trouve pas le cas qu'on cherche, il faut
+           d'abord vérifier qu'on cherche la bonne clé.*
+
+           ── Et le fait le plus instructif : ce que « exercé » ne dit pas ──
+
+           La couverture de PLAN ne bouge pas. **`planSaveRiskProfile` était
+           déjà compté « exercé ».** Le mouchard enregistre qu'un gestionnaire a
+           été *appelé*, non qu'il a *abouti* : le garde du client
+           (`if (!pid || !secteurId || !riskLabel || !intensite)`) l'arrêtait
+           avant le réseau, et le geste restait coché. *Un geste « exercé » dit
+           que son gestionnaire a été atteint, non qu'il a fait ce qu'il promet —
+           c'est précisément pourquoi l'étape 0.c existe, et pourquoi elle porte
+           sur les écritures.*
+
+           Le contrôle de la ronde, lui, affirmait « le geste existe, la fiche
+           est complète ». Il mesurait une **sonde** fabriquée à côté du geste,
+           dont le 404 le satisfaisait quoi que fît l'écran. *Un contrôle qui
+           mesure une sonde au lieu du geste ne dit rien du geste.* Et ma ronde
+           traitait « Intensité » comme une liste alors que c'est un champ de
+           texte : il restait vide, et le garde du client refusait avant tout
+           envoi.
+
+           ── Deux contrôles voisins retournés par cette correction ──
+
+           La déclaration de refus de la suite PLAN portait un **404** sur
+           `POST /risk-profiles` avec la raison « aucune route ne sert ». Elle est
+           devenue fausse le jour où la route a été écrite, et c'est ce garde-là
+           qui l'a dit. Elle porte désormais le **400** que la ronde *provoque*
+           en postant un corps vide.
+
+           Et le contrôle du cycle est tombé pour une raison qui mérite d'être
+           écrite : il posait une date **en dur**, choisie d'après la fin que
+           l'état portait. Du jour où le bloc précédent a su enregistrer un
+           profil, il a changé ce cycle en base et la page s'est redessinée avec,
+           tandis que la ronde avait restauré l'état d'avant. La date en dur
+           n'était plus après la fin affichée, et le contrôle a dénoncé une règle
+           qui tenait. *Ce qu'on pose au document se décide d'après le document ;
+           l'état peut en diverger, et il l'a fait.*
+
+           Sept contre-essais, sept fois rouge : la marque d'origine retirée ;
+           l'ordre des deux dates non vérifié ; le privilège non opposé ; l'union
+           rendue aux seuls dérivés ; la primauté inversée ; le niveau rangé dans
+           `matrice` ; et le cycle non posé avec le profil.
+
+           ── Ce qui reste, et qui n'est pas de mon ressort ──
+
+           Deux mécanismes de refus déclaré coexistent désormais : celui de la
+           suite PLAN (`REFUS_ATTENDUS` — déclaratif, pour toute la ronde, et il
+           **nomme la raison**) et celui du harnais (`refusAttendus()` — une
+           fenêtre autour du geste qui le provoque). Ils servent deux besoins
+           distincts, et le second est né sans voir le premier. À rapprocher.
+
+       5.f.66 [x] **Le circuit du recours — la seule étape qui recule** — fait le 4 novembre 2026.
+
+           `mes-suivi.js` (329 lignes, 6 gestes, un exercé) et les cinq gestes de
+           recours de `mes-qualification.js`. **Sept contrôles** de plus, 33 →
+           **40**, et CARE passe de 58 à **63 sur 89**.
+
+           ── Ce n'était pas deux poches, mais un seul circuit ──
+
+           Le volet « Recours » ne s'offre que s'il y a un recours à examiner ; un
+           recours naît au **suivi** d'une mesure ; et le suivi n'existe que sur
+           un dossier dont la qualification a **conclu** — c'est la conclusion
+           qui inscrit les mesures arrêtées au registre, avec leur référence, et
+           c'est ce registre que le suivi lit. Il fallait donc parcourir le
+           circuit dans cet ordre, et non attaquer les deux fichiers séparément.
+
+           ── Les six règles ──
+
+           La conclusion remplit le registre (`MES-0001`, `issue_de:
+           'qualification'`). Le suivi y écrit **sans copie** : le menu
+           « Mesures » lit la même mesure, et on le relève par l'autre porte. Une
+           contestation **suspend le suivi** : le statut passe à « recours » et
+           cesse de se choisir ; décocher rend la main. Les deux issues de
+           l'étape s'excluent — la contestation arme l'une et éteint l'autre —, et
+           **le serveur repose la règle** par un 409 qu'un appel direct ne
+           contourne pas. Le fil **recule** à la qualification, et la fenêtre
+           d'aveu nomme le retour. Enfin la conclusion applique la décision de
+           l'instance : annulée, la mesure sort du suivi.
+
+           ── Un défaut trouvé en cherchant à éprouver la trace du recul ──
+
+           `POST /suivi/recours` écrit `recours_ouvert_le` et
+           `recours_ouvert_par` — la trace du seul mouvement de ce fil qui revient
+           en arrière. Le GET du traitement expose **toutes** les autres paires
+           `*_le / *_par` — classement, qualification, clôture — et oubliait
+           celle-là : la date existait au serveur et n'atteignait jamais l'écran,
+           qui ne pouvait donc pas dire d'où le dossier revenait. Corrigé.
+
+           ── Trois fautes de ronde, et ce qu'elles enseignent ──
+
+           **J'ai inventé un nom de geste.** `mesQualTypeMesure` n'existe pas :
+           le `<select>` du type n'a **aucun gestionnaire**, c'est un champ
+           `data-champ` relevé à l'enregistrement. Sa valeur ne parvient à l'état
+           qu'à la sauvegarde, et la lire juste après l'avoir posée rendait vide.
+           *On relève une valeur là où elle arrive, non là où on la pose.* Trouvé
+           en vérifiant les sept noms que j'avais écrits — pour une fois, avant
+           de les exécuter.
+
+           **J'ai relevé dans le document un vide que seul l'état porte.**
+           `mesSuiviRecours` remet le statut à chaîne vide ; le `<select>`
+           reconstruit retombe sur sa première option, faute d'en avoir une qui
+           porte le vide. La leçon de 5.f.56, ici pour la seconde fois — et les
+           deux sont désormais relevés, le second comme un fait, non comme la
+           règle.
+
+           **Et ma sonde a clôturé le dossier.** J'ai provoqué le refus de
+           clôture **avant** que la contestation n'atteigne le serveur : il a
+           donc légitimement clos la carence, et tout ce qui suivait est tombé
+           avec — le fil ne pouvant plus reculer depuis un suivi clos. *Une sonde
+           qui mesure un refus doit d'abord mettre le serveur dans l'état où il
+           refuse ; sinon elle ne mesure pas un refus, elle fait ce qu'elle
+           voulait interdire.*
+
+           ── Sept contre-essais, et un faux défaut instructif ──
+
+           L'inscription au registre retirée ; la suspension du statut ôtée ; le
+           refus de clôture levé ; la marque non portée sur la mesure arrêtée ; le
+           suivi écrivant sur une copie détachée ; la décision de l'instance non
+           appliquée ; la trace du recul non exposée. Sept fois rouge, chacun sur
+           son contrôle.
+
+           Et un **faux défaut** : mon premier essai pour « le suivi écrit sur une
+           copie » retirait la réaffectation `etat.mesures = mesures`. Il n'a rien
+           fait tomber — `mesures` **est** `etat.mesures`, et la mutation tient
+           sans la réaffectation. *Un contre-essai qui ne mord pas dit soit que le
+           contrôle est creux, soit que le défaut n'en est pas un ; il faut savoir
+           lequel avant de conclure.* Le vrai défaut détache la copie.
+
+       5.f.67 [x] **Une fonction déclarée deux fois — et le garde-fou qui l'interdit** — fait le 4 novembre 2026.
+
+           `pr-parametres.js` portait **deux `renderParamIndices`** (lignes 99 et
+           690) et deux fonctions d'enregistrement des indices. En script
+           classique, deux `function X()` dans le même fichier ne sont pas une
+           erreur : la seconde **écrase** la première, en silence.
+
+           La version vivante était donc celle du bas, dont le bouton appelle
+           `saveIndices`. Celle du haut — et le `saveModuleIndices` qu'elle seule
+           appelait — étaient **inatteignables**. *Qui les aurait modifiées
+           n'aurait rien vu changer*, et c'est la pire forme de code mort : elle
+           a l'air vivante, et elle se laisse éditer.
+
+           ── La mesure, et non l'intuition ──
+
+           Les deux jumelles ne rangeaient pas leur résultat au même endroit : la
+           morte écrivait dans `window.PESSCO.sharedData.indices`, **écrit une
+           fois et lu nulle part** ; la vivante écrit dans
+           `APP_STATE.data.indices`, que trois endroits relisent
+           (`pr-profils.js` deux fois, `pr-parametres.js` une). Le retrait n'a
+           donc aucune conséquence — et c'est ce relevé qui le dit, non une
+           intuition sur « la bonne jumelle ». Quarante-et-une lignes parties.
+
+           Cela clôt par la mesure une question que je portais ouverte depuis des
+           semaines sous le nom « le doublon `renderParamIndices` » : je savais
+           qu'il y en avait deux, je ne savais pas laquelle vivait, ni que la
+           morte écrivait dans un cul-de-sac.
+
+           ── Le garde-fou ──
+
+           Aucune fonction ne peut plus être déclarée deux fois dans un même
+           fichier. C'était **le seul cas du dépôt** — mesuré sur les cinq écrans
+           avant d'écrire le garde —, qui part donc sans aucune exception à
+           tolérer. Contre-essayé en plantant un doublon ailleurs : il le dénonce
+           en nommant le fichier et la fonction.
+
+           La différence avec le garde voisin des sélecteurs CSS, qui tolère
+           vingt-cinq doublons hérités, mérite d'être dite : *une règle CSS
+           écrite deux fois peut être une maladresse de style ; une fonction
+           déclarée deux fois est toujours un défaut, jamais un choix.*
+
+       5.f.68 [x] **Les référentiels d'indicateurs — le cycle entier d'une entité, et l'aller-retour de son classeur** — fait le 5 novembre 2026.
+
+           `pr-parametres.js` portait 13 gestes exercés sur 21. Les huit qui
+           restaient tiennent en un seul parcours : ouvrir la fenêtre d'un
+           indicateur, l'enregistrer, la rouvrir, le renommer, le supprimer ;
+           puis imprimer la page, exporter le classeur des indicateurs et le
+           réimporter. Cinq contrôles (41 → **46**).
+
+           ── L'ordre du parcours n'est pas libre ──
+
+           Le classeur doit être exporté **après** le cycle de l'entité.
+           Exporté avant, il porterait l'indicateur d'essai, et le réimporter
+           le recréerait après sa suppression : l'aller-retour ne dirait plus
+           « relire ce qu'on vient d'écrire ne change rien », mais *« réimporter
+           ressuscite ce qu'on a retiré »* — une tout autre propriété, et moins
+           forte. Et le bandeau d'import ne paraît qu'après un import : son
+           bouton de fermeture n'existe pas avant.
+
+           ── Trois règles éprouvées plutôt que supposées ──
+
+           · **Le serveur ne reprend pas l'identifiant proposé.** La ronde en
+             pose un dans le corps de la création ; l'enregistrement rendu en
+             porte un autre. C'est la garantie du magasin, tenue deux fois —
+             par `enregistrement()` et par `insert` —, et c'est pourquoi un
+             contre-essai sur une seule des deux couches ne la fait pas tomber.
+
+           · **Un renommage ne touche pas le code.** Le code est ce que les
+             évaluations retiennent : s'il bougeait, les notes perdraient leur
+             indicateur.
+
+           · **Le retrait demande confirmation, et son refus ne retire rien.**
+             Les deux moitiés sont exigées : un garde qui ne vérifie que
+             l'acceptation laisse passer une confirmation décorative.
+
+           Le document d'impression est **lu**, non seulement ouvert : l'en-tête
+           de l'autorité et au moins un indicateur y figurent. *Une fenêtre qui
+           s'ouvre sur une page blanche s'ouvre quand même.*
+
+           Et l'auto-grandissement des zones de texte, qui est un geste de la
+           coquille : ma première rédaction comparait la hauteur avant et après
+           la saisie — elles étaient égales, la fenêtre étant assez large pour
+           que le libellé tienne sur une ligne. Le contrôle exige donc la
+           **règle** — la hauteur posée suit celle du contenu — et non un écart
+           de pixels qui mesure la largeur de la fenêtre autant que l'écouteur.
+
+       5.f.69 [x] **Le barème de risque se réglait depuis une page qui ne réglait rien** — fait le 5 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           `saveIndices` était le dernier geste non exercé de
+           `pr-parametres.js`. L'exercer a montré pourquoi personne ne l'avait
+           remarqué : **il réussissait**. La page affichait « OK », et rien
+           n'était enregistré.
+
+           ── Trois vocabulaires pour une même chose ──
+
+           | Qui | Ce qu'il porte | Qui le lit |
+           |---|---|---|
+           | Le magasin | `indices: [{cle, valeur}, …]` — trois poids, trois paliers | **personne** |
+           | L'écran | `{conf1, conf2, perf1, perf2, expo1, expo2}` | **six endroits du calcul** |
+           | `PUT /api/indices` | n'acceptait qu'un tableau | — |
+
+           Le corps envoyé par l'écran n'étant ni un tableau ni
+           `{indices: […]}`, la route retombait sur `d.indices` —
+           *c'est-à-dire ne changeait rien* — et répondait `{ok: true}`.
+
+           Les six endroits qui lisent le modèle de l'écran : `prSeuils` de
+           `pr-profils.js`, et quatre lectures de la fiche d'évaluation. Tous
+           écrivent `indices.conf1 || 0.8`. **Tous les niveaux de risque de
+           l'application se calculaient donc sur les 0,80 et 0,50 repliés dans
+           le code**, et le privilège de Gestionnaire qui gardait la page ne
+           gardait rien.
+
+           ── La décision, et pourquoi elle est celle-là ──
+
+           Deux modèles possibles, et un seul qui ne demande pas de réécrire le
+           calcul : *le modèle de l'écran fait loi, puisque c'est lui que le
+           calcul lit.* Le semis en tableau — écrit par lui seul, lu par
+           personne — est remplacé.
+
+           Rien ne change dans aucun calcul tant que personne ne règle les
+           seuils : les défauts du magasin sont les valeurs qui étaient
+           repliées dans le code. Mais la page devient véritablement réglable.
+
+           ── Ce que la route oppose désormais, et qui n'existait nulle part ──
+
+           Deux bornes, posées côté serveur et non côté écran : le `min`/`max`
+           d'un `<input type="number">` ne retient rien d'une valeur posée par
+           du code.
+
+           · un seuil hors de `[0,1]` n'a pas de sens ;
+           · **un seuil haut sous le seuil bas renverserait le barème** sans
+             qu'une ligne du calcul ne s'en plaigne.
+
+           Et `seedSeuils()` au démarrage, sur le modèle de CARE : une instance
+           déjà installée porte le tableau, on le convertit plutôt que d'ouvrir
+           une page de réglages sur six champs vides. Il **ne touche pas** un
+           barème déjà réglé — un semis qui écraserait les seuils de l'AAC à
+           chaque redémarrage refondrait le barème de la surveillance en
+           silence, ce qui est exactement le défaut qu'on vient de corriger.
+
+           ── Un défaut latent trouvé en chemin, que supposer n'aurait pas vu ──
+
+           `sharedIndices` lisait par `db.list('indices')`. Or `list` filtre les
+           enregistrements retirés, et appelle donc `.filter` sur la
+           collection. Le barème devenant un objet, **`list` y lève un
+           TypeError**. Le contre-essai l'a dit sans ménagement : *la moitié de
+           l'écran tombe*, parce que `loadAllData` échoue et que plus rien ne se
+           rend. La lecture passe par `load`, et un commentaire dit pourquoi.
+
+           C'est la grammaire du magasin lue, et non devinée, qui l'a trouvé —
+           `COLLECTIONS` nomme les clés du magasin, non des listes, et porte
+           désormais cette note.
+
+           ── Ce que le contrôle éprouve, et ce qu'il refuse d'éprouver ──
+
+           Le contrôle d'écran ne se contente pas du `GET` : il **recharge la
+           page** et relit `APP_STATE.data.indices`, l'état que les six lectures
+           du calcul consultent. Un seuil enregistré mais absent de cet état ne
+           changerait aucun calcul.
+
+           `loadAllData` compose cet état de deux sources : l'amorce du portail
+           quand le module est monté dans la coquille, la route sinon. La ronde
+           monte l'écran seul ; le contrôle vérifie donc **l'état**, non la
+           source, et relève laquelle a servi. *Ma première rédaction exigeait
+           l'amorce : elle rougissait pour une raison qui n'était pas un
+           défaut.*
+
+           ── Sept contre-essais, chacun attribué ──
+
+           | Défaut réintroduit | Ce qui rougit |
+           |---|---|
+           | La route redevient permissive | **trois** contrôles, dont le garde des refus déclarés |
+           | `list` au lieu de `load` | l'écran entier — huit contrôles par cascade |
+           | Les bornes `[0,1]` retirées | le contrôle des deux refus |
+           | Le garde du renversement retiré | le même, sur l'autre moitié |
+           | Le semis écrase un barème réglé | « un barème déjà réglé n'est pas réécrit » |
+           | Le semis ne convertit plus | la conversion, et le barème troué |
+           | Le domaine ne complète plus les défauts | « six nombres même sans clé en magasin » |
+
+           Trois contrôles d'écran de plus (46 → **49**) et quatre unitaires
+           (120 → **124**). `pr-parametres.js` est **complet : 21 sur 21**, et
+           PR passe à **73 gestes exercés sur 88**.
+
+           Un objet de plus dans la table des erreurs normalisées — `seuil`, en
+           trois langues —, puisque le refus nomme ce qu'il concerne et que
+           l'écran compose la phrase : « Échec de l'opération — Seuil inconnu ».
+
+       5.f.70 [x] **La bibliothèque documentaire — et deux autorités qui ne se parlaient pas** — fait le 5 novembre 2026.
+
+           `pr-bibliotheque.js` portait **1 geste exercé sur 6**, et le seul
+           exercé — `triggerFileUpload` — ne faisait qu'ouvrir le sélecteur de
+           fichiers. Les cinq autres forment un cycle : choisir un fichier, le
+           nommer, le déposer, le télécharger, le retirer. Cinq contrôles
+           (49 → **54**).
+
+           ── Ce que le cycle éprouve, et qui n'est pas « le bouton répond » ──
+
+           La propriété forte est l'**identité de l'aller-retour** : les octets
+           téléchargés sont, octet pour octet, ceux déposés. Le fichier traverse
+           trois conversions — base64 à l'aller dans du JSON, rangement tel quel
+           dans l'enregistrement, `Buffer.from(contenu, 'base64')` au retour — et
+           une seule mesure les dit toutes.
+
+           Et la règle que la liste doit tenir : **le contenu n'y voyage
+           jamais**. `publicDoc` l'ôte de chaque enregistrement rendu, et seule
+           la route de téléchargement le restitue. Une liste qui porterait les
+           base64 ferait de chaque ouverture de page le transfert de toute la
+           bibliothèque.
+
+           ── Le défaut : deux autorités, et l'écart dans les deux sens ──
+
+           La page gardait ses deux gestes sur `APP_STATE.user.role ===
+           'Administrateur'` — le rôle M1, dérivé du rôle portail. Les routes,
+           elles, opposent le **privilège du module** dans l'espace « PLAN » :
+           `CONTRIBUTEUR` pour déposer, `GESTIONNAIRE` pour retirer. Et
+           `pr-shell.js` l'écrit en propres termes depuis sa conversion : *« le
+           rôle portail (M1) ne sert plus qu'aux écrans d'administration de
+           l'AAC »*. Cette page était restée sur l'ancienne lecture.
+
+           L'écart joue dans les deux sens, et le premier est **le cas
+           courant** :
+
+           | Compte | Ce que la page offrait | Ce que la route oppose |
+           |---|---|---|
+           | Administrateur sans privilège accordé (défaut `LECTEUR`) | les deux boutons | **403 sur les deux** |
+           | AAC ou inspecteur à qui l'on a accordé `GESTIONNAIRE` | aucun bouton de retrait | **le retrait est permis** |
+
+           Le privilège par défaut étant `LECTEUR`, un administrateur à qui l'on
+           n'a rien accordé dans « Gestion des Droits » voyait un bouton qui
+           répondait 403 ; et un droit accordé à un inspecteur restait
+           **injoignable**. *Un bouton qui mène à un refus et un droit sans
+           bouton sont le même défaut, vu des deux côtés.*
+
+           La correction lit le privilège **de base** (`prPrivilegeOn('')`), et
+           non le meilleur privilège tous secteurs confondus : c'est le premier
+           que `effectivePrivilege` rend quand la route n'a ni domaine ni secteur
+           à opposer. Lire le second rouvrirait l'écart dans un sens —
+           gestionnaire d'un seul secteur, le bouton paraîtrait, la route
+           refuserait.
+
+           ── Deux défauts de plus, trouvés en écrivant les contrôles ──
+
+           · **Le nom du fichier n'était pas échappé.** `handleDocFileSelected`
+             posait `value="${baseName}"` en clair : un guillemet dans le nom du
+             fichier refermait l'attribut, et le champ ne portait plus que la
+             moitié du nom. C'est le même défaut que celui corrigé dans
+             `downloadDoc` — dont le commentaire est resté dans ce fichier —, à
+             ceci près qu'il porte sur une valeur que l'agent **ne compose pas**
+             : il la reçoit avec le fichier. Le fichier d'épreuve de la ronde
+             porte donc un guillemet et une apostrophe, et le contrôle exige le
+             nom **entier**.
+
+           · **La taille stockée était celle de l'encodage.**
+             `Math.round((contenu.length * 3) / 4)` rend la longueur du base64
+             **bourrée** — un base64 a toujours une longueur multiple de quatre,
+             et les `=` y comptent. Mesuré : 122 octets déposés, **123
+             annoncés**. Deux octets ne font pas un défaut d'exploitation, mais
+             une colonne qui s'appelle « Taille » doit dire la taille, et c'est
+             le même nombre que la borne des 3,5 Mo compare. Le bourrage est
+             désormais défalqué.
+
+           ── Ce que la ronde ne peut pas prouver, et qui est dit plutôt que tenu pour acquis ──
+
+           Le compte de la ronde est super-administrateur **et** gestionnaire :
+           les deux autorités y concordent, et aucun 403 ne s'y observe. C'est
+           donc la **règle de rendu** qui est mesurée, en posant tour à tour
+           chacun des cinq états du privilège dans ce que la page lit — ce qui
+           est exactement ce que la correction change, et rien de plus. Le 403
+           que recevrait un administrateur sans privilège est établi par lecture
+           des gardes, non par mesure : *il faudrait un second compte, et la
+           ronde n'en a qu'un.*
+
+           ── Sept contre-essais, six qui mordent, et un qui instruit ──
+
+           | Défaut réintroduit | Ce qui rougit |
+           |---|---|
+           | Le rôle du portail en place du privilège | la règle des deux boutons |
+           | Le nom du fichier non échappé | le dépôt (le nom n'est plus entier) |
+           | La taille redevient celle du base64 bourré | le dépôt (122 ≠ 123) |
+           | `publicDoc` garde le contenu | le dépôt (le base64 voyage) |
+           | La borne de taille du client retirée | le refus sans requête |
+           | Le retrait ne demande plus confirmation | le retrait refusé puis consenti |
+           | **L'ancre de téléchargement détachée** | **rien — 54/54** |
+
+           ── Le contre-essai qui n'a pas mordu, et ce qu'il apprend ──
+
+           Le commentaire de `downloadDoc` affirmait : « détachée du document
+           **et** cliquée après un `await`, elle ne télécharge rien et ne dit
+           rien ». Détachée de nouveau, **le fichier arrive quand même**. Les
+           deux conditions avaient été jointes à tort ; seule la seconde porte,
+           et elle porte sur la **durée** : l'attente du serveur épuise
+           l'activation utilisateur qui autorise l'enregistrement, et c'est le
+           rendu d'un PDF de quelques secondes qui l'a montré sur CARE. Cent
+           vingt-deux octets n'épuisent rien.
+
+           *Un contre-essai qui ne mord pas dit quelque chose du contrôle, non
+           du code.* Celui-ci dit que la ronde ne peut pas observer ce
+           défaut-là : elle éprouve l'aller-retour des octets, non la fenêtre
+           d'activation. Le commentaire est corrigé, la limite est écrite dans
+           le contrôle, et le fait est mesuré plutôt que laissé à l'intuition.
+
+           Et il ouvre un chantier dont la taille est mesurée, non estimée :
+           **six** des neuf chemins de téléchargement du dépôt portent encore ce
+           motif — `await fetch`, puis clic fabriqué.
+
+           | Fichier | Ce qu'il télécharge |
+           |---|---|
+           | `exec-constatations.js` | le classeur des constatations |
+           | `exec-checklists-saisie.js` | le classeur d'une checklist remplie |
+           | `exec-parametres.js` (deux fois) | les checklists et leurs sous-thèmes |
+           | `pr-evaluation-fiche.js` | le classeur d'une évaluation |
+           | `pr-parametres.js` | le classeur des indicateurs |
+           | `pr-bibliotheque.js` | une pièce de la bibliothèque |
+
+           Les trois autres (`exec-rapports.js`, `pr-evaluations.js`,
+           `ramp-stats.js`) composent leur blob **dans le navigateur**, sans
+           attente : ils ne sont pas concernés. La conversion des six en vraie
+           ancre suivie par le navigateur n'est pas un détail de forme : elle
+           déplace le nom du fichier vers l'en-tête `Content-Disposition` — dont
+           la forme actuelle, `filename="${encodeURIComponent(nom)}"`, rendrait
+           un nom pour-cent-encodé — et elle fait **afficher** par le navigateur
+           toute erreur du serveur, ce qui demande une page lisible plutôt qu'un
+           objet JSON. C'est un pas à part, et il porte une question de maîtrise
+           d'ouvrage.
+
+           ── Une affirmation de ma part, corrigée ──
+
+           J'avais annoncé ces pièces jointes comme « communes à quatre écrans »
+           — le suivi, le recours et la qualification de CARE. **C'est faux**, et
+           la lecture le dit : CARE dépose en `multipart/form-data` vers
+           `POST /m/mesures/upload`, écrit le fichier sur le disque sous un nom
+           tiré au hasard, et ne garde dans l'enregistrement qu'un
+           `{nom, path, size}` — avec un garde-fou sur la forme du chemin rendu.
+           La bibliothèque de PR, elle, range le base64 **dans
+           l'enregistrement**. Deux mécanismes sans un octet de code commun, et
+           les couvrir ensemble n'aurait rien économisé.
+
+       5.f.71 [x] **Sept chemins de téléchargement qui échouaient sans bruit — et le garde-fou qui en trouve un huitième** — fait le 5 novembre 2026.
+
+           Un téléchargement fabriqué en JavaScript — `fetch`, puis `blob`, puis
+           une ancre qu'on clique — **échoue sans bruit**. Entre le clic de
+           l'agent et celui du script, l'attente du serveur épuise l'activation
+           utilisateur qui autorise l'enregistrement. Rien n'échoue dans le code :
+           le blob se crée, `click()` ne lève pas, aucune erreur de console,
+           aucune violation de CSP. Seul le fichier n'arrive jamais, et l'écran
+           annonce « opération réussie ».
+
+           Constaté le 4 septembre 2026 sur les exports de CARE, où le rendu
+           d'un PDF prend quelques secondes — assez pour que l'activation
+           expire. Un export instantané, lui, passe : *c'est pourquoi aucune
+           ronde ne l'avait vu.*
+
+           ── Ce que le contre-essai de la veille avait mis au jour ──
+
+           Le contrôle du téléchargement d'une pièce de la bibliothèque
+           (n° 5.f.70) ne mordait pas quand on détachait l'ancre du document :
+           cent vingt-deux octets n'épuisent rien. *Un contre-essai qui ne mord
+           pas dit quelque chose du contrôle.* Celui-ci disait que le défaut ne
+           se voit qu'à la lenteur, et qu'il fallait donc le chercher par la
+           forme.
+
+           ── Le compte, et pourquoi il était faux ──
+
+           J'avais annoncé **six** chemins, mesurés par `grep createObjectURL`.
+           Le garde-fou de forme, lui, en a trouvé un **septième** :
+           `execGenerateNotificationPdf`, qui pose un `download` sur une ancre
+           **détachée**, cliquée après le rendu d'un PDF — le cas exact qui a
+           fait écrire la règle, et que mon motif de recherche ne couvrait pas.
+           *Un garde de forme voit ce qu'un grep manque, parce qu'il décrit la
+           règle au lieu d'en deviner la trace.*
+
+           | Fichier | Ce qu'il télécharge |
+           |---|---|
+           | `exec-constatations.js` | le classeur des constatations (voie de recours) |
+           | `exec-checklists-saisie.js` | le classeur d'une checklist remplie |
+           | `exec-parametres.js` (deux fois) | les checklists et leurs sous-thèmes |
+           | `exec-dossier-actions.js` | le PDF d'une notification — **trouvé par le garde** |
+           | `pr-evaluation-fiche.js` | le classeur d'une évaluation |
+           | `pr-parametres.js` | le classeur des indicateurs |
+           | `pr-bibliotheque.js` | une pièce de la bibliothèque |
+
+           Les trois autres emplois de `createObjectURL` du dépôt
+           (`exec-rapports.js`, `pr-evaluations.js`, `ramp-stats.js`) composent
+           leur blob **dans le navigateur**, sans attente : ils ne sont pas
+           concernés, et ce sont eux qui disent que le garde n'est pas vide de
+           sens.
+
+           ── Ma première correction reproduisait le défaut qu'elle fermait ──
+
+           J'ai d'abord écrit un `oasisTelecharger` qui **fabriquait** l'ancre et
+           la cliquait, en se contentant de supprimer le blob. Or c'est l'attribut
+           `download` posé sur une ancre **cliquée par du code** qui dépend de
+           l'activation : la fonction portait donc le même défaut, en plus
+           discret, et aucune mesure ne l'aurait dit.
+
+           Une **navigation** de premier niveau, elle, n'en dépend pas : le
+           navigateur la suit toujours, et la réponse étant servie avec
+           `Content-Disposition: attachment`, il l'enregistre sans quitter la
+           page. `oasisTelecharger(url)` est donc un `window.location.href`, et
+           rien d'autre. C'est la voie que `exec-constatations.js` et le
+           générateur de RAMP avaient déjà prise, chacun de son côté ; elle vit
+           désormais une seule fois.
+
+           ── Ce que cela exige du serveur, et qui n'était pas tenu ──
+
+           Le nom du fichier vient de l'en-tête, non de la page. Trois
+           conséquences, portées par `src/telechargement.js` :
+
+           · **Le nom, dans les deux formes de la RFC 6266.** Un nom hors de
+             l'ASCII ne tient pas dans un `filename="…"`. Le dépôt portait une
+             **troisième** forme, hybride et fausse —
+             `filename="${encodeURIComponent(nom)}"` —, qui faisait enregistrer
+             « Rapport%20d%27audit » au lieu de « Rapport d'audit ». Et
+             l'apostrophe, que `encodeURIComponent` laisse passer, est le
+             séparateur du champ `filename*` lui-même.
+
+           · **Un refus devient une page.** Le navigateur **affiche** ce qu'il
+             reçoit : un `{"error":"privilege_insuffisant"}` dans un onglet nu
+             n'est pas une réponse à un agent qui attendait un fichier. Le
+             discriminant est `X-OASIS-Request`, que l'appel d'API du socle pose
+             toujours et qu'une navigation ne porte jamais — les appels de
+             l'application gardent donc leur JSON, que l'écran traduit déjà.
+
+             La page ne traduit pas le code du refus, et c'est délibéré : les
+             codes normalisés ont leurs phrases dans les trois langues **du côté
+             du socle**, et une suite vérifie que chaque objet cité y est nommé.
+             Recopier cette table ici en ferait une seconde, qui divergerait. La
+             page se tient donc à ce que le **statut** dit — cinq cas, qui ne
+             référencent pas le vocabulaire des erreurs.
+
+           · **Un POST ne peut pas être une navigation.** Le garde d'origine
+             (SEC-06) refuse toute écriture sans `X-OASIS-Request`, en-tête qu'un
+             formulaire de navigation ne peut pas poser — et c'est bien ce qui
+             arrête un POST forgé depuis un autre site. Une sélection trop longue
+             pour une adresse passe donc par un détour en deux temps : le POST
+             **dépose** la pièce sous un jeton, et la page **navigue** vers le
+             GET qui la sert. RAMP l'avait trouvé pour son générateur de tables ;
+             le dépôt vit maintenant une seule fois, avec ses quatre propriétés —
+             il expire, il est lié au compte, il est à usage unique, et chaque
+             dépôt balaie ce qui a expiré.
+
+           ── Un défaut de plus, trouvé en chemin ──
+
+           Le bouton « Exporter PDF » d'une activité de SURV appelle
+           `GET …/notifications/:id/pdf`, **route qui n'existe pas** : aucune
+           n'est montée sous ce chemin, aucune route générique ne l'attrape, et
+           le relevé dit qu'aucune ronde ne l'a jamais exercé. Le geste passe
+           donc **toujours** par son `catch` — l'aperçu, et « imprimez avec
+           Ctrl-P ». La branche du haut était du code mort, et c'est elle qui
+           portait le patron interdit.
+
+           Elle est corrigée sans être supprimée : le jour où la route est
+           écrite, le geste marchera. Écrire cette route est une question de
+           maîtrise d'ouvrage — le moteur de rendu existe (`src/pdf.js`,
+           puppeteer, déjà employé par CARE), il manque le gabarit.
+
+           ── Ce qui est mesuré, et ce qui ne peut pas l'être ──
+
+           Le garde-fou est un garde de **forme**, et c'est assumé : aucune ronde
+           ne peut voir ce défaut, puisqu'il ne se manifeste qu'à la lenteur.
+           Des contrôles l'entourent néanmoins :
+
+           | Où | Ce qui est éprouvé |
+           |---|---|
+           | Unitaires (douze) | les deux formes du nom et leur réversibilité, l'apostrophe et les caractères que la RFC 5987 interdit, un guillemet et un saut de ligne qui ne sortent pas de l'en-tête, la page de refus et sa phrase par statut, le JSON préservé pour l'application, et les quatre propriétés du dépôt |
+           | PR (HTTP) | les trois classeurs en pièce jointe nommée des deux formes ; une pièce au nom accentué, réversible, avec son repli sans accent ; le refus en page pour le navigateur et en JSON pour l'application |
+           | SURV (HTTP) | le POST qui dépose et ne sert plus, le jeton à usage unique, un jeton inventé, le refus en page, et les deux classeurs de paramétrage |
+           | PR (navigateur) | les trois téléchargements aboutissent, et **les trois abandons de navigation sont venus** |
+
+           Et une limite, nommée plutôt que tue : **les cinq exports de SURV ne
+           sont exercés par aucune ronde** — le relevé le dit. Leur moitié écran
+           est couverte par le seul garde de forme, leur moitié serveur par les
+           contrôles HTTP. Cela appartient au chantier SURV.
+
+           ── Le mécanisme des abandons, hissé dans le harnais ──
+
+           Un téléchargement servi en pièce jointe se présente au moniteur de
+           requêtes comme un `net::ERR_ABORTED` : le navigateur enregistre le
+           fichier et abandonne la navigation. *C'est la signature du geste
+           réussi* — et c'est ce qui a fait rougir le collecteur d'incidents de
+           PR au premier passage après la conversion.
+
+           RAMP déclarait déjà ses deux abandons ; PR en a trois. Le mécanisme
+           vit donc dans le harnais, et un contrôle exige que chaque abandon
+           déclaré soit **venu** : si une route perdait son `attachment`, le
+           navigateur afficherait le fichier au lieu de l'enregistrer, l'abandon
+           n'arriverait plus, et la déclaration deviendrait un filtre muet.
+
+           ── Cinq contre-essais, chacun attribué ──
+
+           | Défaut réintroduit | Ce qui rougit |
+           |---|---|
+           | L'en-tête perd sa forme encodée | le nom accentué, **et** le guillemet qui ressort du repli |
+           | La page de refus retirée de la pièce préparée | le refus lisible, devenu `[object Object]` |
+           | Le POST sert le classeur au lieu de le déposer | la préparation par jeton |
+           | La pièce préparée n'est plus liée au compte | **deux** contrôles du dépôt |
+           | Un export refabrique son téléchargement | le garde de forme, qui le nomme |
+
+       5.f.72 [x] **Une page de SURV que rien n'ouvrait — et un défaut que j'ai cru y voir** — fait le 7 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           `exec-notifications.js` portait **3 gestes exercés sur 26**, le fichier
+           le moins couvert du module. La mesure a dit pourquoi, et ce n'était pas
+           un trou de ronde : **la page « Déclenchement » n'était dans aucune
+           barre**.
+
+           La clé manquait à `EXEC_NAV`. L'aiguillage la rendait
+           (`case 'declenchement'`), le sas la déclarait, et aucun bouton ne la
+           montrait — ni entrée de menu, ni appel de `execNavigateTo`, ni ancre
+           d'URL. *Mille cent vingt-cinq lignes, vingt-six gestes, quatre
+           onglets : injoignables.*
+
+           ── Le garde-fou avait fait son office, et l'a fait deux fois ──
+
+           Le contrôle « toute page de SURV est atteignable, ou déclarée sans
+           chemin » (n° 5.f.2) l'avait **nommée** le 14 octobre 2026, avec les
+           trois autres pages sans chemin. Son en-tête disait déjà la règle :
+           *« une page que l'aiguillage sait rendre et qu'aucun chemin n'ouvre est
+           soit un écran oublié d'un menu, soit du code mort. Les deux se
+           corrigent, mais pas de la même façon, et ce n'est pas à la conversion
+           d'en décider. »*
+
+           La question est donc allée à la maîtrise d'ouvrage, qui a tranché :
+           rendre la page au menu. Et la déclaration devenue périmée a **rougi au
+           passage suivant** — l'autre moitié de l'office de ce garde, qui refuse
+           une dispense qui ne correspond plus.
+
+           ── Pourquoi la page, et non le code mort ──
+
+           Le menu « Processus » couvre le même circuit par une autre vue —
+           formulaire, transitions, accord, fil d'échange —, ce qui a masqué
+           l'absence pendant tout ce temps. Mais le **volet des contacts de
+           l'organisme** n'a pas d'autre porte, et il édite cinq champs que le
+           référentiel du portail n'édite pas : fonction du responsable, fonction,
+           courriel et numéro du point focal, contacts additionnels. Les quatre
+           premiers sont lus par le formulaire de notification.
+
+           La page est réservée à qui **contribue**, puisque c'est ce que ses
+           routes exigent (`CONTRIBUTEUR` pour créer, soumettre et transmettre).
+           Une entrée offerte à un lecteur ne mènerait qu'à des 403 — le défaut
+           corrigé deux jours plus tôt dans la bibliothèque de PR (n° 5.f.70). Le
+           mécanisme de réserve ne connaissait qu'`admin` ; il connaît désormais
+           `contribue`, dans le seul endroit qui le lit.
+
+           ── Un défaut que j'ai rapporté et qui n'existait pas ──
+
+           J'ai annoncé ici un second défaut : le sélecteur de validateur
+           interrogeant `/api/users`, route du portail qui ne porte pas
+           `role_m3` — champ **dérivé** du privilège SURV et composé par la seule
+           route du module. J'en concluais que la liste était toujours vide, que
+           la soumission d'une notification était **impossible**, et qu'un compte
+           AAC recevait un 403 avant de soumettre sans validateur nommé.
+
+           **Rien de cela n'est vrai.** `exec-boot.js` tient une table d'alias
+           qui traduit les chemins transverses de PESSCO vers ceux d'OASIS :
+
+           ```
+           '/api/users': '/api/m/execution/utilisateurs'
+           ```
+
+           L'appel du sélecteur atteignait donc **déjà** la route du module.
+           Mesuré dans le navigateur : la liste porte bien un validateur, et il
+           n'y a jamais eu ni refus ni repli.
+
+           *Mon erreur est d'avoir mesuré ailleurs que là où le code tourne.* La
+           sonde était un appel HTTP direct, passé par le harnais, où l'alias ne
+           s'applique pas : j'y ai lu « zéro validateur » et généralisé à ce que
+           fait l'écran.
+
+           **Et c'est le contre-essai qui l'a dit.** Réintroduire le prétendu
+           défaut n'a fait rougir aucun contrôle — 160/160. J'ai d'abord cherché
+           pourquoi mon contrôle ne mordait pas ; c'était le contrôle qui avait
+           raison. *Un contre-essai qui refuse de mordre est la seule chose qui
+           distingue un défaut d'une histoire qu'on se raconte.*
+
+           L'appel est rendu à la convention du module — le chemin PESSCO, que
+           `execRoute` traduit —, et le contrôle garde ce qui est vrai : le
+           sélecteur liste au moins un validateur, refuse sans choix, et la
+           soumission désigne celui qui a été retenu.
+
+           ── Le second défaut, celui-là réel : un rafraîchissement qui n'avait jamais lieu ──
+
+           Trouvé non par une relecture mais par un **contrôle de restitution** :
+           la ronde enregistre les contacts d'un organisme, puis rend la valeur
+           d'avant, et pour cela rouvre le volet. Il portait l'ancienne valeur.
+
+           `execSaveContactChanges` appelait `loadSharedData()` — **fonction qui
+           n'existe nulle part**, ni dans le module, ni dans le socle, ni dans les
+           paquets construits. Sous son garde `typeof … === 'function'`, elle ne
+           levait pas : *elle ne faisait rien.* Et le repli lisait
+           `window.PESSCO.sharedData.prestataires`, chargé au montage et que rien
+           ne rafraîchissait non plus, avant de retomber sur le cache lui-même.
+
+           Ce n'est pas un défaut d'affichage. `EXEC_STATE.data.prestataires` est
+           lu dans **treize fichiers** du module : le formulaire de notification y
+           prend l'interlocuteur et son courriel, la fiche officielle son
+           dirigeant, le tableau de bord ses libellés. Deux conséquences :
+
+           · une notification rédigée juste après la correction aurait porté
+             **l'ancien** interlocuteur ;
+           · rouvrir le volet pour corriger autre chose aurait **réécrit
+             l'ancienne valeur par-dessus la neuve** — le volet se garnit du cache
+             périmé, et l'enregistrement renvoie tout le formulaire.
+
+           Un chemin de perte de données, dans l'unique écran qui édite ces
+           champs, et que l'on venait de rendre joignable. Le référentiel se relit
+           désormais au serveur, qui est le seul à le savoir.
+
+           ── Ce que la mesure a établi du métier, et qui a contraint le parcours ──
+
+           **L'accord ferme l'étape.** `validate-accord` porte le statut à `acte`,
+           et l'onglet des envoyés écarte délibérément les `acte`
+           (`envoyeItems.filter(n => n.statut !== 'acte')`). La ligne disparaît
+           donc, et avec elle le fil d'échange et l'annulation.
+
+           Ma première rédaction validait l'accord d'abord : les deux gestes
+           suivants ne trouvaient plus de ligne, et deux contrôles rougissaient
+           sur une cause qui n'était pas la leur. Le fil et l'annulation passent
+           donc avant, et le parcours **refait le circuit** après l'annulation
+           pour atteindre l'accord — dont aucun des trois gestes du module
+           n'était exercé par quoi que ce soit.
+
+           Et l'annulation se mesure sur une notification **transmise** : la route
+           n'oppose aucun garde de statut, à la différence des quatre autres
+           transitions. Le contrôle relève le fait plutôt que de le supposer voulu.
+
+           ── Six erreurs de ma part sur ce seul bloc ──
+
+           Elles forment un motif, et c'est à ce titre qu'elles sont écrites.
+
+           | Erreur | Ce qu'elle a coûté, et la règle |
+           |---|---|
+           | `onglets[0].click()` sur une liste vide | l'exception a emporté **la suite entière** : aucun des douze contrôles n'a rendu son verdict. *Une sonde ne doit jamais pouvoir casser ce qu'elle observe* — tout accès indexé est gardé |
+           | `window.EXEC_MODULE_API` | un `const` de premier niveau est une liaison **lexicale**, absente de `window` — à la différence de `EXEC_STATE`, que `exec-adapters.js` publie. L'adresse devenait « undefined/notifications » |
+           | Bloc placé après les autres rondes | j'avais mesuré le jeu d'essai **vierge**, puis placé le bloc là où il ne l'est plus : l'onglet « à notifier » était vide, et douze contrôles rougissaient sur une cause étrangère |
+           | Accord validé avant le fil et l'annulation | *l'ordre d'un parcours n'est pas libre* : une étape qui ferme en ferme d'autres |
+           | `lieu`, `equipe`, `message` cherchés dans le magasin | la couche de transport **renomme** : `lieu_activite`, `equipe_membres`, `contenu`. Trois fois le même piège, et c'est un trait de ce module |
+           | Un défaut rapporté sur une mesure prise hors du client | *la pire des six* : seule la table d'alias d'`exec-boot.js` distingue les deux routes, et elle ne vit que dans le navigateur. Le contre-essai muet l'a dit |
+
+           Et une conséquence qu'il faut dire : faute d'avoir trouvé sa
+           notification, le bloc ne l'effaçait pas, l'activité restait consommée,
+           et **onze contrôles de la suite existante tombaient en aval**. *Les
+           blocs de cette suite ne sont pas indépendants : chacun suppose un
+           magasin que le précédent lui a rendu*, et le dernier contrôle du mien
+           exige précisément cette restitution.
+
+       5.f.73 [x] **Les trois dernières pages sans chemin — et les trois défauts qu'ouvrir leur porte a obligé à corriger** — fait le 8 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           La table `PAGES_SANS_CHEMIN` est **vide**. Les quatre pages que le
+           garde d'atteignabilité avait nommées le 14 octobre 2026 (n° 5.f.2)
+           sont tranchées : trois rendues à la barre, une effacée.
+
+           ── Ce que la mesure a dit de chacune ──
+
+           Prise le 8 novembre 2026, sur un jeu portant trois dossiers — un
+           ouvert, un clos, un archivé par la route du module —, chaque page
+           forcée dans le navigateur :
+
+           | Page | Texte rendu | Gestes rendus | Propre à elle seule |
+           |---|---|---|---|
+           | `execution` | 1 166 car. | 9 | `execDeleteDossier` — les deux autres boutons ouvrent le volet, atteignable par les constatations |
+           | `prestataires` | 900 car. | 14 | trois tris, trois onglets, `execArchiveDossier` |
+           | `prestataire_home` | 148 car. | **0** | rien : un titre, le nom de l'organisme, une icône, une phrase |
+
+           *Trois pages, trois questions différentes.* Les présenter comme une
+           seule aurait obtenu une seule réponse, et deux d'entre elles
+           auraient été mauvaises.
+
+           ── Le premier défaut : deux conventions d'archivage, une seule lue ──
+
+           Le module marque l'archivage d'un dossier par un **champ**,
+           `archive`, posé par `PUT /dossiers/:id/archiver`
+           (`src/modules/execution/routes-etats.js`) avec sa date et son auteur,
+           réservé au super-administrateur et refusé sur un dossier non clos.
+           C'est ce champ que les États lisent, et le tableau de bord, et le
+           serveur.
+
+           L'écran « Dossiers » avait la sienne : il écrivait **`statut:
+           'archive'`** par le PUT générique — celui qui recopie dans
+           l'enregistrement tout ce qu'on lui donne sans rien vérifier — et
+           relisait `statut === 'archive'` en **six** endroits. Mesuré sur un
+           dossier clôturé, les deux chemins côte à côte :
+
+           | | le geste de l'écran | la route du module |
+           |---|---|---|
+           | `statut` | `cloture` → **`archive`** | `cloture`, conservé |
+           | `archive` | **absent** | `1` |
+           | `date_archivage` | vide | horodatée |
+           | `archive_par` | vide | le compte |
+           | réserve au super-administrateur | **tombée** | tenue |
+           | exigence d'un dossier clos | **tombée** | tenue |
+
+           Quatre conséquences, et la quatrième est la plus traître : le statut
+           réel du dossier était **détruit** — plus rien ne disait s'il avait
+           été clos ou laissé ouvert ; le dossier n'apparaissait pas dans les
+           archives, qui lisent l'autre champ ; aucune trace de qui ni quand ;
+           et, dans l'autre sens, un dossier archivé par la vraie route
+           s'affichait ici parmi les **clôturés**, l'onglet des archives
+           annonçant zéro. Les deux sens ont été mesurés avant et après.
+
+           *Un statut n'est pas un drapeau. Les confondre perd celui des deux
+           qui porte le sens.*
+
+           ── Le second : deux suppressions pour un même effet, deux gardes ──
+
+           `DELETE /dossiers/:id` emporte le dossier, **sa notification et tous
+           ses échanges** — l'activité redevient « à notifier », et ce qui s'est
+           dit entre l'Autorité et l'organisme disparaît. Le geste de l'écran ne
+           demandait qu'un **oui/non**. Le même effet, offert par le menu
+           « États », exige de **saisir la référence** de l'activité.
+
+           La garde la plus forte des deux a été posée sur celle qui ne l'avait
+           pas, **avant** que la page ne s'ouvre. Reste une asymétrie que le code
+           ne décide pas, et qui est écrite sur place : le serveur réserve ce
+           chemin aux administrateurs, là où celui des États est réservé au
+           super-administrateur. Deux autorités pour un même effet.
+
+           ── Le troisième, auquel le premier a mené ──
+
+           Si l'écran posait le statut d'un dossier par le PUT générique, c'est
+           que ce PUT le laissait faire. Mesuré, les deux appels à la suite sur
+           le **même** dossier ouvert :
+
+           | Appel | Réponse |
+           |---|---|
+           | `PUT /dossiers/:id/close` | **400** — « Un rapport transmis est requis pour clôturer » |
+           | `PUT /dossiers/:id` avec `{ statut: 'cloture' }` | **200**, et le dossier est clos |
+
+           *Toutes les gardes de transition d'un dossier étaient donc
+           facultatives.* Et celle-là n'est pas une formalité : `/close` rend du
+           même geste les constatations **opposables** à l'organisme — la route
+           porte elle-même le commentaire expliquant qu'elle fait les deux
+           ensemble, pour qu'un échec au milieu ne laisse pas un dossier clos
+           dont les constatations ne le sont pas. Clôturer par le PUT générique
+           sautait cette seconde moitié.
+
+           La même mesure a montré trois autres passages : `archive: 1` avec un
+           auteur forgé et une date de 1970 ; un statut qui n'existe nulle part,
+           accepté et conservé ; et un champ inventé par le client, persisté.
+
+           Les **deux** seuls appelants de cette route n'envoient que du contenu
+           — mesuré, pas supposé. Elle refuse donc les clés du cycle de vie et de
+           l'identité, avec un 400 nommé plutôt qu'un rejet silencieux. Trois
+           contrôles dans la suite HTTP, et ils se tiennent ensemble :
+
+           | Contre-essai | Verdict |
+           |---|---|
+           | liste réservée vidée, `{ statut: 'cloture' }` | **rouge** — 200, et `cloture` en base |
+           | liste réservée vidée, `{ archive: 1 }` | **rouge** — 200, `archive: 1`, auteur « personne » |
+           | le contenu (`conclusion`) passe toujours | **vert** dans les deux cas |
+
+           Le troisième est celui qui compte : sans lui, on aurait pu fermer la
+           route entière et croire l'avoir gardée. `execution` passe de 118 à
+           **121 contrôles**.
+
+           Une inexactitude relevée au passage : pendant ce contre-essai, un
+           contrôle nommé « le PUT générique ne pose pas le statut » est resté
+           vert. Il porte sur les **constatations**, non sur les dossiers — il ne
+           pouvait pas mordre. Sa route, elle, **écarte** les champs réservés en
+           silence au lieu de refuser, et c'est justifié chez elle : ses
+           appelants renvoient le formulaire entier, champs réservés compris.
+           Refuser y casserait l'enregistrement ordinaire. Les deux conventions
+           voisines sont désormais expliquées sur place.
+
+           ── Pourquoi un garde de forme, et non un contrôle d'écran ──
+
+           Les deux défauts vivaient derrière une porte fermée : **aucune ronde
+           ne peut cliquer un bouton que rien n'affiche**. Le garde est donc dans
+           `taille.smoke.js` — aucun code de SURV ne prend « archivé » pour un
+           statut de dossier, ni en écriture ni en lecture —, et il tient la
+           correction indépendamment de ce que la maîtrise d'ouvrage décide de la
+           page. Contre-essayé dans les deux moitiés : l'écriture remise, il
+           rougit ; une lecture remise, il rougit. Et il **ne rougit pas** sur
+           `p.statut === 'archive'` de la liste des plans archivés, qui porte
+           légitimement cette convention — un garde qui mord sur le juste ne
+           garde rien.
+
+           `taille` passe de 69 à **70 contrôles**.
+
+           ── Les trois décisions, et ce qu'elles ont coûté ──
+
+           | Page | Décision | Ce qui a été fait avant d'ouvrir |
+           |---|---|---|
+           | `execution` | **rendue à la barre** | la suppression demande la référence saisie — cinq clés de traduction en trois langues |
+           | `prestataires` | **rendue à la barre** | l'archivage écrit `archive`, les six lectures suivent |
+           | `prestataire_home` | **supprimée** | son cas d'aiguillage, sa fonction de rendu, son entrée du sas et ses deux traductions dans les trois langues |
+
+           *Ouvrir une porte, c'est répondre de ce qu'il y a derrière.* Deux des
+           trois pages rendues portaient un défaut que leur inaccessibilité seule
+           empêchait de nuire ; la question n'était donc pas « faut-il l'ouvrir »
+           mais « qu'est-ce qu'on ouvre ».
+
+           ── Ce que la ronde éprouve maintenant, et ce qu'elle a cessé de faire ──
+
+           Le ménage de la ronde du dossier se faisait **par l'API**, faute de
+           page. Il se fait désormais par le geste de l'écran : le tableau masque
+           les dossiers clôturés, son filtre de statut les rend, une référence
+           fausse n'emporte rien, et la bonne emporte la chaîne entière. *Un
+           contrôle qui appelle la route prouve que la route marche, non que le
+           bouton l'atteint* — et c'était la seule raison pour laquelle il
+           appelait la route.
+
+           L'écran « Dossiers » est éprouvé là où la ronde vient de clôturer :
+           ses trois onglets, le tri d'une colonne, l'archivage et ce que le
+           serveur en retient, le passage de la ligne d'un onglet à l'autre, et
+           la restitution — le dossier est désarchivé en partant, pour que les
+           blocs suivants le trouvent comme ils l'ont toujours trouvé.
+
+           ── Ce que la couverture y gagne, et le compte des contrôles ──
+
+           SURV passe de **180 à 185 gestes exercés sur 316**. Les cinq sont
+           ceux des deux pages rendues : `execDeleteDossier`,
+           `execArchiveDossier`, `execSortDossiersClotures`,
+           `EXEC_STATE.dossierPageTab` et `EXEC_STATE.filters.statut`. Rien
+           n'est perdu, et **le dénominateur ne bouge pas de 316** — ce qui est
+           la preuve, et non l'argument, que la page effacée ne portait rien.
+
+           | Suite | Avant | Après |
+           |---|---|---|
+           | `taille` | 69 | **70** |
+           | `execution` (HTTP) | 118 | **121** |
+           | `surv` (navigateur) | 160 | **170** |
+
+           Le garde de couverture a été contre-essayé lui aussi : la dispense
+           réglée à 184 rougit en nommant l'écart, et à 185 elle passe. *Un
+           chiffre déclaré qui ne vaut pas la mesure n'est pas une dispense,
+           c'est une fiction.*
+
+           ── Un contrôle vert qui vivait d'un cache périmé ──
+
+           Remplacer le ménage par le geste a fait rougir **deux contrôles du
+           tableau de bord**, qui n'avaient rien à voir avec lui. Le geste
+           appelle `execRefreshDynamic()`, l'appel d'API non : le cache du
+           client gardait donc une notification et des constatations que le
+           serveur n'avait plus, et ces deux contrôles vivaient de cette
+           péremption.
+
+           | Contrôle | Ce dont il vivait |
+           |---|---|
+           | le filtre « non initiée » de la piste | `execAvancement` rend `non_initiee` dès qu'il n'y a pas de notification. Sans cache périmé, les **deux** activités du jeu le sont, et cocher le filtre ne restreint plus rien |
+           | les boutons d'année du formulaire de statistiques | la rangée se compose des années des **constatations**. Sans aucune, la rangée n'existe pas, et il n'y a plus rien à cliquer |
+
+           Rétablir le ménage par l'API les aurait rendus verts, et aurait
+           conservé deux contrôles qui passent sur une fiction. Le régime est
+           donc **fabriqué** — une notification en brouillon pour qu'une
+           activité se distingue de l'autre, une constatation directe pour
+           qu'une année existe —, et rendu à la fin, avec un contrôle pour
+           chacun des deux gestes. C'est le patron que cette suite applique
+           partout ailleurs ; ces deux contrôles-là en étaient dispensés par
+           accident.
+
+           *Un contrôle qui dépend de données que la ronde a déjà détruites
+           mesure la péremption du cache, non l'écran.*
+
+           ── Trois erreurs de ma part sur ce bloc ──
+
+           | Erreur | Ce qu'elle a coûté, et la règle |
+           |---|---|
+           | Une sonde lancée avant de garnir le jeu d'essai | les trois pages rendaient leurs barres de filtres et rien d'autre : **la fixture des tests n'a ni dossier ni notification**, et je l'avais confondue avec `data/`. La première mesure donnait 6 gestes là où il y en a 9 |
+           | Un diagnostic annoncé avant d'être éprouvé | j'ai attribué les deux rouges du tableau de bord à des filtres que mon bloc laissait posés, corrigé cela, annoncé le remède — et la ronde a rendu **le même rouge**. La vraie cause était l'inverse : non ce que je laissais, mais ce que je ne laissais plus. *Un remède qu'on annonce avant de l'avoir mesuré n'est qu'une hypothèse qui s'habille* |
+           | Un rouge prédit qui n'est pas venu | j'ai annoncé qu'un de mes contrôles rougirait, les trois onglets rendant le même balisage à vide. **Il n'a pas rougi** — les trois rendent trois empreintes distinctes. Mon relâchement à « au moins deux » reste un choix de robustesse, et je ne le présente pas comme la correction d'un rouge |
+
+       5.f.74 [x] **Un bouton « Exporter PDF » qui n'exportait rien, et le document qui était déjà écrit** — fait le 8 novembre 2026.
+
+           `execGenerateNotificationPdf` appelait `GET …/notifications/:id/pdf`.
+           **Cette route n'existe pas** : aucune n'est montée sous ce chemin, et
+           il n'y a pas de route générique qui l'attrape. L'appel rendait donc
+           toujours un 404, le geste tombait toujours dans son repli — l'aperçu
+           dans le volet, et « imprimez avec Ctrl-P » —, et son libellé
+           promettait ce qu'il ne faisait pas.
+
+           Sa seconde branche était morte aussi : une ancre vers
+           `dossier.notification_pdf_path`, champ que **rien n'écrit nulle part**
+           dans le dépôt, serveur compris — et qui portait un `download`, le
+           patron que le garde de forme interdit depuis le 5 novembre (n° 5.f.71).
+
+           ── Pourquoi personne ne l'avait vu ──
+
+           Parce qu'aucune ronde n'avait jamais cliqué ce bouton : le relevé le
+           disait déjà, et c'est tout. Le contrôle de la console de cette suite
+           relève la **réponse** et non le seul message, et le contre-essai l'a
+           nommé dès le premier clic, avec son adresse :
+
+           > `404 /api/m/execution/notifications/notif_72227c34/pdf`
+
+           *Un geste que rien n'exerce ne ment à personne, et c'est pourquoi il
+           peut mentir longtemps.*
+
+           ── Ce que j'avais annoncé, et ce que la mesure a corrigé ──
+
+           J'avais présenté ce point comme une décision de maîtrise d'ouvrage :
+           écrire la route, le moteur de rendu existant (`src/pdf.js`, puppeteer)
+           mais pas le gabarit. **C'était un mauvais cadrage.**
+
+           Ce module n'a jamais produit de PDF au serveur, et n'en produit
+           nulle part. Sa convention est de composer un document HTML dans le
+           client, de l'ouvrir en fenêtre, et que ce document porte lui-même son
+           impression — `execDownloadRapport` le fait pour le rapport
+           d'activité, et la ronde de SURV éprouve déjà le produit de ce geste.
+           Ce bouton était le seul à ne pas la suivre.
+
+           Et le corps de la fiche était **déjà écrit** : `exec-fiche.js` compose
+           un `official-doc-page` complet, son en-tête disant « présentation de
+           document officiel, prête à imprimer sur papier ». Il était seulement
+           **irrécupérable** — composé au milieu de `_showNotificationPreview` et
+           remis directement au volet, d'où rien ne pouvait l'en tirer.
+
+           *Le document n'existait pas faute que son corps fût accessible, et non
+           faute d'être écrit.* Le troisième paramètre qu'`execDownloadRapport`
+           porte déjà pour exactement la même raison — « le même document sert à
+           l'aperçu intégré : on le renvoie sur demande » — a suffi.
+
+           ── Les feuilles de style vont par lien ──
+
+           Les classes du document vivent dans les feuilles du module :
+           `.official-doc-*` dans `exec-documents.css`, les `.fiche-*` dans
+           `exec-processus.css`, les règles d'impression dans
+           `exec-impression.css`. Les recopier dans une chaîne JavaScript en
+           ferait une **seconde** source, qui divergerait au premier ajustement
+           de la fiche — le défaut que ce dépôt a rencontré le plus souvent. La
+           fenêtre ouverte hérite de l'origine de celle qui l'ouvre, et une
+           adresse absolue y suffit.
+
+           Un PDF au serveur aurait par ailleurs exigé Chromium, que
+           `DEPLOYMENT.md` déclare hors de portée du plan gratuit — « le rendu
+           PDF exige le plan Starter ». Le document du client ne coûte rien de
+           cela.
+
+           ── Trois contrôles, et deux contre-essais qui ne disent pas la même chose ──
+
+           | Contre-essai | Ce qui rougit | Ce qu'il établit |
+           |---|---|---|
+           | le geste rendu à la route absente | les **trois** contrôles de la fiche, **et** celui de la console qui nomme le 404 avec son adresse | que le document n'est pas composé, et que la route n'existe pas |
+           | les feuilles retirées du document | **un seul**, celui des feuilles — les deux autres restent verts, et son détail le dit : `{"fiche":true,"titre":"NOTIF-2026-001","officiel":true,"feuilles":0}` | que ce contrôle mord sur sa propre propriété |
+
+           Le second était nécessaire précisément parce que le premier emportait
+           les trois d'un coup. *Un contre-essai qui fait tout rougir ne dit pas
+           lequel des contrôles tient quoi.*
+
+           ── Couverture ──
+
+           SURV passe de 185 à **186 gestes exercés sur 316** :
+           `execGenerateNotificationPdf`, qui n'avait jamais été pressé.
+           `exec-fiche.js` passe de 7 à **8 noms sur 11**.
+
+           L'inventaire gagne **trois occurrences et aucun nom** :
+           `window.print`, `window.close` et `window:load` du document produit
+           portent des noms qu'`exec-rapports.js` déclarait déjà, et les deux
+           premiers restent non exercés pour la même raison que leurs pareils —
+           ils vivent dans la fenêtre que le geste ouvre, où le mouchard
+           n'instrumente rien.
+
+           `surv` passe de 170 à **173 contrôles**.
+
+       5.f.75 [x] **Cinq routes qui détruisent, trois façons de s'en garder** — fait le 8 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           Le module porte cinq routes destructrices. Elles se gardaient de
+           trois façons différentes, et aucune ne ressemblait aux autres.
+
+           | Route | Garde mesurée |
+           |---|---|
+           | `DELETE /dossiers/:id` | gestionnaire du module, **toutes portées confondues** |
+           | `DELETE /constatations/:id` | idem |
+           | `DELETE /rapports/:id` | idem, **et aucune garde de statut** |
+           | `DELETE /activites/:id` | idem |
+           | `DELETE /activites-en-cours/:id` | rôle portail **SUPERADMIN** du compte réel, **aucune portée** |
+           | `PUT /activites-en-cours/:id/reinitialiser` | gestionnaire **et** validateur de la portée |
+
+           `R.isAdmin` répond « ce compte est gestionnaire quelque part » :
+           `meilleurPrivilege` le dit de lui-même — « toutes portées
+           confondues ». C'est juste pour ce qu'il garde par ailleurs, qui n'a
+           pas de portée : les délais du processus, les référentiels, les
+           paramètres du module. Mais quatre routes **destructrices** s'y
+           adossaient, sur des objets qui en ont une.
+
+           Conséquence, mesurée : **un gestionnaire dont la portée est un
+           secteur pouvait détruire dans tous les autres.** Le contre-essai l'a
+           reproduit — le dossier d'un autre secteur effacé, `200`, et six
+           contrôles tombés en aval avec lui.
+
+           ── Ce que la maîtrise d'ouvrage a tranché, et en deux fois ──
+
+           La portée est exigée partout, et **le privilège du module suffit** :
+           le rôle portail n'entre pas en ligne de compte. Une seule règle pour
+           les six — `peutDetruire`, gestionnaire **de la portée de l'objet**.
+
+           La décision a été prise deux fois, et il faut dire pourquoi. **Ma
+           première question décrivait faussement la cinquième route** : je
+           l'avais annoncée comme exigeant « SUPERADMIN ou ADMIN et le privilège
+           du module », ayant lu `peutAdministrer`, qui garde l'archivage et
+           l'arrêt — non la suppression, qui exige le seul rôle portail
+           SUPERADMIN. La question a été reposée sur la mesure corrigée, et la
+           réponse n'a pas changé.
+
+           C'est donc un **élargissement assumé** de cette route-ci : la
+           destruction définitive d'une activité passe du super-administrateur du
+           portail à tout gestionnaire dans sa portée. Il est cohérent — supprimer
+           le dossier de l'activité emporte déjà la même cascade, et cette
+           suppression-là était ouverte au gestionnaire. Les deux gardes qui
+           restent ne sont pas de niveau : une constatation reprise par « Mesures
+           d'Application » rend l'activité indestructible, et l'écran exige la
+           référence saisie.
+
+           *Une mesure fausse ne se rattrape pas en gardant la décision qu'elle a
+           obtenue : elle se reprend, question comprise.*
+
+           ── Le troisième patron existait déjà, et c'était le bon ──
+
+           `reinitialiser` tenait « gestionnaire et validateur de la portée », et
+           refusait sous le code `gestionnaire_portee` — « au gestionnaire du
+           module, sur sa portée », que le socle traduisait depuis toujours pour
+           cette seule route. La règle était donc dans le module, en un seul
+           endroit, et c'est elle qui a été généralisée. `peutDetruire` demande
+           « gestionnaire **de** la portée », ce qui est plus strict sur l'axe du
+           privilège : nul n'y gagne un droit.
+
+           Les cinq refus portent désormais ce code, et non `administrateurs`.
+           *Un gestionnaire qui détient une portée ne doit pas lire qu'il n'a pas
+           le privilège.*
+
+           ── Un rapport transmis ne se supprime pas ──
+
+           `DELETE /rapports/:id` n'avait **aucune garde de statut** : un rapport
+           `transmis` — l'acte envoyé à l'organisme surveillé — s'effaçait comme
+           un brouillon, et par `db.remove`, qui ne retient pas son auteur.
+
+           Il est refusé (409 `rapport_transmis`). Les versions antérieures et
+           les brouillons restent supprimables, et l'effacement **marque** au
+           lieu de détruire, par le geste que le magasin porte depuis le
+           3 octobre 2026 : `retire_le`, `retire_par`, et l'enregistrement
+           disparaît de toutes les listes. La politique de conservation le dit du
+           magasin entier — « actes de surveillance […] l'effacement reste une
+           décision de l'autorité » : une décision, donc, mais qui laisse sa
+           trace.
+
+           **Une inconséquence reste, et elle est volontaire** : `removeDossier`
+           détruit les rapports d'un dossier qu'on efface, et son commentaire en
+           donne la raison — on efface alors le dossier entier, et plus rien n'y
+           renvoie. Ici on retire **un** rapport d'un dossier qui vit. Ce n'est
+           pas le même geste, et l'aligner demanderait un mandat qui n'a pas été
+           donné.
+
+           ── La garde d'écran reste grossière, et c'est le partage du module ──
+
+           Le client ne connaît que le meilleur privilège, jamais les portées —
+           le module l'écrit déjà : « le serveur revérifie ». Un gestionnaire
+           verra donc le geste sur un objet hors de sa portée, et recevra un
+           refus qui nomme la portée.
+
+           Ce n'est pas le cas de la page « Déclenchement » (n° 5.f.72), où
+           **tous** les gestes étaient refusés à un lecteur et la page entière
+           inutile. Ici le geste marche dans la portée et refuse dehors, et le
+           module fonctionne déjà ainsi pour l'archivage et l'arrêt.
+
+           La garde de la suppression définitive a suivi la route :
+           `execEtatsEstSuperadmin()` est partie — devenue sans emploi, et
+           retirée — pour `_execIsAdmin()`, sans quoi la maîtrise d'ouvrage aurait
+           confié un droit que rien n'offre.
+
+           ── Sept contrôles, et trois contre-essais ──
+
+           Le bloc éprouve la règle sur un **compte réel dont la portée se
+           déplace** : posée sur un autre secteur, le geste est refusé et le
+           dossier est toujours là ; posée sur le secteur du dossier, la version
+           dépassée d'un rapport part et le transmis refuse. Le compte est rendu
+           à sa portée d'origine, et un contrôle l'exige.
+
+           | Contre-essai | Ce qui rougit |
+           |---|---|
+           | la règle oublie la portée | le contrôle de portée : `200`, et le dossier d'un autre secteur **détruit** — six contrôles tombent en aval |
+           | le rapport transmis redevient supprimable | **un seul** des deux contrôles de rapport ; celui de la version dépassée reste vert |
+
+           `execution` passe de 121 à **128 contrôles**.
+
+           ── Ce qui reste ouvert, et qui est hors de ce tour ──
+
+           `routes-notifications.js` laisse un gestionnaire **toutes portées
+           confondues** modifier la notification d'un autre. C'est une écriture,
+           non une destruction, et elle sort du mandat donné ici — mais c'est le
+           même `isAdmin` scope-aveugle sur un objet qui a une portée.
+
+       5.f.76 [x] **Un écran de comptes que rien n'exerçait, et ce qu'il cachait** — fait le 9 novembre 2026.
+
+           `exec-utilisateurs.js` portait **2 gestes exercés sur 10**. L'écran se
+           rendait — la ronde des cinq pages de la vue Prestataire l'ouvrait, et le
+           contrôle « chaque page se remplit » passait. Aucun de ses boutons n'était
+           cliqué. C'est le pire des états : la page est verte, et ce qu'elle *fait*
+           n'est mesuré par rien.
+
+           C'est l'écran par lequel un organisme tient ses propres comptes : créer,
+           confier des droits, réinitialiser un mot de passe, le **révéler en clair**.
+           L'exercer a montré trois choses que personne ne cherchait.
+
+           **Six libellés sur sept s'affichaient en clé brute.** Le fichier demandait
+           ses libellés à `pt`, une table de quinze libellés français que le portage
+           PESSCO avait laissée à côté de celle du module — avec des clés reprises de
+           PR, dont la table les porte. `pt` rendant la clé quand elle manque, le mot
+           de passe généré s'annonçait par « password_gen », la fenêtre de l'œil
+           s'intitulait « confirm_admin_password », et son champ se nommait
+           « password ». Chaque appel portait un repli français écrit à côté —
+           `typeof pt === 'function' ? pt('password_gen') : 'Mot de passe'` — et
+           **aucun ne pouvait servir** : il gardait de l'absence de la *fonction*,
+           quand c'est la *clé* qui manquait. *Un repli placé sur la mauvaise
+           défaillance est une précaution qui rassure et ne protège pas.*
+
+           Les sept appels passent par `te`, la table du module — trois volets, gardée
+           par la suite « traductions ». La seconde table et sa fonction sont
+           retirées : elles n'avaient plus d'appelant, et c'est leur **silence sur
+           leurs manques**, non un oubli, qui a produit le défaut.
+
+           **Le périmètre des routes était plus large que celui de la liste.** La
+           liste écarte les comptes sans accès à ce module ; `cible()` ne regardait
+           que le rattachement. Mesuré sur un compte créé depuis SURV puis rattaché au
+           seul module RAMP : absent de la liste de SURV, et pourtant, depuis SURV,
+           réinitialiser son mot de passe rendait **200**, le révéler en clair
+           **200**, modifier ses droits **200**, le détruire **200**. Le droit
+           « utilisateurs » étant propre à chaque module, un agent à qui l'on confie
+           les comptes dans un module seul pouvait saisir le mot de passe d'un collègue
+           qui n'a jamais eu accès qu'à l'autre. `cible()` applique désormais le même
+           filtre que la liste : 404, pour toutes les routes.
+
+           **Une route détruisait un compte du portail, qu'aucun écran n'offrait.**
+           Sept comptes puis six, mesuré. Les deux écrans qui servent ces routes n'ont
+           qu'un bouton « Désactiver », avec la raison écrite à côté : « plutôt que le
+           supprimer : l'historique reste lisible ». Rien ne l'appelait. Et elle n'avait
+           rien de la cérémonie que le portail exige pour le même geste
+           (`DELETE /api/users/:username`) : celui-là réserve l'effacement au
+           super-administrateur, redemande son mot de passe, emporte la fiche du
+           répertoire du personnel, ferme les sessions ouvertes, et **écrit au journal
+           d'audit**. Celle-ci ne faisait aucun des cinq, et l'ouvrait à
+           l'administrateur d'un organisme. Retirée ; le droit à l'effacement reste
+           servi par la route du portail et sa cérémonie.
+
+           **Deux contrôles de la campagne rougissent désormais sur ces défauts, et un
+           garde-fou ferme la classe entière.** Sept contrôles de navigateur exercent
+           les sept gestes — la recherche, la création avec un seul droit confié, l'œil
+           qui refuse un mauvais mot de passe puis rend le temporaire, la fenêtre qui
+           se rouvre garnie, la désactivation qui n'efface pas, la réinitialisation et
+           le courriel qu'elle compose. Sept contrôles HTTP déplacent l'accès au module
+           **entre deux requêtes** pour voir les trois routes passer de 200 à 404. Et
+           « taille » refuse qu'un écran demande à sa table une clé qu'elle ne porte
+           pas : cinq écrans, 2 400 clés demandées, **aucune dispense** — ce que la
+           suite « traductions » ne regardait pas, ne gardant que l'accord des trois
+           volets entre eux.
+
+           **Trois de mes propres fautes, que les contre-épreuves ont dites.**
+
+           La première est la plus instructive. Mon contrôle « aucune route du module
+           ne détruit un compte » passait **route remise** : le compte venait d'être
+           sorti du module par le contrôle précédent, et le périmètre masquait la
+           route. Deux gardes en série, dont le second n'était pas éprouvé. L'accès est
+           rendu avant la tentative ; alors seulement il ne reste, entre la requête et
+           un compte détruit, que l'absence de la route. *Un contrôle qui passe pour
+           une autre raison que celle qu'il annonce ne garde rien — et seule la
+           contre-épreuve le dit.*
+
+           La deuxième : le garde-fou des clés a rougi sur **mon propre analyseur**, et
+           non sur CARE. Il ne traversait pas les commentaires, et une apostrophe
+           française y ouvrait une chaîne fantôme qui avalait le reste de la table —
+           cinq clés annoncées absentes qui y étaient. La suite « traductions » le
+           savait et le disait dans son commentaire ; je l'ai réappris.
+
+           La troisième est dans le harnais. `abandonsAttendus` rangeait l'abandon vu
+           comme une seule chaîne, « <motif> <chemin> », puis éprouvait les
+           déclarations contre cette chaîne : un champ nommé `chemin` confronté au
+           motif collé devant. Une déclaration ancrée au début du chemin — `/^mailto:/`
+           — ne pouvait **jamais** correspondre, et le contrôle déclarait manquant un
+           abandon qui figurait en clair dans son propre relevé. Les deux rondes qui
+           s'en servaient n'avaient pas rencontré le défaut, leurs chemins commençant
+           par un `/` au milieu de la chaîne : leur motif n'était pas ancré par
+           dessein, mais par chance. Les deux faces se relèvent désormais séparées.
+           *Un garde qui rend impossible la forme la plus naturelle de sa propre
+           déclaration mentait sur ce qu'il mesurait.*
+
+           **Laissé ouvert, et nommé.** `et()`, dans `exec-i18n.js`, lit la table du
+           portail avec le même repli « ou la clé » et n'a plus aucun appelant — comme
+           `pt` avant ce jour. Son homologue de PLAN non plus. Ce sont deux fonctions
+           mortes du même modèle, et le garde-fou des clés ne les voit pas : il ne
+           regarde que les tables des modules. Elles tombent avec le prochain passage
+           sur ces deux écrans.
+       5.f.77 [x] **La décision qu'aucune assertion ne gardait** — fait le 9 novembre 2026.
+           `exec-constatations.js`, 61 occurrences, **32 non exercées** : le plus gros
+           gisement de SURV après l'avoir ouvert. C'est l'écran des écarts constatés —
+           le cœur métier du module — et son circuit de prononcé n'était éprouvé que
+           par son issue : « validée, et la transmission lui est offerte ».
+
+           ── Trois clics qui ne touchaient rien, et que rien ne disait ──
+
+           La ronde de la constatation directe cliquait **la poignée** du panneau de
+           commentaires, puis « Ajouter », puis « Enregistrer ». Mesuré : à
+           l'ouverture le panneau est **déjà déplié** — `EXEC_CD_COM.replie` vaut
+           `false`. Le premier clic le **repliait** donc, et un panneau replié se
+           réduit à sa poignée : les deux boutons suivants **n'existaient plus**.
+           `saisie` valait 0 après les trois clics, et aucun commentaire n'était parti
+           au serveur. La zone de texte visée par `[...textarea].pop()` n'existait pas
+           non plus — ce volet n'en porte aucune hors du panneau.
+
+           Le relevé des gestes le disait depuis le premier jour :
+           `execCdAjouterCommentaire` et `execCdEnregistrerCommentaires` non exercés,
+           quand `execCdBasculerCommentaires` l'était. Personne ne l'avait lu. Et rien
+           n'avait rougi, pour une raison simple : **aucune assertion ne portait sur
+           ces trois clics**. Ils étaient là pour couvrir des gestes, non pour
+           éprouver un résultat.
+
+           C'est le pendant du défaut nommé la veille (n° 5.f.76), et il est pire. Un
+           contrôle qui passe pour une autre raison que celle qu'il annonce garde au
+           moins quelque chose. *Un clic sans assertion ne garde rien, et ne se trahit
+           même pas : il passe pour du travail fait.* Les trois sont retirés, et le
+           panneau est éprouvé dans l'ordre que l'écran impose — on ajoute d'abord, on
+           replie ensuite.
+
+           ── Un titre que la création jetait ──
+
+           Le formulaire porte un champ « Titre » en section B « Constat ». Il l'écrit,
+           la route de modification l'accepte, le volet le rend. **La route de création
+           ne le portait pas** : mesuré, une constatation créée avec « UN TITRE QUE LA
+           RONDE SAISIT » relue ne porte **aucune clé** `titre`, et son champ rend
+           « — ». Le titre ne revenait qu'au premier enregistrement suivant, par le
+           PUT — de sorte que le champ *semblait* fonctionner à qui modifiait, et
+           jamais à qui créait.
+
+           Le repli `cas_type: … || d.titre` compensait cette absence en logeant le
+           titre dans le **type de cas** — un `<select>` dont aucune option ne vaut une
+           phrase libre : le titre disparaissait de l'un sans paraître dans l'autre.
+           Et le service publié aux Mesures d'Application lisait `cas_type || titre`,
+           c'est-à-dire la compensation plutôt que le champ. Les deux champs sont
+           distincts partout ailleurs — section B pour le titre, section C
+           « Traitement » pour le cas, deux entrées du PUT, deux `roField` du volet :
+           ils le sont désormais à la création. Le service publié lit `titre ||
+           cas_type` : les constatations antérieures gardent leur titre là où il était
+           logé, les nouvelles portent le leur.
+
+           ── Ce que l'écran fait, une fois exercé ──
+
+           Le panneau de commentaires est le seul endroit du module où une décision se
+           **motive champ par champ**. Le valideur annote — « Description : ne nomme
+           pas l'exigence manquée » —, ces annotations vivent par **versions**, et le
+           renvoi les transmet **comme motif** : pas de double saisie, et le rédacteur
+           relit en tête de son formulaire exactement ce qui lui est demandé. La
+           version se fige au prononcé ; le tour suivant en ouvre une autre, et
+           l'historique des tours se relit, replié.
+
+           Vingt-deux contrôles en navigateur parcourent le circuit entier, chaque
+           palier relu **chez le serveur** : la ligne qui déplie son détail et la
+           colonne d'actions qui arrête le clic ; un commentaire ajouté, visé sur un
+           champ, rédigé — la cible redessine, la frappe non, sans quoi elle se
+           perdrait ; un second retiré **par son rang**, le premier gardant son texte ;
+           l'enregistrement qui ouvre une version chez le serveur ; la poignée qui
+           replie et rend ; une étape du fil consultée ; la fenêtre du renvoi qui
+           rappelle le commentaire dont elle fera le motif ; le renvoi prononcé, qui
+           fige la version et journalise la décision ; la constatation rouverte par le
+           geste de sa ligne, garnie ; une référence réglementaire posée par Entrée, et
+           la même qui ne se dédouble pas ; le délai changé qui recalcule l'échéance ;
+           une preuve versée ; la fiche imprimée ; « Soumettre » qui enregistre et
+           resoumet d'un geste, les trois corrections relues en base ; l'historique du
+           tour précédent et sa version figée qui s'ouvre ; la fenêtre du rejet
+           **refusée** sans que rien bouge, puis prononcée ; la remise à l'organisme,
+           dont le courriel est composé d'avance et dont le geste d'annexe délègue à un
+           sélecteur caché ; et le sous-onglet « Terrain », que le jeu d'essai laissait
+           vide et que la ronde garnit pour déplier son détail. Deux contrôles HTTP
+           gardent le contrat de création.
+
+           ── Ce qui reste hors de portée, et pourquoi ──
+
+           `execExporterConstatationsXlsx` pose `window.location.href` : le navigateur
+           **quitte la page**, et l'évaluation meurt avec elle. Il se prouve en HTTP,
+           où huit contrôles l'attendent. `execTransmettreConstatation` envoie un
+           courriel : sans serveur de messagerie la route refuse proprement — 502 —, et
+           ce refus est éprouvé pour lui-même dans la suite HTTP ; le bouton est donc
+           relevé présent, non cliqué.
+
+           ── Une dette nommée ──
+
+           `surv.smoke.js` porte maintenant près de sept mille lignes, et le garde-fou
+           de taille **ne regarde que `public/`, `src/` et `server.js`**. Les suites
+           n'ont donc aucun plafond, quand c'est précisément l'argument qui a justifié
+           de leur donner un fichier par écran. Ce n'est pas un défaut de ce tour,
+           c'est un angle mort du garde ; il se traite avec la dette du harnais — les
+           compteurs à isoler, et les six suites de navigateur à sortir du port 4797.
+
+           ── Mesuré ──
+
+           `exec-constatations.js` : **29 occurrences exercées sur 61 avant, 57
+           après** ; 16 noms sur 39 avant, 35 après. SURV dans son ensemble :
+           **193 gestes exercés sur 316 avant, 212 après** — 61 % à 67 %. Il reste
+           trois occurrences non exercées, les trois déclarées ci-dessus, et une
+           indécidable : la ligne de la table, dont le gestionnaire entier est
+           interpolé — l'instrument n'en lit aucun nom, et aucun clic ne peut donc
+           la créditer, quoique le contrôle prouve qu'elle déplie et replie.
+
+           Suites : SURV 181 → **203** contrôles, `execution` 135 → **137**.
+           Contre-épreuves : les quatre défauts remis ensemble font rougir **six**
+           contrôles — les quatre visés, et deux cascades prévues (le titre vide dans
+           le formulaire rouvert, la version enregistrée sans entrée quand le retrait
+           prend le mauvais rang). Rendues, tout reverdit.
+       5.f.78 [x] **Un circuit dont on n'éprouvait que les acceptations** — fait le
+           10 novembre 2026.
+           `exec-pac.js`, 47 occurrences, **22 non exercées** : le premier gisement
+           de SURV après l'écran des constatations. C'est le plan d'actions
+           correctives — ce par quoi un organisme répond à un écart et l'Autorité
+           en juge — et la ronde du cycle le parcourait **par son chemin heureux**
+           seulement. Elle le disait elle-même : « on prend la branche des preuves :
+           l'amendement exige un motif par champ divergent, et refuse sans — ce
+           serait une autre ronde ». C'est celle-ci.
+
+           ── Trois refus que rien n'exerçait ──
+
+           Les trois décisions négatives de l'Autorité étaient toutes non
+           couvertes, quand leurs trois pendants positifs l'étaient :
+
+           | Geste | Ce qu'il fait | État |
+           |---|---|---|
+           | `execAccepterPAC` | le plan est accepté | exercé |
+           | `execReturnPACtoPostulant` | le plan est **renvoyé** | **non exercé** |
+           | `execAccepterPreuves` | les preuves sont acceptées | exercé |
+           | `execPreuvesNonAcceptables` | les preuves sont **refusées** | **non exercé** |
+           | `execCloseFNC` | la fiche est clôturée | exercé |
+           | `execRenvoyerMiseEnOeuvre` | la clôture est **refusée** | **non exercé** |
+
+           *Un circuit dont on n'éprouve que les acceptations n'est pas éprouvé :
+           c'est le refus qui porte la décision.* Les trois sont désormais
+           parcourus, chacun relu chez le serveur — le statut `pac_rejetee` et son
+           renvoi signé, le verdict « NON » et son motif, l'acceptation des preuves
+           retirée et la mise en œuvre rendue.
+
+           ── Une cérémonie entière, jamais jouée ──
+
+           Revenir sur un délai, une criticité ou l'énoncé d'une constatation
+           **déjà notifiée** engage l'administration. L'écran en fait une
+           cérémonie : réservée aux comptes SUPERADMIN et ADMIN sur leur portée,
+           **confirmée par le mot de passe du demandeur**, bornée par trois portées
+           (proroger, requalifier, reprendre l'énoncé), et tracée champ par champ
+           dans un journal rabattable. Rien n'en était exercé — ni la cérémonie, ni
+           ses refus.
+
+           Ce sont ses refus qui lui donnent des dents, et ce sont eux qu'on éprouve
+           d'abord : sans motif, « Le motif est obligatoire » ; sans mot de passe,
+           « Le mot de passe est obligatoire » ; avec un mauvais, le serveur tranche
+           — 403, « Mot de passe incorrect » — et **rien n'est appliqué**, mesuré en
+           base. Puis la cérémonie aboutit : délai 30 → 60, échéance refaite au
+           9 janvier 2027 par le serveur, et une trace qui nomme son auteur, sa
+           portée, son motif et ses deux changements — « Délai de solde 30 → 60 »,
+           « Date d'échéance 2026-12-10 → 2027-01-09 » — lisibles dans le journal.
+
+           ── L'amendement, et le seul endroit du module où un champ doit se justifier ──
+
+           Côté organisme, amender un plan **accepté** remet l'acceptation en jeu.
+           Chaque champ qui diverge de la version acceptée lève un drapeau, réclame
+           son motif, et la soumission ne part pas sans. Éprouvé : le champ touché
+           se marque et son bloc paraît ; **rendu à sa valeur, les deux
+           disparaissent** ; la soumission refuse en signalant le motif manquant ;
+           « Autres » réclame sa précision et la refuse absente ; et le plan parti
+           porte en base son motif, sa précision, sa pièce, et **une version
+           archivée** — celle qui avait été acceptée.
+
+           Les pièces, aussi, qui n'étaient pas exercées : l'intitulé est demandé
+           **avant** l'envoi et refusé vide — le serveur enregistre la pièce sous
+           cet intitulé, non sous le nom du fichier du poste —, il se reprend par
+           son geste, et une pièce de trop se retire en renumérotant les autres.
+
+           ── Un commentaire qui affirmait ce que son code ne faisait pas ──
+
+           `PUT /rapports/:id/send` annonçait : « le rapport validé passe à
+           "transmis" **et ouvre les constatations restées en brouillon** ». Il ne
+           les ouvrait pas. Ses trois routes sœurs — `/transmit`, `/transmettre`, et
+           la clôture du dossier — le font d'un seul geste, pour la raison que l'une
+           d'elles écrit : « un rapport transmis dont les constatations ne le sont
+           pas encore laisse le prestataire sans objet à traiter ». Celle-ci est la
+           **seule que l'écran appelle**, et c'était la seule à ne pas le faire.
+
+           La fenêtre est étroite — la validation du rapport ouvre déjà celles qui
+           existent alors — mais réelle, et mesurée : une constatation relevée
+           **entre** la validation et l'envoi restait `brouillon`, donc inopposable,
+           le rapport étant parti chez l'organisme. Corrigée.
+
+           ── Trois erreurs de ma main, que la mesure a dites ──
+
+           La ronde a rougi trois fois avant de passer, et chaque fois le relevé
+           nommait la cause mieux que mon raisonnement :
+
+           · **Le volet ouvert couvre la barre du portail.** `basculer` clique un
+             bouton de la barre ; le voile du volet le reçoit à sa place. La bascule
+             ne se faisait pas. Le volet se referme désormais avant.
+           · **Un rang n'est pas une identité.** La chaîne prenait
+             `plan.activites[0]`, comme celle du cycle. À cet instant de la suite,
+             l'ordre n'est plus le même : la constatation naissait sur un **autre
+             organisme**, invisible en vue Prestataire — `403` sur sa lecture, dit
+             par le diagnostic. Elle prend maintenant l'activité de l'organisme que
+             cette vue sert, reconnu par la constatation du cycle.
+           · **`plans-valides` n'offre pas ce qui est déjà déclenché.** L'activité
+             de cet organisme avait été notifiée par la chaîne du cycle : la liste
+             l'écartait. `plans-valides/:planId/activites` les rend toutes, et une
+             activité déjà notifiée peut l'être à nouveau — 201, mesuré.
+           · **Un ménage par l'API doit rendre au client l'état qu'il a changé.** La
+             ronde effaçait sa chaîne par `fetch` sans rafraîchir : la page des
+             rapports listait encore deux rapports morts, les cliquer rendait 404,
+             et la ronde de l'aperçu — la suivante — ne recevait **aucun document**.
+
+           ── Mesuré ──
+
+           `exec-pac.js` : **25 occurrences exercées sur 47 avant, 47 après — le
+           fichier entier**, 35 noms sur 35. SURV dans son ensemble : **212 gestes
+           exercés sur 316 avant, 228 après** — 67 % à 72 %. Suites : SURV
+           203 → **228** contrôles, `execution` 137 → **139**.
+
+           Contre-épreuves : les quatre défauts remis ensemble font rougir **dix**
+           contrôles — les quatre visés, chacun avec le détail qui nomme sa cause
+           (`{"faux":"","base":{"delai":"60","traces":1}}` dit que l'ajustement est
+           passé sur un mauvais mot de passe), et six cascades, toutes dues au
+           contournement de la cérémonie, qui désynchronise la suite du parcours.
+
+           ── Ce qui reste ouvert, et nommé ──
+
+           Une occurrence de `exec-constatations.js` échappe encore : le **fond** de
+           la fenêtre à motif (`_execCommentModal`), qui la referme quand on clique
+           à côté. La fenêtre est désormais exercée — c'est par elle que passent
+           deux des trois refus —, mais par son bouton, non par son fond. Elle
+           tombera avec le prochain passage, d'un clic de plus.
+       5.f.79 [x] **Sept suites sur un port, et un garde-fou qui ne se regardait
+           pas** — fait le 10 novembre 2026.
+           Une dette d'outillage, nommée depuis quatre tours et payée par celui-ci.
+           Elle n'a rien corrigé dans l'application : elle a rendu les contrôles
+           indépendants, et mis sous garde ce qui les tenait.
+
+           ── Le port partagé ──
+
+           Sept suites tenaient le port **4797** : `ramp` en HTTP et les six suites
+           de navigateur. La campagne les joue l'une après l'autre, de sorte que
+           cela marchait — et c'est ce qui rendait la dette invisible. Mais **deux
+           ne pouvaient pas tourner ensemble** : impossible de rejouer une suite
+           seule pendant qu'une campagne tourne, impossible de lancer une
+           contre-épreuve sans attendre la fin de l'essai précédent.
+
+           Le 10 novembre, cela a coûté **quatre lancements** sur une seule
+           journée — chacun refusé par le harnais, qui annonçait un serveur
+           « resté d'un passage interrompu » quand ce n'était que le passage en
+           cours. La faute était la mienne, pour avoir relancé sans attendre ; mais
+           c'est le partage qui la rendait possible, et le message qui la rendait
+           illisible.
+
+           Chaque suite a désormais son port. Les dix premières gardent celui
+           qu'elles avaient — les notes et les documents qui les nomment restent
+           vrais —, et les six suites de navigateur reçoivent 4800 à 4805.
+           **Mesuré** : `droits-navigateur` et `mesures-navigateur`, qui
+           partageaient 4797, tournent maintenant **ensemble**, 12 et 40 contrôles,
+           vertes toutes deux.
+
+           ── Le reproche qui n'était pas le sien ──
+
+           J'avais annoncé, dans les étapes suivantes du tour précédent, « un
+           `arreter()` qui tienne en cas d'échec » : le harnais laisserait son
+           serveur derrière lui quand la suite rougit. **Mesuré, c'est faux.** Une
+           sonde démarre un serveur, appelle `arreter()`, puis interroge le port à
+           sept reprises sur cinq secondes : il ne répond plus **dès le premier
+           relevé**, et `lsof` ne trouve personne à le tenir.
+
+           Les « orphelins » que j'avais trouvés étaient mes propres lancements qui
+           se chevauchaient — j'avais lu l'avancement dans le journal au lieu
+           d'attendre la fin, et relancé sur un port encore pris. *Un diagnostic
+           tiré d'un symptôme, et non d'une mesure, accuse le premier coupable
+           plausible.* Le commentaire du harnais le dit désormais, pour que
+           personne n'aille corriger ce qui n'est pas cassé.
+
+           ── La table des suites, qu'aucun contrôle ne pouvait lire ──
+
+           Elle vivait dans le lanceur, construite avec des `require` : la lire
+           **chargeait les vingt suites**, puppeteer compris. Rien ne pouvait donc
+           l'éprouver — un contrôle qui veut savoir si deux suites partagent un port
+           n'a pas à monter un navigateur pour le dire.
+
+           Elle est sortie dans `tests/smoke/suites.js`, où une suite est trois
+           chaînes : son nom, son port, son fichier. Le lanceur en tire ses modules ;
+           huit contrôles la lisent sans rien charger — la table en porte vingt,
+           aucun port n'est partagé, les noms sont uniques, les six noms que le
+           relevé des gestes lance ne sélectionnent chacun que leur propre suite,
+           les ports tiennent hors du serveur de développement et de la passerelle,
+           chaque fichier déclaré existe, et **aucun fichier de suite n'est absent
+           de la table** — une suite écrite et jamais inscrite ne tournerait nulle
+           part.
+
+           Le quatrième de ces contrôles a d'abord été écrit faux : « aucun nom
+           n'est contenu dans un autre ». Il a rougi sur cinq paires **voulues** —
+           `ramp` dans `ramp-navigateur`, et quatre comme elle —, parce que
+           `npm run smoke -- ramp` doit justement jouer les deux suites du module.
+           La règle est plus étroite : ce sont les six noms que *le relevé* emploie
+           qui doivent être sans équivoque. *Un contrôle écrit par analogie éprouve
+           l'analogie, non la règle* — pour la troisième fois en trois tours.
+
+           ── Et le garde-fou de taille, qui ne voyait pas les suites ──
+
+           Tout ce qu'il garde porte sur `public/`, `src/` et `server.js`. Les
+           suites n'avaient **aucun plafond** — alors que c'est l'argument de taille
+           qui a justifié de leur donner un fichier par écran : « `parcours` porte
+           3 200 lignes, y ajouter un second écran ferait un fichier que personne ne
+           lirait, et le garde-fou de taille le refuserait à bon droit ». Il ne
+           l'aurait pas refusé. Mesuré : `surv.smoke.js` **7 829 lignes**,
+           `ramp.navigateur.smoke.js` 6 526 — trois et quatre fois le seuil des
+           sources, sans que rien le dise.
+
+           Il ne découpe rien aujourd'hui : un découpage de suite est un travail à
+           part, et le faire au passage serait pire que la dette. Il **arrête la
+           croissance silencieuse** — chaque suite au-delà de mille lignes déclare
+           la taille qu'elle a, et la dépasser demande de relever le chiffre, c'est
+           à dire de le voir. Deux contrôles l'encadrent de l'autre côté : un budget
+           ne survit pas largement à ce qu'il décrivait — une suite découpée doit
+           faire tomber le sien —, et aucun ne nomme un fichier absent.
+
+           *Un seuil qu'on ne regarde pas n'est pas un seuil.*
+
+           ── Mesuré ──
+
+           Suites : `unitaires` 136 → **144** contrôles, `taille` 71 → **74**.
+           Campagne : 1 612 → **1 623**. Aucun geste d'écran n'est concerné : la
+           couverture de SURV reste à 228 sur 316.
+
+           Contre-épreuves, sept pour sept contrôles : surv remis sur 4797
+           (`4797 : ramp, surv`), une suite retirée de la table (`19 suites`, puis
+           `mfa.smoke.js` absente), le relevé pointé sur un nom équivoque
+           (`ramp → ramp+ramp-navigateur`), un budget rabaissé
+           (`surv.smoke.js : 7829 lignes (toléré 1200)`), un budget pour un fichier
+           qui n'existe pas, et un budget laissé loin au-dessus de sa suite
+           (`ramp.smoke.js : 1447 lignes, toléré 4000`). Chacun rougit en nommant sa
+           cause ; rendus, tout reverdit.
+       5.f.80 [x] **La cinquième route destructrice, et deux portées sur un même
+           objet** — fait le 11 novembre 2026.
+           Le dernier défaut nommé que rien ne gardait. L'entrée n° 5.f.75 le
+           consignait elle-même, sous « ce qui reste ouvert » : « `routes-
+           notifications.js` laisse un gestionnaire **toutes portées confondues**
+           modifier la notification d'un autre ». Il a attendu cinq tours.
+
+           ── Ce que la mesure a corrigé dans l'énoncé ──
+
+           La note disait « modifier ». **Mesuré, c'est faux** :
+           `PUT /notifications/:id` refuse — 403 — un gestionnaire hors de sa
+           portée. C'est `DELETE /notifications/:id` qui passait : 200, et le
+           brouillon d'une activité du secteur AMO **détruit** par le
+           gestionnaire du secteur CAMO. *Une route qui modifie gardait ce qu'une
+           route qui détruit laissait passer.*
+
+           C'était la **cinquième** route du patron `R.isAdmin` — « ce compte est
+           gestionnaire quelque part », toutes portées confondues. Les quatre
+           autres ont quitté ce patron le 8 novembre (n° 5.f.75) ; celle-ci est
+           restée. La règle est désormais la leur — gestionnaire du module, dans
+           la portée de l'objet — à quoi s'ajoute l'initiateur, qui garde son
+           brouillon quel que soit son privilège : il l'a ouvert, il peut le
+           refermer.
+
+           Le refus nomme les deux qualités :
+           `{ error: 'reserve', role: 'initiateur_ou_gestionnaire_portee' }`, et le
+           socle le traduit dans les trois langues. La phrase qu'il remplace —
+           « Seul l'initiateur peut supprimer ce brouillon » — est retirée de la
+           table : le serveur ne l'émet plus, et une traduction qui survit à sa
+           phrase ne garde rien (même geste qu'au n° 5.f.76).
+
+           ── Et un second fait, de la même famille, qu'il a fallu arbitrer ──
+
+           Une activité **hors plan** porte elle-même son année, son domaine et
+           son secteur, faute d'activité planifiée pour les lui donner. Les gardes
+           de portée ne regardaient que l'**organisme surveillé** : mesuré, une
+           notification hors plan déclarant le secteur CAMO, posée sur un organisme
+           rattaché au secteur AMO, s'écrivait sous la portée **AMO**. Le
+           gestionnaire de CAMO, dont l'activité relève, ne pouvait rien ; celui
+           d'AMO, qu'elle ne concerne pas, pouvait tout.
+
+           La restriction par processus, elle, prenait **déjà** le secteur déclaré
+           (`contexteActivite`, inchangé depuis l'origine) : le module se
+           contredisait d'une garde à l'autre sur le même objet. Ce n'était pas un
+           oubli d'un côté, c'était deux lectures qui coexistaient.
+
+           **Arbitré par la maîtrise d'ouvrage le 11 novembre 2026 : le secteur et
+           le domaine que la notification déclare font autorité**, l'organisme ne
+           servant qu'à défaut. Une activité hors plan est rattachée au secteur
+           qu'elle nomme. Les douze gardes de ce fichier lisent désormais la même
+           portée, par une seule fonction — `porteeDe`.
+
+           ── Les deux voisins qui ne sont pas du même défaut, et pourquoi ──
+
+           `R.isAdmin` sert encore à deux endroits du module, et c'est juste :
+
+           · `routes-etats.js` et `routes-parametres.js` le posent sur les délais
+             du processus, les référentiels et les paramètres du module — **qui
+             n'ont pas de portée**. C'est ce que le commentaire de `peutDetruire`
+             dit déjà de lui.
+           · `acteurs.js` l'emploie comme porte de sortie : le gestionnaire passe
+             outre la désignation des intervenants d'un processus, « sans quoi un
+             processus incomplet arrêterait le circuit sans recours applicatif ».
+             Elle ne contourne pas la portée : dans chaque route, la garde de
+             portée s'exécute **avant** `refusProcessus`. Ce qu'elle lève est la
+             liste des acteurs, non le périmètre.
+
+           ── Une protection sur laquelle un essai a buté, et qu'on n'a pas desserrée ──
+
+           La ronde alterne nécessairement entre le compte qui **pose** la portée
+           et celui qui l'**éprouve**. Chaque reconnexion est une tentative
+           d'authentification, et le serveur en compte vingt par quart d'heure :
+           douze bascules ont fait rendre **429** à la suite entière, sur un code
+           sans défaut.
+
+           Baisser le plafond pour les essais aurait été affaiblir une protection
+           pour la commodité d'un test. Or il n'y avait rien à affaiblir : une
+           session déjà ouverte n'a pas à être rouverte. Le harnais rend et repose
+           son témoin (`srv.session`), deux connexions suffisent à toute une ronde,
+           et le plafond du serveur n'a pas bougé d'un cran.
+
+           *Un essai qui bute sur une protection n'est pas une raison de la
+           desserrer.*
+
+           ── Mesuré ──
+
+           Suite `execution` : 139 → **155** contrôles, `unitaires` 144 → **149**.
+           Campagne : 1 623 → **1 644**. Aucun geste d'écran n'est concerné ; la
+           couverture de SURV reste à 228 sur 316.
+
+           Contre-épreuves : le `DELETE` rendu scope-aveugle fait rougir deux
+           contrôles — `{"statut":200,"present":false}`, le brouillon d'un autre
+           secteur détruit, et la cascade en 404 sur le suivant ; la portée
+           ramenée à celle du seul organisme en fait rougir deux, **exactement
+           inversés** — le gestionnaire de l'organisme écrit (200), celui du
+           secteur déclaré est refusé (403) ; et la clause de l'initiateur retirée
+           en fait rougir un, qui nomme le refus reçu.
+
+           Un de mes contrôles a d'abord été écrit sur une situation qui n'existe
+           pas : il laissait le compte **sans portée du tout** pour isoler la
+           clause de l'initiateur, et a rougi sur la *création* — `403`, puisque
+           ouvrir une notification exige d'être contributeur de la portée. La
+           clause s'isole autrement, et mieux : le compte ouvre son brouillon dans
+           sa portée, puis sa portée **s'en va ailleurs**, et il le retire tout de
+           même.
+
+           ── Et le garde-fou posé la veille a mordu sur ce tour même ──
+
+           La campagne a rougi une fois, sur le contrôle de taille des suites
+           inscrit au n° 5.f.79 : « `execution.smoke.js` : 1 174 lignes (non
+           déclaré) ». La ronde de portée l'avait menée de 995 à 1 174 lignes, et
+           le garde l'a dit **au tour suivant sa pose**. C'est exactement son
+           office : la croissance est déclarée, donc vue. Le budget est inscrit.
+
+           ── Et une campagne qui refuse de doubler une autre ──
+
+           Deux fois en deux jours, j'ai lancé une campagne par-dessus une
+           campagne en cours — en lisant l'avancement dans le journal au lieu
+           d'attendre la fin. La seconde rougit alors sur « le port 48xx répond
+           déjà : un autre serveur le tient », message qui décrit un **orphelin
+           d'un passage interrompu** là où il n'y a que le passage en cours. La
+           première fois, j'ai cherché le défaut dans le code ; la seconde, dans
+           trois suites de navigateur. Le port par suite (n° 5.f.79) protège deux
+           suites l'une de l'autre, pas deux campagnes : elles jouent les mêmes
+           seize ports, dans le même ordre.
+
+           `tests/smoke/verrou-campagne.js` le dit en un mot. Il reprend la leçon
+           de `src/verrou.js` — *un verrou qui bloque après un arrêt brutal est
+           pire que pas de verrou du tout* : il demande au système si le tenant
+           vit encore, et **reprend la place s'il est mort**, en le signalant. Le
+           refus nomme le numéro du tenant et **trois** remèdes : attendre, le
+           retrouver par `ps -p`, ou jouer une suite seule — qui a son propre port
+           et n'est pas concernée.
+
+           Cinq contrôles l'éprouvent (`unitaires`), sur un chemin à lui : la
+           place libre se prend sans rien reprendre, un tenant vivant refuse la
+           seconde en nommant son numéro et le remède, un tenant mort est repris
+           et la reprise s'annonce, une campagne qui s'arrête n'emporte pas le
+           verrou d'une autre repris entre-temps, et `OASIS_SMOKE_VERROU=0` le
+           lève. Éprouvé en vrai aussi : une seconde campagne lancée trente
+           secondes après la première a été refusée, et `npm run smoke -- taille`
+           a passé pendant ce temps.
+
+           La fonction prend `chemin` et `pid` en paramètres pour cela : le verrou
+           de la campagne est tenu par la campagne qui joue le contrôle. *Une
+           fonction qu'on ne peut pas appeler hors de son usage ne s'éprouve pas.*
+
+           ── Une assertion qui gravait une date ──
+
+           La campagne a rougi une fois de plus, le lendemain : « l'ajustement
+           prononcé proroge le délai, refait l'échéance » attendait
+           `2027-01-09`, et a reçu `2027-01-10`. La date d'ouverture d'une
+           constatation est **celle du jour** où la ronde la crée ; l'échéance en
+           découle, et se déplace donc chaque jour. Le contrôle calcule désormais
+           ce qu'il attend, au lieu de le graver. *Une assertion qui grave une
+           date éprouve le calendrier, non le calcul.*
+
+       5.f.81 [x] **Huit dépôts de pièces pour une route, et le courriel qui
+           annonçait des liens vers « localhost »** — fait le 11 novembre 2026.
+           `exec-activites.js` portait **52 gestes exercés sur 70**, et les
+           dix-huit restants couvraient les quatre dépôts de pièces du volet, les
+           bornes de dates de la réalisation, l'intitulé du rapport, les gestes
+           de la table des constatations, l'amendement et la transmission par
+           courriel. Quatre défauts et une limite d'environnement ont été trouvés
+           en les exerçant.
+
+           ── 1. Toute pièce versée s'appelait « piece-jointe » ──
+
+           `POST …/upload` nomme ce qu'elle reçoit d'après le champ `nom` du
+           formulaire : c'est écrit dans la route — « le nom d'origine ne ressort
+           pas : c'est l'intitulé qui nomme la pièce ». **Quatre des huit dépôts
+           du module ne l'envoyaient pas.** La route repliait alors sur
+           `piece-jointe`, et trois PDF versés dans les annexes d'un rapport
+           donnaient trois `piece-jointe.pdf` — indiscernables dans le document
+           produit, et dans le courriel qui les annonce à l'organisme.
+
+           ── 2. Un type de fichier refusé ne disait rien ──
+
+           Hors de ses huit extensions la route répond 400, « Type de fichier non
+           autorisé ». La phrase est traduite dans le socle depuis des semaines :
+           **elle n'arrivait nulle part.** Cinq des huit dépôts lisaient
+           `data.status === 'ok'` et se taisaient sinon ; leur `catch` ne s'en
+           mêlait pas, `fetch` ne levant pas sur un 400. Rien ne paraissait dans
+           la liste, et rien n'était dit.
+
+           Deux dépôts sur huit étaient justes sur les deux points. C'est d'eux
+           qu'est tirée la fonction unique qui les remplace tous —
+           `execDeposerPiece`, dans `exec-boot.js`, à côté d'`api()` qui relève
+           le refus et le traduit. *Huit copies d'un même appel ne restent pas
+           huit copies : elles divergent, et c'est de la divergence qu'on
+           s'aperçoit, jamais de la copie.*
+
+           Le contre-essai a dit plus que ce qu'on lui demandait. Les deux
+           défauts reposés ensemble, **huit** contrôles rougissent au lieu des
+           deux attendus : les six autres appartiennent à des rondes
+           antérieures — la preuve d'un plan d'actions, l'acceptation des
+           preuves, l'échéance recalculée, la pièce du courriel —, qui
+           **asseyaient déjà** le nom réel de leur fichier et passaient parce que
+           leurs appels étaient, eux, des copies correctes. Elles gardent
+           maintenant la fonction commune. *Rassembler huit copies ne ferme pas
+           seulement un défaut : cela met huit contrôles d'accord sur un seul
+           point de passage.* Le second défaut, lui, se mesure à ce que la ronde
+           entend : le refus avalé, la dernière annonce reçue reste celle du
+           contrôle précédent.
+
+           ── 3. Un onglet que rien ne pouvait afficher, et un envoi sans
+              cérémonie ──
+
+           `_buildDossierTabContent` portait une branche `tab === 'rapports'`
+           **que `REDACTION_SUBTABS` ne déclare pas** : aucun appel du dépôt ne
+           l'atteignait, et aucun écran n'ouvrait le volet sur cet onglet. La
+           table morte qu'elle rendait portait un bouton « Envoyer au
+           prestataire » appelant `execSendRapport` — **jumeau sans cérémonie**
+           de `execSendRapportValidated` : même route, même méthode, ni
+           confirmation ni message de résultat.
+
+           C'est la raison de la retirer plutôt que de lui ouvrir un chemin.
+           Remettre un rapport à l'organisme surveillé est un acte de
+           surveillance ; l'offrir d'un clic sec n'est pas un manque de confort.
+           La branche, la table et la fonction jumelle sont parties ; un garde de
+           forme (`taille`) refuse qu'une branche d'onglet désigne une section
+           que la table ne déclare pas. Éprouvé : la branche remise fait rougir
+           le garde. *Du code mort ne vieillit pas — il attend qu'on le
+           rebranche.*
+
+           ── 4. « Constatation modifiée », et rien n'avait changé ──
+
+           Huit champs engagent l'organisme dès la notification d'une
+           constatation et ne se changent plus que par l'ajustement — motivé,
+           confirmé par mot de passe, tracé. `PUT /constatations/:id` les
+           **écarte**, à bon droit ; elle le faisait **sans un mot**, et
+           répondait « ok ».
+
+           L'écran, lui, offre le geste : la table du dossier remplace
+           « Modifier » par « Consulter » dès qu'un rapport est validé — *sauf
+           pour le compte qui gouverne le module*, seul à garder le crayon.
+           Mesuré : cet administrateur change la description et la criticité,
+           lit « Constatation modifiée », et rien n'a bougé. Les champs non
+           opposables du formulaire suffisaient à éviter le 400 « aucun champ à
+           mettre à jour », seul signe qui aurait pu alerter.
+
+           La route rend désormais `non_ecrits`, et l'écran le dit. Elle
+           **n'échoue pas** : le formulaire réémet tous ses champs, et refuser un
+           envoi qui ne fait que renvoyer des valeurs inchangées empêcherait
+           d'enregistrer ce qui a vraiment changé à côté. Seuls les champs dont
+           la valeur **diverge** sont nommés, et un second contrôle — le plus
+           important des deux — tient que l'avertissement ne se déclenche pas
+           quand rien ne change. *Un écran qui dit « enregistré » pour ce qui n'a
+           pas été écrit est pire qu'un refus : le refus, on le lit.*
+
+           ── 5. Et les liens que l'organisme n'aurait pas pu suivre ──
+
+           La transmission d'un rapport n'était mesurable que par son refus : le
+           jeu d'essai pointe la messagerie sur le Mailpit d'un poste de
+           développement, et rien n'y écoute. Un sas SMTP de cent cinquante
+           lignes (`tests/smoke/messagerie-essai.js`) lève la limite — port donné
+           par le système, `OASIS_SMTP_HOST`/`OASIS_SMTP_PORT` pour y diriger le
+           serveur, le chemin déclaré pour désigner une messagerie.
+
+           Ce qu'il a trouvé du premier coup. `src/email.js` compose le lien de
+           connexion en lisant `APP_URL`, puis l'adresse que l'hébergeur pose
+           (`RENDER_EXTERNAL_URL`), et son commentaire dit pourquoi : « sans quoi
+           les destinataires recevraient un lien vers *localhost* ».
+           `transmission.js` composait la **même adresse de son côté**, et sa
+           règle ignorait l'hébergeur. Mesuré contre un serveur portant
+           `RENDER_EXTERNAL_URL` et aucun `APP_URL` — l'état exact d'un service
+           Render sans domaine propre : le courriel d'ouverture de compte portait
+           la bonne adresse, et **le rapport transmis annonçait ses documents sur
+           `http://localhost:4750`**. Dans l'acte même qui engage l'Autorité, et
+           avec l'avis de notification qui renvoyait au même endroit.
+
+           `.env.example` affirmait pourtant qu'« en hébergement Render,
+           RENDER_EXTERNAL_URL suffit » : la documentation décrivait la règle de
+           l'un des deux fichiers, appliquée aux deux. Une seule fonction
+           désormais, `racinePublique()`, et `transmission.js` l'appelle. Six
+           contrôles unitaires la tiennent, dont deux de forme : la transmission
+           n'écrit pas de seconde règle, et **un seul fichier du socle** lit ces
+           variables. Éprouvé : les deux rougissent quand la seconde règle
+           revient.
+
+           Et ce que le sas rend mesurable, qu'aucun contrôle ne tenait : le
+           message **ne porte aucune pièce jointe** — `text/plain`, pas de
+           `multipart`, pas de `Content-Disposition: attachment` — et annonce ses
+           liens, ce que l'écran promet en toutes lettres. La copie cachée, elle,
+           ne figure dans aucun en-tête et pourtant elle est servie : on la lit
+           dans les `RCPT TO` du dialogue, nulle part ailleurs.
+
+           ── Deux notes qui sont devenues fausses, et qu'il fallait reprendre ──
+
+           Deux rondes portaient l'explication de leur propre limite : « la
+           transmission n'est pas cliquée, sans serveur de messagerie la route
+           refuse ». La raison n'existe plus. Celle du rapport est désormais
+           cliquée de bout en bout ; celle de la constatation ne l'est pas
+           encore, et sa note dit maintenant la vraie raison — cette ronde efface
+           sa constatation en partant, et une constatation transmise ne s'efface
+           plus du même geste. *Une justification qu'on ne relit pas devient un
+           alibi.*
+
+           ── Les deux derniers noms, et ce qu'ils disent de l'instrument ──
+
+           `exec-activites.js` passe de **52 occurrences sur 70 à 65 sur 68**.
+           Trois restent, et aucune n'est un geste oublié.
+
+           Deux sont du **second angle mort du relevé**, et la mesure l'a établi
+           plutôt que de le supposer. Le lien d'aperçu du courriel porte
+           `onclick="event.preventDefault();${_escAttr(repli)}"`, et son contrôle
+           est **vert** : le document est composé, la page n'est pas quittée. Mais
+           le nom que le mouchard tire de l'attribut **tel qu'il existe à
+           l'exécution** est `execDownloadRapport` — mesuré —, que
+           `exec-rapports.js` déclare ; les deux noms que la source donne,
+           `event.preventDefault` qui est une garde et `_escAttr` qui est une
+           fonction de rendu, ne peuvent correspondre à aucun geste. C'est
+           l'angle mort déjà nommé pour « exportPdf » (5.e.5), sous une troisième
+           forme : *un gestionnaire composé au rendu se nomme ailleurs qu'où il
+           est posé.* Il touche aussi `exec-etats.js`, dont `execEtatsOuvrir`
+           compose `execOpenActiviteProcessus` — c'est donc une correction de
+           l'instrument, et non de cet écran.
+
+           Le troisième, `execViewFNC`, est hors de portée pour une raison nette :
+           la table ne l'offre qu'au compte qui **ne gouverne pas** le module, et
+           la suite se connecte en SUPERADMIN, qui garde le crayon. L'exercer
+           demande une seconde session dans un autre contexte de navigateur.
+
+           ── Ce que cette entrée laisse ouvert ──
+
+           `surv.smoke.js` passe de 7 846 à 8 726 lignes, et le garde-fou posé le
+           10 novembre l'a dit. Le découpage, nommé depuis deux tours, devient la
+           **prochaine** étape et non une étape ultérieure : son obstacle est
+           identifié — `scripts/relever-gestes.js` associe un écran à **une**
+           suite, et un écran découpé en deux suites ne serait plus mesuré qu'à
+           moitié. C'est cette table qui doit changer d'abord, et la même passe
+           peut corriger le nommage d'un gestionnaire composé au rendu.
+
+       5.f.82 [x] **Un fichier qu'on n'arrivait pas à couper n'était pas trop
+           long : il était trop lié** — fait le 12 novembre 2026.
+           `surv.smoke.js` portait 8 726 lignes. Son découpage était nommé dans
+           l'ADR depuis trois tours, et son budget de taille avait été relevé
+           **deux fois** — la seconde en écrivant que l'étape suivante serait
+           celle-ci. Elle l'est.
+
+           ── Les deux obstacles, et aucun n'était la longueur ──
+
+           **1. Toute ronde a besoin de la même mise en place** : un sas de
+           messagerie, un serveur, un navigateur au délai de protocole relevé, le
+           mouchard des gestes, le relevé des incidents de console avec ses refus
+           déclarés, et une session ouverte sur l'écran. Couper le fichier en
+           deux sans extraire cela aurait fait **deux copies de cent dix
+           lignes** — et ce dépôt venait justement de refermer, au tour
+           précédent, le défaut de huit copies d'un même appel qui avaient
+           divergé (n° 5.f.81). *On ne répare pas une divergence le lundi pour en
+           fabriquer une le mardi.*
+
+           La mise en place vit donc dans `surv-socle.js`, et chaque suite n'est
+           plus que ses rondes et ses **déclarations** — les refus HTTP, les
+           messages de console et les abandons de navigation que *ses* rondes
+           provoquent exprès. Le socle les reçoit et vérifie qu'elles sont toutes
+           venues : une déclaration portée pour le compte d'une autre suite
+           deviendrait une déclaration muette, c'est-à-dire un filtre qui cache
+           au lieu de dispenser.
+
+           Les trois contrôles de fin — console propre, déclarations venues,
+           abandons venus — appartiennent à **chaque** suite et non à la
+           première : une suite qui salirait la console sans porter le contrôle
+           qui la regarde ne serait pas éprouvée du tout. Et ils ne sont posés
+           que s'il y a quelque chose à vérifier — un contrôle vrai sans rien
+           regarder gonfle un compte sans rien garder.
+
+           **2. Le relevé des gestes associait un écran à une seule suite.** Un
+           écran coupé en deux n'aurait plus été mesuré qu'à **moitié** : sa
+           couverture aurait chuté de 241 à une centaine sans qu'un seul geste
+           cesse d'être exercé. *Un dénominateur qui baisse en silence* est le
+           défaut que cet outil existe pour empêcher — il l'a commis deux fois
+           sur le portail, et une fois à chaque conversion.
+
+           Ce n'est pas une crainte : c'est mesuré. Une seule des deux suites
+           déclarée, le relevé rend **25 gestes exercés sur 315 — 8 %** au lieu
+           de 241 et 77 %. Et il le rend sans se plaindre : un rapport complet,
+           cohérent, et faux de soixante-neuf points.
+
+           `suite` accepte donc un nom **ou une liste**. Chaque suite reçoit son
+           propre journal — un chemin partagé aurait fait écraser le premier par
+           le second, et la couverture rendue aurait été celle de la dernière
+           suite, plausible et fausse de moitié — et les journaux se réunissent.
+           Le refus d'une suite rouge est, lui, **par suite** : une seule suffit
+           à rendre l'ensemble partiel.
+
+           ── Un troisième obstacle, trouvé en coupant ──
+
+           Le lanceur choisit ses suites par **inclusion** du nom. Cela tenait
+           tant qu'aucun nom n'était contenu dans un autre de façon gênante :
+           `-- ramp` joue les deux suites du module, et c'est commode. Mais
+           `surv` est contenu dans `surv-pieces`, et `npm run smoke -- surv` en
+           aurait lancé **deux** — pour le relevé, le journal de la première
+           écrasé par celui de la seconde.
+
+           Un nom exact désigne désormais sa seule suite ; à défaut, l'inclusion
+           reste, qui sert à lancer une famille. Et le garde-fou qui vérifie
+           qu'un nom lancé par le relevé ne désigne qu'une suite **appelle la
+           fonction du lanceur** au lieu de refaire la règle de son côté : il
+           décidait par « le nom est contenu dans un seul », et il aurait rougi
+           sur un lanceur juste. C'est la troisième fois que ce contrôle-là est
+           corrigé, et toujours pour la même raison — *un contrôle qui réécrit la
+           règle qu'il garde éprouve sa propre version de la règle.*
+
+           Il lit aussi la table de l'outil plutôt que sa source : un motif
+           cherchant `suite: '…'` n'aurait plus rien trouvé le jour où `suite`
+           est devenu une liste, et le dénominateur se serait tu — précisément le
+           mode de défaillance qu'on venait de corriger ailleurs.
+
+           ── Ce qui a été coupé, et pourquoi celui-là ──
+
+           `surv-pieces.smoke.js` : les pièces du dossier, l'intitulé du rapport
+           et la transmission par courriel. Ce morceau a été choisi parce qu'il
+           **bâtit sa propre chaîne** par l'API et l'efface en partant, sans lire
+           aucun état qu'une autre ronde aurait laissé. Les rondes qui restent
+           s'enchaînent — le dossier, son plan d'actions, son rapport —, et les
+           séparer demandera de donner à chacune la sienne. *On ne coupe pas un
+           fichier là où c'est commode, mais là où il n'est pas lié.*
+
+           Ce que cela change pour qui travaille : la ronde des pièces se rejoue
+           **seule en cinq minutes** là où il fallait seize, et les deux suites
+           peuvent tourner ensemble, chacune ayant son port (4800 et 4806).
+
+           ── La vérification, en trois temps ──
+
+           Le socle a été extrait **d'abord**, et la suite rejouée sans rien
+           déplacer d'autre : **248 contrôles sur 248**, identiques. C'était le
+           seul moyen de savoir que la mise en place avait voyagé sans perdre un
+           écouteur. La ronde n'a été détachée qu'ensuite — `surv` 228/228,
+           `surv-pieces` 21/21 — et le relevé des gestes rejoué en dernier, pour
+           que la couverture de l'écran soit relue après la coupe et non avant.
+
+           Le budget de taille **baisse** pour la première fois depuis qu'il
+           existe : 8 726 → 7 739. *Un budget qui ne fait que monter n'est pas un
+           budget, c'est une chronique.*
+
+       5.f.83 [x] **Nommer ce qui est posé, et non ce qui l'assemble** — fait le
+           12 novembre 2026.
+           Le relevé des gestes comptait quatre gestes de SURV « non exercés »
+           qui n'existent pas. Mal nommer un gestionnaire ne fait pas tomber une
+           campagne : cela déplace un chiffre, dans un rapport que personne ne
+           recoupe. C'est le mode de défaillance le plus coûteux de cet outil, et
+           c'est la quatrième fois qu'il se produit.
+
+           ── Ce que la mesure avait établi la veille ──
+
+           Le lien d'aperçu du courriel de transmission porte
+           `onclick="event.preventDefault();${_escAttr(repli)}"`, et son contrôle
+           est **vert** : le document est composé, la page n'est pas quittée. Le
+           relevé comptait pourtant deux gestes non exercés — `preventDefault`,
+           qui est une garde, et `_escAttr`, qui est une fonction de rendu.
+
+           Le nom que le mouchard tire de l'attribut **tel qu'il existe dans le
+           navigateur** est `execDownloadRapport` : mesuré, en rejouant la
+           fonction de nommage sur les deux textes. Aucun des noms que la source
+           donne ne peut donc correspondre à un geste.
+
+           ── La règle, et ce qui la décide ──
+
+           La différence n'est pas le ternaire — l'outil savait déjà qu'un
+           `onclick="${actId ? `planUpdateActivity(…)` : `planCreateActivity(…)`}"`
+           porte **deux** gestes, et les nommait tous deux à bon droit. La
+           différence est **où le nom est écrit** :
+
+             · dans un **littéral**, c'est le texte que l'attribut portera — le
+               nom est posé sur l'élément ;
+             · **à l'air libre** dans l'interpolation, c'est un appel qui
+               *fabrique* ce texte — et le texte qu'il fabrique n'est pas ici.
+
+           Le relevé ne retient donc que ce qui sera posé : le code hors
+           interpolation, et les littéraux qu'une interpolation contient. *Nommer
+           ce qui assemble un geste, c'est nommer le menuisier et non la porte.*
+
+           Deux raffinements, l'un et l'autre trouvés en mesurant :
+
+             · **un littéral seul tient la place de l'interpolation**, et le texte
+               qui suit complète l'appel.
+               `${ouvrir || 'rampOuvrirParam'}('${p.id}')` pose donc
+               `rampOuvrirParam` — le geste par défaut que l'écran y met, écrit
+               noir sur blanc. Sans ce raffinement il devenait indécidable, et
+               l'on perdait un nom réel ; avec lui, RAMP garde son compte exact.
+               Au passage, cette occurrence était nommée `event.stopPropagation`
+               — une garde, créditée « exercée » par agrégation avec les dizaines
+               d'autres gardes de l'écran. *Un faux vert, et le plus discret qui
+               soit* ;
+             · **plusieurs littéraux ne se collent pas**. `${c ? 'execA' :
+               'execB'}('${id}')` donnerait `execAexecB`, un nom qui n'existe
+               pas et qui compterait « non exercé » pour toujours. Chacun reste
+               une alternative complète, et faute d'appel l'occurrence est
+               indécidable. *Une mesure qui invente un nom est pire qu'une mesure
+               qui se tait.*
+
+           ── Et la faute que la première écriture a refaite ──
+
+           Elle nommait encore `event.target.closest` sur les attributs gardés
+           par `if(!event.target.closest('button'))…` : l'appel **de la garde**,
+           que `sansCondition` existe depuis le 8 novembre pour ne plus nommer,
+           et que son propre commentaire juge « plus trompeur que *if*, qui au
+           moins s'avouait ». Les deux retraits — gardes de tête et condition —
+           s'appliquent maintenant ici comme ailleurs.
+
+           C'est la comparaison **entrée par entrée** des relevés, avant et
+           après, qui l'a dit : les compteurs, eux, n'y voyaient rien. Elle a
+           aussi montré que `gestes-profil_risque.json`, figé le 5 novembre,
+           portait des lignes que `pr-parametres.js` avait déplacées le 7 — sans
+           qu'aucun geste bouge. Le garde-fou de l'inventaire a raison de ne
+           comparer que les noms et le nombre d'occurrences ; les numéros de
+           ligne du relevé figé sont une **commodité de lecture**, non une
+           mesure, et son commentaire le dit désormais. Les sept inventaires ont
+           été refaits.
+
+           ── La décision vit en un seul endroit ──
+
+           Elle était écrite **dans** `relever`, et un garde-fou qui aurait voulu
+           l'éprouver aurait dû la réécrire — c'est-à-dire éprouver sa propre
+           version de la règle. Ce dépôt a payé cette faute trois fois sur le
+           seul contrôle des noms de suites, dont une fois la veille. `classer`
+           porte la règle ; `relever` l'appelle, et les sept contrôles
+           d'`unitaires` aussi.
+
+           ── Ce que cela change aux chiffres ──
+
+           | Écran | noms | non exercés | exercés |
+           |---|---|---|---|
+           | SURV | 315 → **311** | 71 → **67** | 241 → **241** |
+           | PLAN | 95 → **93** | 13 → **11** | 77 → **77** |
+           | RAMP | 209 → 209 | 16 → 16 | 193 → 193 |
+
+           Quatre noms quittent SURV — `preventDefault`, `_escAttr`,
+           `event.target.closest`, `execEtatsOuvrir` —, deux quittent PLAN —
+           `_escAttr` et `geste` —, et **tous étaient comptés non exercés**.
+           Aucun exercé n'est gagné : *une correction du dénominateur ne doit
+           rien ajouter au numérateur*, et celle-ci n'ajoute rien. Elle retire
+           six fantômes.
+
+           Il reste à SURV **un** geste hors de portée de ses suites,
+           `execViewFNC` : la table ne l'offre qu'à un compte qui ne gouverne pas
+           le module, et les suites se connectent en SUPERADMIN, qui garde le
+           crayon. L'exercer demande une session dans un autre contexte de
+           navigateur.
+
+       5.f.84 [x] **Cinq téléchargements qui ne partaient pas, et une liste de
+           dispositions toujours vide** — fait le 12 novembre 2026.
+           `exec-parametres.js` était le plus gros gisement de gestes non
+           exercés de SURV — **42 occurrences sur 61**, treize noms. Une ronde
+           devait les couvrir. Elle a trouvé deux défauts avant qu'une seule
+           assertion soit écrite, et ni l'un ni l'autre n'était dans le
+           paramétrage.
+
+           ── Le premier : `oasisTelecharger is not defined` ──
+
+           Trois fichiers de SURV appellent `oasisTelecharger`, et l'écran ne
+           chargeait pas `oasis-utils.js`, seul à le poser. **Cinq
+           téléchargements du module levaient une exception** : l'export d'une
+           checklist, celui de ses sous-thèmes, celui d'une checklist
+           renseignée, et les deux pièces d'une constatation. Au-dessus de trois
+           d'entre eux, un commentaire de vingt lignes explique par le menu
+           pourquoi une navigation vaut mieux qu'une ancre fabriquée — *un
+           patron juste, posé sur un appel qui ne pouvait pas s'exécuter*.
+
+           Et c'est le n° 5.f.71 qui les y avait mis, le **5 novembre 2026** :
+           l'entrée qui fermait « sept chemins de téléchargement qui échouaient
+           sans bruit ». Elle a bien remplacé les sept ; elle n'a pas vérifié
+           que le nom de remplacement existait sur la page. Quatre des sept
+           n'ont donc **pas fonctionné une seule fois depuis**, et le registre
+           les comptait faits. *Une correction qu'aucune suite n'exerce est une
+           affirmation.*
+
+           Rien ne pouvait le dire. Un nom absent ne se manifeste qu'au clic, et
+           aucune suite ne cliquait ces boutons. La surface du socle était
+           relevée, et son contrôle dit qu'aucun nom n'a disparu — il ne disait
+           pas qu'une page qui s'en sert le charge. *Une surface publiée ne vaut
+           que pour qui la charge.*
+
+           Charger `oasis-utils.js` dans SURV aurait réglé le symptôme en y
+           posant `api` et `_pesSearchInput`, que le module redéfinit : un nom
+           global déclaré deux fois sur le même écran, que le garde-fou de
+           taille refuse à bon droit. `oasisTelecharger` rejoint donc
+           `oasis-commun`, que **les six écrans chargent déjà** — et son nom
+           porte le préfixe du socle, quand les six qui restent dans
+           `oasis-utils` sont la surface héritée de PESSCO. *Un outil du socle
+           vit dans le fichier que ses appelants chargent, non dans celui où
+           l'histoire l'avait laissé.*
+
+           Un garde-fou neuf le tient : **un écran qui appelle un nom du socle
+           charge le fichier qui le pose**. Il lit `surface-socle.json`, écarte
+           ce que l'écran déclare lui-même — SURV a son propre `api`, qui
+           traduit ses routes — et ne compte pas les commentaires, qui citent
+           souvent le nom.
+
+           Il le faut, car **trois des cinq restent sans contrôle qui les
+           clique** : la ronde en exerce deux — l'export des items et celui des
+           sous-thèmes —, et le relevé dit que `execExporterConstatationsXlsx`,
+           `execChkFillExportXlsx` et le téléchargement d'une pièce de
+           constatation ne sont atteints par aucune suite. Le garde tient la
+           classe du défaut ; il ne remplace pas une ronde, et ces deux fichiers
+           sont nommés plus bas comme gisements.
+
+           ── Le second : une portée qui ne pouvait jamais correspondre ──
+
+           Une exigence réglementaire nomme son domaine et son secteur par leur
+           **code** — `OPS`, `OPS-TAC` ; les écrans les choisissent par leur
+           **identifiant**. Trois endroits comparaient les deux chaînes telles
+           quelles :
+
+             · le sélecteur de dispositions d'un item de checklist : dès qu'une
+               checklist avait une portée, il annonçait « 0 disposition
+               disponible » sur un référentiel qui en porte — mesuré, et il
+               n'avait jamais rien proposé d'autre ;
+             · la liste des références réglementaires du formulaire de
+               constatation, **à son ouverture** — le secteur y est pré-rempli
+               depuis l'organisme du dossier, donc toujours renseigné ;
+             · la même liste à chaque changement de secteur.
+
+           C'est le cœur du module qui s'en trouvait vidé : un écart se rattache
+           à un texte, et l'inspecteur n'avait plus qu'à le saisir de mémoire.
+
+           L'écran savait pourtant que les deux formes circulent — une ligne,
+           une seule, dans la fiche d'une constatation, cherche son domaine par
+           `d.id === … || d.code === …`. *Une règle qui ne vit qu'à un endroit
+           garde cet endroit, et rien d'autre.* `execClesDePortee` la porte
+           désormais, dans `exec-boot.js`, à côté d'`api()` et du dépôt de
+           pièce ; les trois lectures l'appellent, et les deux du formulaire
+           n'en font plus qu'une.
+
+           Normaliser le référentiel était l'autre voie : c'est une migration de
+           données, et elle casserait l'import d'un classeur où une AAC écrit
+           naturellement des codes. La tolérance à la comparaison est le plus
+           petit changement qui ferme le défaut.
+
+           **Ce que cela ne règle pas, et qu'il ne faut pas taire.** Sur le
+           référentiel servi aujourd'hui, les deux exigences nomment les
+           secteurs `OPS-TAC` et `AIR-OMA`, qui **n'existent plus** parmi les
+           huit — `AMO, CAMO, CAT, STA, ATO, MED, ANP, ADM`. La liste du
+           formulaire de constatation reste donc vide, pour une seconde raison,
+           de données celle-là ; et le détecteur d'orphelins ne regarde que
+           `secteurs`, `sous_activites` et `themes_supervision`, jamais
+           `exigences`. Le contrôle relève le compte par secteur et le montre
+           **sans l'affirmer nul** : un référentiel corrigé le fera monter sans
+           rougir. C'est une question de maîtrise d'ouvrage, non de code.
+
+           ── La ronde, et pourquoi une troisième suite ──
+
+           `surv-parametres.smoke.js`, **30 contrôles**, détachée pour la raison
+           du tour précédent : elle bâtit sa chaîne par l'API — une checklist,
+           trois items, deux sous-thèmes — et l'efface en partant. Elle ne lit
+           rien de ce que les autres laissent, et rien ne lit le sien. Le
+           découpage ne coûte plus que ses déclarations, et c'était tout
+           l'objet du n° 5.f.82.
+
+           Ce qu'elle mesure, et qui ne tenait à rien :
+
+             · la recherche ne redessine que le corps du tableau, **et le
+               curseur reste dans le champ** — c'est la raison que son
+               commentaire donne, et qu'aucun contrôle ne gardait ;
+             · la portée se resserre de gauche à droite, une coche posée à la
+               main survit au rafraîchissement du niveau, et des secteurs sans
+               sous-activité **le disent** au lieu de proposer la liste
+               entière ;
+             · les six champs d'une ligne s'enregistrent d'eux-mêmes, le cache
+               local suit, et changer de thème **écrit** la perte du sous-thème
+               au lieu de seulement vider la liste ;
+             · **« Ajouter » n'annule pas l'import : c'est l'autre mode.** Le
+               bouton d'annulation de la question porte ce libellé, et les deux
+               réponses écrivent. Qui croit annuler ajoute ;
+             · ré-importer un sous-thème met son ordre à jour au lieu de le
+               dupliquer — la propriété qui décide si un classeur se rejoue.
+
+           ── Et deux fautes de ma propre écriture ──
+
+           `Ctrl+A` n'a rien sélectionné sur ce poste : la frappe s'est
+           **ajoutée** à la valeur en place — `IT-1IT-1b` —, et le contrôle l'a
+           dit, parce qu'il comparait la valeur en base et non le fait d'avoir
+           tapé. *Un contrôle qui regarde le geste au lieu de son effet ne voit
+           pas ce genre de chose.*
+
+           Le premier passage a rougi six contrôles, dont deux par ricochet : le
+           sélecteur vide faisait lever la ligne qui cochait sa case. Un
+           contrôle qui s'effondre sur l'absence de ce qu'il mesure reste utile
+           ; ce sont ses voisins qu'il ne faut pas lire.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 241 / 311 (77 %) | **253 / 311 (81 %)** |
+           | `exec-parametres.js` | 42 / 61, 13 noms non exercés | **60 / 61, aucun** |
+           | Suites de SURV | 2 | **3** |
+           | `taille` | 75 contrôles | **76** |
+           | Campagne | 1 681 | **1 717** |
+
+           Le seul geste qui reste au paramétrage est l'occurrence
+           **indécidable** de la ligne 198 : un gestionnaire reçu en argument,
+           `onclick="${onclick}"`, que la source ne nomme pas. Le relevé le dit
+           plutôt que d'inventer — c'est la règle posée la veille (n° 5.f.83).
+
+           Le gisement suivant de SURV est `exec-app.js` — 15 occurrences sur
+           30, quatorze noms : le thème, la langue, la barre mobile et le
+           panneau des notifications. Puis `exec-processus.js` (18 sur 32), et
+           les deux fichiers qui portent les trois téléchargements encore sans
+           ronde — `exec-checklists-saisie.js` (12 sur 16) et les deux gestes
+           qui restent à `exec-constatations.js`.
+
+       5.f.85 [x] **La coquille et sa barre de filtres — et une liste que
+           personne n'avait regardée** — fait le 12 novembre 2026.
+           `exec-app.js` était devenu à son tour le plus gros gisement de SURV —
+           **15 occurrences sur 30**, quatorze noms. Ils se rangent en deux
+           familles qui n'ont rien à voir avec un cycle de surveillance : la
+           coquille — thème, langue, barre mobile, panneau des notifications — et
+           la barre de filtres, dont huit listes sur dix restaient dehors.
+
+           ── La quatrième suite de l'écran, et pourquoi ──
+
+           `surv-coquille.smoke.js`, **15 contrôles**. C'était la ronde la plus
+           indépendante du dépôt : elle ne voulait bâtir aucune chaîne. Elle en
+           bâtit la plus courte possible — deux constatations directes —, et la
+           raison est la mesure qui suit.
+
+           ── Ce que la mesure a trouvé, et qui n'est pas de ce tour ──
+
+           **`GET /constatations` rend une liste vide** à la session
+           super-administrateur, quand le magasin du module en porte **quatre**,
+           lu directement hors serveur. Trois causes plausibles sont écartées,
+           mesurées une à une : la vue Prestataire (le compte est en vue AAC),
+           le resserrement par instance (le choix enregistré est la vue
+           régionale, qui laisse tout passer) et une route qui en masquerait une
+           autre (il n'y en a qu'une). La cause demande d'instrumenter le
+           serveur ; c'est un tour à part, et le nommer ici vaut mieux que de
+           lui inventer une explication.
+
+           Ce qui compte autant : **aucune suite ne l'avait jamais regardé.**
+           Les trois rondes de SURV et la suite HTTP créent chacune leurs
+           propres constatations — c'est la bonne pratique, et c'est elle qui
+           avait rendu cette liste invisible. *Un jeu d'essai que rien ne lit
+           n'est pas un jeu d'essai, c'est un décor.*
+
+           ── Ce que la ronde mesure ──
+
+             · **le thème** s'applique au document entier et se retient — non
+               la seule pastille ;
+             · **la langue** charge son volet *avant* de rendre : les deux
+               volets non français pèsent 131 Ko et ne se chargent qu'à la
+               demande, de sorte que rendre d'abord donnerait un écran resté en
+               français, sans erreur ni trace. Les libellés de la barre changent
+               tous, et reviennent un pour un ;
+             · **le voile de la barre mobile porte le même geste que le bouton**
+               — c'est lui qui rend la fermeture possible au doigt, hors de la
+               barre ;
+             · **le panneau des notifications** annonce le compte que l'écran a
+               calculé, la cloche le bascule, un clic au dehors le referme et un
+               clic dedans **ne** le referme pas. L'écouteur est posé sur le
+               document, en différé, et se retire lui-même ;
+             · **la barre de filtres** : les huit listes écrivent chacune son
+               filtre ; la criticité **partitionne** la table — la somme des
+               trois niveaux vaut le total, sans qu'aucun chiffre soit écrit
+               dans le contrôle ; la liste des années n'offre que les années
+               présentes ; et les deux règles que son commentaire énonce sont
+               tenues — une sélection que rien ne porte **reste proposée**
+               plutôt qu'orpheline, et la liste voisine **se vide sans retomber
+               sur le référentiel**.
+
+           Ces deux dernières ne se produisent pas en cliquant : l'instance ne
+           porte que deux organismes, du même secteur. L'état est donc posé, et
+           c'est la règle de rendu qui est lue — les gestes, eux, sont exercés
+           juste au-dessus. *Mieux vaut mesurer la règle en le disant que ne pas
+           la mesurer du tout.*
+
+           ── Trois fautes de mon écriture, et ce que chacune enseigne ──
+
+           1. **Un `<select>` posé sur une valeur qu'il n'offre pas** reste vide,
+              sans lever. J'avais choisi l'année « 1970 » pour vider la table ;
+              le filtre n'a jamais été écrit. *L'absence de l'option **est** la
+              propriété* — la liste des années ne porte que celles qui existent,
+              et c'est cela qu'il fallait vérifier.
+           2. **Un compteur qui compte le message « aucune donnée ».** Les trois
+              criticités rendaient « une ligne » chacune : deux fois le même
+              rang d'absence. Le compteur écarte désormais les rangs à
+              `colspan` et les rangs de détail. *Un compteur qui compte « rien à
+              voir » ne mesure plus rien.*
+           3. **Une assertion que le jeu d'essai ne peut pas montrer.** J'ai
+              affirmé le resserrement d'une liste par une autre là où les plans
+              ne couvrent qu'un domaine. Le contrôle avait raison de rougir ; la
+              propriété a été reportée là où les données la portent.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 253 / 311 (81 %) | **266 / 311 (85 %)** |
+           | `exec-app.js` | 15 / 30, quatorze noms | **29 / 30**, un seul |
+           | `exec-plans.js` | 3 / 10 | **5 / 10** (la barre du plan) |
+           | Suites de SURV | 3 | **4** |
+           | Campagne | 1 717 | **1 732** |
+
+           Il ne reste **deux** noms hors de portée des suites, et les deux pour
+           la même raison : `execViewFNC` et `execAccuserReception` ne sont
+           offerts qu'à un compte qui **ne gouverne pas** le module. La bascule
+           « Vue Prestataire » les met à portée — en vue simulée, `req.user`
+           *est* le prestataire —, et c'est la ronde suivante : une seule
+           bascule pour les deux derniers gestes de l'écran.
+
+           Le gisement qui vient ensuite est `exec-processus.js`, 18 sur 32.
+
+       5.f.86 [x] **Le circuit guidé, retours compris — et une coupe faite
+           d'abord au mauvais endroit** — fait le 13 novembre 2026.
+           `exec-processus.js` était le dernier gros gisement de SURV — **18
+           occurrences sur 32**, treize noms —, et tous se tiennent sur un même
+           écran : le promeneur du circuit d'une activité.
+
+           ── La ronde existait : elle était au mauvais endroit ──
+
+           Elle vivait dans `surv.smoke.js`, au milieu d'un bloc de cinq mille
+           lignes, et elle y **bâtissait déjà sa propre chaîne** — une activité
+           hors plan, créée par le formulaire de l'écran, effacée en partant.
+           Elle ne lisait rien de ce que les autres laissaient. Elle sort donc
+           dans `surv-circuit.smoke.js`, et le budget de `surv.smoke.js` baisse
+           une seconde fois : **7 739 → 7 513**.
+
+           **La coupe a d'abord été faite au mauvais endroit.** La ronde se
+           terminait par le ménage du dossier d'une **autre** chaîne — celle que
+           `surv.smoke.js` bâtit plus haut —, et ce ménage lisait une variable
+           du bloc englobant. L'extraction a rendu « chaine is not defined », et
+           fait rougir un contrôle de `surv` qui comptait sur ce nettoyage.
+           J'avais vérifié que le bloc ne **déclarait** rien d'extérieur ; je
+           n'avais pas vérifié qu'il n'en **lisait** rien. *On ne coupe pas un
+           fichier là où c'est commode, mais là où il n'est pas lié* — et la
+           frontière était trois contrôles plus haut.
+
+           Après correction, la somme est exacte : `surv` 223, `surv-circuit`
+           6 — les 228 d'avant, plus le contrôle de console que chaque suite
+           porte en propre.
+
+           ── Le motif d'un renvoi passait par la boîte du navigateur ──
+
+           `execProcRenvoyerSoumission` demandait son motif par `window.prompt` :
+           ni traduit, ni aux couleurs de l'application, et **hors de portée
+           d'une suite**, qui ne peut pas écrire dans une boîte que le navigateur
+           ouvre hors de la page. C'était la seule du module — `exec-notifications.js`
+           demande le motif d'un **rejet** par `oasisSaisir` depuis toujours, et
+           c'est le même geste à une étape près.
+
+           Elle passe par la boîte du socle, et c'est ce qui rend son contrôle
+           possible. Deux autres subsistent dans le dépôt, hors de ce module : un
+           `window.confirm` dans RAMP (`ramp-pac.js`) et un `window.prompt` au
+           portail (`instances.ts`). Elles sont **nommées ici plutôt que
+           corrigées au passage** : chacune appartient à l'écran qui la porte.
+
+           **La contre-épreuve dit mieux que la correction.** Remise à
+           `window.prompt`, la ronde ne rougit pas sur une assertion : elle
+           **meurt** — « Runtime.callFunctionOn timed out », cinq minutes
+           d'attente, aucun contrôle rendu. La boîte native ne fait pas échouer
+           la mesure, elle l'empêche : le navigateur l'ouvre hors de la page, et
+           le script qui l'a appelée reste suspendu là. *Un geste qui bloque la
+           page ne se mesure pas « mal » — il ne se mesure pas.*
+
+           ── Ce que la ronde mesure ──
+
+           Le contrôle du parcours ne disait que la ligne droite — « soumise,
+           validée, transmise ». Le circuit en a deux paliers de plus, et ce sont
+           les **retours** : soumis → *rejet* → brouillon → soumis → valide →
+           *renvoi* → brouillon → soumis → valide → envoyé → **acté**. Il les dit
+           tous, dans l'ordre, et chaque palier est celui que le **serveur**
+           porte, non celui que l'écran affiche.
+
+           Et les contrats, un par geste :
+
+             · `execProcDeclencher` pose la sous-étape et autorise l'édition,
+               **et rien d'autre** — chercher un champ du formulaire mesurerait
+               le formulaire, non le geste ;
+             · la bascule d'édition n'existe qu'à la validation ; l'état **et**
+               le libellé basculent, et se rendent ;
+             · le rejet emporte le motif saisi dans les observations ;
+             · **« Enregistrer » l'accord écrit les dates et le périmètre sans
+               franchir l'étape** — la notification reste envoyée —, et
+               « Confirmer » les écrit *et* franchit. La différence est la
+               propriété, et elle est écrite dans la route elle-même ;
+             · les deux cases de la portée hors plan se mesurent **l'une contre
+               l'autre** : cocher une sous-activité entraîne tous ses thèmes, et
+               un thème coché la tient tant qu'il en reste un — décocher le
+               dernier la décoche ;
+             · la ligne du lot hors plan rouvre le circuit **sur son activité** :
+               c'est le seul chemin vers une activité qui n'est dans aucun plan ;
+             · l'archivage range le lot **entier** d'un seul geste. La ronde le
+               défait ensuite par la route, le geste inverse n'existant pas.
+
+           ── Un fantôme retiré du dénominateur ──
+
+           `voile.onclick = null` **retire** un gestionnaire : il n'en pose
+           aucun. Le motif du relevé, qui cherche un identifiant, acceptait
+           `null` comme un nom — et l'écran portait un geste **nommé « null »**,
+           compté non exercé pour toujours, qu'aucune suite n'aurait jamais pu
+           couvrir. Un seul dans tout le dépôt, mesuré avant d'écrire la
+           correction. Même famille que le n° 5.f.83 : *retirer du dénominateur
+           ce qui n'y a jamais eu sa place, sans rien ajouter au numérateur.*
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 266 / 311 (85 %) | **276 / 310 (89 %)** |
+           | `exec-processus.js` | 18 / 32 | **29 / 31** |
+           | `surv.smoke.js` | 7 739 lignes | **7 513** |
+           | Suites de SURV | 4 | **5** |
+           | Campagne | 1 732 | **1 741** |
+
+           Les deux occurrences qui restent à `exec-processus.js` sont
+           **indécidables**, et l'outil le dit plutôt que de crier au loup : un
+           gestionnaire composé au rendu, et un écouteur dont la cible est une
+           variable locale. L'écran est donc couvert pour tout ce qui est
+           décidable.
+
+           Le gisement qui vient est `exec-dossier-actions.js`, 9 sur 18 : le
+           **formulaire de constatation**, et parmi ses six noms
+           `execFncOnSecteurChange` — le geste dont la liste des exigences a été
+           corrigée la veille (n° 5.f.84) **sans qu'aucune ronde l'atteigne**.
+           Une correction non exercée est une affirmation ; celle-là attend
+           depuis un jour.
+
+       5.f.87 [x] **Les quatre échanges du remplisseur, le classeur des
+           constatations — et un défaut annoncé qui n'existait pas** — fait le
+           13 novembre 2026.
+           Il restait à SURV **cinq gestes de téléchargement ou de dépôt
+           qu'aucune ronde n'atteignait**. Ils sont tous exercés, et plus aucun
+           échange de fichier de cet écran n'est sans mesure.
+
+           ── Les quatre du remplisseur de checklist ──
+
+           `exec-checklists-saisie.js` portait seize occurrences, douze
+           exercées, et **les quatre qui restaient étaient ses échanges avec le
+           dehors** : le classeur qui sort, le document qui s'imprime, le
+           classeur qui rentre, et la bascule qui retire un regroupement du
+           décompte. Elles sont mesurées dans une **réouverture** du
+           remplisseur, au sein de la ronde du volet, et non dans une suite à
+           part : l'import se fabrique **hors du navigateur** — un `.xlsx` ne
+           s'écrit pas dans la page —, et il faut donc sortir de l'évaluation
+           pour le préparer, puis y revenir. *Rouvrir coûte un clic ; couper le
+           bloc du dessus en deux coûterait sa chaîne.*
+
+           Ce que chacun doit tenir :
+
+             · le classeur **sort par une navigation** : la fenêtre est menée à
+               l'adresse, le navigateur enregistre la pièce jointe et abandonne
+               la navigation — un abandon déclaré de plus, et le remplisseur
+               reste debout ;
+             · le document d'impression est **composé dans le client**, comme
+               celui de la fiche : `window.open` est enveloppée, et c'est le
+               produit qui est mesuré — complet, en paysage, sept colonnes, son
+               impression, et **les statuts que la ronde vient de poser**, lus
+               au DOM et non au serveur ;
+             · le classeur **rentre** et renseigne l'item que sa référence
+               désigne ; l'écran rechargé rend ce que le serveur porte ;
+             · la bascule d'un regroupement **le retire du dénominateur du
+               taux** — le bandeau tombe de 141 à 140 —, marque ses lignes, le
+               replie, et écrit le drapeau `disabled` **au serveur**. Et elle se
+               défait : tout revient, drapeau compris.
+
+           ── Trois pièges, et le troisième était un faux succès ──
+
+           **Le signal d'enregistrement est la coche, non le mot.** L'écran
+           écrit « … enregistrement » en *commençant* et « ✓ enregistré » en
+           finissant : un motif sur `enregistr` rendait vrai au premier instant,
+           et la ronde lisait la base au milieu de l'écriture — un contrôle qui
+           mesure sa propre hâte.
+
+           **Le plus petit regroupement, et non le premier.** Ils sont
+           emboîtés — sous-domaine, thème, sous-thème —, et le premier dans
+           l'ordre du document est le plus extérieur : ses lignes sont *toutes*
+           celles de la checklist, cent quarante et une. Le drapeau s'écrivant
+           item par item, à deux requêtes chacun, la bascule du plus grand
+           demandait près de trois cents allers-retours pour mesurer la même
+           propriété. La ronde prend le plus petit qui porte au moins une ligne.
+
+           **`data-ref` n'est pas la référence.** Elle porte « référence +
+           description » : c'est l'index de la recherche. La route, elle,
+           retrouve les items par la **référence seule**. Un classeur bâti sur
+           `data-ref` n'aurait rien trouvé — et un import qui n'importe rien
+           rend « 0 » et un bandeau vert. *C'est la forme la plus dangereuse de
+           l'échec : celle qui se présente comme un succès.* La référence se lit
+           désormais dans la première cellule, et le contrôle dépose **deux**
+           lignes dont une fictive, pour que le compte annoncé soit **un**, non
+           deux.
+
+           Un quatrième, du même genre : l'option d'un statut affiche
+           `alias || libelle`, et le document d'impression écrit le `libelle`.
+           Lire l'option aurait fait rougir le contrôle sur un alias — une
+           mesure qui éprouve l'affichage là où elle croit éprouver la donnée.
+
+           ── Le classeur des constatations, et ce qui ne part pas ──
+
+           `execExporterConstatationsXlsx` exporte **la liste telle qu'elle est
+           affichée** — les identifiants retenus par les filtres, le titre du
+           sous-menu, les filtres en clair. Il n'y a nulle part ailleurs où
+           l'éprouver : il faut une liste, et `surv-coquille` est la seule ronde
+           qui en pose une. Elle y gagne sa première déclaration d'abandon.
+
+           Deux propriétés, et la seconde est celle qu'on oublie : la liste part
+           **dans l'adresse**, par une navigation qui ne quitte pas la page ; et
+           **liste vide, rien ne part**.
+
+           La contre-épreuve de la seconde est la plus parlante de ce tour. La
+           garde retirée, l'adresse devient :
+
+               …/constatations/export-xlsx?ids=&titre=…&filtres=Aucun+filtre
+
+           Un classeur demandé **sans aucun identifiant**, deux abandons au lieu
+           d'un, et deux contrôles rouges. Sans ce contrôle, l'écran aurait
+           téléchargé un classeur vide en annonçant un succès.
+
+           La seconde contre-épreuve discrimine ce qu'il faut : la persistance
+           du drapeau retirée, la moitié **cliente** du geste reste parfaite —
+           marque, libellé basculé, repli, décompte à 140 — et `enBase` rend
+           `[]`. Deux contrôles tombent, 231 sur 233. *Un contrôle qui n'aurait
+           regardé que l'écran aurait passé.*
+
+           ── Un défaut annoncé qui n'existait pas ──
+
+           Le n° 5.f.85 a laissé dans `surv-coquille.smoke.js` un commentaire
+           annonçant un défaut : « `GET /constatations` rend une liste vide
+           quand le magasin du module en porte quatre ». **La mesure portait sur
+           le mauvais magasin.** Les quatre sont dans `data/execution.json`, le
+           magasin de *développement* ; une suite n'y touche jamais — le harnais
+           copie `tests/fixtures/` dans un bac neuf à chaque passage, et
+           `tests/fixtures/execution.json` porte **zéro** constatation. La route
+           rendait exactement ce que son bac contenait.
+
+           *On ne lit pas l'état d'un serveur dans un fichier qu'il ne sert
+           pas.* Le relevé est devenu un **contrôle** — « le bac n'en porte
+           aucune, et la ronde pose les deux qu'il faut » —, de sorte que le
+           jour où le jeu d'essai en portera, il le dira. L'entrée est
+           **conservée** au registre, retirée mais non effacée : elle dit où la
+           mesure a dérapé, et empêche de rouvrir la question.
+
+           ── Un registre pour ce que le code ne peut pas trancher ──
+
+           `docs/QUESTIONS-DE-MAITRISE-D-OUVRAGE.md` est ouvert, pour la même
+           raison que le garde des pages sans chemin : **nommer sans décider**.
+           Une question laissée dans un commentaire se perd ; une question qu'un
+           agent tranche au passage est une décision prise par personne.
+
+           Deux entrées ouvertes, et la première a de la suite :
+
+             · **Q-01** — `RAB-OPS 1.037` nomme le secteur `OPS-TAC`,
+               `RAB-145.A.30` nomme `AIR-OMA`, et les huit secteurs du
+               référentiel sont `AMO, CAMO, CAT, STA, ATO, MED, ANP, ADM`.
+               Vérifié dans les **deux** magasins. C'est la seconde raison —
+               après le défaut de code corrigé en 5.f.84 — pour laquelle le
+               sélecteur de dispositions et la liste d'exigences du formulaire
+               de constatation restent vides. Et **aucun contrôle ne peut le
+               dire** : le détecteur d'orphelins exclut les exigences,
+               délibérément, pour ne pas les emporter quand on efface un
+               secteur. L'exclusion est juste pour la suppression ; elle vaut
+               aussi pour le comptage. *Ne pas supprimer et ne pas voir sont
+               deux décisions ; une seule a été prise.*
+             · **Q-02** — les deux dernières boîtes natives du dépôt, hors de ce
+               module : un `window.confirm` dans RAMP, un `window.prompt` au
+               portail. La contre-épreuve du n° 5.f.86 dit ce qu'elles coûtent :
+               elles ne sont pas mal mesurables, elles sont **inéprouvables**.
+
+           ── Le budget remonte, et à découvert ──
+
+           `surv.smoke.js` : **7 513 → 7 890**. Le garde-fou de taille n'empêche
+           pas de grandir, il empêche de grandir en silence — et ce bloc **est
+           lié** : il lui faut un dossier, une checklist rattachée et le volet à
+           l'étape « Réalisation », c'est-à-dire la chaîne que ce fichier bâtit
+           déjà. La coupe qui vient est nommée dans le budget lui-même : le
+           remplisseur est un éditeur plein écran de **seize** gestes, qui n'a
+           besoin que d'un dossier et d'une checklist ; un
+           `surv-checklist.smoke.js` les lui donnerait et emporterait du même
+           coup les douze occurrences que la ronde du volet exerce aujourd'hui.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 276 / 310 (89 %) | **281 / 310 (91 %)** |
+           | `exec-checklists-saisie.js` | 12 / 16 | **16 / 16** |
+           | `exec-constatations.js` | 57 / 61 | **58 / 61** |
+           | `surv.smoke.js` | 223 contrôles | **233** |
+           | `surv-coquille.smoke.js` | 15 contrôles | **18** |
+           | Campagne | 1 741 | **1 754** |
+
+           Le gisement qui vient est `exec-dossier-actions.js`, **9 sur 18** :
+           le formulaire de constatation, et parmi ses six noms
+           `execFncOnSecteurChange` — le geste dont la liste des exigences a été
+           corrigée en 5.f.84 **sans qu'aucune ronde l'atteigne**, et dont
+           Q-01 dit maintenant qu'elle restera vide tant que la maîtrise
+           d'ouvrage n'aura pas tranché. *Une correction non exercée est une
+           affirmation.*
+
+       5.f.88 [x] **Le tiroir de la constatation — et deux défauts qui se
+           présentaient comme réglés** — fait le 13 novembre 2026.
+           `exec-dossier-actions.js` portait **9 occurrences sur 18** sans
+           ronde, et toutes les neuf vivent dans le même tiroir : le formulaire
+           de constatation, ouvert par-dessus le rapport. Six noms : la
+           fermeture par le bandeau et par le pied, la liste des exigences au
+           changement de secteur, les deux façons d'ajouter une référence, le
+           calcul de la date due, le garde de la date d'ouverture, le dépôt
+           d'une preuve.
+
+           Le tour prend place dans `surv-pieces.smoke.js`, seule suite qui
+           ouvre ce tiroir, et dont la chaîne porte déjà ce dont le formulaire a
+           besoin : un dossier, et une activité qui a une date de début. Il
+           écrit une **seconde** constatation, la relit au serveur, puis
+           **l'efface par la route** avant de rendre la main : la suite de la
+           chaîne — rapport validé, constatation opposable, transmission —
+           retrouve l'état qu'elle avait.
+
+           ── Les deux défauts que la contre-épreuve a montrés ──
+
+           **Le garde de la date disait déjà ce qu'il ne faisait plus.** Ôtée la
+           ligne qui ramène la date d'ouverture à la borne, le bandeau paraît
+           quand même — « La date d'ouverture ne peut pas être antérieure au
+           début de l'activité (2026-09-01) » —, le champ garde le 15 juillet,
+           et le serveur l'écrit. L'écran annonce un refus et enregistre la
+           valeur refusée. *L'annonce n'est pas la correction* : un contrôle qui
+           n'aurait lu que le bandeau aurait été vert sur un formulaire qui ne
+           garde plus rien. Celui-ci lit la valeur du champ, celle de la date
+           due, **et** ce que le serveur porte.
+
+           **Une preuve peut être nommée sans être rattachée.** Ôté le
+           `div.dataset.path = data.path`, le fichier part bien au serveur, la
+           ligne paraît sous son nom, et la constatation enregistrée porte
+           toujours « preuve-de-la-constatation.pdf » — parce qu'`execSaveFNC`
+           se rabat sur le nom quand le chemin manque. Ce qui disparaît, c'est
+           le **lien** vers le document déposé : la pièce existe sur le serveur,
+           la constatation la nomme, et plus rien ne les joint. Une vérification
+           faite au seul magasin aurait été verte. Le contrôle exige donc que la
+           ligne affichée porte un chemin **non vide**.
+
+           Les deux autres contre-épreuves ont dit ce qu'on leur demandait : la
+           liste des exigences non rebâtie au changement de secteur, et le
+           doublon de référence non refusé — « RAB-OPS 1.037, RAB-OPS 1.037,
+           RAB-145.A.30 » jusque dans le magasin.
+
+           ── Mesurer le chemin quand le contenu n'existe pas encore ──
+
+           `execFncOnSecteurChange` est le geste dont la liste des exigences a
+           été corrigée en 5.f.84 **sans qu'aucune ronde l'atteigne**. Elle est
+           atteinte. Mais Q-01 dit que cette liste reste vide pour une raison de
+           **données** : les deux exigences du référentiel nomment des secteurs
+           qui n'existent plus parmi les huit. Un contrôle qui attendrait des
+           exigences rougirait sur un produit sain.
+
+           Le couple qui discrimine est ailleurs : **sans** secteur, la règle
+           rend toutes les exigences actives — deux ; **avec** n'importe lequel
+           des huit, elle en rend zéro. Le contrôle mesure donc que le geste
+           rebâtit la liste et que la règle appliquée est bien celle de la
+           portée. Le jour où la maîtrise d'ouvrage tranchera, c'est ce même
+           contrôle qui dira que la liste s'est remplie — ou rougira si l'on
+           croit avoir tranché sans que rien ne bouge. La note est portée au
+           registre, sous Q-01.
+
+           ── Un budget qui naît ──
+
+           `surv-pieces.smoke.js` vivait sous le seuil des mille lignes : elle
+           n'avait pas de budget, et n'en avait pas besoin. Le bloc l'a portée
+           de 880 à **1 168** lignes, et le garde a dit « non déclaré ». C'est
+           son autre office, celui qu'on voit moins : il ne surveille pas
+           seulement les gros fichiers, **il remarque qu'un fichier est devenu
+           gros**.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, **noms** exercés | 281 / 310 (91 %) | **287 / 310 (93 %)** |
+           | SURV, **occurrences** exercées | 462 / 505 (91 %) | **471 / 505 (93 %)** |
+           | `exec-dossier-actions.js` | 9 / 18 occurrences | **18 / 18**, 11 noms sur 11 |
+           | `surv-pieces.smoke.js` | 21 contrôles, 880 lignes | **27**, 1 168 |
+           | Campagne | 1 754 | **1 760** |
+
+           Le premier passage de cette campagne a perdu **deux** suites —
+           `surv` et `profil-risque-navigateur` — sur « Target closed » : le
+           navigateur est mort en cours de route, à deux endroits différents, et
+           ni l'une ni l'autre n'est touchée par ce point. Aucun serveur
+           orphelin, aucune mémoire à l'étroit. Repassée telle quelle, la
+           campagne est entière. *Une suite qui meurt n'est pas une suite qui
+           rougit, et l'on ne compte ni l'une ni l'autre comme un succès* : le
+           chiffre ci-dessus est celui du passage complet, non du premier.
+
+           ── Un libellé remis d'aplomb ──
+
+           Ce tableau porte depuis plusieurs entrées « SURV, occurrences
+           exercées : 276 / 310 », puis « 281 / 310 ». **Le chiffre comptait des
+           noms**, non des occurrences : l'écran en porte 505, et le relevé dit
+           les deux à côté l'une de l'autre. L'erreur est de libellé, non de
+           mesure — le numérateur et le dénominateur venaient bien du même
+           compte —, et elle a tenu parce que les deux ratios tombaient sur le
+           même pourcentage. Ils y retombent ici, 93 % et 93 %. *Deux comptes
+           qui donnent le même nombre ne sont pas le même compte.* Les deux
+           lignes sont dites désormais, et le tableau du § 5.c avec elles.
+
+           ── Ce que le relevé laisse derrière lui, et qui n'est plus un gisement ──
+
+           Il ne reste plus un seul gros fichier : les vingt noms non exercés
+           sont dispersés sur quatorze. Le plus chargé est `exec-etats.js`,
+           **six occurrences** — et les six sont le **même geste**, posé six
+           fois : `onclick="…${execEtatsOuvrir(l)}"`. Le relevé renonce à les
+           nommer dès qu'il rencontre `${`, les appelle « ${} », et les comptera
+           non exercées quoi qu'une ronde fasse. Le nom est pourtant lisible à
+           l'endroit même où il est posé. C'est la famille du fantôme « null »
+           du n° 5.f.86 : *six occurrences retirées du dénominateur, ou six
+           occurrences rendues mesurables — mais pas six faux manquants de
+           plus.*
+
+           Le gisement qui vient, lui, est `exec-plans.js`, **6 sur 10** :
+           quatre fonctions nommées, archiver un plan, exporter les plans en
+           PDF, réinitialiser une activité et ouvrir son historique.
+
+
+       5.f.89 [x] **« Indécidable » n'est pas « non exercé » — et j'ai lu le
+           relevé comme on ne doit pas le lire** — fait le 13 novembre 2026.
+           Le n° 5.f.88 se termine par une phrase fausse, écrite deux fois : au
+           registre et dans le message de validation.
+
+           ── Ce qui a été affirmé, et ce qui est ──
+
+           J'ai écrit que `exec-etats.js` devait six occurrences à un défaut du
+           relevé, que « les six sont le même geste, `execEtatsOuvrir` », et
+           qu'il « les comptera non exercées quoi qu'une ronde fasse ». Les
+           trois sont fausses.
+
+             · Elles sont **indécidables** — `exerce: null`, `raison: composé au
+               rendu` —, et non « non exercées ». C'est le verdict prudent que
+               le relevé rend exprès, et son commentaire le dit depuis le
+               8 novembre : *dire « non couvert » de ce qu'on ne sait pas
+               rapprocher serait une fausse alarme.*
+             · `execEtatsOuvrir` n'est **pas un geste**. C'est une aide d'une
+               ligne qui **écrit** le gestionnaire :
+               `const execEtatsOuvrir = (l) => \`execOpenActiviteProcessus(…)\`;`.
+               La retenir serait exactement la faute que le relevé évite en ne
+               retenant pas `_escAttr`, et un contrôle unitaire l'interdit
+               nommément depuis le 11 novembre.
+             · Le geste réel est `execOpenActiviteProcessus`, et il est **déjà
+               exercé**, deux fois, depuis `exec-plans.js` et
+               `exec-processus.js`.
+
+           **Comment je m'y suis pris pour me tromper.** J'ai compté les
+           occurrences en Python avec `exerce is not True` pour « reste à
+           faire », ce qui met les indécidables au débit. C'est, mot pour mot,
+           la faute contre laquelle le relevé est écrit — commise en le lisant.
+           *Un outil qui distingue trois états ne protège pas celui qui n'en
+           lit que deux.*
+
+           La même lecture a produit un second chiffre faux dans la même entrée :
+           « vingt noms non exercés dispersés sur **quatorze** fichiers ». Ils
+           sont sur **dix** — les quatre autres ne portaient que des
+           indécidables. Et en corrigeant le tableau du § 5.c, j'ai d'abord
+           écrit « treize », de tête, avant de le mesurer. *Une erreur de
+           lecture se reproduit tant qu'on corrige le chiffre sans changer la
+           façon de compter.*
+
+           ── Ce qui restait vrai, et qu'il a fallu corriger ──
+
+           Le bilan du haut distingue les trois états depuis toujours. **La
+           ligne par fichier, non** : elle disait `exec-etats.js — 28/34
+           occurrences`, sans dire que six de ces trente-quatre ne sont pas
+           mesurables. Un dénominateur dans lequel on ne peut pas progresser, et
+           rien pour le signaler. Elle porte désormais « dont 6 indécidables ».
+
+           C'est la suite directe du paragraphe que cette même ligne portait
+           déjà — « une mesure qui ne nomme pas son unité laisse celui qui la
+           lit en choisir une ». D'un cran plus loin : *il ne suffit pas qu'une
+           mesure nomme son unité, il faut qu'elle dise ce qu'elle ne sait pas
+           mesurer.*
+
+           ── Et un cran de plus pour le nommeur ──
+
+           La doctrine ne bouge pas : **on retient ce que l'interpolation
+           écrit, non ce qui l'assemble.** Elle ne regardait que les littéraux
+           écrits sur place ; elle regarde maintenant ceux qu'une aide du
+           **même fichier** écrit à sa place. Une aide n'est reconnue que si son
+           corps est un gabarit commençant par un appel, et **l'indirection ne
+           se poursuit pas** : une aide qui appellerait une aide n'est plus
+           quelque chose qu'on lit, c'est quelque chose qu'on exécute. *Une
+           mesure qui se met à exécuter le code qu'elle mesure a changé de
+           métier.*
+
+           Une seule aide y répond dans tout le front. Une règle qui ne sert
+           qu'une fois reste une règle : l'autre voie était de faire répéter six
+           fois le même appel dans `exec-etats.js` pour plaire à l'outil, et
+           *une mesure qui force le code à être moins bon est une mauvaise
+           mesure.*
+
+           Trois contrôles unitaires la tiennent, dont deux qui disent ce
+           qu'elle **ne** fait **pas** : l'aide n'est jamais retenue à la place
+           de ce qu'elle écrit, et deux crans d'indirection restent
+           indécidables. Le contrôle du 11 novembre, qui exige l'indécidable
+           sans carte des aides, est **conservé tel quel** — c'est lui qui
+           garantit que l'indirection se lit dans le fichier et ne se devine
+           pas.
+
+           ── Et un garde né de la vérification faite à la main ──
+
+           Pour m'assurer que le relevé figé décrivait encore ce que le script
+           produit, j'ai comparé les deux à la main. **Rien ne le vérifiait.**
+           Les `gestes-<écran>.json` servent de référence à la couverture
+           déclarée et personne ne les recalcule à chaque campagne — le relevé
+           de SURV demande cinq suites de navigateur et vingt minutes. Toucher
+           au nommeur et oublier de refiger, c'est porter au dépôt un relevé qui
+           décrit une règle qui n'existe plus.
+
+           Le contrôle compare la **structure** — fichier, ligne, événement,
+           nom, indécidabilité, raison —, jamais l'état d'exercice, qui vient
+           des journaux. `relever` est pur : le contrôle coûte des
+           millisecondes, là où refiger coûte vingt minutes.
+
+           **Il a trouvé deux fichiers périmés à son premier passage** :
+           `gestes-portail.json` et `gestes-mesures.json`, figés les 3 et
+           4 novembre — donc **avant** que le champ `raison` n'existe. Refigés,
+           leurs chiffres n'ont pas bougé d'une unité : la péremption était
+           entière dans la structure, nulle dans les comptes. *Les nombres
+           étaient justes ; la description ne l'était plus.* Le jour où un
+           changement du nommeur déplacera un chiffre, ce garde le dira avant
+           que le registre ne cite un nombre mort.
+
+           ── Un navigateur qui meurt, deux fois sur trois campagnes ──
+
+           Le premier passage de cette campagne a perdu `parcours` sur
+           « Target closed », puis `frontend` — la suite suivante — sur un délai
+           de navigation dépassé. Au n° 5.f.88, c'étaient `surv` et
+           `profil-risque-navigateur`. **Deux campagnes sur les trois
+           dernières** : ce n'est plus un accident, c'est une propriété de
+           l'endroit où la campagne tourne.
+
+           La mesure, cette fois, plutôt que la relance : aucun navigateur ni
+           serveur de test laissé derrière — le harnais nettoie —, mais le swap
+           à **4,75 Go sur 6**. La campagne partage la machine avec le travail de
+           son propriétaire, traitement de texte, messagerie, synchronisation
+           de fichiers, et c'est elle qui cède : un Chromium sans tête qui
+           swappe meurt ou expire. Seules, les deux suites rendent 110 sur 110
+           et 12 sur 12. Le passage suivant, relancé tel quel, est allé au bout :
+           24 suites, 1 765 contrôles, aucun rouge — c'est lui que porte le
+           tableau ci-dessous.
+
+           La règle tenue est celle du n° 5.f.88 : *une suite qui meurt n'est
+           ni un succès ni un échec du produit, et le chiffre porté est celui
+           d'un passage complet.* Ce qui manque, et qui est nommé sans être
+           fait : quand une suite meurt, le lanceur pourrait dire **dans quel
+           état était la mémoire** à cet instant. Il a fallu le mesurer à la
+           main, après coup — c'est-à-dire sur une machine qui n'était plus
+           celle du moment.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, occurrences exercées | 471 / 505 (93 %) | **477 / 505 (94 %)**, 6 indécidables |
+           | `exec-etats.js` | 28 / 34, 6 indécidables | **34 / 34**, 25 noms sur 25 |
+           | SURV, noms exercés | 287 / 310 (93 %) | **287 / 310 (93 %)** |
+           | `unitaires.smoke.js` | 163 contrôles, 1 802 lignes | **168**, 1 997 |
+           | Campagne | 1 760 | **1 765**, 24 suites, 0 rouge |
+
+           Les noms ne bougent pas, et c'est la preuve que la correction ne
+           gonfle rien : `execOpenActiviteProcessus` était déjà compté exercé.
+           Ce qui change est la **lisibilité** — six occurrences cessent d'être
+           muettes, et un fichier cesse d'annoncer un reste qu'il n'a pas.
+
+           Le gisement qui vient est toujours `exec-plans.js`, **6 sur 10**.
+
+
+       5.f.90 [x] **La page des plans : quatre commandes, une impression qui
+           partait deux fois, et cent lignes que rien n'appelait** — fait le
+           13 novembre 2026. `exec-plans.js` était le gisement annoncé par le
+           n° 5.f.89, **6 occurrences sur 10** ; les quatre qui restaient sont
+           les quatre commandes de la page : exporter les plans en PDF, ouvrir
+           l'historique d'une activité, réinitialiser une activité déclenchée,
+           archiver un plan entier.
+
+           ── Où les loger ──
+
+           `surv.smoke.js` est à son plafond. Une sixième suite, `surv-plans`
+           (port 4810), qui bâtit sa propre chaîne — une notification posée sur
+           une activité du plan validé de l'amorce, menée jusqu'au dossier, et
+           une constatation dessus —, l'efface par le geste même qu'elle
+           éprouve, et rend le plan désarchivé en partant. Elle ne lit rien de
+           ce que les autres suites laissent. Le relevé réunit désormais
+           **six** journaux.
+
+           ── Ce que la suite tient : onze contrôles ──
+
+           - **L'export** écrit les plans dépliés, sans la colonne des actions
+             — autant de tables qu'à l'écran, une colonne de moins par table,
+             aucun geste resté dans le document —, et sans plans à rendre il
+             n'ouvre rien et le dit.
+           - **L'historique** d'une activité du plan ouvre l'écran du circuit
+             sur cette activité, et se referme.
+           - **La réinitialisation** n'est offerte qu'à une activité
+             déclenchée ; son refus ne retire rien ; une constatation qui en
+             dépend la fait refuser par le serveur, et l'écran le dit ; la
+             constatation retirée, elle emporte notification et dossier, et le
+             bouton part. Le 400 est un refus **déclaré** : c'est la propriété
+             mesurée.
+           - **L'archivage** demande confirmation en nommant le plan et le
+             nombre de ses activités ; son refus ne range rien ; accepté, il
+             range le plan au serveur et le retire de la page.
+
+           ── Une impression qui partait deux fois ──
+
+           Le premier passage a rendu **dix sur onze**, et le rouge était un
+           défaut du produit, non de la ronde : « Exporter PDF » appelait
+           `print()` **deux fois**. Deux chemins y menaient — le chargement de
+           la fenêtre, et un secours à 600 ms « au cas où le chargement serait
+           déjà passé » —, et les deux passaient : le secours ne vérifiait que
+           l'état du document, toujours `complete` à ce moment-là. Dans un vrai
+           navigateur, la boîte d'impression s'ouvrait, et se rouvrait dès
+           qu'on l'avait fermée.
+
+           Personne ne l'avait vu parce qu'on ne regarde pas combien de fois une
+           boîte s'ouvre : on la ferme, et on ferme la seconde en croyant
+           fermer la première. La ronde **compte** les appels, dans la vraie
+           fenêtre ouverte par l'écran. Le remède est une porte : le premier
+           chemin arrivé imprime, l'autre trouve la porte fermée.
+
+           ── Cent lignes que rien n'appelait ──
+
+           `execShowActiviteHistorique` était défini **deux fois** : un écran
+           hérité de PESSCO dans `exec-plans.js`, et un renvoi vers l'écran du
+           circuit dans `exec-processus.js`, chargé après, qui l'écrasait. Le
+           premier ne s'exécutait donc jamais. Le contrôle de l'historique le
+           prouve en exigeant ce que seul l'écran du circuit produit — sa fin de
+           fil, `.exec-histo-fin`. Les cent lignes sont retirées ; un
+           commentaire dit où l'historique vit et pourquoi il n'est plus ici.
+           C'est le danger ordinaire du code mort dans un espace global
+           partagé : on l'aurait lu, corrigé, traduit, pour un effet nul.
+
+           ── Contre-tests ──
+
+           Six défauts réintroduits, un par un. Chacun rougit son contrôle ;
+           deux en rougissent un second, par conséquence et non par
+           recouvrement — le geste a eu lieu au « non », il n'y a plus rien à
+           faire au « oui ».
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+                      | A — la porte de l'impression ôtée | l'export, `impressions: 2` |
+           | B — le renvoi de l'historique ôté | l'historique, et la console : `execShowActiviteHistorique is not defined` |
+           | C — le « non » de la réinitialisation ignoré | son refus de confirmation (+ la réinitialisation acceptée) |
+           | D — l'archivage sans rechargement | l'archivage accepté : le plan reste à la page |
+           | E — la colonne des actions gardée à l'export | l'export |
+           | F — le « non » de l'archivage ignoré | son refus de confirmation (+ l'archivage accepté) |
+
+           C n'a pas rougi du premier coup, et c'était la ronde qui avait tort.
+           Elle éprouvait le « non » pendant qu'une constatation retenait encore
+           l'activité : un « non » ignoré partait au serveur, qui refusait pour
+           une autre raison, et l'activité restait — le contrôle voyait ce qu'il
+           attendait, sans que la garde y soit pour rien. Le « non » s'éprouve
+           désormais quand plus rien ne retient l'activité. *Un refus ne se
+           mesure que là où, sans lui, le geste passerait.*
+
+           ── En passant ──
+
+           Le titre du PDF est sorti « Activites de Supervision » : le
+           dictionnaire français du module en porte des dizaines sans leurs
+           accents — « Etats », « Delai », « Creer Constatation »,
+           « Echeance »… Ce n'est pas l'objet de ce point ; c'est signalé à part,
+           avec un contrôle à poser pour qu'ils ne reviennent pas.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-plans.js` | 6 / 10 | **10 / 10** |
+           | SURV, occurrences exercées | 477 / 505 (94 %) | **481 / 505 (95 %)** |
+           | SURV, noms exercés | 287 / 310 (93 %) | **291 / 310 (94 %)** |
+           | Campagne | 1 765, 24 suites | **1 776**, 25 suites, 0 rouge |
+
+           Il reste dix-huit occurrences non exercées sur neuf fichiers, aucune
+           au-delà de trois. Le gisement qui vient est `exec-processus-config.js`,
+           **3 restes sur un même écran** : les deux filtres de la liste des
+           processus, et le retrait d'un acteur dans l'éditeur.
+
+       5.f.91 [x] **La configuration des processus sort de `surv.smoke.js`, et
+           une suite seule cesse de se jeter sur la campagne d'un autre** —
+           fait le 13 novembre 2026. `exec-processus-config.js` était le
+           gisement annoncé par le n° 5.f.90 : trois restes sur un même écran,
+           les deux filtres de la liste des processus et le retrait d'un acteur
+           dans l'éditeur.
+
+           ── Une coupe, pas un ajout ──
+
+           La ronde qui parcourait cet écran vivait dans `surv.smoke.js`, à son
+           plafond. Elle bâtissait déjà son propre processus, le dupliquait et
+           retirait tout ce qu'elle avait posé ; elle n'était liée à rien
+           d'autre. Elle en sort sans rien changer — 175 lignes —, dans une
+           septième suite, `surv-processus` (port 4811), et y reçoit ce qui lui
+           manquait. Le budget de `surv.smoke.js` **baisse une troisième fois**,
+           7 890 → 7 736.
+
+           ── Ce que la suite tient : neuf contrôles ──
+
+           Les quatre de la ronde d'origine, et cinq de plus :
+
+           - **les deux filtres** : filtrée sur l'autre type ou sur un autre
+             secteur, la liste perd le processus de la ronde ; sur les siens,
+             elle le rend ; filtres levés, elle se rend entière ; et le choix
+             affiché tient à chaque pas ;
+           - **le retrait d'un acteur** : deux acteurs à la première étape, le
+             second marqué d'un rôle libre, le **premier** retiré. C'est bien
+             lui qui part, et la saisie du second survit à la recomposition du
+             formulaire ; enregistré, le serveur ne garde que lui ; le dernier
+             retiré, l'étape redit qu'elle est vide, et refermer sans
+             enregistrer ne change rien au serveur.
+
+           ── Contre-tests : sept, et l'un mal visé ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | G — le filtre de type ignoré au rendu | le filtre de type |
+           | H — le filtre de secteur ignoré | le filtre de secteur |
+           | I — le retrait sans relecture du formulaire | le retrait (+ ce que le serveur garde) |
+           | J — le retrait ôte la dernière ligne, non celle du bouton | le retrait (+ ce que le serveur garde) |
+           | K — le type choisi perd son « selected » | le filtre de type |
+           | L — le secteur choisi perd son « selected » | le filtre de secteur |
+           | M — une suite seule ne refuse jamais | le verrou consulté |
+
+           K n'a pas rougi du premier coup. Le processus de la ronde est de
+           type « constatation » ; le contrôle ne relisait le choix affiché
+           qu'au pas où le filtre portait l'autre type, et le contre-test
+           ôtait le « selected » de l'option que le contrôle ne regardait pas.
+           Le choix se relit désormais aux deux pas, de type comme de secteur
+           — d'où L, ajouté pour l'éprouver.
+
+           ── Le relevé jeté sur la campagne d'un autre ──
+
+           La tâche des accents — signalée au n° 5.f.90 et lancée depuis
+           une autre session — jouait sa campagne dans son
+           propre worktree pendant que je lançais le relevé. Le relevé a rendu
+           « le port 4800 répond déjà : un autre serveur le tient » : le message
+           même que le verrou de campagne existe pour remplacer (n° 5.f.80).
+
+           Le verrou aurait pu le dire : il vit dans le répertoire temporaire du
+           système, que les worktrees partagent, et la campagne de l'autre le
+           tenait. Mais **une suite jouée seule ne le consultait pas** — le
+           lanceur ne le prenait que pour une campagne entière — et le relevé
+           lance ses suites par leur nom. Pire : le refus de la campagne
+           conseillait précisément ce geste, « jouer une suite seule, qui a son
+           propre port ». C'était faux. Une campagne joue **tous** les ports,
+           celui de la suite seule compris, et les deux finissent par se
+           croiser.
+
+           Une suite seule qui démarre un serveur **consulte** désormais le
+           verrou, sans le prendre — deux suites seules différentes tournent
+           toujours ensemble —, et refuse si une campagne vivante le tient, en
+           nommant son processus. Le conseil faux est retiré du refus de la
+           campagne. Éprouvé en vrai, sur la campagne de l'autre session :
+           `npm run smoke -- surv-plans` a refusé, code 2, en nommant le
+           processus 75345. Un contrôle unitaire de plus, contre-testé (M).
+
+           Ce qui reste nommé sans être fait : deux worktrees jouent toujours
+           les mêmes ports. Le verrou les fait attendre l'un l'autre au lieu de
+           se croiser ; il ne les fait pas tourner ensemble.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-processus-config.js` | 14 / 17 | **17 / 17** |
+           | SURV, occurrences exercées | 481 / 505 (95 %) | **484 / 505 (96 %)** |
+           | SURV, noms exercés | 291 / 310 (94 %) | **294 / 310 (95 %)** |
+           | `surv.smoke.js` | 7 890 lignes | **7 736** |
+           | `unitaires.smoke.js` | 168 contrôles | **169** |
+           | Campagne | 1 776, 25 suites | **1 782**, 26 suites, 0 rouge |
+
+           Il reste treize noms non exercés sur huit fichiers, aucun au-delà de
+           trois. Le gisement qui vient est celui des **documents
+           imprimables** : la barre que portent la fiche de notification et le
+           rapport dans leur fenêtre — imprimer, fermer, et, au rapport,
+           écarter l'astuce d'impression —, cinq occurrences de même nature sur
+           `exec-fiche.js` et `exec-rapports.js`.
+
+       5.f.92 [x] **Les documents imprimables, dans leur vraie fenêtre — et un
+           mouchard qui n'y entrait pas** — fait le 13 novembre 2026. C'était
+           le gisement annoncé par le n° 5.f.91 : la barre que portent la fiche
+           de notification et le rapport dans la fenêtre qu'ils ouvrent —
+           « Télécharger PDF », « Fermer », et au rapport la croix qui écarte
+           l'astuce d'impression. Cinq occurrences sur `exec-fiche.js` et
+           `exec-rapports.js`.
+
+           ── Présents dans un texte n'est pas faire ce qu'ils disent ──
+
+           Ces boutons avaient un contrôle depuis le n° 5.f.74 : `surv.smoke.js`
+           constate que le document produit les **porte**. Mais il le lit dans
+           un relais — une fausse fenêtre qui recueille le texte écrit. Un
+           bouton présent dans un texte n'est pas un bouton qui imprime.
+
+           Une huitième suite, `surv-documents` (port 4812), ouvre la **vraie**
+           fenêtre par le vrai geste — l'œil de la page des rapports, « Exporter
+           PDF » du volet du dossier —, et y clique. L'impression est comptée
+           (la boîte n'a pas à s'ouvrir) ; la fermeture est comptée **et
+           exécutée** : la fenêtre doit être réellement fermée.
+
+           ── Sa propre chaîne ──
+
+           Une suite seule part de l'amorce, qui n'a ni dossier ni rapport
+           transmis — seul statut que la page des rapports affiche. La ronde
+           pose une notification sur une activité d'un plan validé, la mène au
+           dossier, soumet le dossier, valide et transmet le rapport qui en
+           naît. En partant elle supprime le dossier, ce qui emporte rapport et
+           notification et rend l'activité « à notifier ».
+
+           Le premier passage avait ajouté par-dessus une réinitialisation de
+           l'activité : elle a rendu 404. La suppression du dossier avait déjà
+           tout fait — la route le dit dans son code. Le geste redondant est
+           retiré, et le 404 n'est pas déclaré : il n'y avait rien à refuser.
+
+           ── Sept contrôles ──
+
+           - la chaîne se bâtit, et la ronde ne laisse rien ;
+           - au rapport, la croix écarte l'astuce **sans toucher à la barre** ;
+             « Télécharger PDF » imprime une fois, la fenêtre reste ouverte ;
+             « Fermer » la ferme ;
+           - la fiche, ouverte avec impression automatique, s'imprime **une
+             fois** d'elle-même au chargement — le défaut d'`exec-plans.js`
+             (n° 5.f.90) ne s'y retrouve pas —, une de plus au bouton, et se
+             ferme.
+
+           ── Le mouchard n'entrait pas dans la fenêtre ──
+
+           Le relevé a d'abord refusé la suite : rouge sous le mouchard, verte
+           sans. Le mouchard est posé par le socle sur la page ; une fenêtre que
+           l'écran ouvre lui-même ne le reçoit pas, et ses clics manqueraient au
+           relevé **sans que rien ne le dise** — couverture nulle présentée comme
+           mesurée. La suite l'y pose donc elle-même, et c'est là qu'elle
+           cassait : par `eval`, que la politique de contenu de l'application
+           refuse (`unsafe-eval`), et dont la fenêtre hérite.
+
+           Il entre désormais par un élément de script, que la politique admet,
+           et **après** que l'écran a écrit son document : `document.open()`
+           efface les écouteurs du document qu'il remplace, et un mouchard posé
+           avant serait présent sans rien voir. Sous le relevé, les contrôles
+           exigent qu'il soit là dans chaque fenêtre. Mesuré : son registre
+           porte les cinq gestes.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | N — la croix de l'astuce ne masque qu'elle-même | l'astuce du rapport |
+           | O — « Fermer » de la fiche n'appelle plus `close` | la barre de la fiche |
+           | P — la fiche s'imprime deux fois d'elle-même | l'impression automatique (+ la barre) |
+           | Q — le mouchard non posé dans la fenêtre, sous le relevé | les deux barres ; et son registre tombe à **zéro** geste |
+
+           O rougit parce que le bouton n'est plus trouvé par ce qu'il appelle,
+           non parce que la fenêtre resterait ouverte : `close` est au
+           navigateur, l'écran ne peut le casser qu'en ne l'appelant pas.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-fiche.js` | 8 / 11 | **10 / 11** |
+           | `exec-rapports.js` | 3 / 6 | **6 / 6** |
+           | SURV, occurrences exercées | 484 / 505 (96 %) | **489 / 505 (97 %)** |
+           | SURV, noms exercés | 294 / 310 (95 %) | **297 / 310 (96 %)** |
+           | Campagne | 1 782, 26 suites | **1 789**, 27 suites, 0 rouge |
+
+           Il reste dix noms non exercés sur sept fichiers, aucun au-delà de
+           deux. Le reste de `exec-fiche.js` est « Soumettre pour validation »
+           depuis l'aperçu de la fiche. Le gisement qui vient est
+           `exec-prestataires.js` : **les deux tris** des tables de dossiers,
+           en cours et archivés, sur un même écran.
+
+       5.f.93 [x] **Les tris des dossiers, mesurés à deux lignes** — fait le
+           14 novembre 2026. `exec-prestataires.js` était le gisement annoncé
+           par le n° 5.f.92 : ses deux restes sont les tris des tables de
+           dossiers en cours et de dossiers archivés, sur la page
+           « Prestataires ». Celui des clôturés est exercé par `surv.smoke.js`.
+
+           ── Un tri ne se mesure qu'à deux lignes ──
+
+           Le contrôle des clôturés le dit lui-même : avec une seule ligne, la
+           flèche est le seul témoin, et une flèche n'est qu'un état qui
+           s'affiche. Une neuvième suite, `surv-dossiers` (port 4813), bâtit
+           donc **deux** dossiers sur des activités dont les organismes
+           partagent un domaine — ils tombent dans la même table —, et lit
+           l'ordre des lignes : croissant au premier clic sur la référence,
+           décroissant au second, l'ordre réellement inversé, et la flèche qui
+           suit.
+
+           Elle les mène ensuite à l'archive par les vraies routes — dossier
+           soumis, rapport validé puis transmis, clôture, archivage — pour
+           éprouver le second tri, puis les désarchive et les supprime. Six
+           contrôles, chaîne et ménage compris.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | R — le second clic ne bascule plus le sens (dossiers en cours) | le tri des dossiers en cours |
+           | S — la table des archivés ignore le tri | le tri des dossiers archivés |
+           | T — le décroissant n'inverse plus l'ordre (dossiers en cours) | le tri des dossiers en cours |
+
+           Ce que la mesure ne prouve pas, et que S a montré : aux dossiers en
+           cours, l'ordre par défaut — par date — coïncide avec l'ordre
+           croissant des références. Le premier clic y serait donc vert même
+           sans effet ; c'est le retour décroissant qui prouve le tri, et R et T
+           le gardent. Aux archivés, l'ordre non trié est l'inverse — 002 puis
+           001 —, et le premier clic s'y mesure aussi.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-prestataires.js` | 6 / 8 | **8 / 8** |
+           | SURV, occurrences exercées | 489 / 505 (97 %) | **491 / 505 (97 %)** |
+           | SURV, noms exercés | 297 / 310 (96 %) | **299 / 310 (96 %)** |
+           | Campagne | 1 789, 27 suites | **1 795, 28 suites** |
+
+           Il reste huit noms non exercés sur six fichiers, aucun au-delà de
+           deux. Le gisement qui vient est `exec-adapters.js` : **le
+           changement d'instance** et **le renvoi vers la gestion des droits**,
+           les deux gestes que l'adaptateur pose sur la barre du socle.
+
+       5.f.94 [x] **Soumettre depuis l'aperçu — et un dossier supprimé que
+           l'écran redemandait** — fait le 14 novembre 2026. Le reste
+           d'`exec-fiche.js` : « Soumettre pour validation », au pied de
+           l'aperçu de la fiche qu'offre le formulaire d'une notification en
+           brouillon.
+
+           ── Trois issues au choix du validateur ──
+
+           Soumettre ouvre le choix du validateur. La ronde, ajoutée à
+           `surv-documents`, pose un brouillon par la route, l'ouvre par le
+           formulaire, passe à l'aperçu, et y soumet :
+
+           - le choix **refusé** se ferme, et la notification reste un
+             brouillon ;
+           - **confirmé sans validateur**, il reste ouvert, l'écran le dit
+             (« selectionner_validateur »), et rien ne part ;
+           - le validateur **choisi**, la notification est soumise **à lui** —
+             le serveur garde son identifiant —, la saisie est gardée, le volet
+             se ferme et l'écran passe aux soumises.
+
+           Elle la rejette puis la supprime en partant.
+
+           ── Ce que la ronde a trouvé en passant ──
+
+           Le premier passage était vert sur les trois contrôles, et rouge sur
+           la console : un 404 sur `GET /dossiers/:id`, le dossier que la ronde
+           venait de supprimer. La cause est dans l'écran, non dans la ronde.
+
+           `execOpenDossierSlider` retient le dossier vu
+           (`EXEC_STATE.selectedDossier`), et rien ne l'oublie à la fermeture
+           du volet. `execRefreshDynamic`, qu'appellent toutes les actions, le
+           recharge **unitairement** dès qu'il est retenu. Un utilisateur qui
+           regarde un dossier, ferme le volet, puis le supprime du tableau :
+           le rafraîchissement de la suppression redemande au serveur ce qu'on
+           vient de lui faire supprimer, et chaque action suivante le
+           redemande encore. Mesuré par le vrai geste — la référence saisie,
+           comme à l'écran : **deux 404 de suite**, et le dossier toujours
+           retenu.
+
+           Deux corrections, chacune à l'endroit qui sait :
+
+           - `execDeleteDossier` sait ce qu'il supprime : il oublie le dossier
+             retenu si c'est lui. **Aucune** demande ne part plus ;
+           - `execRefreshDynamic` oublie un dossier dont le rechargement rend
+             **404** et que la liste ne porte plus — supprimé par une autre
+             main, ou par les États. **Une** demande, puis plus aucune. Pour le
+             distinguer d'une panne passagère, `api()` attache désormais le
+             code HTTP à l'erreur qu'elle lève (`e.statut`) : une panne ne fait
+             rien oublier.
+
+           Deux pistes plus larges ont été écartées, toutes deux mesurées
+           fausses à la lecture :
+
+           - oublier à la fermeture du volet : `execShowSlider` ferme le volet
+             précédent **après** que `execOpenDossierSlider` a retenu le
+             dossier — le volet du dossier aurait perdu le sien ;
+           - oublier tout dossier absent de la liste : la liste d'un
+             prestataire ne porte que les dossiers **clôturés**, alors qu'il
+             ouvre le dossier d'une constatation avant la clôture
+             (`exec-constatations.js`). Son volet aurait perdu son dossier.
+
+           Le ménage de la ronde passe donc désormais par le geste de l'écran,
+           et deux contrôles comptent les demandes faites pour le dossier :
+           zéro au geste, une à l'autre main. Le 404 de l'autre main est
+           déclaré ; c'est le compte qui garde ce que la déclaration dispense.
+
+           Ce qui reste : `execEtatsSupprimer` ne connaît que la notification,
+           et s'en remet au rafraîchissement — un 404 au plus, non mesuré par
+           son propre geste.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | U — la suppression n'oublie plus le dossier retenu | le geste : une demande au lieu de zéro |
+           | V — le rafraîchissement garde un dossier introuvable | l'autre main : deux demandes, non oublié |
+           | W — `api()` ne porte plus le code HTTP | l'autre main : deux demandes, non oublié |
+           | X — refuser le choix soumet quand même | le refus (+ sans validateur, par suite) |
+           | Y — confirmer sans validateur est accepté | sans validateur (+ le choix) |
+           | Z — le validateur choisi n'est pas transmis | le validateur choisi |
+
+           U montre que le contrôle du geste ne se suffit pas de l'oubli : sans
+           la première correction, la seconde oublie le dossier après un 404 —
+           déclaré —, et seul le compte des demandes le voit.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-fiche.js` | 10 / 11 | **11 / 11** |
+           | SURV, occurrences exercées | 491 / 505 (97 %) | **492 / 505 (97 %)** |
+           | SURV, noms exercés | 299 / 310 (96 %) | **300 / 310 (97 %)** |
+           | `surv-documents` | 7 contrôles | **12** |
+           | Campagne | 1 795, 28 suites | **1 800, 28 suites** |
+
+           `exec-fiche.js` est complet. Le gisement qui vient est
+           `exec-adapters.js` : l'instance regardée et le renvoi vers la
+           gestion des droits, les deux gestes que l'adaptateur pose sur la
+           barre du socle — deux gestes qui quittent la page, et qu'on mesure
+           donc de part et d'autre du chargement.
+
+       5.f.95 [x] **La barre du socle : l'instance, les droits — et un bouton
+           qui manquait quand le compte arrivait le dernier** — fait le
+           14 novembre 2026. Le reste d'`exec-adapters.js` : les deux gestes
+           que l'adaptateur pose sur la barre supérieure, l'instance regardée
+           et le renvoi vers la gestion des droits.
+
+           ── Deux gestes qui quittent la page ──
+
+           Changer d'instance écrit le choix chez le serveur, puis **recharge**
+           le module ; la gestion des droits **navigue** vers un autre écran.
+           On ne les mesure donc pas dans la page, mais de part et d'autre du
+           chargement. La dixième suite SURV, `surv-barre`, le fait :
+
+           - reprendre l'instance déjà regardée ne fait **rien** — ni écriture,
+             ni rechargement (une marque posée dans la page y survit) ;
+           - une autre instance choisie est retenue par le serveur, et la page
+             rechargée la montre ; le même geste ramène l'origine. Le choix est
+             persisté pour le compte : la ronde le rétablit par la route quoi
+             qu'il arrive, et le contrôle exige que la route n'ait **pas** eu à
+             servir ;
+           - « Gestion des Droits » ouvre l'écran des droits réglé sur SURV, et
+             « Retour au module » y ramène.
+
+           ── Ce que la ronde a trouvé en passant ──
+
+           Le premier passage était vert. Le passage témoin d'après, sur le même
+           code, rougissait : **le bouton des droits manquait**.
+
+           La barre se dessine à trois arrivées : `/vue`, `/instance`, et le
+           compte. Le bouton tient au rôle, donc au compte. L'adaptateur
+           attendait bien `EXEC_BOOT` pour redessiner — mais deux attentes
+           pendaient à cette promesse, la sienne et celle de la page qui **pose**
+           le compte, et la sienne, inscrite la première, était servie la
+           première : elle redessinait sur un compte encore inconnu. Le bouton
+           ne tenait donc qu'à ce que `/vue` ou `/instance` réponde **après**
+           `/context`.
+
+           C'est l'ordre ordinaire, à dix ou vingt millisecondes près : douze
+           rechargements, douze boutons. Forcé — `/context` retardé —, le
+           bouton manque, et rien ne le rend. Un administrateur pouvait ne pas
+           trouver la gestion des droits, et la retrouver en rechargeant.
+
+           La correction est à l'endroit qui sait : la page redessine la barre
+           sitôt le compte posé (`index.html`). L'attente de l'adaptateur, qui
+           ne servait à rien, est retirée, et son commentaire dit pourquoi.
+
+           Un relevé ne verrait ce défaut qu'une fois sur cent. Le contrôle ne
+           s'en remet donc pas au hasard : il **force** l'ordre perdant —
+           `/context` retardé dans la page avant que rien n'y soit chargé —,
+           vérifie qu'il l'a bien obtenu (le compte servi après les deux
+           autres), puis exige le bouton.
+
+           Deux autres choses apprises en route :
+
+           - le contrôle « sans effet » rougissait, au défaut réintroduit, par
+             une **exception** — le rechargement emportait le contexte de
+             l'évaluation — et non par son nom. Il lit désormais ce
+             rechargement comme le défaut qu'il est ;
+           - au défaut C (plus de rechargement), le retour à l'origine échoue
+             aussi : l'adaptateur garde l'instance d'avant, et juge le retour
+             sans objet. La route rétablit, et le contrôle le voit.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | A — reprendre la même instance écrit et recharge | sans effet (rechargée) |
+           | B — le choix n'est plus écrit chez le serveur | une autre instance retenue |
+           | C — plus de rechargement après le choix | retenue, et le retour à l'origine |
+           | D — le renvoi vise un autre module | les droits réglés sur SURV, et le retour |
+           | E — le bouton des droits n'est plus posé | les droits, et le retour |
+           | F — la page ne redessine plus le compte posé | le contexte arrivé le dernier |
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | `exec-adapters.js` | 2 / 4 | **4 / 4** |
+           | SURV, occurrences exercées | 492 / 505 (97 %) | **494 / 505 (98 %)** |
+           | SURV, noms exercés | 300 / 310 (97 %) | **302 / 310 (97 %)** |
+           | Suites SURV | 9 | **10** |
+           | Campagne | 1 800, 28 suites | **1 808, 29 suites** |
+
+           La campagne a été coupée par une mise en veille de la machine
+           (batterie à 1 %, quatre heures d'hibernation) : `ramp-navigateur`,
+           qui tournait, a perdu son navigateur, et `droits-navigateur` a
+           démarré au réveil. Les deux ont été rejouées — seules, puis dans le
+           même processus derrière `surv-barre`, comme en campagne —, vertes.
+           Leurs contrôles restés en vol avaient été comptés à la suite
+           suivante (`PLAN`, 88 au lieu de 51) : le total ci-dessus est fait
+           des comptes de chaque suite, non de ce relevé faussé.
+
+           `exec-adapters.js` est complet. Restent, hors des deux noms qu'un
+           compte gouvernant ne voit pas : la remise d'une constatation
+           directe, l'œil des statistiques, et le fond de la fenêtre de
+           commentaire.
+
+       5.f.96 [x] **Remettre une constatation, l'ouvrir depuis les statistiques,
+           refermer un commentaire par son fond** — fait le 14 novembre 2026.
+           Trois gestes que rien n'exerçait, et qui se suivent dans la vie
+           d'une constatation relevée hors activité. Onzième suite SURV,
+           `surv-constatations`.
+
+           ── La remise ──
+
+           `surv.smoke.js` menait la constatation jusqu'au courriel de remise et
+           s'y arrêtait : sa ronde l'efface en partant, et l'écran n'offre plus
+           de l'effacer une fois remise. Celle-ci l'efface par la route. Elle
+           passe par le sas de messagerie de la suite : rien ne sort de la
+           machine.
+
+           - **sans destinataire**, l'écran le dit et rien ne part — aucun
+             appel à `/transmettre`, la constatation reste validée, le bouton
+             reste libre ;
+           - **le destinataire saisi**, la constatation est remise **à lui** —
+             le serveur le garde —, ouverte, sa fiche servie en PDF, et le volet
+             rouvert sur elle ;
+           - le courriel arrive au sas, la référence en objet et **le lien** de
+             la fiche dans le corps.
+
+           Ce dernier contrôle a d'abord rougi sur un écran sans défaut : il
+           cherchait la fiche **en pièce jointe**. Elle n'y est pas, et c'est
+           voulu — `transmission.js` dépose le PDF et en met le lien dans le
+           corps. Le contrôle suit désormais le chemin du destinataire : le lien
+           dans le courriel, puis le document par ce lien, qui commence par
+           `%PDF-`.
+
+           ── L'œil des statistiques ──
+
+           `execOuvrirConstatation` aiguille selon le statut, et arme le retour.
+           Ouverte et majeure, la constatation est dans « émises — ouvertes » :
+           l'œil la mène à son suivi PAC, et « Retour » ramène aux
+           statistiques, le détail de l'indicateur toujours ouvert.
+
+           ── Le fond de la fenêtre de commentaire ──
+
+           Elle s'ouvre au refus des preuves, à l'étape de la mise en œuvre, que
+           la constatation n'a pas atteinte : la ronde appelle donc ce que le
+           bouton appelle. Le geste mesuré est le clic : dedans, la fenêtre
+           tient ; sur le fond, elle se referme ; et rien ne part.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | G — plus de garde sans destinataire | sans destinataire (le serveur refuse : 400), la remise, la console |
+           | H — le volet n'est plus rouvert après la remise | la remise |
+           | I — le destinataire saisi n'est pas celui qui part | la remise, le courriel |
+           | J — l'œil n'arme plus le retour | l'œil des statistiques |
+           | K — l'œil n'aiguille plus une constatation ouverte vers son suivi | l'œil des statistiques |
+           | L — le fond referme à tout clic, dedans compris | la fenêtre de commentaire |
+           | M — le fond ne referme plus | la fenêtre de commentaire |
+
+           G montre que la garde de l'écran n'est pas redondante : sans elle,
+           le serveur refuse bien, mais l'agent lit « Destinataire manquant »
+           après un appel qui a échoué, au lieu de la consigne de l'écran.
+
+       5.f.97 [x] **Du côté de l'organisme : accuser réception, consulter une
+           constatation — et une phrase fausse corrigée** — fait le 14 novembre
+           2026. Les deux derniers noms de SURV. Douzième suite,
+           `surv-prestataire`.
+
+           ── Ce qui était écrit, et qui était faux ──
+
+           La ligne de SURV ci-dessus disait ces deux noms **hors de portée des
+           suites** : offerts au seul compte qui ne gouverne pas le module, ils
+           auraient exigé une seconde session, quand la suite se connecte en
+           super-administrateur. Un passage ancien de la note de couverture
+           disait de même pour `execViewFNC`.
+
+           La note avait pourtant vu le chemin dès le n° 5.f.85 : la bascule
+           « Vue Prestataire » les met à portée, `req.user` y étant le compte
+           simulé. Le serveur y sert un compte de rôle `PRESTATAIRE` —
+           `M3_Prestataire` à l'écran —, borné à l'organisme choisi : il ne
+           gouverne pas. La ronde annoncée n'avait pas été écrite ; la phrase
+           fausse, elle, était restée. C'est la même faute que la phrase du
+           n° 5.f.88, que le n° 5.f.89 a corrigée : *une limite écrite se relit
+           comme un fait, longtemps après que ce qui la fondait a changé.*
+
+           La ronde bascule par la route — la bascule par la barre est éprouvée
+           dans `surv.smoke.js` — et rend la vue Autorité quoi qu'il arrive : la
+           vue est persistée pour le compte.
+
+           ── L'accusé de réception ──
+
+           Une notification envoyée par les routes ; en vue Prestataire, l'écran
+           raisonne en organisme et offre l'accusé. Refusé à la confirmation,
+           rien ne part ; confirmé, le serveur le porte, avec son auteur, et le
+           bouton se fige sur « accusé ».
+
+           ── Consulter une constatation ──
+
+           L'Autorité prend l'accord, qui ouvre le dossier, y pose une
+           constatation, valide et transmet le rapport, clôture, et solde la
+           constatation. L'organisme la consulte : l'œil « Consulter », et non
+           le crayon ; la fiche sans rien de saisissable ; « Retour » aux
+           constatations du dossier.
+
+           Le chemin a été **cherché**, non supposé. La première ronde cherchait
+           le dossier dans les pages de la vue, et ne l'y trouvait pas : aucune
+           ne liste les dossiers, et la table des constatations mène une
+           constatation en vigueur — **soldée comprise**
+           (`EXEC_CONSTA_EN_VIGUEUR`) — à son plan d'actions, non à son
+           dossier. Le seul chemin que l'écran offre à l'organisme passe par le
+           tableau de bord, ses statistiques, « émises — clôturées », et l'œil
+           d'une constatation soldée portée par un dossier
+           (`execOuvrirConstatation`).
+
+           C'est un constat, pas un défaut corrigé : un organisme ne rejoint
+           le dossier d'une constatation, et sa fiche en lecture, que par les
+           statistiques. Si l'on veut qu'il le puisse depuis la table de ses
+           constatations, c'est une décision d'écran — à prendre, non à glisser
+           dans une ronde.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | N — refuser la confirmation accuse quand même | le refus |
+           | O — l'écran ne se rafraîchit plus après l'accusé | l'accusé donné (bouton non figé) |
+           | P — un dossier clôturé offre le crayon | l'œil « Consulter », et la consultation |
+           | Q — « Retour » mène à un autre onglet du dossier | la consultation |
+
+           ── Le dernier « non exercé » n'en était pas un ──
+
+           Le relevé, refait sur les douze suites, laissait **un** nom non
+           exercé : `e`, au fond de la fenêtre de commentaire — le geste que
+           `surv-constatations` presse, et que ses contre-tests L et M font
+           rougir. Le geste joue ; c'est le relevé qui ne le voyait pas.
+
+           `el.onclick = e => { … }` pose une fonction fléchée **anonyme**. Le
+           motif statique lisait `e`, son **paramètre**, comme le nom du
+           gestionnaire ; à l'exécution, une affectation sur un membre ne donne
+           aucun nom à la fonction, et le rapprochement ne pouvait jamais se
+           faire. La même chose entre parenthèses, `(e) => …`, n'entrait pas au
+           relevé du tout : le motif exige un identifiant.
+
+           Les deux formes sont désormais traitées pareil : un identifiant suivi
+           de `=>` n'est pas un nom. Même famille que la correction de `null`
+           (n° 5.f.83) — *retirer du dénominateur ce qui n'y avait pas sa place,
+           sans rien ajouter au numérateur.* Le relevé figé est ajusté de cette
+           seule entrée, et le contrôle des unitaires qui compare le figé au
+           relevé frais le confirme.
+
+           Ce qui reste est un **angle mort nommé** : sept fonctions fléchées
+           posées en propriété, dans tout le dépôt, n'entrent pas au relevé.
+           Les nommer par leur source, des deux côtés, les y ferait entrer ;
+           c'est un chantier du relevé, non de SURV, et il toucherait aussi le
+           portail.
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, noms exercés | 302 / 310 (97 %) | **306 / 309 (99 %)** — tous les décidables |
+           | SURV, occurrences exercées | 494 / 505 (98 %) | **498 / 504** — toutes les décidables, 6 indécidables |
+           | Suites SURV | 10 | **12** |
+           | Campagne | 1 808, 29 suites | **1 823, 31 suites** |
+
+           SURV est entier pour tout ce qu'un relevé sait décider. Restent deux
+           choses, qui ne sont pas des rondes à écrire :
+
+           - **l'angle mort du relevé** — nommer par leur source les sept
+             fonctions fléchées posées en propriété, des deux côtés du
+             rapprochement. C'est un chantier du relevé ; il touche le portail ;
+           - **l'accès de l'organisme au dossier d'une constatation** — par les
+             seules statistiques aujourd'hui. Une décision d'écran, à demander
+             à la maîtrise d'ouvrage avant toute ligne de code.
+
+       5.f.98 [x] **L'angle mort du relevé : les flèches posées en propriété,
+           nommées par leur texte — et seize là où l'on en disait sept** —
+           fait le 14 novembre 2026. Une suite SURV de plus, `surv-fenetres`,
+           et une ronde de plus au `parcours`.
+
+           ── Ce qui manquait au relevé ──
+
+           `overlay.onclick = () => execCloseSlider()` pose une fonction sans
+           nom : une affectation sur un membre n'en donne aucun. Le relevé
+           nommait un gestionnaire en propriété par l'identifiant écrit après
+           `=` ; une flèche n'en a pas, et elle restait dehors. Le n° 5.f.97
+           l'avait dit — « sept fonctions fléchées » —, sans les avoir comptées
+           toutes.
+
+           Le compte a été refait sur **toutes** les affectations
+           `.on<événement> =` des sources, contre ce que le relevé en retenait.
+           Il en manquait **seize**, en trois familles :
+
+           - neuf flèches derrière une cible simple — `el.onclick = (e) => …` ;
+           - six derrière une cible qui est un **appel** —
+             `el.querySelector('#exec_preuve_ok').onclick = () => …`. Le motif
+             ne lisait qu'un identifiant pointé avant `.on…` : ces affectations
+             n'entraient au relevé sous **aucune** forme, nommée ou non. Elles
+             n'étaient pas dans les sept ;
+           - une avec un type de retour TypeScript — `(e): void => …`
+             (`instances.ts`).
+
+           Quatorze dans SURV, deux dans le portail. La seule affectation encore
+           hors du relevé est `voile.onclick = null`, qui retire un geste.
+
+           ── Les nommer par leur texte, des deux côtés ──
+
+           Le texte d'une flèche est ce que les deux côtés voient : la source
+           l'écrit, le navigateur le rend par `String(fn)`. Mais pas sous la même
+           forme — un écran TypeScript est réimprimé par esbuild, qui change les
+           guillemets et réindente les blocs, et un commentaire est blanchi d'un
+           côté, gardé de l'autre. Les deux côtés passent donc par **une seule**
+           mise en forme, `formeDeFleche` : esbuild réimprime l'expression, et
+           les blancs se réduisent. Le mouchard, quand une fonction n'a ni nom
+           ni globale qui la porte, rend son texte au lieu de « (anonyme) » ; le
+           côté Node le met en forme.
+
+           Le texte **entier** est la clé, non le premier appel qu'il contient :
+           `el.remove` ou `fermer` diraient trop peu, et confondraient les
+           fenêtres. Le prix, dit : deux flèches identiques en deux endroits ne
+           font qu'un geste, comme deux attributs qui appellent la même fonction.
+
+           Quatre contrôles unitaires le gardent : une flèche écrite et la même
+           servie par esbuild ont une clé ; un commentaire n'y change rien ; deux
+           flèches qui appellent autre chose restent deux ; les deux côtés
+           passent par la même fonction.
+
+           Le deuxième a rougi au premier passage, sur un code sans faute
+           apparente : esbuild **garde** certains commentaires, et `String(fn)`
+           les rend tous, quand la source arrive aux motifs déjà blanchie. Une
+           flèche commentée ne se serait jamais rapprochée. Aucune ne l'est
+           aujourd'hui, et c'est pourquoi le relevé ne l'aurait pas dit :
+           `formeDeFleche` blanchit désormais elle-même, des deux côtés.
+
+           ── Ce que les suites pressaient déjà, et ce qu'elles ne pressaient pas ──
+
+           Le premier relevé refait a rapproché **neuf** flèches sur seize —
+           toutes dans SURV, aucune au portail. C'est la preuve que le
+           rapprochement tient : ce sont celles que des rondes pressent, et le
+           fond de la fenêtre de commentaire que `surv-constatations`
+           contre-teste en est.
+
+           Restaient cinq gestes SURV, tous des **renoncements** — le fond du
+           volet, le fond du choix du validateur, et dans la fenêtre d'intitulé
+           d'une preuve son fond, « Annuler », et la touche Entrée, qui vaut
+           « Ajouter ». La treizième suite SURV, `surv-fenetres`, les joue par
+           leurs vrais chemins — la soumission d'une notification, le sélecteur
+           de fichiers d'une preuve — et compte les écritures pendant chaque
+           geste : la fenêtre doit se fermer, et rien ne doit partir. L'Entrée
+           est l'inverse : un seul dépôt, sous l'intitulé saisi ; une autre
+           touche ne valide rien.
+
+           Une attente bornée garde la ronde : une fenêtre qui ne se refermerait
+           plus aurait laissé pendre la promesse qui l'ouvre, et la suite se
+           serait **arrêtée** au lieu de rougir. Le contre-test T l'a confirmé :
+           il rougit, et ne pend pas.
+
+           ── Une phrase du portail, fausse sans que rien ne le dise ──
+
+           La note de couverture du portail portait : *« Il ne reste aucun geste
+           du portail qui soit à la fois couvrable et non couvert. »* Le choix de
+           l'instance dans la barre l'était — couvrable, non couvert —, mais
+           invisible : c'est la flèche de `instances.ts`. Le `parcours` le couvre
+           au même pas : l'instance d'essai qu'il vient d'ouvrir est choisie
+           dans la barre, le portail se recharge sur elle, puis le même geste
+           ramène l'origine. Le choix étant persisté pour le compte, la route le
+           rétablit quoi qu'il arrive, et le contrôle exige qu'elle n'ait pas eu
+           à servir. *Un bloc vide ne prouve rien de plus que l'instrument qui
+           l'a vidé.*
+
+           La seconde flèche du portail, `(e) => e.preventDefault()` sur le
+           `mousedown` du bouton de vidage, est la même précaution que
+           l'attribut déjà déclaré « pas un geste » : elle est déclarée à côté.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | R — le fond du volet ne referme plus | le fond du volet |
+           | S — le fond du validateur referme à tout clic, dedans compris | le choix du validateur |
+           | T — le fond de la preuve ne referme plus | la preuve par son fond (sans pendre) |
+           | U — « Annuler » valide au lieu de renoncer | « Annuler », et l'Entrée (un dépôt de trop) |
+           | V — toute touche vaut Entrée | l'Entrée (une autre touche valide) |
+           | W — le choix d'instance ne recharge plus le portail | l'instance choisie dans la barre |
+           | X — le choix d'instance n'envoie pas la valeur choisie | l'instance choisie dans la barre |
+           | Y — le mouchard ne met plus le texte en forme par `formeDeFleche` | les deux côtés, par la même fonction (unitaires) |
+           | Z — la mise en forme ne blanchit plus les commentaires | un commentaire ne change pas la clé (unitaires) |
+
+           Sous W et X, la route a rétabli l'instance : le reste du parcours
+           n'en a pas hérité (110 sur 111).
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | SURV, noms exercés | 306 / 309 | **320 / 323** — tous les décidables ; 512 occurrences sur 518, 6 indécidables |
+           | Portail, noms exercés | 67 / 84 | **68 / 86** — le plafond, 10 motivés, 8 indécidables |
+           | Affectations `.on… =` hors du relevé | 16 | **0** (et `= null`) |
+           | Suites SURV | 12 | **13** |
+           | Campagne | 1 823, 31 suites | **1 834, 32 suites** |
+
+           Le relevé n'a plus d'angle mort connu parmi les gestionnaires posés
+           en propriété. Ce qu'il ne voit pas encore, il ne le sait pas — et
+           c'est le compte de toutes les affectations, refait contre lui, qui
+           l'a montré cette fois-ci : *mesurer l'instrument contre une liste
+           qu'il n'a pas faite lui-même.*
+
+           ── Une décision, prise le même jour ──
+
+           Le n° 5.f.97 laissait ouverte une question d'écran : un organisme ne
+           rejoint le dossier d'une constatation, et sa fiche en lecture, que
+           par les statistiques — « émises — clôturées », puis l'œil. Faut-il
+           l'y mener aussi depuis la table de ses constatations ?
+
+           **Décidé par la maîtrise d'ouvrage, le 14 novembre 2026 : la
+           situation actuelle est maintenue.** Le chemin par les statistiques
+           est le chemin voulu, et `surv-prestataire` le garde. Ce n'est donc
+           plus une question en attente, ni un défaut à corriger : une ronde
+           qui ne trouverait pas le dossier depuis la table des constatations
+           ne devra pas le « réparer ».
+
+       5.f.99 [x] **PLAN, mesuré avant d'être réécrit : huit gestes de plus,
+           un motif périmé, et un nom que rien ne pouvait rapprocher** — fait
+           le 14 novembre 2026. PLAN est le prochain écran de la conversion
+           (5.c) ; sa seconde suite, `plan-gestes`.
+
+           ── Les onze qui restaient, relus contre l'écran ──
+
+           Le relevé laissait onze gestes non exercés, et la note en disait
+           quatre inatteignables. Relus un par un :
+
+           - **trois le restent** — la barre de sous-onglets
+             (`PLAN_STATE.currentSub`), qu'aucune entrée de `PLAN_NAV` ne
+             déclare ; l'approbation du directeur et la transmission, dont les
+             boutons exigent `valide` ou `approuve_dg` dans le seul rendu qui
+             ne reçoit que des plans `soumis` ;
+           - **le quatrième ne l'était plus** : `planAppliquerInstance` était
+             dit hors d'atteinte faute de multi-instances, « Docker étant à
+             l'arrêt ». L'environnement d'essai en offre — `surv-barre` change
+             déjà l'instance de SURV par la même barre du socle. C'est la faute
+             des n° 5.f.88 et 5.f.97, une troisième fois : *une limite écrite
+             se relit comme un fait longtemps après que ce qui la fondait a
+             changé* ;
+           - **les sept autres** n'avaient jamais été dits inatteignables : ils
+             n'étaient pas pressés.
+
+           ── La seconde suite, et le socle qu'elle partage avec SURV ──
+
+           `plan-gestes` avait besoin de la mise en place de `surv-socle.js` —
+           sas, serveur, mouchard, console, session. La copier aurait fait deux
+           socles qui divergent. Trois choses seules distinguent un module :
+           son chemin, l'élément où il pose son contenu, la largeur de fenêtre
+           de sa suite. Elles sont devenues des paramètres de
+           `module-socle.js` ; `surv-socle.js` les fixe pour SURV, et ses
+           treize suites n'ont pas bougé.
+
+           Huit gestes, onze contrôles :
+
+           - l'instance regardée — reprise sans effet ; une autre retenue, le
+             module rechargé, et le même geste qui ramène l'origine sans que la
+             route ait à servir ;
+           - la croix du panneau des notifications ;
+           - les flèches du calendrier, qui ne valent que si la piste déborde :
+             la fenêtre rétrécie, l'écouteur `resize` doit les armer ; « › »
+             défile, « ‹ » ramène ; la largeur rendue, elles suivent ;
+           - l'étiquette d'une sous-activité — voir plus bas ;
+           - « Activité pour ce prestataire » : le plan s'ouvre, et la nouvelle
+             activité reprend le prestataire ;
+           - le dépli des modifications d'un amendement, dans l'historique ;
+           - « Tout sélectionner », à la synchronisation des risques.
+
+           Le plan, son activité, sa validation et son amendement soumis sont
+           bâtis par les routes, et retirés par elles ; un contrôle exige qu'il
+           n'en reste rien.
+
+           ── Deux fautes de ma ronde, une leçon de l'écran ──
+
+           Le premier passage a rendu neuf sur onze. L'historique : j'avais
+           appelé la page `history` ; elle s'appelle `historique`. L'étiquette :
+           j'exigeais que cocher la case **ne bouge pas** le volet. L'écran les
+           lie exprès — cocher ouvre, décocher referme (`pl-crud.js`) — et
+           c'était mal lire l'écran. Le contrôle mesure désormais l'accord de
+           la case et du volet, dans les deux sens, par un vrai clic de souris.
+
+           ── Une garde qui ne garde rien ici ──
+
+           L'étiquette porte `onclick="event.stopPropagation();"`, censé
+           empêcher le clic de basculer le volet une seconde fois. Le
+           contre-test qui la **retire** (AE) est resté vert : dans Chrome,
+           un clic sur une étiquette placée dans un `<summary>` est activé par
+           l'étiquette, et le volet ne bascule pas de lui-même. La garde n'a
+           ici aucun effet mesurable, et le contrôle ne la prouve pas — il est
+           dit tel, dans la suite. Elle reste, inoffensive : d'autres
+           navigateurs ont traité autrement le contenu interactif d'un
+           `<summary>`, et ce dépôt ne les éprouve pas. *Un contre-test vert
+           n'est pas un échec de la méthode : c'est elle qui dit ce qu'un
+           contrôle ne prouve pas.*
+
+           ── Un nom que rien ne pouvait rapprocher ──
+
+           Le relevé refait laissait un quatrième non exercé :
+           `this.classList.toggle`, dans le dépli d'un amendement — le geste
+           que la ronde presse, et que son contre-test (AG) fait rougir.
+
+           Le gestionnaire commence par une **déclaration** :
+           `const r=document.getElementById('${diffRowId}');…`. Aucune règle du
+           nommeur ne s'y appliquait, et il se nommait par ses quarante-huit
+           premiers caractères. Côté source, l'interpolation gardée dans ce
+           fragment l'envoyait sur la voie des noms « posables », qui en tirait
+           **deux** gestes ; côté mouchard, le fragment portait l'identifiant
+           réel. Rien ne pouvait se rapprocher. `document.getElementById`
+           passait pour exercé grâce à une **autre** occurrence — la croix des
+           notifications —, et `this.classList.toggle` restait non exercé pour
+           toujours. Le masquage par agrégation du n° 5.f.30, encore.
+
+           Une déclaration en tête se saute désormais, et l'on nomme ce qui
+           suit, par les mêmes règles — `r.style.display` ; s'il ne suit rien,
+           l'appel qui initialise la variable. Mesuré sur les sept écrans avant
+           de figer : **une seule occurrence** change, celle-ci. Deux cas
+           s'ajoutent aux contrôles du nommeur.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | AA — reprendre la même instance écrit et recharge | reprendre sans effet |
+           | AB — la croix vise un autre panneau | les notifications |
+           | AC — plus d'écouteur `resize` | l'armement des flèches, et le défilement |
+           | AD — les deux flèches défilent dans le même sens | le défilement |
+           | AE — la garde de l'étiquette retirée | **aucun** — voir plus haut |
+           | AF — le prestataire n'est plus gardé à l'ouverture | « Activité pour ce prestataire » |
+           | AG — le chevron ne marque plus son dépli | l'historique |
+           | AH — « Tout sélectionner » ne décoche plus | la synchronisation |
+           | AI — la règle de la déclaration retirée | les deux cas du nommeur, et le relevé figé |
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | PLAN, noms exercés | 77 / 93 | **85 / 93** — les trois restants inatteignables, mesurés ; 5 indécidables |
+           | PLAN, occurrences exercées | — | **127 / 137**, 7 indécidables |
+           | Suites PLAN | 1 | **2** |
+           | Campagne | 1 834, 32 suites | **1 847, 33 suites** |
+
+           PLAN est désormais mesuré jusqu'à son plafond. Sa conversion peut
+           commencer — à la manière de DROITS (suite n° 1) : les contrôles de
+           ses deux suites sont la définition de « la réécriture marche ».
+
+       5.f.100 [x] **L'approbation du directeur et la transmission, rendues à
+           l'écran — et une lettre que le serveur jetait** — fait le
+           14 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           ── La décision ──
+
+           Le n° 5.f.99 laissait deux actes du circuit (Chap. 4 §4.2.3.e-f)
+           qu'aucun écran n'offrait, quand le serveur les exécute : leurs
+           boutons vivaient dans la page de validation, qui ne reçoit que des
+           plans soumis, et ils exigent un plan validé. La question était de
+           les rendre accessibles ou de les retirer. **Décidé : les rendre
+           accessibles.**
+
+           ── Où, et à qui ──
+
+           Au **détail du plan**. Ce n'est pas un choix d'agencement : les deux
+           gestes y ramènent déjà après succès (`planOpenDetail`). L'écran
+           savait où il les attendait ; seul l'appel manquait.
+
+           À l'intersection de deux règles : l'administrateur agit comme DG — la
+           règle que l'écran portait —, et le serveur exige le privilège de
+           validation sur le secteur du plan. *Un bouton que le serveur
+           refuserait ne s'offre pas.* « Approuver (DG) » sur un plan validé,
+           « Transmettre au prestataire » sur un plan approuvé, et plus rien
+           sur un plan transmis.
+
+           La branche de la page de validation, qui ne pouvait jamais
+           s'afficher, est retirée, avec le statut `valide_directeur` qu'elle
+           testait et qu'aucune transition ne produit.
+
+           ── Ce que la ronde a trouvé en jouant l'acte ──
+
+           Le contrôle de la suite d'origine **constatait** le manque. Il a été
+           réécrit pour jouer les deux actes par leurs boutons — l'approbation
+           et ses deux invites enchaînées, le commentaire puis la lettre de
+           transmission ; la transmission refusée une fois à la confirmation,
+           puis confirmée.
+
+           Tout a tenu, sauf une chose, que le contrôle cherchait exprès : **la
+           lettre de transmission se perdait.** L'écran la demande ; la
+           confirmation de la transmission la dit « enregistrée » ; le
+           gestionnaire générique des transitions ne retenait que le motif et
+           le commentaire. Sur un acte d'autorité, c'est une donnée saisie et
+           jetée sans un mot. Aucune suite ne pouvait le voir tant que le
+           bouton n'existait pas : la route était éprouvée par la suite HTTP,
+           mais avec un corps qui ne portait pas de lettre.
+
+           Le serveur la garde désormais, sur le plan et dans son circuit, et
+           refuse une lettre qui n'est pas un texte raisonnable plutôt que de la
+           tronquer. Deux contrôles HTTP de plus.
+
+           ── Une faiblesse vue, et non corrigée ici ──
+
+           Les sept transitions du circuit passent par un seul gestionnaire,
+           qui **ne vérifie pas le statut d'origine** : la route
+           `transmettre` transmettrait un brouillon, `valider` validerait un
+           plan jamais soumis. L'écran seul tient l'ordre du circuit. Le
+           corriger change la règle de toutes les transitions, et la suite
+           HTTP en exerce plusieurs hors de l'ordre de l'écran : c'est une
+           décision à part, nommée ici plutôt que glissée dans celle-ci.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôle qui rougit |
+           |---|---|
+           | AJ — le bouton d'approbation n'est plus rendu au détail | l'approbation, et la transmission qui la suit |
+           | AK — « Transmettre » offert dès le plan validé | l'approbation (transmettre offert trop tôt) |
+           | AL — le serveur ne garde plus la lettre | la lettre gardée (HTTP) |
+           | AM — la transmission part sans confirmation | la transmission (le refus transmet) |
+
+           ── Ce que cela change aux chiffres ──
+
+           | | avant | après |
+           |---|---|---|
+           | PLAN, noms exercés | 85 / 93 | **87 / 93** — le seul reste, la barre de sous-onglets, est inatteignable |
+           | Contrôles HTTP de PLAN | 71 | **73** |
+           | Contrôles de navigateur de PLAN | 51 | **52** |
+           | Campagne | 1 847, 33 suites | **1 850, 33 suites** |
+
+       5.f.101 [x] **PLAN en TypeScript, premier fichier : les libellés et
+           l'état — et un nom que le socle déclarait pour un autre** — fait le
+           14 novembre 2026. La conversion de PLAN commence (5.c), par le seul
+           de ses treize fichiers qui n'a pas d'interface, `pl-i18n.js`
+           (1 032 lignes). C'est l'ordre du portail en 5.c.1 : ce qui n'a pas
+           d'interface se prouve entièrement.
+
+           ── Ce qui est converti ──
+
+           | Source | Devient |
+           |---|---|
+           | la table `PLAN_TR`, trois volets de 330 clés | `traductions.fr.ts`, `.en.ts`, `.pt.ts` — un fichier par volet, sous le seuil de forme |
+           | `tp`, `pt` | `traductions.ts` |
+           | `PLAN_MODULE_API`, `PLAN_STATE` | `etat.ts` — l'état d'un écran n'avait rien à faire dans le fichier des libellés |
+           | ce que la page lisait en globales | le sas `globales/pl-i18n.ts`, construit vers `modules/planification/app/pl-i18n.js` |
+
+           Les volets ne sont pas recopiés : ils sont **générés** depuis la
+           table elle-même, relus, et comparés entrée par entrée. Le français
+           définit les clés, les deux autres sont typés par lui — une
+           traduction oubliée ne construit plus.
+
+           ── La surface, mesurée ──
+
+           `PLAN_MODULE_API` et `PLAN_TR` étaient des `const` de premier
+           niveau : des globales **lexicales**, lues en identifiant nu, et
+           qu'un module ne peut pas créer. Le sas les pose sur `window`, où une
+           lecture nue les retrouve — la leçon de `CURRENT_LANG` (5.c.1).
+           Aucun autre fichier ne redéclare l'un des cinq noms, faute de quoi
+           la pose serait masquée. Les deux contre-tests qui retirent une pose
+           arrêtent l'écran au montage — `PLAN_STATE is not defined`,
+           `PLAN_MODULE_API is not defined` : l'un arrête `plan-gestes` après
+           trois contrôles rouges, l'autre en fait tomber huit sur onze.
+
+           ── La preuve d'équivalence ──
+
+           L'ancien fichier, pris dans `git`, et le paquet construit, chacun
+           dans un contexte isolé : **6 077 comparaisons, aucun écart** —
+           chaque clé dans six langues, dont une inconnue, une vide et une
+           nulle ; chaque clé avec des arguments, `$&` compris ; `pt` avec et
+           sans table du portail ; l'état initial selon quatre valeurs du
+           stockage ; les lectures nues et sur `window`. La comparaison a été
+           contre-essayée cinq fois — une pose retirée, `tp` qui remplace tout,
+           `pt` qui préfère la langue du portail, une traduction altérée, une
+           autre clé de stockage —, et chaque fois elle a mordu.
+
+           Elle a aussi montré ce qu'elle préserve et qu'on ne choisirait pas :
+           `tp('field_changed', 'A', 2, '$&')` rend `« {2} »`, l'argument `$&`
+           étant lu par `replace` comme « le texte trouvé ». C'est l'ancien
+           comportement, conservé : une conversion ne corrige rien, elle rend
+           vérifiable.
+
+           Une seule différence, dite : `tp` convertit ses arguments par
+           `String()`, l'ancien les passait bruts. Une fonction passée en
+           argument aurait été **appelée** par `replace` ; mesuré, aucun appel
+           n'en passe — ce sont des nombres et des chaînes.
+
+           ── Un nom que le socle déclarait pour un autre ──
+
+           Le compilateur a refusé la première construction : `frontend/socle/
+           chrome.ts` **déclarait** `window.PLAN_STATE`, qu'il lit pour déplier
+           le volet latéral de PLAN. Il le faisait faute de définisseur — PLAN
+           était en JavaScript. Il en a un maintenant, et la règle de 5.b veut
+           que le module qui définit un nom soit le seul à le déclarer. La
+           déclaration passe au sas de PLAN, **optionnelle**, parce que c'est la
+           vérité : seule la page de PLAN le pose.
+
+           ── Deux garde-fous qui ont demandé leur dû ──
+
+           - **le typage ne se défait nulle part** : ma première écriture de
+             `traductions.ts` lisait la table et `window` par
+             `as unknown as`. Refusé, à bon droit. La table s'affecte sans
+             transtypage à un type indexé par chaîne — le même objet, la même
+             lecture —, et `PORTAL_TRANSLATIONS`, que **rien ne définit** dans
+             le dépôt, est déclaré avec les autres noms sans propriétaire
+             (`sans-proprietaire.d.ts`) plutôt que tu par un transtypage. `pt`
+             rend donc toujours la clé : c'était vrai avant, c'est écrit
+             maintenant ;
+           - **les clés orphelines** : le garde lisait la table dans
+             `public/…/js` seul. La table partie dans `frontend/`, il aurait
+             déclaré orphelines les deux mille clés que les fichiers restés en
+             JavaScript demandent. Il lit désormais les deux répertoires, et la
+             forme convertie des volets (`export const FR = {`).
+
+           Et un troisième, qui a mordu avant toute suite : la page laissée sur
+           l'ancien chemin, **la construction s'arrête** — « un sas que rien
+           n'atteint ». Le contrôle des ressources servies n'a pas eu à parler.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui rougit |
+           |---|---|
+           | AO — le sas ne pose plus `PLAN_STATE` | l'écran au montage — trois contrôles rouges, puis la suite s'arrête sur l'exception |
+           | AP — le sas ne pose plus `PLAN_MODULE_API` | l'écran au montage ; 8 contrôles sur 11 |
+           | AQ — la page demande encore l'ancien chemin | la construction elle-même |
+           | 1 à 5 — sur la comparaison | la comparaison, chaque fois |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **1 sur 13** — 1 032 lignes sur 5 958 |
+           | Restent | `pl-namespace.js` (28), `pl-instances.js` (61), et les dix qui portent l'interface |
+           | Contrôles qui définissent « la réécriture marche » | 52 + 11 de navigateur, 73 HTTP — inchangés, tous verts |
+           | Campagne | **1 850, 33 suites** — inchangée : la conversion n’ajoute ni ne retire aucun contrôle |
+
+       5.f.102 [x] **PLAN en TypeScript, deuxième pas : la façade et
+           l'instance — une façade que personne ne lit, et un script qui ne
+           publie plus rien** — fait le 15 novembre 2026. `pl-namespace.js`
+           (28 lignes) et `pl-instances.js` (61) : les deux fichiers de PLAN
+           qui portent le moins d'interface.
+
+           ── Mesurer d'abord : une photographie de la page ──
+
+           Ni l'un ni l'autre ne se prouve par une comparaison de valeurs : ce
+           qu'ils font tient à la page entière — l'ordre de chargement, la
+           barre du socle, l'enveloppe que la page pose sur `planNavigateTo`.
+           La page de PLAN a donc été **photographiée** dans un navigateur
+           avant la conversion, puis après : `window.PL` — ses clés, chacune
+           de ses fonctions par son nom, son accesseur `state`, et le fait que
+           `navigateTo` soit la fonction d'origine et non l'enveloppe —, les
+           quatre noms de `pl-instances`, la liste d'instance de la barre, et
+           les exceptions de la page.
+
+           ── La façade : convertie telle quelle, et sans lecteur ──
+
+           `window.PL` est le point d'entrée documenté du module — « c'est
+           elle, et elle seule, que le portail, le chrome partagé ou un autre
+           module doivent utiliser ». **Aucun fichier du dépôt ne la lit.**
+           Elle est convertie à l'identique, en sas : retirer un nom n'est pas
+           l'objet d'une conversion, et son absence de lecteur est écrite dans
+           le sas, pour qu'on la pèse le jour où PLAN n'aura plus de
+           JavaScript.
+
+           Les fonctions qu'elle capture sont définies par des fichiers restés
+           en JavaScript. Le TypeScript les **déclare**, en un seul endroit —
+           `restant.d.ts`, la frontière de la cohabitation —, toutes
+           optionnelles, parce que c'est la vérité pour un programme qui ne
+           voit pas la page. Chaque ligne en partira avec le fichier qui
+           définit son nom.
+
+           ── L'instance : un script de page, et non un sas ──
+
+           `pl-instances.js` posait quatre noms au premier niveau. **Aucun
+           autre fichier ne les lit** : le geste passe par une fermeture remise
+           à la barre du socle. Converti, le fichier ne publie donc rien — il
+           est rangé dans `pages/` —, et les quatre noms quittent la portée
+           globale. C'est la **seule** différence entre les deux photographies,
+           et elle est déclarée.
+
+           Un piège évité en l'écrivant : `pl-instances` n'a besoin que de
+           l'adresse de l'API, qui vivait dans `etat.ts`. L'importer aurait
+           emporté dans son paquet un **second** état de l'écran, distinct de
+           celui que la page partage. L'adresse a son module, sans effet de
+           bord, que `etat.ts` réexporte.
+
+           ── Ce que le relevé a dit ──
+
+           Refait sur les deux suites de PLAN, il rendait d'abord **138**
+           occurrences pour 137 : j'avais oublié de retirer les deux anciens
+           fichiers, qui n'étaient plus chargés et que le relevé lisait encore.
+           Retirés, il rend 137, comme avant — et l'action de barre
+           `planAppliquerInstance`, posée désormais depuis le paquet, est
+           **reconnue au vol** : le mouchard lit le texte de la fermeture, que
+           la construction n'a pas renommée.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | AR — la façade lit `planNavigateTo` à la demande | la photographie : elle rendrait l'enveloppe |
+           | AS — la page ne charge plus le script de l'instance | la construction : « un sas que rien n'atteint » |
+           | AT — le choix d'instance n'appelle plus rien | `plan-gestes` : l'instance retenue |
+
+           ── Où en est PLAN ──
+
+           **3 fichiers sur 13**, 1 121 lignes sur 5 958 — les trois qui n'ont
+           pas d'interface. Restent les dix qui en portent, 4 837 lignes.
+
+       5.f.103 [x] **Le circuit des plans, tenu par le serveur** — fait le
+           15 novembre 2026, sur décision de la maîtrise d'ouvrage.
+
+           Le n° 5.f.100 l'avait vu et nommé : les sept transitions d'un plan
+           passent par un seul gestionnaire, qui ne vérifiait pas le statut
+           d'origine. `transmettre` transmettait un brouillon, `valider`
+           validait un plan jamais soumis ; l'écran seul tenait l'ordre. Sur
+           des actes d'autorité, c'est l'écran qui protégeait le serveur — à
+           l'envers.
+
+           ── La règle ──
+
+           Chaque transition déclare d'où elle part, et ces origines sont
+           **celles que l'écran offre**, relevées dans ses gabarits :
+
+           | Transition | Depuis |
+           |---|---|
+           | soumettre | brouillon, rejeté |
+           | valider, rejeter, rejeter définitivement | soumis (et `en_revue`, que l'écran traite comme soumis) |
+           | approuver (DG) | validé |
+           | transmettre | approuvé DG |
+           | archiver | tout statut, sauf archivé — l'écran l'offre ainsi |
+
+           Hors de cet ordre, la route répond **409 `transition_invalide`**,
+           avec le statut trouvé et ceux attendus, et le plan ne bouge pas —
+           la convention que RAMP suit déjà pour ses fiches. Le statut est lu
+           **dans** la transaction : deux décisions simultanées ne passent pas
+           toutes deux sur la foi d'une lecture d'avant. Et la vérification
+           vient **après** celle des droits : un lecteur reçoit toujours son
+           403, et la suite HTTP l'éprouvait déjà.
+
+           Ce qui n'a pas bougé le dit autant que ce qui a bougé : les 52 + 11
+           contrôles de navigateur de PLAN passent sans changement — l'écran
+           ne demandait jamais une transition hors d'ordre.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Contrôles qui rougissent |
+           |---|---|
+           | AU — plus aucune vérification | les trois contrôles d'ordre |
+           | AV — un plan rejeté ne se resoumet plus (règle trop étroite) | **27** — tout le cycle qui suit la resoumission |
+           | AW — l'approbation admise depuis un brouillon (règle trop large) | le contrôle du brouillon, et le cycle qui suit |
+
+           AV est le plus instructif : une origine oubliée ne fait pas tomber
+           un contrôle, elle fait tomber le cycle. C'est la raison de relever
+           les origines dans l'écran plutôt que de les écrire de mémoire.
+
+           | | avant | après |
+           |---|---|---|
+           | Contrôles HTTP de PLAN | 73 | **76** |
+           | Campagne | 1 850, 33 suites | **1 853, 33 suites** |
+
+       5.f.104 [x] **PLAN en TypeScript, les trois premières pages : « Mes
+           activités », les profils de risque, le calendrier — et un second
+           état que rien n'aurait vu** — fait le 15 novembre 2026.
+
+           ── La manière, choisie sur mesure ──
+
+           Les dix fichiers restants portent l'interface : 4 837 lignes de
+           gabarits en chaînes, et leurs gestes en `onclick`. Deux voies
+           s'offraient — des modules TypeScript publiés par sas, comme le
+           portail, ou une réécriture en React, comme DROITS. **La première
+           est retenue**, pour une raison mesurée : une réécriture en React
+           change le balisage, donc ce que les 63 contrôles de navigateur et
+           le relevé des gestes regardent, et l'équivalence ne se prouverait
+           plus. Convertis à la lettre, les gabarits se comparent **caractère
+           pour caractère**. React viendra, s'il vient, sur un écran déjà typé.
+
+           L'ordre suit le couplage, relevé fichier par fichier : `pl-shell.js`
+           et `pl-actions.js` sont lus par presque tous les autres et les
+           lisent ; ils viendront en dernier. Les feuilles d'abord.
+
+           ── Un second état, que rien n'aurait vu ──
+
+           Chaque sas de PLAN est un **paquet séparé**, chargé à la position du
+           fichier qu'il remplace — la cohabitation l'impose. En écrivant la
+           première page, j'allais importer `tp` depuis `traductions.ts`. Le
+           paquet aurait emporté sa propre copie d'`etat.ts` : un second
+           `PLAN_STATE`, que rien ne relie à celui de la page.
+
+           Le défaut a été **mesuré**, non supposé, par un contre-test (AX) :
+           l'écran passé en anglais, la page convertie affichait « Mes
+           Activités » au lieu de « My Activities ». Aucun des 63 contrôles de
+           navigateur ne l'aurait vu : ils tournent en français.
+
+           D'où deux choses. Les modules convertis lisent l'état, les libellés
+           et les aides des fichiers restés en JavaScript **sur la page**, au
+           moment de l'appel, par un seul module, `partage.ts` — comme les
+           fichiers en JavaScript les lisaient par leur nom. Et un garde-fou,
+           dans la suite `frontend`, suit les imports **exécutés** de chaque
+           paquet de PLAN et refuse que l'un d'eux, hors `pl-i18n`, atteigne
+           `etat.ts`. Il exige aussi que `pl-i18n` l'atteigne : sans cela, il
+           serait vrai sans rien regarder. Écrit d'abord dans la suite `taille`,
+           il l'a fait sortir de son propre budget de lignes ; il a rejoint la
+           suite dont c'est le sujet plutôt que de relever le plafond.
+
+           ── La preuve, page par page ──
+
+           Chaque page est photographiée dans un navigateur avant et après :
+
+           | Page | États photographiés | Écarts |
+           |---|---|---|
+           | « Mes activités » | 12 — le compte courant, chaque filtre, la période, la réinitialisation | **0** |
+           | Profils de risque | 20 — les filtres, le volet d'un prestataire, la fenêtre d'ajout et ses lignes par secteur, le refus faute de champs | **0** |
+           | Calendrier | 38 — les douze mois en deux vues, chaque filtre, le volet ouvert ; 490 000 caractères | **0** |
+
+           Les écritures — la date d'un cycle, l'enregistrement d'un profil, la
+           synchronisation — ne se photographient pas : les deux suites de PLAN
+           les exercent, et passent sans changement.
+
+           La seule différence, sur chaque page, est déclarée : les noms que
+           personne d'autre ne lisait quittent la portée globale — six, un,
+           sept. Chaque sas pose ceux qui sont lus, **y compris par les `onclick`
+           du fichier lui-même**, qui s'évaluent dans la portée de la page.
+
+           ── La frontière de la cohabitation ──
+
+           Les aides que lisent les modules convertis sont définies par des
+           fichiers restés en JavaScript — `_esc`, `planShowModal`,
+           `_canValidate`, `PLAN_ICONS`… Elles sont déclarées en un seul
+           endroit, `restant.d.ts`, optionnelles, et exigées à l'appel par
+           `requis()`, qui dit laquelle manque. Une ligne part de ce fichier
+           avec la conversion de celui qui définit son nom : les deux
+           déclarations de `planRenderPrestataires` et `planRenderCalendar` en
+           sont parties dès ce pas.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | AX — un module importe `tp` au lieu de le lire sur la page | le garde « un seul état » ; la page reste en français dans un écran anglais |
+           | AY — le sas ne pose plus `planMaSetFiltre` | la suite PLAN : l'exception au premier filtre |
+           | AZ — l'échappement est retiré | la photographie : la vue dont les données portent un caractère à échapper |
+           | BA — le sas ne pose plus `planUpdateCycleDate` | la suite PLAN : le cycle réglé en ligne, et l'exception |
+           | BB — le volet d'un prestataire dit son état à l'envers | la photographie : ouvert et fermé |
+           | BC — le numéro de semaine décalé d'une semaine | la photographie : les douze vues semaine |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **6 sur 13** — 2 095 lignes sur 5 958 |
+           | Restent | `pl-dashboard.js`, `pl-validation.js`, `pl-calendrier-bord.js`, `pl-plans.js`, `pl-crud.js`, puis `pl-actions.js` et `pl-shell.js` — 3 863 lignes |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — un contrôle de plus, le garde « un seul état » |
+
+       5.f.105 [x] **PLAN en TypeScript : le tableau de bord, son calendrier, la
+           validation et l'historique — et une photographie qui ne voyait pas
+           tout** — fait le 15 novembre 2026. `pl-dashboard.js` (273 lignes),
+           `pl-calendrier-bord.js` (382) et `pl-validation.js` (473).
+
+           ── Un seul scénario pour le lot ──
+
+           Les trois fichiers se voient sur les mêmes pages. Une seule
+           photographie les couvre : un plan validé puis amendé — une activité
+           déplacée, une retirée, une ajoutée —, un plan soumis en version
+           initiale ; puis le tableau de bord sous chacune de ses cartes et
+           chacun de ses filtres, la carte calendrier et ses commandes — sur le
+           tableau de bord comme dans le volet —, la page de validation et
+           l'historique sous leurs filtres. **72 états.**
+
+           ── Une comparaison éprouvée contre elle-même ──
+
+           Le plan et ses activités sont créés à chaque photographie, avec des
+           identifiants neufs. Comparer tel quel aurait vu des écarts partout ;
+           remplacer les identifiants par leur rang d'apparition n'a pas suffi
+           — deux prises **avant** du même code différaient encore, l'ordre de
+           certains éléments dépendant des identifiants. Ils sont donc
+           remplacés par **ce qu'ils désignent** — le titre d'un plan, l'objet
+           d'une activité —, relevé dans la même photographie ; l'ordre des
+           listes reste jugé tel quel. Ma première expression ne voyait pas un
+           identifiant précédé d'un `_` — `validComment_…` —, le souligné étant
+           un caractère de mot. Corrigée, deux prises avant donnent **0 écart
+           sur 72** : la comparaison ne prend plus le bruit pour un changement.
+
+           Avant et après la conversion : **0 écart**.
+
+           ── Une photographie qui ne voyait pas tout ──
+
+           Le contre-test BF fausse la comparaison des dates d'un amendement —
+           elle ne regarderait plus que l'année et le mois. Il est resté
+           **vert** : l'activité de mon scénario changeait de mois, et l'écart
+           se voyait encore. Une date décalée **dans son mois** n'était pas
+           protégée par la photographie.
+
+           Le scénario a reçu une activité décalée de sept jours dans le même
+           mois, et la photographie avant a été reprise sur le code d'origine,
+           extrait de `git` dans un arbre de travail à part. Avant et après :
+           0 écart. BF : **9 vues en écart**. *Un contre-test vert n'innocente
+           pas le code : il dit ce que la mesure ne regarde pas.*
+
+           ── Ce qui reste publié ──
+
+           Treize noms sur les quarante-deux que ces fichiers posaient — ceux
+           qu'un autre fichier, la façade `PL` ou un gabarit lit, dont
+           `planCalInfo`, qu'appellent les `onmouseenter` des barres : le relevé
+           des gestes n'inventorie pas cet événement, la page l'appelle quand
+           même. `planCalBord` n'a aucun lecteur ; il était posé sur `window`, il
+           l'est encore. Les vingt-neuf autres quittent la portée globale.
+
+           L'écouteur `resize` de la carte calendrier, et le drapeau qui le garde
+           de se poser deux fois, vivent dans le sas : c'est lui qui se charge à
+           la position de l'ancien fichier, et le module qu'il publie n'a plus
+           d'effet de bord. Un module qui en a ne s'importe pas d'un autre
+           paquet — il y serait évalué une seconde fois — : le tableau de bord
+           et le calendrier appellent le diagramme **sur la page**, et la page
+           de validation fait de même pour les filtres du tableau de bord.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BD — le tableau de bord ne publie plus `_applyPlanFilters` | la suite PLAN : les pages, les fenêtres, l'accordéon |
+           | BE — le sas ne pose plus l'écouteur `resize` | `plan-gestes` : les flèches du calendrier |
+           | BF — les dates d'un amendement comparées au mois près | la photographie renforcée : 9 vues |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **9 sur 13** — 3 223 lignes sur 5 958 |
+           | Restent | `pl-plans.js`, `pl-crud.js`, puis `pl-actions.js` et `pl-shell.js` — 2 735 lignes |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — inchangée |
+
+       5.f.106 [x] **PLAN en TypeScript : la liste et le détail des plans — un
+           contrôle devenu aveugle, et un minuteur qui lit trop tard** — fait
+           le 15 novembre 2026. `pl-plans.js` (677 lignes).
+
+           ── La photographie : un plan dans chacun de ses statuts ──
+
+           Les boutons du détail dépendent du statut. Le scénario bâtit donc,
+           par les routes, un plan de chaque sorte : brouillon, soumis, rejeté
+           avec son commentaire, validé puis amendé et revalidé — sa lignée v1 →
+           v2, l'ancêtre « remplacé » —, validé avec un amendement en cours,
+           approuvé par le DG, transmis, et un plan « ponctuel / spécial », dont
+           la synchronisation est désactivée. Puis la liste sous chacun de ses
+           six tris dans les deux sens et sous ses filtres, l'accordéon à la
+           souris et au clavier — la touche portée par un lien de l'en-tête
+           comprise —, le détail de chaque plan et le pré-remplissage d'une
+           activité. **50 états**, deux prises avant sans écart entre elles ;
+           avant et après la conversion : **0 écart**.
+
+           ── Un minuteur qui lit trop tard — dans `pl-shell.js` ──
+
+           Les deux prises avant portaient deux exceptions. La pile les a
+           rapportées à `pl-shell.js:382` : après chaque rendu du détail, un
+           minuteur charge les commentaires du plan **cent millisecondes plus
+           tard**, et lit `PLAN_STATE.selectedPlan.id` à ce moment-là, non au
+           moment du rendu. Mon scénario ouvrait deux détails puis quittait la
+           page aussitôt ; `planNavigateTo` vide alors le plan choisi, et les
+           deux minuteurs lisent `null`. Ouvrir un autre plan dans l'intervalle
+           chargerait, lui, les commentaires du mauvais plan.
+
+           Le défaut est antérieur à la conversion, et il appartient à
+           `pl-shell.js` : il sera corrigé avec la conversion de ce fichier,
+           non glissé dans celle-ci, qui ne change aucun comportement. Les deux
+           photographies portent la même exception, et c'est voulu.
+
+           ── Un contrôle devenu aveugle ──
+
+           La suite PLAN a rougi sur « toute page que l'aiguillage rend est
+           atteignable — sans chemin : plan-detail ». L'écran n'avait rien : le
+           contrôle lit les sources pour trouver ce qui ouvre chaque page, et ne
+           lisait que `public/…/js`. L'affectation qui ouvre le détail était
+           partie avec `pl-plans.js`. C'est le défaut que `traductions.smoke.js`
+           avait prévu pour lui-même — *un contrôle qui lit les sources doit
+           suivre la source où elle va* — : il lit désormais les deux
+           répertoires de l'écran. Le contre-test qui retire l'affectation (BG)
+           le fait rougir, avec trois contrôles de comportement.
+
+           ── Un fichier coupé à sa frontière ──
+
+           Converti d'un bloc, le module faisait 718 lignes ; le dépôt en accorde
+           600 à un fichier de frontend, et le garde-fou l'a refusé. Le fichier
+           d'origine portait déjà sa frontière — « PLANS LIST », « PLAN
+           DETAIL » — : `liste-plans.ts` et `detail-plan.ts`, dans le même
+           paquet, le second important du premier l'en-tête d'accordéon et les
+           types. Le même paquet n'évalue qu'une copie de chacun.
+
+           ── Ce qui reste publié ──
+
+           Huit noms sur dix-neuf : les deux pages, `planOpenDetail` — lu par
+           quatre fichiers et une dizaine de gabarits —, `_applyRoleFilter`,
+           l'accordéon, le tri et son état, `_planTableSort`, qui vit sur
+           `window` comme à l'origine et que le module relit à chaque usage. Les
+           onze autres quittent la portée globale. Quatre variables calculées et
+           jamais lues, et un paramètre inutilisé, sont retirés ; la
+           photographie dit que rien n'en dépendait.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BG — l'ouverture ne pose plus la page du détail | la suite PLAN : la page sans chemin, et trois contrôles de comportement |
+           | BH — le sas n'initialise plus l'état du tri | `plan-gestes` : l'exception au rendu de la liste |
+           | BI — le clavier de l'accordéon ne vérifie plus sa cible | la photographie : deux états |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **10 sur 13** — 3 900 lignes sur 5 958 |
+           | Restent | `pl-crud.js`, puis `pl-actions.js` et `pl-shell.js` — 2 058 lignes |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — inchangée |
+
+       5.f.107 [x] **PLAN en TypeScript : les fenêtres de saisie — photographier
+           ce qui part au serveur, et un relevé que mon écriture aveuglait** —
+           fait le 15 novembre 2026. `pl-crud.js` (806 lignes).
+
+           ── Photographier les écritures ──
+
+           Jusqu'ici, la photographie regardait ce que l'écran dessine ; les
+           écritures étaient laissées aux suites de PLAN. Ce fichier est fait
+           d'écritures : créer, modifier, supprimer un plan ou une activité,
+           archiver, synchroniser. La photographie enregistre donc **chaque
+           appel au serveur, avec son corps**, chaque message de l'écran, et
+           chaque confirmation demandée — répondue « non » puis « oui » par le
+           scénario.
+
+           **75 états** : les fenêtres de création et d'édition sous chaque type
+           de plan, le volet des prestataires et ses tris, la fenêtre d'une
+           activité — neuve, modifiée, en lecture, ouverte depuis « Mes
+           activités », pré-remplie depuis un prestataire —, la liaison des
+           dates et de la durée dans les quatre sens, les volets de
+           sous-activités, deux refus de saisie — une année hors du plan, une
+           fin avant le début —, les confirmations refusées et acceptées, et la
+           synchronisation des risques jusqu'à l'amendement automatique d'un
+           plan validé. Deux prises avant sans écart ; avant et après : **0
+           écart**, corps des requêtes compris.
+
+           Le contre-test BK — la suppression d'un plan ignore la confirmation
+           — le montre : sur la confirmation refusée, la photographie voit
+           partir un `DELETE`.
+
+           ── Un relevé que mon écriture aveuglait ──
+
+           Le relevé refait rendait 84 noms exercés au lieu de 87, et trois
+           indécidables de plus : les écouteurs de la date de début, de la date
+           de fin et de la durée. L'écran n'avait rien. Le relevé rapproche un
+           écouteur de sa cible par l'identifiant qu'il lit sur la ligne qui
+           déclare la variable — `const debut = document.getElementById(
+           'actDebut')`. J'avais écrit `champ('actDebut')`, une aide plus
+           courte, que le relevé ne sait pas lire. Les trois lignes ont repris
+           la forme lisible, et un commentaire dit pourquoi. *Une conversion qui
+           rend le code plus court peut rendre la mesure aveugle ; c'est la
+           mesure refaite qui l'a dit.*
+
+           ── Coupé en deux ──
+
+           Comme `pl-plans.js`, le fichier passait les 600 lignes accordées à un
+           fichier de frontend : `saisie-plan.ts` — les fenêtres d'un plan, son
+           volet de prestataires, la synchronisation — et `saisie-activite.ts` —
+           la fenêtre d'une activité —, dans le même paquet.
+
+           Dix-huit noms sur vingt-deux restent publiés : onze lus par d'autres
+           fichiers, et les gestes des boutons que ces fenêtres portent. Les
+           quatre autres — la fin déduite d'une durée, la liaison des dates,
+           l'année d'une activité, la lecture du formulaire — quittent la
+           portée globale.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BJ — le formulaire n'envoie plus le responsable | la photographie : le corps de la création et de la modification |
+           | BK — la suppression d'un plan ignore la confirmation | la photographie : un `DELETE` sur un « non » |
+           | BL — le sas ne publie plus `planUpdateActivity` | la suite PLAN : la modification d'une activité, et l'exception |
+           | BM — la fin déduite d'une durée décalée d'un jour | la photographie : trois liaisons dates ↔ durée |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **11 sur 13** — 4 706 lignes sur 5 958 |
+           | Restent | `pl-actions.js` et `pl-shell.js` — 1 252 lignes |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — inchangée |
+
+       5.f.108 [x] **PLAN en TypeScript : les actes du circuit et les pastilles
+           — un cache qui doit rester unique, et ce que mon scénario lisait de
+           trop** — fait le 15 novembre 2026. `pl-actions.js` (671 lignes),
+           l'avant-dernier fichier.
+
+           ── La photographie ──
+
+           Ce fichier tient les actes du circuit — soumettre, valider, rejeter,
+           rejeter définitivement, approuver au nom du directeur, transmettre,
+           amender, annuler un amendement —, les discussions d'un plan,
+           l'historique de son circuit, son export PDF, la cloche des
+           notifications, et les petites aides que presque tous les modules
+           convertis lisent : l'échappement, les pastilles, les couleurs.
+
+           Comme pour les fenêtres de saisie, la photographie enregistre chaque
+           appel au serveur avec son corps, chaque message, chaque confirmation
+           et chaque invite — le scénario répond « non », puis rien, puis
+           « oui ». Le commentaire par activité saisi dans la page de validation
+           y est suivi jusqu'au corps de la décision. L'export ouvre une
+           fenêtre : `window.open` est remplacé le temps de la photographie, et
+           le document écrit est capturé, comme le refus d'une fenêtre bloquée.
+           Les commentaires et l'historique affichent l'heure de leur
+           création : la comparaison normalise les horodatages courts, et deux
+           prises avant le vérifient. **52 états, 0 écart.**
+
+           ── Ce que mon scénario lisait de trop ──
+
+           La première photographie après conversion s'est arrêtée sur
+           « `planLibelleType` is not defined ». La page n'avait rien : c'est
+           **mon scénario** qui appelait ce nom, que plus aucun fichier ne lit
+           et qui quitte la portée globale. Le libellé reste photographié dans
+           la pastille du type qui l'affiche ; l'appel direct est retiré, et la
+           photographie avant a été reprise sur le code d'origine, extrait de
+           `git`. *Une mesure qui lit un détail interne mesure sa propre
+           curiosité, non l'écran.*
+
+           ── Un cache qui doit rester unique ──
+
+           La couleur d'un organisme lui est attribuée au premier passage, dans
+           l'ordre : c'est ce qui la rend stable d'une vue à l'autre. Le cache
+           vit dans `affichage.ts`, qui n'est chargé que par ce paquet ; les
+           autres appellent `_prestataireColor` sur la page. C'est la même règle
+           que pour l'état de l'écran (n° 5.f.104), appliquée à un état plus
+           petit : un second paquet qui l'importerait aurait son propre cache,
+           et les mêmes organismes changeraient de couleur d'une page à
+           l'autre. Le contre-test qui ne garde plus le cache (BN) fait
+           diverger la séquence des couleurs.
+
+           Le brouillon d'une décision reste sur `window._planDecisionDraft` :
+           la suite PLAN le lit là, entre la confirmation et son application.
+
+           ── Coupé en deux ──
+
+           `decisions.ts` — les actes, les discussions, le circuit — et
+           `affichage.ts` — l'échappement, les pastilles, l'export, la cloche —,
+           dans le même paquet. Vingt-sept noms restent publiés sur
+           trente-six ; les neuf autres quittent la portée globale. Les huit
+           déclarations que `restant.d.ts` portait pour ce fichier en sont
+           parties : il ne déclare plus que ce que `pl-shell.js` définit.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BN — le cache des couleurs n'est plus gardé | la photographie : la séquence des couleurs |
+           | BO — la décision n'envoie plus les commentaires par activité | la photographie : le corps de la validation d'un amendement |
+           | BP — le sas ne publie plus `planDeleteComment` | la suite PLAN : le commentaire retiré, et l'exception |
+           | BQ — l'annulation d'un amendement ignore une invite refusée | la photographie : un `POST` parti sur un refus |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **12 sur 13** — 5 377 lignes sur 5 958 |
+           | Reste | `pl-shell.js` — 581 lignes, et le minuteur des commentaires (n° 5.f.106) |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
+           | Campagne | **1 854, 33 suites** — inchangée |

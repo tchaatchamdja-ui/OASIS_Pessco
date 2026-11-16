@@ -837,24 +837,21 @@ function _execCliRenderRows(clId) {
 }
 
 // ── Export / Import xlsx d'une checklist ──
-async function execChecklistExportXlsx(clId) {
-    // `pr_token` n'existe pas : rien ne l'écrit, et le serveur ne lit aucun
-    // Bearer — la session est en cookie. L'en-tête mort est retiré (n° 5.f.29).
-    try {
-        const res = await fetch(`/api/m/execution/checklists/${clId}/export-xlsx`);
-        if (!res.ok) {
-            const j = await res.json().catch(() => ({}));
-            throw new Error(oasisMessageErreur(j, res.status));
-        }
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const cl = (EXEC_STATE.data.checklists || []).find(c => c.id === clId);
-        a.href = url;
-        a.download = `checklist_${(cl?.nom || 'export').replace(/[^\w\-]/g, '_').slice(0, 60)}.xlsx`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (e) { shellShowToast(te('export_echoue', e.message || e), 'error'); }
+// ── Un téléchargement passe par une navigation, jamais par un clic fabriqué ──
+//
+// `oasisTelecharger` mène la fenêtre à l'adresse ; le navigateur reçoit
+// `Content-Disposition: attachment` et enregistre le fichier sans quitter la
+// page. Le patron qu'elle remplace — `await fetch`, `await blob`, puis une ancre
+// fabriquée qu'on clique — **échoue sans bruit**, l'attente du serveur épuisant
+// l'activation utilisateur qui autorise l'enregistrement (socle,
+// `frontend/socle/utils.ts`).
+//
+// Il n'y a donc **rien à attendre ici, et rien à lire** : pas de `async`, pas de
+// `try`, pas de toast de réussite sur un fichier qu'on n'a pas vu arriver. Le
+// nom de la pièce vient de l'en-tête, et un refus est affiché par le navigateur
+// en page lisible (`src/telechargement.js`).
+function execChecklistExportXlsx(clId) {
+    oasisTelecharger(`/api/m/execution/checklists/${clId}/export-xlsx`);
 }
 
 async function execChecklistImportXlsx(clId, ev) {
@@ -905,12 +902,19 @@ function _execCliExigencesForChecklist(clId) {
     const saIds = _parse(cl?.sous_activites_ids);
     const secIds = _parse(cl?.secteurs_ids);
     const domIds = _parse(cl?.domaines_ids);
-    const allExigences = (window.PESSCO?.sharedData?.exigences) || [];
-    // Une exigence s'applique si elle correspond à une SA, à défaut un secteur, à défaut un domaine de la checklist.
+    const shared = window.PESSCO?.sharedData || {};
+    const allExigences = shared.exigences || [];
+    // Une exigence s'applique si elle correspond à une SA, à défaut un secteur,
+    // à défaut un domaine de la checklist. Elle nomme ce niveau par son code ou
+    // par son identifiant, indifféremment : `execClesDePortee` porte la règle
+    // (exec-boot.js), et sans elle cette liste était toujours vide.
+    const clesSa = execClesDePortee(saIds, shared.sousActivites);
+    const clesSec = execClesDePortee(secIds, shared.secteurs);
+    const clesDom = execClesDePortee(domIds, shared.domaines);
     return allExigences.filter(e => {
-        if (saIds.length && e.sous_activite_id) return saIds.includes(e.sous_activite_id);
-        if (secIds.length && e.secteur_id) return secIds.includes(e.secteur_id);
-        if (domIds.length && e.domaine_id) return domIds.includes(e.domaine_id);
+        if (saIds.length && e.sous_activite_id) return clesSa.has(String(e.sous_activite_id));
+        if (secIds.length && e.secteur_id) return clesSec.has(String(e.secteur_id));
+        if (domIds.length && e.domaine_id) return clesDom.has(String(e.domaine_id));
         return true; // pas de restriction
     });
 }
@@ -1099,22 +1103,8 @@ function execOpenSousThemesManager(clId) {
 }
 
 // ── Export / Import xlsx des sous-thèmes d'une checklist ──
-async function execSousThemesExportXlsx(clId) {
-    try {
-        const res = await fetch(`${EXEC_MODULE_API}/checklists/${clId}/sous-themes/export-xlsx`);
-        if (!res.ok) {
-            const j = await res.json().catch(() => ({}));
-            throw new Error(oasisMessageErreur(j, res.status));
-        }
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        const cl = (EXEC_STATE.data.checklists || []).find(c => c.id === clId);
-        a.href = url;
-        a.download = `sous_themes_${(cl?.nom || 'export').replace(/[^\w\-]/g, '_').slice(0, 50)}.xlsx`;
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (e) { shellShowToast(te('export_echoue', e.message || e), 'error'); }
+function execSousThemesExportXlsx(clId) {
+    oasisTelecharger(`${EXEC_MODULE_API}/checklists/${clId}/sous-themes/export-xlsx`);
 }
 
 async function execSousThemesImportXlsx(clId, ev) {

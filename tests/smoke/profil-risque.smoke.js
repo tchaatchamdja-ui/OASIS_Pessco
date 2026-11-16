@@ -88,9 +88,68 @@ module.exports = async function profilRisqueSmoke(port) {
       const r = await srv.appel(chemin);
       // Un classeur xlsx est un zip : « PK » en tête. Le corps rendu est du
       // texte, mais ses deux premiers octets suffisent à le dire.
-      verifier(`${quoi} rend un classeur`,
-        r.statut === 200 && typeof r.corps === 'string' && r.corps.slice(0, 2) === 'PK',
-        `statut ${r.statut}, ${String(r.corps).length} octet(s)`);
+      //
+      // Et le **nom**, depuis que le navigateur suit l'adresse lui-même
+      // (n° 5.f.71) : c'est l'en-tête qui le porte, non la page, et un nom hors
+      // de l'ASCII ne tient pas dans un `filename="…"`. Les deux formes de la
+      // RFC 6266 sont donc exigées sur chacune des trois routes.
+      verifier(`${quoi} rend un classeur, en pièce jointe nommée dans les deux formes`,
+        r.statut === 200 && typeof r.corps === 'string' && r.corps.slice(0, 2) === 'PK'
+        && /^attachment;/.test(r.entetes['content-disposition'] || '')
+        && /filename="[\x20-\x7e]+\.xlsx"/.test(r.entetes['content-disposition'] || '')
+        && /filename\*=UTF-8''/.test(r.entetes['content-disposition'] || ''),
+        `statut ${r.statut}, ${String(r.corps).length} octet(s), `
+        + `« ${r.entetes['content-disposition'] || ''} »`);
+    }
+
+    // ── La pièce de la bibliothèque, et son nom accentué ──
+    //
+    // L'en-tête portait une forme **hybride et fausse** —
+    // `filename="${encodeURIComponent(nom)}"` —, de sorte qu'une pièce nommée
+    // « Rapport d'audit » s'enregistrait sous « Rapport%20d%27audit ». Le nom
+    // vient du serveur depuis que la page navigue : c'est donc ici qu'il se
+    // mesure, et avec un nom qui sort de l'ASCII pour que la mesure porte.
+    {
+      const NOM = 'Rapport d’audit — été 2026';
+      const pose = await srv.appel('/api/documents', {
+        method: 'POST',
+        body: JSON.stringify({
+          nom: NOM, type: 'TXT', mime: 'text/plain',
+          fileB64: Buffer.from('deux lignes\nde preuve\n', 'utf8').toString('base64'),
+        }),
+      });
+      const id = (pose.corps || {}).id;
+      const recu = id ? await srv.appel(`/api/documents/${id}/download`) : { statut: 0, entetes: {} };
+      const disposition = recu.entetes['content-disposition'] || '';
+      const encode = disposition.split("UTF-8''")[1] || '';
+      verifier('la pièce téléchargée porte son nom accentué, réversible, et un repli sans accent',
+        pose.statut === 200 && recu.statut === 200
+        // La taille rendue est celle du fichier, non celle du base64 bourré.
+        && (pose.corps || {}).taille === 22
+        && /^attachment;/.test(disposition)
+        && decodeURIComponent(encode) === NOM
+        // Le repli ne porte aucun accent — c'est tout son objet —, et rien qui
+        // refermerait l'en-tête.
+        && !/[^\x20-\x7e]/.test(disposition.split('"')[1] || '')
+        && String(recu.corps) === 'deux lignes\nde preuve\n',
+        JSON.stringify({ statut: [pose.statut, recu.statut],
+          taille: (pose.corps || {}).taille, disposition }));
+
+      // Et le refus, que le navigateur **affiche** : une navigation ne porte
+      // pas `X-OASIS-Request`, et c'est à cela que le serveur la reconnaît.
+      const refusPage = await srv.appel('/api/documents/inexistant/download',
+        { headers: { 'X-OASIS-Request': '' } });
+      const refusJson = await srv.appel('/api/documents/inexistant/download');
+      verifier('le refus d’une pièce est une page pour le navigateur, et reste du JSON pour l’application',
+        refusPage.statut === 404
+        && /text\/html/.test(refusPage.entetes['content-type'] || '')
+        && /n’existe plus/.test(String(refusPage.corps))
+        && refusJson.statut === 404
+        && (refusJson.corps || {}).error === 'introuvable'
+        && (refusJson.corps || {}).objet === 'fichier',
+        JSON.stringify({ page: String(refusPage.corps).slice(0, 70), json: refusJson.corps }));
+
+      if (id) await srv.appel(`/api/documents/${id}`, { method: 'DELETE' });
     }
 
     // L'import, lui, écrit — en une seule transformation, dont les compteurs se

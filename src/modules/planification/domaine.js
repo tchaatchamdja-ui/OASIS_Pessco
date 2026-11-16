@@ -15,7 +15,23 @@ const db = require('./store');
 // `profil_risque`, qui passera en base. Attendre une valeur qui n'est pas
 // encore une promesse ne coûte rien et évite de reprendre PLAN ce jour-là.
 async function riskProfiles() {
-  return services.callOr('PR.riskProfiles', []);
+  const derives = await services.callOr('PR.riskProfiles', []);
+  const directs = await db.list('profils_directs');
+  if (!directs.length) return derives;
+  // ── Qui l'emporte, et pourquoi ──
+  //
+  // Un profil écrit depuis cet écran **comble un vide** ; il ne recouvre pas une
+  // évaluation validée. Sur un même couple prestataire + secteur, celui que PR
+  // dérive gagne donc toujours : le circuit — notation, instance, validation —
+  // est la source, et la saisie directe le palliatif.
+  //
+  // L'hypothèse est écrite ici plutôt que supposée ailleurs : elle se renverse
+  // d'une ligne, et c'est la maîtrise d'ouvrage qui en décide.
+  const couvert = new Set(derives.map((p) => `${p.prestataire_id}|${p.secteur_id}`));
+  return [
+    ...derives,
+    ...directs.filter((p) => !couvert.has(`${p.prestataire_id}|${p.secteur_id}`)),
+  ];
 }
 
 // ── Service publié : plans de surveillance en vigueur ──

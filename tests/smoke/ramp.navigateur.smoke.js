@@ -39,7 +39,9 @@ const puppeteer = require('puppeteer');
 // un classeur : la ronde en **écrit** un avec, et le serveur le relit.
 // Deux paquets qui se répondent finiraient par ne plus se répondre.
 const XLSX = require('xlsx');
-const { demarrer, verifier, bilan } = require('./harness');
+const {
+  demarrer, verifier, bilan, abandonsAttendus, refusDeclares, adresseDeConsole,
+} = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'ramp', 'js', 'ramp-app.js');
@@ -167,13 +169,17 @@ module.exports = async function rampNavigateurSmoke(port) {
           + ' classeur se demande, et le navigateur l’enregistre » (n° 5.f.35).',
       },
     ];
-    const abandonsVus = [];
-    const codesAttendus = new Set();
+    // Le mécanisme vit dans le harnais depuis que PR en a besoin aussi
+    // (n° 5.f.71) : les déclarations restent ici, la mécanique est commune.
+    const abandons = abandonsAttendus(ABANDONS_ATTENDUS);
+    // La règle vit dans le harnais (`refusDeclares`) : la ligne de console se
+    // confronte aux déclarations par son adresse, et non au code d'une réponse
+    // que Puppeteer peut rendre après elle (15 novembre 2026).
+    const refusVus = refusDeclares(REFUS_ATTENDUS);
     page.on('console', (m) => {
       if (!ramp || m.type() !== 'error') return;
       const texte = m.text();
-      const code = (/status of (\d{3})/.exec(texte) || [])[1];
-      if (code && codesAttendus.has(Number(code))) return;
+      if (refusVus.console(texte, adresseDeConsole(m))) return;
       incidents.push(`[${etape}] console : ${texte.slice(0, 160)}`);
     });
     page.on('pageerror', (e) => {
@@ -202,10 +208,7 @@ module.exports = async function rampNavigateurSmoke(port) {
       if (!ramp) return;
       const chemin = r.url().replace(srv.base, '');
       const motif = String(((r.failure() || {}).errorText) || '');
-      if (ABANDONS_ATTENDUS.some((x) => x.motif.test(motif) && x.chemin.test(chemin))) {
-        abandonsVus.push(`${motif} ${chemin}`);
-        return;
-      }
+      if (abandons.attendu(motif, chemin)) return;
       incidents.push(`[${etape}] requête : ${r.url().slice(0, 120)}`);
     });
     // La **réponse**, et non le seul message de console : un 404 s'y présente
@@ -214,9 +217,7 @@ module.exports = async function rampNavigateurSmoke(port) {
     page.on('response', (r) => {
       if (!ramp || r.status() < 400) return;
       const chemin = r.url().replace(srv.base, '');
-      const attendu = REFUS_ATTENDUS.some((x) => x.code === r.status()
-        && x.methode === r.request().method() && x.chemin.test(chemin));
-      if (attendu) { codesAttendus.add(r.status()); return; }
+      if (refusVus.reponse(r.status(), r.request().method(), chemin)) return;
       incidents.push(`[${etape}] ${r.status()} ${chemin.slice(0, 120)}`);
     });
 
@@ -2861,8 +2862,8 @@ module.exports = async function rampNavigateurSmoke(port) {
         && G6.modaleFermee === true,
         JSON.stringify(G6).slice(0, 420));
       verifier('la navigation vers le classeur préparé est abandonnée une fois, sur son chemin, et la ronde le déclare au lieu de le taire',
-        abandonsVus.filter((x) => /\/tables\/fichier\//.test(String(x))).length === 1,
-        JSON.stringify(abandonsVus));
+        abandons.compte(/\/tables\/fichier\//) === 1,
+        JSON.stringify(abandons.vus));
       verifier('la ronde retire ses quatre inspections, et le module revient à son compte',
         Me.aEffacer === 4 && Me.effacees === 4 && Me.rendueAuDepart === true,
         JSON.stringify(Me));
@@ -3163,8 +3164,8 @@ module.exports = async function rampNavigateurSmoke(port) {
         Ou.boutonModele === true && Ou.cheminApres === Ou.cheminAvant
         && Ou.voletDebout === true
         // L'abandon est la trace du téléchargement : déclaré, et exigé.
-        && abandonsVus.filter((x) => /\/import\/modele/.test(String(x))).length === 1,
-        JSON.stringify({ ouverture: Ou, abandons: abandonsVus }));
+        && abandons.compte(/\/import\/modele/) === 1,
+        JSON.stringify({ ouverture: Ou, abandons: abandons.vus }));
       verifier('un vrai classeur se dépose, et l’analyse du serveur rend quatre inspections de cinq lignes — deux écarts sur celle qui en portait deux',
         An.depose === true && An.lignes === 4 && An.rangs === 4
         && An.fichier === 'ronde_ramp.xlsx'
@@ -3877,7 +3878,29 @@ module.exports = async function rampNavigateurSmoke(port) {
         if (dest) dest.value = 'ronde.ramp@example.test';
         const envoyer = document.querySelector('[onclick*="rampEnvoyerCommunication("]');
         d.boutonEnvoyer = !!envoyer;
+        // ── Ce que le bouton **est**, et non seulement qu'il existe ──
+        //
+        // Toute la lettre est `disabled` quand la fiche n'est pas validée, quand
+        // le compte ne peut pas saisir, ou quand une notification est déjà
+        // partie. `querySelector` trouve un bouton désactivé comme un autre, et
+        // `.click()` n'y déclenche rien : *ni requête, ni erreur, ni trace.*
+        // C'est l'une des deux explications possibles du `coms: 0` rencontré le
+        // 5 novembre 2026 — l'autre étant que le gestionnaire ait échoué avant
+        // sa requête. On relève donc les deux : l'état du bouton, et ce que
+        // l'écran a dit après le clic.
+        d.boutonActif = !!envoyer && !envoyer.disabled;
+        // `window.RAMP_STATE ||` et non `window.RAMP_STATE.` : le reste de la
+        // ronde l'écrit ainsi, et une sonde qui lèverait ferait tomber tout le
+        // bloc — une trace ne doit jamais pouvoir casser ce qu'elle observe.
+        const etat = (window.RAMP_STATE || {}).poiEnCours || {};
+        d.statutFiche = etat.statut || '';
+        d.ficheEnCours = !!etat.id;
+        document.querySelectorAll('.oasis-toast-fond').forEach((n) => n.remove());
         envoyer?.click();
+        await a(2500);
+        const dit = document.querySelector('.oasis-toast-fond');
+        d.toastEnvoi = dit ? (dit.className || '') : '(aucun)';
+        d.toastTexte = dit ? (dit.innerText || '').trim().slice(0, 120) : '';
         // ── Attendre ce qu'on mesure, non une horloge ──
         //
         // Ce contrôle a rougi **en campagne** et passé seul : cinq secondes
@@ -4278,6 +4301,10 @@ module.exports = async function rampNavigateurSmoke(port) {
       // Le modèle rendu à l'identique : c'est l'effet du rétablissement.
       && ronde.circuit.modeleRendu === true
       && ronde.circuit.champDestinataire === true && ronde.circuit.boutonEnvoyer === true
+      // Trouvé n'est pas actif : toute la lettre est `disabled` hors de l'état
+      // « validée », et un clic sur un bouton désactivé ne fait rien du tout.
+      // Exigé à part, pour que ce cas se nomme au lieu de se lire dans `coms: 0`.
+      && ronde.circuit.boutonActif === true
       && ronde.circuit.communications === 1
       && ronde.circuit.cible === 'exploitant'
       && ronde.circuit.destinataire === 'ronde.ramp@example.test'
@@ -4286,10 +4313,26 @@ module.exports = async function rampNavigateurSmoke(port) {
       && ronde.circuit.envoye === false
       // Une seule des deux cibles : la fiche n'est donc pas encore transmise.
       && ronde.circuit.transmise === false,
+      // ── Une trace qui dit quel maillon a cédé ──
+      //
+      // Ce contrôle a rougi en campagne le 5 novembre 2026 sur `coms: 0`, et la
+      // trace ne disait pas pourquoi : ni si le bouton d'envoi avait été trouvé,
+      // ni combien d'essais la boucle avait faits, ni si le rétablissement avait
+      // bien eu lieu. *Un relevé qui ne nomme pas le maillon rompu oblige à
+      // rejouer la campagne pour apprendre ce qu'il aurait pu dire.* Il porte
+      // donc désormais tout le chemin.
       JSON.stringify({ lettre: ronde.circuit.lettre, modele: ronde.circuit.modeleRendu,
-        objet: ronde.circuit.objetModele, coms: ronde.circuit.communications,
-        cible: ronde.circuit.cible, envoye: ronde.circuit.envoye,
-        transmise: ronde.circuit.transmise }).slice(0, 400));
+        objet: ronde.circuit.objetModele, retabli: ronde.circuit.objetRetabli,
+        boutonRetablir: ronde.circuit.boutonRetablir,
+        champDest: ronde.circuit.champDestinataire,
+        boutonEnvoyer: ronde.circuit.boutonEnvoyer,
+        boutonActif: ronde.circuit.boutonActif,
+        statutFiche: ronde.circuit.statutFiche, ficheEnCours: ronde.circuit.ficheEnCours,
+        toast: ronde.circuit.toastEnvoi, dit: ronde.circuit.toastTexte,
+        essais: ronde.circuit.essais, coms: ronde.circuit.communications,
+        cible: ronde.circuit.cible, destinataire: ronde.circuit.destinataire,
+        envoye: ronde.circuit.envoye,
+        transmise: ronde.circuit.transmise }).slice(0, 600));
     verifier('la table des fiches, qui n’a pas d’entrée de menu, s’ouvre par « Traiter » et ses deux filtres restreignent dans les deux sens',
       !!ronde.table && ronde.table.page === 'inspection'
       && ronde.table.filtres === 2 && ronde.table.tous >= 1

@@ -86,6 +86,46 @@ const canRead = (user) => !!user
 const isAdmin = (user, referentiels) => !estPrestataire(user)
   && meilleurPrivilege(user, referentiels) === 'GESTIONNAIRE';
 
+// ── Détruire : gestionnaire du module, **dans la portée de l'objet** ──
+//
+// `isAdmin` répond « ce compte est gestionnaire quelque part » — toutes portées
+// confondues, comme `meilleurPrivilege` le dit de lui-même. C'est juste pour ce
+// qu'il garde par ailleurs : les délais du processus, les référentiels, les
+// paramètres du module, qui n'ont pas de portée.
+//
+// Mais quatre routes **destructrices** s'y adossaient, sur des objets qui en
+// ont une. Mesuré le 8 novembre 2026 : un gestionnaire dont la portée est le
+// secteur AMO pouvait supprimer un dossier, une constatation ou un rapport du
+// secteur CAT. La cinquième route — la même cascade, depuis le menu « États » —
+// refusait exactement cela, en exigeant le domaine et le secteur de l'activité.
+//
+// | Route | Avant | Après |
+// |---|---|---|
+// | `DELETE /dossiers/:id` | gestionnaire, toutes portées | gestionnaire **de la portée** |
+// | `DELETE /constatations/:id` | idem | idem |
+// | `DELETE /rapports/:id` | idem | idem, **et** un rapport transmis est refusé |
+// | `DELETE /activites/:id` | idem | idem |
+// | `DELETE /activites-en-cours/:id` | portail SUPERADMIN/ADMIN **et** validateur de la portée | gestionnaire de la portée |
+//
+// La maîtrise d'ouvrage a tranché les deux écarts le 8 novembre 2026 : la
+// portée est exigée partout, et le **privilège du module suffit** — le rôle
+// portail n'entre pas en ligne de compte. Une seule règle pour les cinq, et
+// elle est ici. (ADR-003, n° 5.f.75)
+//
+// Sur l'axe du privilège, c'est **plus strict** que ce que la route des États
+// demandait : elle se contentait d'un validateur, il faut désormais un
+// gestionnaire. Sur l'axe du rôle portail, c'est plus ouvert. Les deux sont
+// voulus, et ils tiennent ensemble parce que « Gestion des Droits » du module
+// est l'endroit où cette autorité se confie.
+//
+// *La garde d'écran, elle, reste grossière* : le client ne connaît que le
+// meilleur privilège, jamais les portées — le module l'écrit déjà (« le serveur
+// revérifie »). Un gestionnaire verra donc le geste sur un objet hors de sa
+// portée, et recevra un refus. C'est le partage que ce module a choisi, et non
+// un oubli.
+const peutDetruire = (user, cible, referentiels) => !estPrestataire(user)
+  && peut(user, 'GESTIONNAIRE', cible && cible.domaine_id, cible && cible.secteur_id);
+
 // ── Droits confiés aux comptes d'un prestataire ──
 // Un organisme n'ouvre pas les mêmes portes à tous ses agents : l'administrateur
 // du prestataire coche, pour chacun, ce qu'il lui confie. Un compte sans liste
@@ -125,6 +165,6 @@ const aLeDroit = (compte, cle) => droitsDe(compte).includes(cle);
 
 module.exports = {
   MODULE, estPrestataire, canRead, privilege, meilleurPrivilege, roleM3,
-  prestatairesDe, accedeA, canValidate, canContribute, isAdmin,
+  prestatairesDe, accedeA, canValidate, canContribute, isAdmin, peutDetruire,
   DROITS_PRESTATAIRE, droitsDe, aLeDroit, normaliserDroits, compteA,
 };

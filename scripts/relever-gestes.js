@@ -143,9 +143,28 @@ const ecranDeModule = (nom) => ({
   page: `/modules/${nom}/index.html`,
 });
 
-// SURV, le plus lourd des six (ADR-003, suite n° 5.f.0), et le seul à porter
-// aujourd'hui une suite de navigateur.
-ECRANS.execution = { ...ecranDeModule('execution'), suite: 'surv' };
+// ── Un écran peut porter **plusieurs** suites, et SURV est le premier ──
+//
+// `suite` valait un nom. C'était l'obstacle du découpage de `surv.smoke.js`,
+// nommé dans l'ADR deux tours de suite : un écran coupé en deux suites n'aurait
+// plus été mesuré qu'à **moitié**, et la couverture aurait chuté sans qu'un seul
+// geste cesse d'être exercé. *Un dénominateur qui baisse en silence est le
+// défaut que cet outil existe pour empêcher* — il l'a déjà commis deux fois sur
+// le portail, et une fois sur chaque conversion.
+//
+// `suite` accepte donc un nom **ou une liste**. Chaque suite reçoit son propre
+// journal, et les journaux sont réunis : ce que la **campagne** exerce, et non
+// ce qu'une suite exerce.
+//
+// SURV, le plus lourd des six (ADR-003, suite n° 5.f.0), en porte **trois**
+// depuis le 12 novembre 2026 : le cycle de surveillance, les pièces du dossier,
+// et le paramétrage des checklists.
+ECRANS.execution = {
+  ...ecranDeModule('execution'),
+  suite: ['surv', 'surv-pieces', 'surv-parametres', 'surv-coquille', 'surv-circuit',
+    'surv-plans', 'surv-processus', 'surv-documents', 'surv-dossiers', 'surv-barre',
+    'surv-constatations', 'surv-prestataire', 'surv-fenetres'],
+};
 
 // ── Les cinq autres, et pourquoi `suite: null` et non rien du tout ──
 //
@@ -165,7 +184,11 @@ ECRANS.execution = { ...ecranDeModule('execution'), suite: 'surv' };
 // `suite` est désormais refusé plutôt que mesuré de travers.
 ECRANS.ramp = { ...ecranDeModule('ramp'), suite: 'ramp-navigateur' };
 ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: 'profil-risque-navigateur' };
-ECRANS.planification = { ...ecranDeModule('planification'), suite: 'planification-navigateur' };
+// PLAN porte deux suites depuis le 14 novembre 2026 : la sienne, et celle des
+// gestes qu'elle ne pressait pas (ADR-003, n° 5.f.99).
+ECRANS.planification = {
+  ...ecranDeModule('planification'), suite: ['planification-navigateur', 'plan-gestes'],
+};
 ECRANS.mesures = { ...ecranDeModule('mesures'), suite: 'mesures-navigateur' };
 ECRANS.droits = { ...ecranDeModule('droits'), suite: 'droits-navigateur' };
 
@@ -275,6 +298,90 @@ function blanchirCommentaires(code) {
   }
   return sortie.join('');
 }
+
+// ── Une fonction fléchée posée en propriété se nomme **par sa source** ──
+//
+// `overlay.onclick = () => execCloseSlider()` ne donne aucun nom à la
+// fonction : l'inférence de nom ne s'applique pas à une affectation sur un
+// membre. Le mouchard voyait donc `''`, puis « (anonyme) », et le relevé ne
+// pouvait rien rapprocher — il les laissait dehors, un angle mort (n° 5.f.97).
+//
+// Ce qui identifie une telle fonction est son **texte**, que les deux côtés
+// voient : la source l'écrit, et le navigateur le rend par `String(fn)`. Mais
+// pas sous la même forme. Un écran TypeScript est réimprimé par esbuild — les
+// guillemets simples deviennent doubles, les blocs se réindentent —, et un
+// commentaire glissé dans le corps est blanchi d'un côté, gardé de l'autre.
+// Comparer les textes tels quels aurait rendu « non exercé » un geste pressé.
+//
+// Les deux côtés passent donc par **la même** mise en forme : esbuild, celui
+// qui construit le portail, réimprime l'expression, puis les blancs se
+// réduisent. *Deux côtés qui nomment séparément finissent par nommer
+// différemment* (n° 5.f.3) : ici, ils ne nomment que par `formeDeFleche`.
+//
+// Ce que cela coûte, et qui est dit : deux flèches au texte identique, en deux
+// endroits, ne font qu'un geste — comme deux attributs qui appellent la même
+// fonction. Rien d'autre n'est confondu : le texte entier est la clé, non le
+// premier appel qu'il contient (`el.remove`, `fermer` diraient trop peu).
+const formeDeFleche = (texte, chargeur = 'js') => {
+  let transformSync;
+  try {
+    // eslint-disable-next-line global-require
+    ({ transformSync } = require('esbuild'));
+  } catch {
+    return null;
+  }
+  try {
+    // Les commentaires sont blanchis **ici**, des deux côtés : esbuild en garde
+    // certains, et `String(fn)` les rend tous, quand la source arrive déjà
+    // blanchie. Sans cette ligne, une flèche commentée ne se rapprochait
+    // jamais — c'est le contrôle unitaire écrit pour cela qui l'a montré, au
+    // premier passage.
+    const { code } = transformSync(`(${blanchirCommentaires(String(texte))});`,
+      { loader: chargeur, logLevel: 'silent' });
+    return code.replace(/\s+/g, ' ').trim().replace(/;$/, '');
+  } catch {
+    return null;
+  }
+};
+
+// Le texte d'une fonction fléchée dans la source, de ses paramètres à la fin
+// de son corps. Un corps en bloc se clôt à son accolade ; une expression, au
+// premier `;`, `,` ou saut de ligne hors de toute parenthèse — ou à la
+// parenthèse qui la contient. Les chaînes et les gabarits sont sautés entiers :
+// une accolade dans `'{'` n'en est pas une.
+const texteDeFleche = (texte, depart) => {
+  const ouvrants = '([{';
+  const fermants = ')]}';
+  const fleche = texte.indexOf('=>', depart);
+  if (fleche < 0) return null;
+  let i = fleche + 2;
+  while (/\s/.test(texte[i] || '')) i += 1;
+  const bloc = texte[i] === '{';
+  let profondeur = 0;
+  while (i < texte.length) {
+    const c = texte[i];
+    if (c === '`') {
+      const g = corpsDuGabarit(texte, i);
+      if (!g) return null;
+      i = g.fin + 1;
+      continue;
+    }
+    if (c === '"' || c === "'") {
+      i += 1;
+      while (i < texte.length && texte[i] !== c) i += texte[i] === '\\' ? 2 : 1;
+      i += 1;
+      continue;
+    }
+    if (ouvrants.includes(c)) profondeur += 1;
+    else if (fermants.includes(c)) {
+      profondeur -= 1;
+      if (profondeur < 0) break;
+      if (bloc && profondeur === 0) { i += 1; break; }
+    } else if (!bloc && profondeur === 0 && (c === ';' || c === ',' || c === '\n')) break;
+    i += 1;
+  }
+  return texte.slice(depart, i).trim();
+};
 
 // ── Le nom d'un gestionnaire en ligne, et les trois formes qu'il prend ──
 //
@@ -391,6 +498,42 @@ const nomDuGestionnaire = (corps) => {
   }
   // Rien après la garde : la garde **est** le geste.
   if (!sansGarde) return premiereGarde || 'event.stopPropagation';
+  // ── Une déclaration en tête n'est pas le geste ──
+  //
+  // `const r=document.getElementById('${id}');r.style.display=…;this.classList
+  // .toggle('expanded')` (`pl-validation.js`, le dépli d'un amendement) ne
+  // tombait sous aucune règle, et se nommait par ses quarante-huit premiers
+  // caractères. Deux torts en un : côté source, l'interpolation gardée dans ce
+  // fragment l'envoyait sur la voie des noms « posables », qui en tirait
+  // **deux** gestes ; côté mouchard, le fragment portait l'identifiant réel.
+  // Aucun ne pouvait se rapprocher de rien. `document.getElementById` passait
+  // pour exercé grâce à une **autre** occurrence — la croix des notifications —
+  // et `this.classList.toggle` restait non exercé pour toujours, sur un geste
+  // que `plan-gestes` presse (n° 5.f.99). Le masquage par agrégation, encore
+  // (n° 5.f.30).
+  //
+  // La déclaration se saute, et l'on nomme ce qui suit, par les mêmes règles.
+  // S'il ne suit rien, le geste est l'appel qui initialise la variable.
+  const declaration = /^(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*=/.exec(sansGarde);
+  if (declaration) {
+    let profondeur = 0;
+    let guillemet = null;
+    let i = declaration[0].length;
+    for (; i < sansGarde.length; i += 1) {
+      const c = sansGarde[i];
+      if (guillemet) {
+        if (c === '\\') i += 1;
+        else if (c === guillemet) guillemet = null;
+      } else if (c === '"' || c === "'" || c === '`') guillemet = c;
+      else if ('([{'.includes(c)) profondeur += 1;
+      else if (')]}'.includes(c)) profondeur -= 1;
+      else if (c === ';' && profondeur === 0) break;
+    }
+    const suite = sansGarde.slice(i + 1).trim();
+    if (suite) return nomDuGestionnaire(suite);
+    const init = /([A-Za-z_$][\w$.]*)\s*\(/.exec(sansGarde.slice(declaration[0].length));
+    if (init) return init[1];
+  }
   const appel = /^([A-Za-z_$][\w$.]*)\s*\(/.exec(sansGarde);
   if (appel) return appel[1];
   // Une affectation : la cible la nomme. `EXEC_STATE.filters.domaine=this.value;…`
@@ -448,12 +591,220 @@ const nomDuGeste = (corps) => {
   return nomme;
 };
 
+// ── Ce qu'une interpolation **écrit**, et ce qui l'assemble ──
+//
+// `appelsDuGestionnaire` lit tous les appels du gestionnaire, où qu'ils soient.
+// C'était juste pour le cas qui l'a fait naître — un ternaire qui choisit entre
+// deux gestes, tous deux écrits dans la source :
+//
+//   onclick="${actId ? `planUpdateActivity('${actId}')` : `planCreateActivity('${planId}')`}"
+//
+// Ce ne l'est pas pour celui-ci, et la mesure l'a établi le 11 novembre 2026 :
+//
+//   onclick="event.preventDefault();${_escAttr(repli)}"
+//
+// Le nom tiré de l'attribut **tel qu'il existe dans le navigateur** est
+// `execDownloadRapport` — mesuré. Les deux que la source donne, `preventDefault`
+// qui est une garde et `_escAttr` qui est une fonction de rendu, ne peuvent
+// correspondre à aucun geste : ils comptaient donc « non exercés » pour
+// toujours, alors que le contrôle qui clique ce lien est **vert**.
+//
+// La différence n'est pas le ternaire : c'est **où le nom est écrit**. Dans le
+// premier cas il est dans un littéral — le texte que l'attribut portera. Dans
+// le second il est à l'air libre dans l'interpolation : c'est un appel qui
+// **fabrique** le texte, et le texte qu'il fabrique n'est pas ici.
+//
+// On ne retient donc que ce qui sera **posé** : le code hors interpolation, et
+// les littéraux qu'une interpolation contient. Ce qui assemble reste dehors.
+//
+// *Nommer ce qui assemble un geste, c'est nommer le menuisier et non la porte.*
+//
+// Les gardes de tête se retirent au passage, par la même règle qu'ailleurs :
+// une garde n'est pas un geste, et `appelsDuGestionnaire` ne le savait pas —
+// `event.preventDefault` y figurait comme un appel ordinaire.
+// ── Une aide qui **écrit** un gestionnaire n'est pas un gestionnaire ──
+//
+// `exec-etats.js` pose six fois le même clic par une aide de fichier :
+//
+//   const execEtatsOuvrir = (l) => `execOpenActiviteProcessus('${l.planId}',…)`;
+//   …  onclick="if(!event.target.closest('button'))${execEtatsOuvrir(l)}"
+//
+// `execEtatsOuvrir` n'est **pas** le geste : c'est la fonction qui l'écrit, et
+// la retenir serait la même faute que retenir `_escAttr`. L'occurrence était
+// donc indécidable, « composé au rendu », et le geste réel —
+// `execOpenActiviteProcessus` — n'apparaissait nulle part dans ces six lignes.
+//
+// La doctrine ne change pas d'un pouce : *on retient ce que l'interpolation
+// **écrit**, non ce qui l'assemble.* Elle ne regardait que les littéraux écrits
+// sur place ; elle regarde maintenant, **d'un seul cran**, ceux qu'une aide du
+// même fichier écrit à sa place. Une aide n'est reconnue que si son corps est
+// un gabarit qui commence par un appel : tout le reste reste indécidable, et
+// l'indirection ne se poursuit pas — une aide qui appellerait une aide n'est
+// plus quelque chose qu'on lit, c'est quelque chose qu'on exécute.
+const corpsDuGabarit = (texte, depart) => {
+  let i = depart + 1;
+  let profondeur = 0;
+  while (i < texte.length) {
+    const c = texte[i];
+    if (c === '\\') { i += 2; continue; }
+    if (c === '$' && texte[i + 1] === '{') { profondeur += 1; i += 2; continue; }
+    if (c === '}' && profondeur > 0) { profondeur -= 1; i += 1; continue; }
+    if (c === '`') {
+      if (profondeur === 0) return { corps: texte.slice(depart + 1, i), fin: i };
+      const imbrique = corpsDuGabarit(texte, i);
+      if (!imbrique) return null;
+      i = imbrique.fin + 1;
+      continue;
+    }
+    i += 1;
+  }
+  return null;
+};
+
+const MOTIF_AIDE = /(?:^|[\n;])\s*(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*\([^()]*\)\s*=>\s*`/g;
+
+const aidesDeTexte = (texte) => {
+  const aides = new Map();
+  for (const m of String(texte).matchAll(MOTIF_AIDE)) {
+    const gabarit = corpsDuGabarit(texte, m.index + m[0].length - 1);
+    if (!gabarit) continue;
+    // Elle n'est une aide que si elle écrit un **appel**, et rien d'autre.
+    if (!/^\s*[A-Za-z_$][\w$.]*\s*\(/.test(gabarit.corps)) continue;
+    aides.set(m[1], gabarit.corps);
+  }
+  return aides;
+};
+
+const nomsPosables = (corps, aides) => {
+  let t = String(corps).trim();
+  for (let m = GARDE_EN_TETE.exec(t); m; m = GARDE_EN_TETE.exec(t)) t = t.slice(m[0].length);
+  // ── Et la condition, par la même règle qu'ailleurs ──
+  //
+  // `onclick="if(!event.target.closest('button'))${execEtatsOuvrir(l)}"` : sans
+  // ce retrait, le seul nom qui se pose est `event.target.closest` — l'appel
+  // **de la garde**, que `sansCondition` existe depuis le 8 novembre pour ne
+  // plus nommer, et que son commentaire juge « plus trompeur que *if*, qui au
+  // moins s'avouait ». La première écriture de cette fonction l'avait réintroduit
+  // sur deux attributs, et c'est le relevé comparé entrée par entrée qui l'a dit.
+  const protege = sansCondition(t);
+  if (protege !== null) t = protege;
+  let pose = '';
+  let i = 0;
+  while (i < t.length) {
+    if (t[i] === '$' && t[i + 1] === '{') {
+      // Le corps de l'interpolation, pris par comptage d'accolades — la même
+      // raison qu'en normalisant : une expression régulière s'arrête au premier
+      // `}` et coupe au milieu d'un ternaire paramétré.
+      let profondeur = 0;
+      let j = i + 1;
+      for (; j < t.length; j += 1) {
+        if (t[j] === '{') profondeur += 1;
+        else if (t[j] === '}') {
+          profondeur -= 1;
+          if (profondeur === 0) break;
+        }
+      }
+      const dedans = t.slice(i + 2, j);
+      // L'aide du même fichier, si c'en est une : son gabarit prend la place de
+      // l'appel, et c'est lui qu'on lit ensuite. Un seul cran, sans récursion.
+      const appel = /^\s*([A-Za-z_$][\w$]*)\s*\(/.exec(dedans);
+      if (appel && aides && aides.has(appel[1])) {
+        pose += aides.get(appel[1]);
+        i = j < t.length ? j + 1 : t.length;
+        continue;
+      }
+      // Ce que l'interpolation **écrit** : ses littéraux. Le reste l'assemble.
+      //
+      // Un seul littéral tient la place de l'interpolation, et le texte qui
+      // suit complète l'appel — `${ouvrir || 'rampOuvrirParam'}('${p.id}')`
+      // pose `rampOuvrirParam('')`, et c'est bien le geste par défaut que
+      // l'écran y met. Plusieurs littéraux sont des **alternatives**, chacune
+      // complète par elle-même : le ternaire qui choisit entre deux gestes les
+      // écrit tous deux en entier. Les coller bout à bout fabriquerait un nom
+      // qui n'existe pas — `execAexecB` —, et *une mesure qui invente un nom
+      // est pire qu'une mesure qui se tait.*
+      const litteraux = [...dedans.matchAll(
+        /`((?:\\.|[^`\\])*)`|'((?:\\.|[^'\\])*)'|"((?:\\.|[^"\\])*)"/g,
+      )].map((l) => l[1] ?? l[2] ?? l[3] ?? '');
+      if (litteraux.length === 1) pose += litteraux[0];
+      else litteraux.forEach((l) => { pose += `${l};`; });
+      i = j < t.length ? j + 1 : t.length;
+    } else {
+      pose += t[i];
+      i += 1;
+    }
+  }
+  return appelsDuGestionnaire(pose);
+};
+
+// ── Ce qu'une ligne de fichier dit, et ce qu'elle taisait ──
+//
+// Elle disait `exec-etats.js — 28/34 occurrences`. Six de ces trente-quatre
+// étaient **indécidables** : un dénominateur dans lequel on ne peut pas
+// progresser, et rien pour le dire. Je les ai lues comme six rondes manquantes,
+// je l'ai écrit au registre et dans un message de validation, et rien ne m'a
+// contredit (n° 5.f.89).
+//
+// Le bilan du haut distingue les trois états depuis toujours ; cette ligne,
+// non. C'est la suite directe de ce que le paragraphe suivant dit de l'unité :
+// *il ne suffit pas qu'une mesure nomme son unité, il faut qu'elle dise ce
+// qu'elle ne sait pas mesurer* — sinon celui qui la lit le porte au débit.
+//
+// Elle vit ici, et non dans la boucle qui l'imprime, pour la même raison que
+// `classer` : un garde-fou qui la réécrirait éprouverait sa propre version de
+// la règle.
+const ligneDeFichier = ({ exercees, occurrences, indecidables, nomsExerces, noms }) => {
+  const dont = indecidables
+    ? `, dont ${indecidables} indécidable${indecidables > 1 ? 's' : ''}`
+    : '';
+  return `${exercees}/${occurrences} occurrences${dont}, ${nomsExerces}/${noms} noms`;
+};
+
+// ── Classer un gestionnaire en ligne : la décision, en un seul endroit ──
+//
+// Elle était écrite **dans** `relever`, et un garde-fou qui aurait voulu
+// l'éprouver aurait dû la réécrire — c'est-à-dire éprouver sa propre version de
+// la règle. Ce dépôt a payé cette faute trois fois sur le seul contrôle des noms
+// de suites. La règle vit donc ici, `relever` l'appelle, et `unitaires` aussi.
+//
+// ── Un attribut dont le nom se dérobe ──
+//
+// Quand la valeur est une interpolation, il n'y a pas **un** nom : le code
+// choisit à l'exécution. `onclick="${actId ? `planUpdateActivity(…)` :
+// `planCreateActivity(…)`}"` peut appeler l'une ou l'autre, et les deux sont des
+// gestes de l'écran. On en rend donc **un par nom** : c'est l'attribut qui est
+// unique, non le geste qu'il porte.
+//
+// Et quand aucun nom ne s'en tire — `onclick="${}"`, dont le gestionnaire entier
+// vient d'ailleurs, ou `${_escAttr(repli)}`, dont l'appel **fabrique** le texte
+// au lieu de l'écrire —, l'occurrence est **indécidable**. La compter « non
+// exercée » serait affirmer qu'un geste qu'on ne sait pas nommer n'est pas
+// couvert : *une mesure ne doit pas conclure de ce qu'elle ne voit pas.*
+//
+// `raison` distingue les deux silences, parce qu'ils ne se corrigent pas de la
+// même façon : l'un demande de nommer le gestionnaire, l'autre de le poser sans
+// l'assembler.
+const classer = (corps, aides) => {
+  const nom = nomDuGeste(corps);
+  if (!nom.includes('${}')) return [{ nom }];
+  const noms = nomsPosables(corps, aides);
+  if (noms.length) return noms.map((n) => ({ nom: n, interpole: true }));
+  return [{
+    nom,
+    indecidable: true,
+    raison: /\$\{[^}]*[A-Za-z_$][\w$.]*\s*\(/.test(corps) ? 'composé au rendu' : 'sans nom',
+  }];
+};
+
 function relever(fichiers) {
   const gestes = [];
   for (const rel of fichiers) {
     const abs = path.join(RACINE, rel);
     if (!fs.existsSync(abs)) continue;
     const texte = blanchirCommentaires(fs.readFileSync(abs, 'utf8'));
+    // Les aides du fichier, relevées sur le texte **blanchi** : une définition
+    // laissée dans un commentaire n'en est pas une.
+    const aides = aidesDeTexte(texte);
     // Sans espace avant le `=` : voir le point 3 ci-dessus.
     const motifEnLigne = new RegExp(`\\bon(${EVENEMENTS.join('|')})=\\s*(["'\`])((?:\\\\.|(?!\\2).)*)\\2`, 'g');
     for (const m of texte.matchAll(motifEnLigne)) {
@@ -465,30 +816,7 @@ function relever(fichiers) {
         evenement: m[1],
         source: corps.slice(0, 120),
       };
-      const nom = nomDuGeste(corps);
-      // ── Un attribut dont le nom se dérobe ──
-      //
-      // Quand la valeur est une interpolation, il n'y a pas **un** nom : le code
-      // choisit à l'exécution. `onclick="${actId ? `planUpdateActivity(…)` :
-      // `planCreateActivity(…)`}"` peut appeler l'une ou l'autre, et les deux
-      // sont des gestes de l'écran. On en pousse donc **un par nom** : c'est
-      // l'attribut qui est unique, non le geste qu'il porte.
-      //
-      // Et quand aucun nom ne s'en tire — `onclick="${}"`, dont le gestionnaire
-      // entier vient d'ailleurs —, l'occurrence est **indécidable**. La compter
-      // « non exercée » serait affirmer qu'un geste qu'on ne sait pas nommer
-      // n'est pas couvert : *une mesure ne doit pas conclure de ce qu'elle ne
-      // voit pas.*
-      if (nom.includes('${}')) {
-        const noms = appelsDuGestionnaire(corps);
-        if (noms.length) {
-          noms.forEach((n) => gestes.push({ ...commun, nom: n, interpole: true }));
-        } else {
-          gestes.push({ ...commun, nom, indecidable: true });
-        }
-      } else {
-        gestes.push({ ...commun, nom });
-      }
+      classer(corps, aides).forEach((g) => gestes.push({ ...commun, ...g }));
     }
     // ── Troisième forme : le gestionnaire posé en **propriété** ──
     //
@@ -544,13 +872,72 @@ function relever(fichiers) {
       }
     }
 
-    const motifPropriete = new RegExp(`\\b([\\w$.[\\]'"]+)\\.on(${EVENEMENTS.join('|')})\\s*=\\s*([A-Za-z_$][\\w$.]*)`, 'g');
+    // ── Une cible peut être un **appel** ──
+    //
+    // `el.querySelector('#exec_preuve_ok').onclick = …` finit par `)` : le motif
+    // ne lisait qu'un identifiant pointé avant `.on…`, et ces affectations
+    // n'entraient au relevé sous **aucune** forme. Six dans SURV, trouvées en
+    // comptant toutes les affectations `.on<événement> =` du dépôt contre ce que
+    // le relevé en retenait (n° 5.f.98). La cible n'est pas le nom : il suffit
+    // de la reconnaître.
+    const CIBLE = `((?:[\\w$.[\\]'"]+|\\)))\\.on(${EVENEMENTS.join('|')})\\s*=\\s*`;
+    const motifPropriete = new RegExp(`${CIBLE}([A-Za-z_$][\\w$.]*)`, 'g');
     for (const m of texte.matchAll(motifPropriete)) {
+      // ── Une propriété mise à `null` **retire** un gestionnaire ──
+      //
+      // `voile.onclick = null` n'en pose aucun : c'est l'inverse d'un geste. Le
+      // motif, qui cherche un identifiant, acceptait `null` comme un nom — et
+      // le relevé portait un geste **nommé « null »**, compté non exercé pour
+      // toujours, qu'aucune suite ne pourrait jamais couvrir.
+      //
+      // Un seul dans tout le dépôt, mesuré avant d'écrire cette ligne. La
+      // correction est de la même famille que celle du 12 novembre
+      // (n° 5.f.83) : *retirer du dénominateur ce qui n'y a jamais eu sa
+      // place, sans rien ajouter au numérateur.*
+      if (m[3] === 'null' || m[3] === 'undefined') continue;
+      // `= async () => …` et `= function …` ne sont pas des noms : la flèche a
+      // son motif, et le relevé ne connaît aucune `function` posée ainsi.
+      if (m[3] === 'async' || m[3] === 'function') continue;
+      // ── Un identifiant suivi de `=>` est un **paramètre**, non un nom ──
+      //
+      // `el.onclick = e => { … }` pose une fonction fléchée **anonyme** : le
+      // motif lisait `e`, son paramètre, comme le nom du gestionnaire. À
+      // l'exécution, la fonction n'a pas de nom — une affectation sur un membre
+      // n'en infère aucun —, et le rapprochement ne pouvait jamais se faire :
+      // un « non exercé » éternel sur un geste que `surv-constatations` presse
+      // et contre-teste (n° 5.f.96).
+      //
+      // `el.onclick = (e) => …`, la même chose entre parenthèses, n'entre pas
+      // à ce motif-ci : il exige un identifiant. Les flèches, sous l'une et
+      // l'autre forme, ont le leur, juste en dessous.
+      if (/^\s*=>/.test(texte.slice(m.index + m[0].length))) continue;
       gestes.push({
         fichier: rel, ligne: texte.slice(0, m.index).split('\n').length,
         forme: 'propriété', evenement: m[2], nom: m[3],
         source: m[0].slice(0, 120), id: null,
       });
+    }
+
+    // ── La fonction fléchée posée en propriété, nommée par son texte ──
+    //
+    // Écartées jusqu'ici, et dites « un angle mort » (n° 5.f.97) — sept, disait
+    // la phrase. Le compte de toutes les affectations en a trouvé **seize** :
+    // quatorze dans SURV, deux dans le portail. Voir `formeDeFleche`.
+    // Le type de retour d'une flèche TypeScript — `(e): void => …` — se tient
+    // entre ses paramètres et `=>` : sans lui, `instances.ts` restait dehors.
+    const motifFleche = new RegExp(`${CIBLE}`
+      + '(?=(?:async\\s*)?(?:\\([^()]*\\)(?:\\s*:\\s*[\\w$<>\\[\\]|. ]+?)?|[A-Za-z_$][\\w$]*)\\s*=>)', 'g');
+    for (const m of texte.matchAll(motifFleche)) {
+      const fleche = texteDeFleche(texte, m.index + m[0].length);
+      const forme = fleche && formeDeFleche(fleche, /\.tsx?$/.test(rel) ? 'ts' : 'js');
+      const commun = {
+        fichier: rel, ligne: texte.slice(0, m.index).split('\n').length,
+        forme: 'propriété', evenement: m[2], source: (fleche || m[0]).slice(0, 120), id: null,
+      };
+      // Un texte qu'esbuild ne sait pas relire ne se rapproche de rien : il est
+      // dit indécidable, et non compté pour non exercé.
+      if (!forme) gestes.push({ ...commun, nom: '(flèche illisible)', indecidable: true, raison: 'flèche illisible' });
+      else gestes.push({ ...commun, nom: forme });
     }
 
     // ── Quatrième forme : l'action remise au socle ──
@@ -781,10 +1168,13 @@ const MOUCHARD_FN = (EVTS) => {
           try {
             nom = Object.getOwnPropertyNames(window).find((k) => {
               try { return window[k] === fn; } catch { return false; }
-            }) || '(anonyme)';
-          } catch { nom = '(anonyme)'; }
+            }) || '';
+          } catch { nom = ''; }
         }
-        garder('propriete', nom);
+        // Ni nom ni globale : une fonction fléchée posée sur place. On garde
+        // **son texte**, que le côté Node met en forme par `formeDeFleche`,
+        // comme la source — le nommage n'appartient pas à la page.
+        garder('propriete', nom || { source: String(fn).slice(0, 2000) });
         break;
       }
     }, true);
@@ -925,36 +1315,54 @@ async function principal() {
     console.log(`Relevé figé dans tests/smoke/gestes-${quoi}.json — inventaire seul.`);
     return;
   }
-  if (!ecran.suite) {
+  if (!ecran.suite || (Array.isArray(ecran.suite) && !ecran.suite.length)) {
     console.error(`l’écran « ${quoi} » ne déclare pas de suite. Poser le nom de sa suite`
       + ' de navigateur, ou `suite: null` si elle n’existe pas encore — mesurer un écran'
       + ' de module avec le parcours du portail rendrait « 0 exercé », indiscernable du vrai.');
     process.exit(2);
   }
 
-  const journal = path.join(require('os').tmpdir(), `oasis-gestes-${process.pid}.json`);
-  const suite = ecran.suite;
-  const { code, sortie } = lancerLaSuite(journal, suite);
-  if (!fs.existsSync(journal)) {
-    console.error('la suite n’a pas écrit de journal. Sortie :\n'
-      + sortie.split('\n').slice(-12).join('\n'));
-    process.exit(1);
+  // ── Les suites, une par une, et leurs journaux réunis ──
+  //
+  // Chaque suite écrit **son** journal : un chemin partagé ferait écraser le
+  // premier par le second, et la couverture rendue serait celle de la dernière
+  // suite — un résultat plausible et faux.
+  const suites = Array.isArray(ecran.suite) ? ecran.suite : [ecran.suite];
+  const exerces = {
+    enLigne: [], ecouteurs: [], propriete: [], jsx: [], barre: [], poses: 0, pages: 0,
+  };
+  for (const suite of suites) {
+    const journal = path.join(require('os').tmpdir(), `oasis-gestes-${process.pid}-${suite}.json`);
+    /* eslint-disable no-await-in-loop */
+    const { code, sortie } = lancerLaSuite(journal, suite);
+    if (!fs.existsSync(journal)) {
+      console.error(`la suite « ${suite} » n’a pas écrit de journal. Sortie :\n`
+        + sortie.split('\n').slice(-12).join('\n'));
+      process.exit(1);
+    }
+    const vu = JSON.parse(fs.readFileSync(journal, 'utf8'));
+    fs.unlinkSync(journal);
+    // Une suite rouge mesure un parcours interrompu : le relevé serait partiel
+    // et le dirait « couverture ». Le refus est **par suite** — une seule rouge
+    // suffit à rendre l'ensemble faux.
+    if (code !== 0) {
+      console.error(`la suite « ${suite} » est rouge (code ${code}) : le parcours s’est `
+        + 'arrêté en route, et le relevé serait partiel. Corriger la suite d’abord.');
+      process.exit(1);
+    }
+    ['enLigne', 'ecouteurs', 'propriete', 'jsx', 'barre'].forEach((c) => {
+      exerces[c].push(...(vu[c] || []));
+    });
+    exerces.poses += vu.poses || 0;
+    exerces.pages += vu.pages || 0;
   }
-  const exerces = JSON.parse(fs.readFileSync(journal, 'utf8'));
-  fs.unlinkSync(journal);
+  const suite = suites.join(' + ');
 
   // ── Une mesure muette est un échec de la mesure, non un résultat ──
   if (!exerces.enLigne.length && !exerces.ecouteurs.length) {
     console.error(`AUCUN geste enregistré sur ${exerces.pages} page(s), `
       + `${exerces.poses} écouteur(s) posé(s). L’instrumentation n’a rien vu : `
       + 'mesure invalide, et non « écran inerte ».');
-    process.exit(1);
-  }
-  // Une suite rouge mesure un parcours interrompu : le relevé serait partiel et
-  // le dirait « couverture ».
-  if (code !== 0) {
-    console.error(`la suite « ${suite} » est rouge (code ${code}) : le parcours s’est `
-      + 'arrêté en route, et le relevé serait partiel. Corriger la suite d’abord.');
     process.exit(1);
   }
 
@@ -1021,7 +1429,10 @@ async function principal() {
     const i = t.indexOf('=>');
     return nomDuGeste(i >= 0 ? t.slice(i + 2).trim() : t);
   }));
-  const proprietesVues = new Set(exerces.propriete || []);
+  // Une propriété vue sans nom porte son texte : on le met en forme par la
+  // fonction qui a nommé la source, et par elle seule.
+  const proprietesVues = new Set((exerces.propriete || []).map((v) => (
+    v && typeof v === 'object' ? formeDeFleche(String(v.source || '')) : v)).filter(Boolean));
   // ── Nommer un gestionnaire JSX **vu au vol**, comme on nomme celui qui est
   //    écrit dans la source ──
   //
@@ -1090,7 +1501,7 @@ async function principal() {
   const nAbsents = distincts.length - nExerces - nIndecidables;
 
   console.log(`\n═══ ${quoi} — ${noms.size} gestes nommés, ${gestes.length} occurrences ═══\n`);
-  console.log(`  exercés par la suite « ${suite} » : ${nExerces}`
+  console.log(`  exercés par ${suites.length > 1 ? 'les suites' : 'la suite'} « ${suite} » : ${nExerces}`
     + `  (${Math.round((nExerces / noms.size) * 100)} %)`);
   console.log(`  non exercés                       : ${nAbsents}`);
   console.log(`  indécidables (cible non nommée)   : ${nIndecidables}`);
@@ -1121,7 +1532,13 @@ async function principal() {
     // pas sur une ligne. *Une mesure qui ne nomme pas son unité laisse celui qui
     // la lit en choisir une.*
     const nomsExerces = [...noms.values()].filter((e) => e.exerce > 0).length;
-    console.log(`── ${f} — ${n}/${liste.length} occurrences, ${nomsExerces}/${noms.size} noms ──`);
+    console.log(`── ${f} — ${ligneDeFichier({
+      exercees: n,
+      occurrences: liste.length,
+      indecidables: liste.filter((g) => g.exerce === null).length,
+      nomsExerces,
+      noms: noms.size,
+    })} ──`);
     [...noms.entries()]
       .sort((a, b) => (a[1].exerce ? 1 : 0) - (b[1].exerce ? 1 : 0) || b[1].total - a[1].total)
       .forEach(([nom, e]) => {
@@ -1157,10 +1574,14 @@ if (require.main === module) {
 const MOUCHARD = `(${MOUCHARD_FN.toString()})(${JSON.stringify(EVENEMENTS)})`;
 
 module.exports = {
-  MOUCHARD, MOUCHARD_FN, EVENEMENTS, relever, ECRANS,
+  MOUCHARD, MOUCHARD_FN, EVENEMENTS, relever, ECRANS, classer, nomsPosables,
+  aidesDeTexte, ligneDeFichier,
   // Le nommeur est exporté pour être éprouvé seul : c’est lui qui décide ce
   // qu’un geste **est**, et plusieurs de ses règles sont nées d’un relevé faux.
   // `nomDuGeste` est l’entrée : les deux côtés — la source et le mouchard — ne
   // nomment que par elle.
   nomDuGeste, nomDuGestionnaire,
+  // La mise en forme d'une flèche posée en propriété, pour la même raison : les
+  // deux côtés ne nomment une flèche que par elle.
+  formeDeFleche,
 };

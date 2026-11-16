@@ -8,6 +8,7 @@ const db = require('./store');
 const R = require('./roles');
 const vues = require('./vues');
 const { asynchrone } = require('../../route');
+const telechargement = require('../../telechargement');
 const instances = require('../../instances');
 const { enregistrement } = require('../../valider');
 const comptesPrestataire = require('../../comptes_prestataire');
@@ -251,10 +252,15 @@ module.exports = function register(app, deps, M) {
     return XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
   }
 
+  // Le nom passe par le socle : un nom hors de l'ASCII ne tient pas dans un
+  // `filename="…"`, et la RFC 6266 veut alors un `filename*=UTF-8''…`. Les
+  // libellés de checklist sont nettoyés côté écran, mais la règle ne doit pas
+  // dépendre de ce nettoyage (`src/telechargement.js`).
   function envoyerClasseur(res, buffer, nom) {
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${nom}"`);
-    res.send(buffer);
+    telechargement.piece(res, {
+      nom,
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }, buffer);
   }
 
   // Retrouve la ligne d'en-tête à partir de son premier intitulé.
@@ -273,7 +279,8 @@ module.exports = function register(app, deps, M) {
   // ── Items d'une checklist ──
   const ENTETES_ITEMS = ['Ordre', 'Réf. Item', 'Thème', 'Sous-thème', 'Réf. Règlement', 'Description', 'Directives'];
 
-  app.get(`${M}/checklists/:id/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
+  app.get(`${M}/checklists/:id/export-xlsx`, requireAuth, telechargement.pageDeRefus,
+    asynchrone(async (req, res) => {
     const cl = await db.get('checklists', req.params.id);
     if (!cl) return introuvable(res, 'checklist');
     const themes = themesSupervision();
@@ -339,7 +346,8 @@ module.exports = function register(app, deps, M) {
   // ── Checklist renseignée sur un dossier ──
   const ENTETES_FILL = ['Ordre', 'Réf. Item', 'Réf. Règlement', 'Thème', 'Sous-thème', 'Description', 'Directives', 'Statut', 'Observations'];
 
-  app.get(`${M}/checklist-fill/:dossierId/:checklistId/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
+  app.get(`${M}/checklist-fill/:dossierId/:checklistId/export-xlsx`, requireAuth,
+    telechargement.pageDeRefus, asynchrone(async (req, res) => {
     const cl = await db.get('checklists', req.params.checklistId);
     if (!cl) return introuvable(res, 'checklist');
     const themes = themesSupervision();
@@ -416,7 +424,8 @@ module.exports = function register(app, deps, M) {
   }));
 
   // ── Sous-thèmes d'une checklist ──
-  app.get(`${M}/checklists/:id/sous-themes/export-xlsx`, requireAuth, asynchrone(async (req, res) => {
+  app.get(`${M}/checklists/:id/sous-themes/export-xlsx`, requireAuth,
+    telechargement.pageDeRefus, asynchrone(async (req, res) => {
     const cl = await db.get('checklists', req.params.id);
     if (!cl) return introuvable(res, 'checklist');
     const themes = themesSupervision();

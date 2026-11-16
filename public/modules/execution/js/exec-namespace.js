@@ -19,7 +19,6 @@ window.EXEC = {
     rapports: typeof execRenderRapports === 'function' ? execRenderRapports : null,
     parametres: typeof execRenderParametres === 'function' ? execRenderParametres : null,
     mes_utilisateurs: typeof execRenderMesUtilisateurs === 'function' ? execRenderMesUtilisateurs : null,
-    prestataire_home: typeof execRenderPrestataireHome === 'function' ? execRenderPrestataireHome : null,
     prestataire_notifications: typeof execRenderPrestataireNotifications === 'function' ? execRenderPrestataireNotifications : null,
   },
 };

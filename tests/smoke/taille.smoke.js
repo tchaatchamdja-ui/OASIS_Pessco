@@ -192,6 +192,184 @@ module.exports = async function tailleSmoke() {
   verifier(`aucune fonction au-delà de ${SEUIL_FONCTION} lignes hors exceptions déclarées`,
     longues.length === 0, longues.join(' · '));
 
+  // ── Un écran de module ne se déconnecte pas lui-même ──
+  //
+  // Les cinq écrans portaient chacun un bouton de déconnexion, et chacun était
+  // **mort par construction** : le socle **remplace** le nœud `.btn-logout` par
+  // « Retour au portail » (`frontend/socle/chrome.ts`), et remplacer un nœud
+  // détruit son gestionnaire en ligne. Les cinq fonctions ont donc été retirées
+  // le 3 novembre 2026 — dont trois qui, de surcroît, ne déconnectaient pas :
+  // elles effaçaient le stockage local et allaient à `/login` sans appeler
+  // `/api/logout`, laissant la session **ouverte côté serveur**. On avait même
+  // corrigé avec soin, sur les deux autres, un refus de serveur que personne ne
+  // lisait — sur un bouton que personne ne pouvait cliquer. *Un geste mort n'est
+  // mesuré par rien, et c'est pourquoi il peut être à la fois soigné et faux.*
+  //
+  // Ce garde tient les **deux** côtés, et il le faut :
+  //
+  //   · le nœud doit **rester** — c'est l'ancre du socle. Le retirer ôterait
+  //     « Retour au portail » des cinq écrans, et c'est exactement ce que la
+  //     lettre de la consigne aurait fait faire ;
+  //   · le nœud ne doit porter **aucun gestionnaire**, et aucun écran de module
+  //     ne doit redéclarer une fonction de déconnexion.
+  {
+    const ecrans = ['execution', 'planification', 'profil_risque', 'ramp', 'mesures'];
+    const sansAncre = [];
+    const avecGestionnaire = [];
+    const avecFonction = [];
+    ecrans.forEach((e) => {
+      const js = path.join(RACINE, 'public', 'modules', e, 'js');
+      if (!fs.existsSync(js)) { sansAncre.push(`${e} (pas de source)`); return; }
+      let ancres = 0;
+      fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => {
+        const t = fs.readFileSync(path.join(js, f), 'utf8');
+        // L'ancre : un nœud de classe `btn-logout`, et rien d'autre dessus.
+        for (const m of t.matchAll(/<button[^>]*class="btn-logout"[^>]*>/g)) {
+          ancres += 1;
+          if (/\bon[a-z]+=/.test(m[0])) avecGestionnaire.push(`${e}/${f} : ${m[0].slice(0, 90)}`);
+        }
+        // Et la fonction : aucun écran de module n'en déclare plus.
+        for (const m of t.matchAll(/^(?:async\s+)?function\s+(\w*(?:[Ll]ogout|[Dd]econnexion)\w*)\s*\(/gm)) {
+          avecFonction.push(`${e}/${f} : ${m[1]}`);
+        }
+      });
+      if (!ancres) sansAncre.push(e);
+    });
+    verifier('les cinq écrans gardent l’ancre que le socle remplace, et aucun ne se déconnecte lui-même',
+      sansAncre.length === 0 && avecGestionnaire.length === 0 && avecFonction.length === 0,
+      `ancre absente : ${sansAncre.join(', ') || 'aucune'}`
+      + ` · gestionnaire : ${avecGestionnaire.join(' ; ') || 'aucun'}`
+      + ` · fonction : ${avecFonction.join(' ; ') || 'aucune'}`);
+  }
+
+  // ── Une déclaration qui en ombre une autre est toujours un défaut ──
+  //
+  // En script classique, deux `function X()` dans le même fichier ne sont pas
+  // une erreur : la seconde **écrase** la première, en silence. Le code de la
+  // première devient inatteignable, et qui le modifie ne voit rien changer.
+  //
+  // `pr-parametres.js` en portait un cas : deux `renderParamIndices`, dont la
+  // morte appelait un `saveModuleIndices` qui rangeait son résultat dans
+  // `window.PESSCO.sharedData.indices` — écrit une fois, lu nulle part. La
+  // vivante le range dans `APP_STATE.data.indices`, que trois endroits
+  // relisent. Quarante-et-une lignes retirées le 4 novembre 2026 (n° 5.f.67).
+  //
+  // C'était le **seul** cas du dépôt : ce garde part donc sans exception à
+  // tolérer, et il refuse qu'il s'en ajoute. Un doublon de fonction n'est jamais
+  // un choix — contrairement à un sélecteur CSS écrit deux fois, dont ce fichier
+  // tolère vingt-cinq hérités.
+  {
+    const doublees = [];
+    fichiers.filter((f) => f.endsWith('.js')).forEach((f) => {
+      const compte = new Map();
+      fs.readFileSync(f, 'utf8').split('\n').forEach((l) => {
+        const m = /^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/.exec(l);
+        if (m) compte.set(m[1], (compte.get(m[1]) || 0) + 1);
+      });
+      [...compte].filter(([, n]) => n > 1)
+        .forEach(([nom, n]) => doublees.push(`${relatif(f)} : ${nom} ×${n}`));
+    });
+    verifier('aucune fonction n’est déclarée deux fois dans un même fichier',
+      doublees.length === 0, doublees.join(' · '));
+  }
+
+  // ── Un téléchargement fabriqué après une attente échoue sans bruit ──
+  //
+  // `fetch`, puis `blob`, puis une ancre qu'on clique : entre le clic de l'agent
+  // et celui du script, l'attente du serveur épuise l'activation utilisateur qui
+  // autorise l'enregistrement. Rien ne lève, rien ne s'écrit à la console, et
+  // l'écran annonce « opération réussie ». Constaté le 4 septembre 2026 sur les
+  // exports de CARE, où le rendu d'un PDF prend quelques secondes.
+  //
+  // ── Pourquoi ce garde est un garde de **forme**, et non un contrôle d'écran ──
+  //
+  // Parce qu'aucune ronde ne peut le voir. Contre-essayé le 5 novembre 2026 : un
+  // document de 122 octets se télécharge parfaitement par le patron interdit,
+  // l'activation n'ayant pas eu le temps d'expirer. *Le défaut ne se manifeste
+  // qu'à la lenteur, et une suite éprouve des jeux d'essai rapides.* Il ne
+  // reste donc que la forme à surveiller, et c'est ce que fait ce garde.
+  //
+  // La règle : une fonction qui fabrique un téléchargement — `createObjectURL`,
+  // ou une ancre dont elle pose le `download` — ne doit porter **aucune
+  // attente**. Six chemins la violaient le 5 novembre 2026 (n° 5.f.71) ; les
+  // trois qui restent composent leur blob sur place, sans rien attendre, et ce
+  // sont eux qui disent que le garde n'est pas vide de sens.
+  {
+    const fabriques = [];
+    // Découpage en fonctions de premier niveau : le fichier est un script
+    // classique, et chaque `function X()` en colonne 1 ouvre la suivante.
+    const OUVRE = /^(?:async\s+)?function\s+([A-Za-z_$][\w$]*)\s*\(/;
+    fichiers.filter((f) => /public\/modules\/.*\.js$/.test(f.replace(/\\/g, '/')))
+      .forEach((f) => {
+        const lignes = fs.readFileSync(f, 'utf8').split('\n');
+        let nom = '';
+        let corps = [];
+        const juger = () => {
+          if (!nom) return;
+          const texte = corps.join('\n');
+          const fabrique = /URL\.createObjectURL|\.download\s*=/.test(texte);
+          if (fabrique && /\bawait\b/.test(texte)) fabriques.push(`${relatif(f)} : ${nom}`);
+        };
+        lignes.forEach((l) => {
+          const m = OUVRE.exec(l);
+          if (m) { juger(); nom = m[1]; corps = []; }
+          corps.push(l);
+        });
+        juger();
+      });
+    verifier('aucun geste ne fabrique un téléchargement après une attente',
+      fabriques.length === 0, fabriques.join(' · '));
+  }
+
+  // ── Un dossier archivé se marque sur `archive`, et jamais sur `statut` ──
+  //
+  // Deux conventions d'archivage coexistaient dans SURV, et une seule était
+  // lue. `PUT /dossiers/:id/archiver` (`routes-etats.js`) pose `archive: 1`,
+  // `date_archivage` et `archive_par`, en réservant le geste au
+  // super-administrateur et en exigeant un dossier clôturé ; c'est ce champ
+  // `archive` que les États, le tableau de bord et le serveur lisent.
+  //
+  // L'écran « Dossiers » avait la sienne : il écrivait `statut: 'archive'` par
+  // le PUT générique — qui recopie tout ce qu'on lui donne sans rien vérifier —
+  // et relisait `statut === 'archive'` en six endroits. Mesuré le 8 novembre
+  // 2026 sur un dossier clôturé : le statut réel était **écrasé**, `archive`
+  // restait absent, la date et l'auteur restaient vides, et les deux gardes du
+  // serveur tombaient. Dans l'autre sens, un dossier archivé par la vraie route
+  // s'affichait dans « Dossiers clôturés », et l'onglet des archives annonçait
+  // zéro (n° 5.f.73).
+  //
+  // Le défaut était hors d'atteinte — la page n'était dans aucune barre. C'est
+  // précisément pourquoi il faut un garde de **forme** : aucune ronde ne peut
+  // cliquer un bouton que rien n'affiche, et l'écran sera rendu au menu le jour
+  // où la maîtrise d'ouvrage le décidera. Le garde tient la correction d'ici là.
+  //
+  // Les plans de planification, eux, portent légitimement `statut === 'archive'`
+  // (`exec-app.js`, la liste des plans archivés) : le garde ne regarde donc que
+  // les porteurs dont le nom désigne un dossier.
+  {
+    const fautes = [];
+    // Commentaires retirés : ce bloc-ci cite les deux formes qu'il interdit, et
+    // un garde qui se prend lui-même pour un défaut ne garde rien.
+    const sansCommentaires = (t) => t
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    const ECRIT = /statut\s*:\s*'archive'/g;
+    const LIT = /\b(d|doss|dossier|dos)\.statut\s*[!=]==\s*'archive'/g;
+    fichiers.filter((f) => /(public\/modules\/execution|src\/modules\/execution)\/.*\.js$/
+      .test(f.replace(/\\/g, '/')))
+      .forEach((f) => {
+        const texte = sansCommentaires(fs.readFileSync(f, 'utf8'));
+        for (const m of texte.matchAll(ECRIT)) {
+          fautes.push(`${relatif(f)} : écrit ${m[0]}`);
+        }
+        for (const m of texte.matchAll(LIT)) {
+          fautes.push(`${relatif(f)} : lit ${m[0]}`);
+        }
+      });
+    verifier('aucun code de SURV ne prend « archivé » pour un statut de dossier',
+      fautes.length === 0, fautes.join(' · '));
+  }
+
   // Un sélecteur défini deux fois dans la même feuille, c'est une règle qui en
   // annule une autre — la source de plusieurs corrections déjà passées ici.
   const doublons = [];
@@ -687,6 +865,20 @@ module.exports = async function tailleSmoke() {
   // Le relevé est donc figé, et comparé à chaque campagne. Un geste ajouté sans
   // que le relevé soit refait fait tomber ce contrôle, et la conduite à tenir est
   // dans son message.
+  //
+  // ── Ce qu'il compare, et ce qu'il laisse passer **exprès** ──
+  //
+  // Les **noms** et le **nombre d'occurrences** : ce dont la couverture est
+  // faite. Pas les numéros de ligne. Mesuré le 12 novembre 2026 en comparant les
+  // relevés entrée par entrée : `gestes-profil_risque.json`, figé le 5 novembre,
+  // porte des lignes que `pr-parametres.js` a déplacées le 7 — et ce contrôle
+  // est resté vert, à juste titre, puisque aucun geste n'avait bougé.
+  //
+  // Les faire entrer dans la comparaison ferait rougir une campagne pour un
+  // commentaire ajouté au-dessus d'un bouton, et coûterait un relevé de quinze
+  // minutes à chaque fois. Les numéros de ligne du relevé figé sont donc une
+  // **commodité de lecture**, non une mesure : qui s'y fie doit refaire le
+  // relevé.
   const releves = fs.readdirSync(path.join(RACINE, 'tests', 'smoke'))
     .filter((f) => /^gestes-[a-z_]+\.json$/.test(f));
   if (!releves.length) {
@@ -1178,6 +1370,60 @@ module.exports = async function tailleSmoke() {
   verifier('chaque écran charge la feuille commune des filtres',
     sansFiltres.length === 0, sansFiltres.join(' · '));
 
+  // ── Un nom du socle appelé sur une page qui ne charge pas son fichier ──
+  //
+  // Mesuré le 12 novembre 2026 : trois fichiers de SURV appelaient
+  // `oasisTelecharger`, et l'écran ne chargeait pas `oasis-utils.js`, seul à le
+  // poser alors. **Cinq téléchargements du module levaient « oasisTelecharger
+  // is not defined »** — l'export d'une checklist, celui de ses sous-thèmes,
+  // celui d'une checklist renseignée, et les deux pièces d'une constatation.
+  //
+  // Rien ne pouvait le dire. Un nom absent ne se manifeste qu'au **clic**, et
+  // aucune suite ne cliquait ces boutons ; les trois commentaires qui les
+  // surmontent décrivaient par le menu un patron qui ne pouvait pas s'exécuter.
+  // La surface du socle était bien relevée (`surface-socle.json`), et son
+  // contrôle dit qu'aucun nom n'a disparu — il ne disait pas qu'une page qui
+  // s'en sert le charge. *Une surface publiée ne vaut que pour qui la charge.*
+  //
+  // La règle se lit dans les deux sens : un nom non chargé est un défaut, et un
+  // fichier chargé pour rien est du poids. Seul le premier est gardé ici — le
+  // second ne casse personne.
+  //
+  // Un écran qui **déclare lui-même** le nom est hors de cause : SURV définit
+  // son propre `api`, qui traduit ses routes.
+  const SURFACE = JSON.parse(fs.readFileSync(path.join(__dirname, 'surface-socle.json'), 'utf8'));
+  const poseParLeSocle = new Map();
+  Object.entries(SURFACE).forEach(([fichier, noms]) => {
+    noms.forEach((n) => poseParLeSocle.set(n.split(':')[0], fichier));
+  });
+  const nonCharges = [];
+  PAGES.forEach((rel) => {
+    const page = path.join(RACINE, rel);
+    const dossierJs = path.join(path.dirname(page), 'js');
+    if (!fs.existsSync(page) || !fs.existsSync(dossierJs)) return;
+    const charges = new Set([...fs.readFileSync(page, 'utf8')
+      .matchAll(/\/shared\/(?:app|js)\/([\w-]+)\.js/g)].map((m) => m[1]));
+    const scripts = fs.readdirSync(dossierJs).filter((f) => f.endsWith('.js'));
+    const sources = scripts.map((f) => fs.readFileSync(path.join(dossierJs, f), 'utf8'));
+    poseParLeSocle.forEach((fichier, nom) => {
+      if (charges.has(fichier)) return;
+      // Déclaré par l'écran lui-même : le nom lui appartient.
+      const sien = new RegExp(`(?:function\\s+${nom}\\b|window\\.${nom}\\s*=`
+        + `|(?:const|let|var)\\s+${nom}\\b)`);
+      if (sources.some((s) => sien.test(s))) return;
+      // Les commentaires ne comptent pas : ils citent souvent le nom.
+      const appel = new RegExp(`(?<![\\w$.])${nom}\\s*[([.]`);
+      const coupables = scripts.filter((f, i) => appel.test(sources[i]
+        .replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '')));
+      if (coupables.length) {
+        nonCharges.push(`${path.basename(path.dirname(rel))} : ${nom} `
+          + `(${fichier}.js) ← ${coupables.join(', ')}`);
+      }
+    });
+  });
+  verifier('aucun écran n’appelle un nom du socle sans charger le fichier qui le pose',
+    nonCharges.length === 0, nonCharges.join(' · '));
+
   // ── Le registre des traitements suit les modules ──
   // Un registre est un document du responsable de traitement, et un document
   // prend du retard en silence. Celui-ci ne le peut pas : un module monté qui
@@ -1245,6 +1491,38 @@ module.exports = async function tailleSmoke() {
   verifier('aucun acte d’autorité n’est différable hors ligne',
     actes.length === 0, actes.join(' · '));
 
+  // ── Les sections du rapport : une branche, une section déclarée ──
+  //
+  // Le volet d'un dossier rend le rapport en sections, et `REDACTION_SUBTABS`
+  // les déclare. `_buildDossierTabContent` les aiguille par une suite de
+  // `if (tab === '…')`.
+  //
+  // Une de ces branches désignait un onglet **« rapports » que la table ne
+  // déclare pas** : elle n'était atteinte par aucun appel du dépôt, et la table
+  // des rapports qu'elle rendait — avec un « Envoyer au prestataire » sans
+  // confirmation ni message — était invisible et le resta. *Du code mort ne
+  // vieillit pas : il attend qu'on le rebranche.*
+  //
+  // Les deux listes se lisent dans la source, et doivent coïncider. Le contrôle
+  // refuse si l'une des deux ne se lit plus : une liste vide et un écran sans
+  // sections se ressemblent.
+  {
+    const src = fs.readFileSync(path.join(RACINE, 'public', 'modules', 'execution',
+      'js', 'exec-activites.js'), 'utf8');
+    const bloc = /const REDACTION_SUBTABS = \[([\s\S]*?)\n\];/.exec(src);
+    const declarees = bloc ? [...bloc[1].matchAll(/id: '(\w+)'/g)].map((m) => m[1]) : [];
+    const corps = /function _buildDossierTabContent\(([\s\S]*?)\n\}/.exec(src);
+    const aiguillees = corps ? [...corps[1].matchAll(/tab === '(\w+)'/g)].map((m) => m[1]) : [];
+    const orphelines = aiguillees.filter((t) => !declarees.includes(t));
+    const sansBranche = declarees.filter((t) => !aiguillees.includes(t));
+    verifier('SURV : chaque branche d’onglet du volet désigne une section déclarée, et chacune a la sienne',
+      declarees.length >= 5 && aiguillees.length >= 5
+      && orphelines.length === 0 && sansBranche.length === 0,
+      `déclarées ${declarees.length} · aiguillées ${aiguillees.length}`
+      + `${orphelines.length ? ` · sans section : ${orphelines.join(', ')}` : ''}`
+      + `${sansBranche.length ? ` · sans branche : ${sansBranche.join(', ')}` : ''}`);
+  }
+
   // ── Un nom global, une définition ──
   // Les scripts d'un écran partagent une seule portée : deux fichiers qui
   // déclarent la même fonction ne se contredisent pas, le dernier chargé
@@ -1276,7 +1554,13 @@ module.exports = async function tailleSmoke() {
   // où l'affectation à `window` *est* la déclaration de la surface publiée,
   // écrite à la main, et rien d'autre. C'est exactement le cas qu'il fallait
   // couvrir, et c'est le seul où cette forme ne soit pas ambiguë.
-  const DECLARATION = /^(?:function\s+([A-Za-z_$][\w$]*)|(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=)/gm;
+  // `async function` compte autant que `function` : une déclaration au premier
+  // niveau d'un script classique pose le nom sur `window` dans les deux cas.
+  // Le motif ne la voyait pas, et la contre-épreuve du 12 novembre 2026 l'a dit
+  // — SURV chargé avec `oasis-utils.js` fait **deux** collisions, `api` et
+  // `_pesSearchInput`, et ce contrôle n'en nommait qu'une. L'élargir ne rougit
+  // sur rien aujourd'hui : mesuré avant de l'écrire.
+  const DECLARATION = /^(?:(?:async\s+)?function\s+([A-Za-z_$][\w$]*)|(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=)/gm;
   const POSE_SUR_WINDOW = /^window\.([A-Za-z_$][\w$]*)\s*=[^=]/gm;
   const collisions = [];
   PAGES.forEach((rel) => {
@@ -1970,5 +2254,287 @@ module.exports = async function tailleSmoke() {
   verifier('toute page portant du code client charge l’enveloppe qui marque les requêtes, avant ses propres scripts',
     sansEnveloppe.length === 0,
     sansEnveloppe.join(' | ') || `${pagesClient.length} pages examinées`);
+
+  // ── Une clé demandée à une table qui ne la porte pas ──
+  //
+  // La fonction de traduction d'un module retombe sur la clé elle-même quand
+  // elle ne la connaît pas. C'est une bonne propriété — un libellé oublié
+  // n'empêche pas l'écran de se rendre —, mais c'est aussi un **silence** : le
+  // dépôt n'avait aucun moyen de savoir qu'une clé demandée n'existait pas.
+  //
+  // La suite « traductions » garde que les trois volets d'une table portent les
+  // mêmes clés. Elle ne regardait pas le sens inverse : les clés que le code
+  // **demande**. Mesuré le 9 novembre 2026 : `exec-utilisateurs.js` demandait
+  // sept libellés à `pt`, la table de quinze que le portage PESSCO avait laissée
+  // à côté de celle du module — six n'y étaient pas, reprises de PR. L'écran
+  // affichait donc « password », « confirm_admin_password », et un mot de passe
+  // annoncé par « password_gen ». Rien n'exerçait cet écran, et rien ne le
+  // disait (ADR-003 n° 5.f.76).
+  //
+  // Le garde part **sans aucune dispense**, et c'est la mesure qui le permet :
+  // cinq écrans, 2 401 clés demandées, zéro absente. Deux conditions l'ont
+  // rendu exact :
+  //
+  //   · les **commentaires** sont effacés d'abord. Deux fichiers portent
+  //     « rt('cle') » et « mt('cle') » dans leur exemple d'usage, et un garde
+  //     qui rougit sur la prose qui l'explique empêche d'écrire cette prose —
+  //     même leçon que le garde du bouton effacé, et que le relevé des gestes ;
+  //   · une clé **composée** — `te('avancement_' + x)` — n'est pas une clé : le
+  //     littéral n'en est qu'un morceau. Le garde les écarte par le `+` qui
+  //     suit, et non par une liste d'exceptions qui aurait vieilli.
+  {
+    const nu = (texte) => texte
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/(^|[^:])\/\/.*$/gm, '$1');
+    // Clés de premier niveau de l'objet littéral ouvert à `debut`.
+    const clesDuBloc = (texte, debut) => {
+      const cles = [];
+      let i = debut + 1;
+      let profondeur = 0;
+      let chaine = null;
+      while (i < texte.length) {
+        const c = texte[i];
+        if (chaine) {
+          if (c === '\\') { i += 2; continue; }
+          if (c === chaine) chaine = null;
+          i += 1;
+          continue;
+        }
+        if (c === "'" || c === '"' || c === '`') { chaine = c; i += 1; continue; }
+        if (c === '{' || c === '[' || c === '(') { profondeur += 1; i += 1; continue; }
+        if (c === '}' || c === ']' || c === ')') {
+          if (c === '}' && profondeur === 0) break;
+          profondeur -= 1;
+          i += 1;
+          continue;
+        }
+        if (profondeur === 0 && /[\s,{]/.test(texte[i - 1] || '')) {
+          const m = /^([A-Za-z_$][A-Za-z0-9_$]*|'[^']+'|"[^"]+")\s*:/.exec(texte.slice(i));
+          if (m) { cles.push(m[1].replace(/^['"]|['"]$/g, '')); i += m[0].length; continue; }
+        }
+        i += 1;
+      }
+      return cles;
+    };
+    // Un écran : sa table, son répertoire, et les noms de sa fonction.
+    const ECRANS = [
+      { nom: 'SURV', table: 'EXEC_TR', dir: 'public/modules/execution/js', fn: ['te'] },
+      // PLAN se convertit fichier par fichier : sa table vit dans `frontend/`
+      // depuis le 14 novembre 2026, et ses appels encore dans `public/`. Les
+      // deux répertoires sont lus — ne lire que l'un aurait déclaré orphelines
+      // les 2 000 clés de l'autre, ou ne les aurait plus vues (n° 5.f.101).
+      { nom: 'PLAN', table: 'PLAN_TR', dir: 'public/modules/planification/js', ts: 'frontend/planification', fn: ['pt', 'tp'] },
+      { nom: 'RAMP', table: 'RAMP_TR', dir: 'public/modules/ramp/js', fn: ['tr', 'rt'] },
+      { nom: 'CARE', table: 'MES_TR', dir: 'public/modules/mesures/js', fn: ['tm', 'mt'] },
+      { nom: 'PR', table: 'TRANSLATIONS', dir: 'public/modules/profil_risque/js', fn: ['pt', 't'] },
+    ];
+    const orphelines = [];
+    let demandees = 0;
+    let examines = 0;
+    ECRANS.forEach((e) => {
+      const d = path.join(RACINE, e.dir);
+      const dts = e.ts ? path.join(RACINE, e.ts) : null;
+      // Un écran converti en React n'a plus de `public/modules/<nom>/js` : son
+      // absence n'est pas un défaut, c'est l'avancement de la reprise.
+      if (!fs.existsSync(d) && !(dts && fs.existsSync(dts))) return;
+      examines += 1;
+      const fichiers = fs.existsSync(d)
+        ? fs.readdirSync(d).filter((x) => x.endsWith('.js')).map((x) => path.join(d, x)) : [];
+      // ── Et ses fichiers convertis, où la table a pu partir ──
+      //
+      // Un volet converti s'écrit `export const FR = {` : ni `PLAN_TR = {`, ni
+      // `PLAN_TR.fr = {`. Sans ce motif, la table passée en TypeScript aurait
+      // rendu **toutes** les clés orphelines — ou, pire, un garde réécrit à la
+      // hâte les aurait tues.
+      const parcourirTs = (r) => fs.readdirSync(r, { withFileTypes: true }).forEach((x) => {
+        const p = path.join(r, x.name);
+        if (x.isDirectory()) parcourirTs(p);
+        else if (/\.tsx?$/.test(x.name)) fichiers.push(p);
+      });
+      if (dts && fs.existsSync(dts)) parcourirTs(dts);
+      const cles = new Set();
+      fichiers.forEach((x) => {
+        // Les commentaires sont effacés **avant la lecture de la table**, et
+        // c'est la correction d'un faux positif de ce garde même : une
+        // apostrophe française dans un commentaire de la table ouvrait une
+        // chaîne fantôme qui avalait le reste du bloc, et le garde annonçait
+        // cinq clés absentes de CARE qui y étaient. La suite « traductions »
+        // le savait et traversait les commentaires ; cette lecture-ci les
+        // retire, ce qui revient au même et se lit mieux.
+        const texte = nu(fs.readFileSync(x, 'utf8'));
+        // La table elle-même : ses clés de premier niveau sont ses volets.
+        for (const m of texte.matchAll(new RegExp(`${e.table}\\s*=\\s*\\{`, 'g'))) {
+          const o = texte.indexOf('{', m.index + m[0].length - 1);
+          clesDuBloc(texte, o).forEach((volet) => {
+            const p = texte.indexOf('{', texte.indexOf(`${volet}:`, o));
+            if (p > 0) clesDuBloc(texte, p).forEach((k) => cles.add(k));
+          });
+        }
+        // Un volet posé depuis un autre fichier, ou complété.
+        for (const m of texte.matchAll(new RegExp(`${e.table}\\.(fr|en|pt)\\s*=\\s*\\{`, 'g'))) {
+          clesDuBloc(texte, texte.indexOf('{', m.index + m[0].length - 1)).forEach((k) => cles.add(k));
+        }
+        for (const m of texte.matchAll(new RegExp(`Object\\.assign\\(${e.table}\\.(fr|en|pt)\\s*,\\s*\\{`, 'g'))) {
+          clesDuBloc(texte, texte.indexOf('{', m.index + m[0].length - 1)).forEach((k) => cles.add(k));
+        }
+        // Un volet converti : une constante nommée de la langue.
+        for (const m of texte.matchAll(/\bconst (FR|EN|PT)\b[^=\n]*=\s*\{/g)) {
+          clesDuBloc(texte, texte.indexOf('{', m.index + m[0].length - 1)).forEach((k) => cles.add(k));
+        }
+      });
+      fichiers.forEach((x) => {
+        const texte = nu(fs.readFileSync(x, 'utf8'));
+        e.fn.forEach((nom) => {
+          for (const m of texte.matchAll(new RegExp(`\\b${nom}\\('([^']+)'\\s*(\\+)?`, 'g'))) {
+            if (m[2]) continue;      // clé composée : le littéral n'en est qu'un morceau
+            demandees += 1;
+            if (!cles.has(m[1])) {
+              orphelines.push(`${e.nom} · ${path.basename(x)} : ${nom}('${m[1]}') — absente de ${e.table}`);
+            }
+          }
+        });
+      });
+    });
+    verifier('aucun écran ne demande à sa table une clé qu’elle ne porte pas',
+      examines > 0 && orphelines.length === 0,
+      orphelines.length ? orphelines.slice(0, 6).join(' · ')
+        : `${examines} écran(s), ${demandees} clé(s) demandée(s), aucune orpheline`);
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  Les suites elles-mêmes, que ce garde-fou ne regardait pas
+  // ══════════════════════════════════════════════════════════════════════════
+  //
+  // Tout ce qui précède porte sur `public/`, `src/` et `server.js` : les suites
+  // n'avaient **aucun plafond**. Or c'est l'argument de taille qui a justifié de
+  // leur donner un fichier par écran — « `parcours` porte 3 200 lignes, y ajouter
+  // un second écran ferait un fichier que personne ne lirait, et le garde-fou de
+  // taille le refuserait à bon droit ». Il ne l'aurait pas refusé : il ne les
+  // voit pas.
+  //
+  // Mesuré le 10 novembre 2026 : `surv.smoke.js` porte **7 828 lignes**,
+  // `ramp.navigateur.smoke.js` 6 525 — trois et quatre fois le seuil des
+  // sources, sans que rien le dise.
+  //
+  // ── Ce que ce garde fait, et ce qu'il ne fait pas ──
+  //
+  // Il ne découpe rien aujourd'hui : un découpage de suite est un travail à
+  // part, et le faire au passage serait pire que la dette. Il **arrête la
+  // croissance silencieuse** : chaque suite déclare la taille qu'elle a, et la
+  // dépasser demande de relever le chiffre — c'est-à-dire de le voir.
+  //
+  // `MARGE` donne la même tolérance de 5 % qu'aux sources : une ronde de plus
+  // ne fait pas rougir une campagne, deux le font.
+  //
+  // *Un seuil qu'on ne regarde pas n'est pas un seuil.*
+  const SUITES_TOLEREES = {
+    // ── 8 726 → 7 739 → 7 513, et un budget qui baisse deux fois ──
+    //
+    // Deux tours de suite, ce budget a été relevé — et la seconde fois en
+    // écrivant que « le découpage devient la prochaine étape ». Il l'a été :
+    // la mise en place commune est partie dans surv-socle.js, la ronde des
+    // pièces dans surv-pieces.smoke.js, et celle du circuit guidé dans
+    // surv-circuit.smoke.js — chacune avec son port et son entrée dans la
+    // table, et le relevé des gestes réunit leurs journaux.
+    //
+    // La seconde coupe a d'abord été faite **au mauvais endroit** : la ronde
+    // du circuit se terminait par le ménage du dossier d'une autre chaîne, et
+    // l'extraction a rendu « chaine is not defined ». On ne coupe pas un
+    // fichier là où c'est commode, mais là où il n'est pas lié.
+    //
+    // Le chiffre baisse donc deux fois : *un budget qui ne fait que monter
+    // n'est pas un budget, c'est une chronique.*
+    //
+    // ── 7 513 → 7 890, et pourquoi il remonte ──
+    //
+    // Les quatre échanges du remplisseur de checklist — le classeur qui sort,
+    // le document qui s'imprime, le classeur qui rentre, la bascule qui retire
+    // un regroupement du décompte — sont venus ici et non dans une suite à
+    // part, et la raison est celle qui a présidé aux coupes précédentes : ce
+    // bloc **est lié**. Il lui faut un dossier, une checklist rattachée et le
+    // volet à l'étape « Réalisation », c'est-à-dire la chaîne que ce fichier
+    // bâtit déjà. L'y poser coûte trois cents lignes ; l'extraire coûterait de
+    // rebâtir la chaîne, et un second jeu d'essai à tenir d'accord avec
+    // celui-ci.
+    //
+    // Il remonte donc, et **à découvert** : c'est l'office de ce garde, qui
+    // n'empêche pas de grandir mais empêche de grandir en silence. La coupe
+    // qui vient est nommée : le remplisseur est un éditeur plein écran de
+    // seize gestes, qui n'a besoin que d'un dossier et d'une checklist — un
+    // `surv-checklist.smoke.js` les lui donnerait, et emporterait du même coup
+    // les douze occurrences que la ronde du volet exerce aujourd'hui.
+    //
+    // ── 7 890 → 7 736 : la configuration des processus s'en va ──
+    //
+    // Elle bâtissait déjà son propre processus et le retirait ; elle n'était
+    // liée à rien d'autre ici. Partie dans surv-processus.smoke.js, elle y a
+    // reçu les trois gestes qui lui manquaient (n° 5.f.91).
+    'surv.smoke.js': 7736,
+    'ramp.navigateur.smoke.js': 6526,
+    'profil-risque.navigateur.smoke.js': 3432,
+    'parcours.smoke.js': 3211,
+    'planification.navigateur.smoke.js': 2720,
+    'mesures.navigateur.smoke.js': 2652,
+    // 2 377 → 2 473 : le garde qui vérifie qu'un écran charge le fichier du
+    // socle dont il appelle les noms. Il est né d'un défaut que rien d'autre
+    // ne pouvait voir — cinq téléchargements de SURV levaient une exception.
+    'taille.smoke.js': 2473,
+    // 1 802 → 1 997 : cinq contrôles de plus, et les deux derniers tiennent le
+    // relevé lui-même. Trois sur le nommage — l'aide de fichier qui écrit un
+    // gestionnaire, le refus de poursuivre l'indirection d'un cran de plus, le
+    // gabarit qui n'écrit pas un appel —, un sur la ligne par fichier qui
+    // taisait ses indécidables, et un qui vérifie que chaque relevé **figé**
+    // décrit encore ce que le nommeur produit. Ce dernier a trouvé deux
+    // fichiers périmés à son premier passage. Cette suite grandit par contrôles
+    // unitaires de règles : c'est son office, et elle n'a de chaîne à partager
+    // avec personne.
+    'unitaires.smoke.js': 1997,
+    'ramp.smoke.js': 1447,
+    // Franchi le 11 novembre 2026, au tour suivant la pose de ce garde : la
+    // ronde de portée des notifications l'a mené de 995 à 1 174 lignes, et le
+    // contrôle l'a dit — « non déclaré ». C'est exactement son office. Le dépôt
+    // d'une pièce et les champs écartés d'une constatation opposable l'ont porté
+    // à 1 297.
+    'execution.smoke.js': 1297,
+    // ── Un budget qui naît, et c'est le garde qui l'a demandé ──
+    //
+    // Cette suite vivait sous le seuil des mille lignes : elle n'avait pas de
+    // budget, et n'en avait pas besoin. La ronde du formulaire de constatation
+    // l'a portée de 880 à 1 168 lignes, et le garde a dit « non déclaré » —
+    // c'est son autre office, celui qu'on voit moins : il ne surveille pas
+    // seulement les gros fichiers, il **remarque qu'un fichier est devenu
+    // gros**.
+    //
+    // Le bloc ajouté est lié : le tiroir de la constatation ne s'ouvre que sur
+    // un dossier, et sa date d'ouverture ne se mesure que si l'activité a une
+    // date de début. La chaîne de cette suite les porte toutes les deux.
+    'surv-pieces.smoke.js': 1168,
+  };
+  const SEUIL_SUITE = 1000;
+  const DOSSIER_SUITES = path.join(RACINE, 'tests', 'smoke');
+  const horsBudget = [];
+  const budgetsMorts = [];
+  const suitesLues = fs.readdirSync(DOSSIER_SUITES).filter((f) => /\.js$/.test(f));
+  suitesLues.forEach((f) => {
+    const n = fs.readFileSync(path.join(DOSSIER_SUITES, f), 'utf8').split('\n').length;
+    const budget = SUITES_TOLEREES[f];
+    if (budget === undefined) {
+      if (n > SEUIL_SUITE) horsBudget.push(`${f} : ${n} lignes (non déclaré)`);
+      return;
+    }
+    if (n > Math.round(budget * MARGE)) horsBudget.push(`${f} : ${n} lignes (toléré ${budget})`);
+    // Une suite découpée doit faire tomber son budget, sinon la déclaration
+    // survit à ce qu'elle décrivait et ne garde plus rien.
+    if (n < Math.round(budget * 0.75)) budgetsMorts.push(`${f} : ${n} lignes, toléré ${budget} — budget à revoir`);
+  });
+  verifier(`aucune suite au-delà de ${SEUIL_SUITE} lignes hors budget déclaré`,
+    horsBudget.length === 0, horsBudget.join(' · '));
+  verifier('aucun budget de suite ne survit largement à ce qu’il décrivait',
+    budgetsMorts.length === 0, budgetsMorts.join(' · '));
+  // Un budget déclaré pour un fichier qui n'existe plus se tairait pour toujours.
+  const budgetsSansFichier = Object.keys(SUITES_TOLEREES).filter((f) => !suitesLues.includes(f));
+  verifier('aucun budget de suite ne nomme un fichier absent',
+    budgetsSansFichier.length === 0, budgetsSansFichier.join(', '));
+
   return bilan('taille');
 };

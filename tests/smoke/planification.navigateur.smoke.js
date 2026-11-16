@@ -21,7 +21,9 @@
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
-const { demarrer, verifier, bilan } = require('./harness');
+const {
+  demarrer, verifier, bilan, refusDeclares, adresseDeConsole,
+} = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'planification', 'js', 'pl-shell.js');
@@ -53,13 +55,32 @@ function aiguillageEtChemins() {
   // Une page sans entrée de menu peut rester atteignable : « plan-detail » est
   // ouverte en posant `currentPage`, depuis la table des plans. On lit donc les
   // deux chemins — l'appel nommé, et l'affectation.
-  const js = path.join(RACINE, 'public', 'modules', 'planification', 'js');
+  //
+  // ── Les deux répertoires de l'écran, pendant sa conversion ──
+  //
+  // PLAN passe en TypeScript fichier par fichier (ADR-003, 5.c) : ses sources
+  // vivent à la fois dans `public/…/js` et dans `frontend/planification`. Ne
+  // lire que le premier a fait rougir ce contrôle à la conversion de
+  // `pl-plans.js` — « sans chemin : plan-detail » —, l'affectation qui ouvre
+  // la page étant partie avec lui (n° 5.f.106). L'écran n'avait rien ; le
+  // contrôle devenait aveugle. Il lit donc les deux.
   const ouvrables = new Set();
-  fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => {
-    const t = fs.readFileSync(path.join(js, f), 'utf8');
+  const lire = (t) => {
     for (const m of t.matchAll(/planNavigateTo\(\s*'([\w-]+)'/g)) ouvrables.add(m[1]);
     for (const m of t.matchAll(/currentPage\s*=\s*'([\w-]+)'/g)) ouvrables.add(m[1]);
-  });
+  };
+  const js = path.join(RACINE, 'public', 'modules', 'planification', 'js');
+  if (fs.existsSync(js)) {
+    fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => lire(fs.readFileSync(path.join(js, f), 'utf8')));
+  }
+  (function parcourir(rep) {
+    if (!fs.existsSync(rep)) return;
+    fs.readdirSync(rep, { withFileTypes: true }).forEach((e) => {
+      const c = path.join(rep, e.name);
+      if (e.isDirectory()) parcourir(c);
+      else if (/\.tsx?$/.test(e.name)) lire(fs.readFileSync(c, 'utf8'));
+    });
+  }(path.join(RACINE, 'frontend', 'planification')));
   return { rendues, ouvrables: [...ouvrables] };
 }
 
@@ -93,24 +114,28 @@ module.exports = async function planificationNavigateurSmoke(port) {
     // ce qu'on attend, et laisse rougir le reste.*
     const REFUS_ATTENDUS = [
       {
-        code: 404, methode: 'POST', chemin: /\/risk-profiles$/,
-        pourquoi: 'les profils de risque appartiennent au module PR, qui les'
-          + ' produit ; PLAN ne les lit (`GET /risk-profiles`). Sa fenêtre'
-          + ' « Ajouter un profil » envoie pourtant un POST, qu’aucune route ne'
-          + ' sert. Contrôle « la fenêtre du profil de risque remplit ses'
-          + ' cascades, mais son enregistrement n’a pas de route » (n° 5.f.49).',
+        code: 400, methode: 'POST', chemin: /\/risk-profiles$/,
+        pourquoi: 'la route existe depuis le 4 novembre 2026 (décision de la'
+          + ' maîtrise d’ouvrage, n° 5.f.65) : ce 400 est celui que la ronde'
+          + ' **provoque** en postant un corps vide, pour montrer que le schéma'
+          + ' refuse ce qui n’a ni organisme, ni secteur, ni niveau. La'
+          + ' déclaration portait auparavant un 404 et disait qu’aucune route ne'
+          + ' servait : elle est devenue fausse le jour où l’on a écrit la'
+          + ' route, et c’est ce garde-ci qui l’a dit. Contrôle « le geste'
+          + ' d’enregistrement du profil atteint sa route, et un corps vide y'
+          + ' est refusé ».',
       },
     ];
     // Un refus déclaré laisse aussi une trace en console — « Failed to load
-    // resource : … 404 », **sans l'adresse**. On tient le compte des codes
-    // rencontrés, et l'on dispense le message qui porte **le même code**. Rien
-    // de plus large : un 404 non déclaré garde son message.
-    const codesAttendus = new Set();
+    // resource : … 400 ». Son texte ne dit pas l'adresse, mais sa `location`
+    // la porte. La règle vit dans le harnais (`refusDeclares`) : la ligne de console se
+    // confronte aux déclarations par son adresse, et non au code d'une réponse
+    // que Puppeteer peut rendre après elle (15 novembre 2026).
+    const refusVus = refusDeclares(REFUS_ATTENDUS);
     page.on('console', (m) => {
       if (!plan || m.type() !== 'error') return;
       const texte = m.text();
-      const code = (/status of (\d{3})/.exec(texte) || [])[1];
-      if (code && codesAttendus.has(Number(code))) return;
+      if (refusVus.console(texte, adresseDeConsole(m))) return;
       incidents.push(`[${etape}] console : ${texte.slice(0, 160)}`);
     });
     page.on('pageerror', (e) => {
@@ -126,9 +151,7 @@ module.exports = async function planificationNavigateurSmoke(port) {
     page.on('response', (r) => {
       if (!plan || r.status() < 400) return;
       const chemin = r.url().replace(srv.base, '');
-      const attendu = REFUS_ATTENDUS.some((x) => x.code === r.status()
-        && x.methode === r.request().method() && x.chemin.test(chemin));
-      if (attendu) { codesAttendus.add(r.status()); return; }
+      if (refusVus.reponse(r.status(), r.request().method(), chemin)) return;
       // La méthode est dite : un chemin seul ne dit pas quelle déclaration
       // aurait dû couvrir le refus.
       incidents.push(`[${etape}] ${r.request().method()} ${r.status()} ${chemin.slice(0, 120)}`);
@@ -1352,72 +1375,62 @@ module.exports = async function planificationNavigateurSmoke(port) {
         return d;
       });
 
-      // ── 6. Deux actes du circuit que l'écran n'offre nulle part ──
+      // ── 6. L'approbation du directeur, puis la transmission au prestataire ──
       //
-      // `planApprouverDG` et `planTransmettre` — l'approbation du directeur
-      // général et la transmission au prestataire, Chap. 4 §4.2.3.e-f — sont
-      // rendus par `_renderPlanDiffAccordion`, sous condition de statut
-      // `valide` / `approuve_dg`. Or ce rendu n'est appelé qu'**une fois** dans
-      // tout le module, sur `pending = plans.filter(p => p.statut === 'soumis')`.
+      // Jusqu'au 14 novembre 2026, ce contrôle **constatait** un manque :
+      // `planApprouverDG` et `planTransmettre` (Chap. 4 §4.2.3.e-f) étaient
+      // rendus par la page de validation, qui ne reçoit que des plans soumis,
+      // quand ils exigent un plan validé — les deux boutons ne pouvaient jamais
+      // paraître, et le serveur exécutait pourtant les deux transitions.
       //
-      // Les deux conditions s'excluent : un plan soumis n'est ni validé ni
-      // approuvé. **Les deux boutons ne peuvent donc jamais paraître.** Ce
-      // contrôle le constate, et montre que le manque est dans l'écran seul :
-      // les transitions du serveur, elles, fonctionnent.
+      // La maîtrise d'ouvrage a décidé de les rendre accessibles. Ils sont au
+      // **détail du plan**, là où les deux gestes ramènent après succès, et la
+      // ronde les joue par leurs boutons : l'approbation, avec ses deux invites
+      // enchaînées — le commentaire, puis la lettre de transmission —, puis la
+      // transmission, refusée une fois à la confirmation, puis confirmée.
+      //
+      // Et ce que l'approbation saisit doit **rester** : la lettre de
+      // transmission est demandée à l'écran, et la transmission la dit
+      // « enregistrée ». Le contrôle la cherche dans le plan et dans son
+      // circuit (ADR-003, n° 5.f.100).
       await essai('directeur', async () => {
         const d = {};
-        // Les deux plans soumis ont été rejetés par les phases précédentes : la
-        // page du circuit est vide, et une page vide ne départage rien. Cette
-        // phase sème donc son propre témoin — *une ronde qui suit une autre
-        // commence par relever ce qu'elle hérite.*
-        o.idTemoin = await semer('Circuit — témoin soumis', 'soumis');
-        d.temoin = !!o.idTemoin;
-        if (typeof window.planLoadData === 'function') await window.planLoadData();
-        await a(1500);
-        document.querySelector('.nav-btn[data-page="workflow"]')?.click();
-        await a(3500);
-        // La page ne montre que les plans soumis…
-        const titres = (document.querySelector('.page-content, main') || document.body).textContent || '';
-        d.montreLeSoumis = titres.includes('Circuit — témoin soumis');
-        d.montreLeValide = titres.includes('Circuit — pour le DG');
-        // …et aucun des deux gestes n'est dans le DOM, pour aucun plan.
-        d.approuverNullePart = document.querySelectorAll('[onclick*="planApprouverDG"]').length;
-        d.transmettreNullePart = document.querySelectorAll('[onclick*="planTransmettre"]').length;
-        // Le serveur, lui, sait faire les deux transitions.
+        if (typeof window.planOpenDetail !== 'function') return d;
+        await window.planOpenDetail(o.idDG);
+        await a(2500);
         d.statutAvant = await statutDe(o.idDG);
-        d.routeDG = (await env(`/plans/${o.idDG}/approuver-dg`, 'POST',
-          { commentaire: 'Par la route, faute d’écran.' })).statut;
+        d.detail = S().currentPage === 'plan-detail' && (S().selectedPlan || {}).id === o.idDG;
+        d.approuverOffert = !!parBouton('planApprouverDG', o.idDG);
+        d.transmettreAvant = !!parBouton('planTransmettre', o.idDG);
+        parBouton('planApprouverDG', o.idDG)?.click();
+        d.commentaire = await saisir('Approuvé en comité de direction.', 600);
+        d.lettre = await saisir('Lettre de transmission n° 2030-17', 4500);
         d.statutApresDG = await statutDe(o.idDG);
-        d.routeTransmettre = (await env(`/plans/${o.idDG}/transmettre`, 'POST', {})).statut;
+        d.redetail = S().currentPage === 'plan-detail' && (S().selectedPlan || {}).id === o.idDG;
+        d.approuverApres = !!parBouton('planApprouverDG', o.idDG);
+        d.transmettreOffert = !!parBouton('planTransmettre', o.idDG);
+        const lu = JSON.stringify((await env(`/plans/${o.idDG}`, 'GET')).corps || {});
+        const circuit = JSON.stringify((await env(`/plans/${o.idDG}/workflow`, 'GET')).corps || []);
+        d.commentaireGarde = circuit.includes('comité de direction');
+        d.lettreGardee = lu.includes('2030-17') && circuit.includes('2030-17');
+        // La transmission, refusée à la confirmation : rien ne part.
+        parBouton('planTransmettre', o.idDG)?.click();
+        await a(900);
+        const non = document.querySelector('.oasis-confirm-non');
+        d.refusOffert = !!non;
+        non?.click();
+        await a(1800);
+        d.statutApresRefus = await statutDe(o.idDG);
+        // Puis confirmée.
+        parBouton('planTransmettre', o.idDG)?.click();
+        d.confirme = await oui(4500);
         d.statutApresTransmission = await statutDe(o.idDG);
-
-        // ── Où est le manque, exactement ──
-        //
-        // La fonction de rendu, appelée à la main sur un plan validé, **porte**
-        // le bouton : la condition de rôle passe (`_isAdmin()` reconnaît le
-        // SUPERADMIN, ce que la comparaison à `'Administrateur'` ne faisait
-        // pas), et la condition de statut est satisfaite. Ce qui manque est le
-        // seul **appel** : la page ne lui donne jamais de plan validé.
-        d.role = o.role;
-        const rendu = (statut) => {
-          if (typeof window._renderPlanDiffAccordion !== 'function') return null;
-          try {
-            return window._renderPlanDiffAccordion({
-              id: 'essai-rendu', titre: 'Essai de rendu', version: 1,
-              statut, secteur_id: '', parent_plan_id: null,
-            });
-          } catch { return null; }
-        };
-        const htmlValide = rendu('valide');
-        const htmlApprouve = rendu('approuve_dg');
-        const htmlSoumis = rendu('soumis');
-        d.renduJoignable = typeof htmlValide === 'string';
-        d.renduValidePorteDG = !!htmlValide && htmlValide.includes('planApprouverDG');
-        d.renduApprouvePorteTransmettre = !!htmlApprouve && htmlApprouve.includes('planTransmettre');
-        // Et le soumis — le seul que la page lui donne — ne porte ni l'un ni l'autre.
-        d.renduSoumisPorteNiLUnNiLAutre = !!htmlSoumis
-          && !htmlSoumis.includes('planApprouverDG')
-          && !htmlSoumis.includes('planTransmettre');
+        d.plusRien = !parBouton('planTransmettre', o.idDG) && !parBouton('planApprouverDG', o.idDG);
+        // La page de validation n'en porte plus aucun : la branche qui ne
+        // pouvait jamais s'afficher est retirée.
+        document.querySelector('.nav-btn[data-page="workflow"]')?.click();
+        await a(3000);
+        d.circuitSansDG = document.querySelectorAll('[onclick*="planApprouverDG"], [onclick*="planTransmettre"]').length === 0;
         return d;
       });
 
@@ -1495,26 +1508,19 @@ module.exports = async function planificationNavigateurSmoke(port) {
         && typeof Cl.statut === 'string' && Cl.statut !== 'soumis'
         && Cl.statut !== Re.statut,
         JSON.stringify(Cl));
-      verifier('l’approbation du directeur et la transmission au prestataire ne sont offertes par aucun écran, alors que le serveur les exécute',
-        // La page du circuit ne liste que les plans soumis : un plan validé
-        // n'y paraît pas, et c'est là que les deux boutons seraient rendus.
-        Dg.temoin === true
-        && Dg.montreLeSoumis === true && Dg.montreLeValide === false
-        // Les deux gestes sont absents du document, pour tout plan.
-        && Dg.approuverNullePart === 0 && Dg.transmettreNullePart === 0
-        // Le dispositif sait pourtant faire les deux transitions : le manque
-        // est dans l'écran, non dans le serveur.
-        && Dg.statutAvant === 'valide'
-        && Dg.routeDG === 200 && Dg.statutApresDG === 'approuve_dg'
-        && Dg.routeTransmettre === 200 && Dg.statutApresTransmission === 'transmis'
-        // Le manque est le seul **appel** : la fonction de rendu, appelée à la
-        // main sur un plan validé, porte bien le bouton — la condition de rôle
-        // passe depuis qu'elle suit `_isAdmin()` comme le reste du module.
-        && Dg.renduJoignable === true
-        && Dg.renduValidePorteDG === true
-        && Dg.renduApprouvePorteTransmettre === true
-        && Dg.renduSoumisPorteNiLUnNiLAutre === true,
-        JSON.stringify(Dg).slice(0, 460));
+      verifier('au détail d’un plan validé, le directeur l’approuve par son bouton, commentaire et lettre de transmission gardés',
+        Dg.statutAvant === 'valide' && Dg.detail === true
+        && Dg.approuverOffert === true && Dg.transmettreAvant === false
+        && !!Dg.commentaire && !!Dg.lettre
+        && Dg.statutApresDG === 'approuve_dg' && Dg.redetail === true
+        && Dg.approuverApres === false && Dg.transmettreOffert === true
+        && Dg.commentaireGarde === true && Dg.lettreGardee === true,
+        JSON.stringify(Dg));
+      verifier('le plan approuvé se transmet au prestataire par son bouton — un refus de confirmation ne transmet rien',
+        Dg.refusOffert === true && Dg.statutApresRefus === 'approuve_dg'
+        && Dg.confirme === true && Dg.statutApresTransmission === 'transmis'
+        && Dg.plusRien === true && Dg.circuitSansDG === true,
+        JSON.stringify(Dg));
       verifier('l’historique du circuit d’une version s’ouvre garni et se referme',
         Hi.bouton === true && Hi.fenetre === true && Hi.garnie === true
         && Hi.fermee === true,
@@ -1985,12 +1991,20 @@ module.exports = async function planificationNavigateurSmoke(port) {
         await poser('rpRiskLabel', (document.getElementById('rpRiskLabel') || {}).tagName === 'SELECT'
           ? ([...(document.getElementById('rpRiskLabel') || { options: [] }).options]
             .find((op) => op.value) || {}).value || '' : 'Moyen');
-        const int = document.getElementById('rpIntensite');
-        if (int && int.options && int.options.length > 1) {
-          int.value = [...int.options].find((op) => op.value).value;
-          int.dispatchEvent(new Event('change', { bubbles: true }));
-          await a(600);
-        }
+        // ── « Intensité » est un champ de **texte**, non une liste ──
+        //
+        // Ma ronde le traitait comme un `<select>` : `int.options` étant
+        // `undefined` sur un `<input>`, la branche était sautée et le champ
+        // restait vide. Le garde du client (`if (!pid || !secteurId ||
+        // !riskLabel || !intensite)`) refusait alors **avant tout envoi**, et le
+        // geste n'atteignait jamais le réseau. Personne ne l'a su pendant des
+        // semaines parce que le contrôle mesurait une **sonde** — un POST
+        // fabriqué à côté — et non le geste : il voyait le 404 de la sonde et
+        // concluait « la fiche est complète ». *Un contrôle qui mesure une sonde
+        // au lieu du geste ne dit rien du geste.*
+        await poser('rpIntensite', (document.getElementById('rpIntensite') || {}).tagName === 'SELECT'
+          ? ([...(document.getElementById('rpIntensite') || { options: [] }).options]
+            .find((op) => op.value) || {}).value || '' : 'Normale');
         await poser('rpCsrbo', '6');
         await poser('rpDebutCycle', '2031-01-15');
         d.finLaisseeVide = ((document.getElementById('rpFinCycle') || {}).value || '') === '';
@@ -2008,20 +2022,48 @@ module.exports = async function planificationNavigateurSmoke(port) {
         }
         d.ligneRenseignee = !!tr;
 
-        // ── L'enregistrement : le geste existe, la route n'existe pas ──
+        // ── L'enregistrement : la route existe désormais ──
         //
-        // On le mesure **au serveur**, et non par un comptage : un comptage
-        // inchangé a bien des causes, un code de réponse n'en a qu'une. Le
-        // refus est déclaré dans `REFUS_ATTENDUS`, avec le nom de ce contrôle.
+        // Elle a été écrite le 4 novembre 2026 sur décision de la maîtrise
+        // d'ouvrage (n° 5.f.65). Deux choses se mesurent ici, et la seconde a
+        // demandé de changer d'instrument.
+        //
+        // D'abord le refus d'un corps vide, **provoqué** : un schéma qui
+        // n'exigerait rien ne se verrait pas. Le refus est déclaré dans
+        // `REFUS_ATTENDUS`, avec le nom de ce contrôle.
         d.codeEnEcriture = (await env('/risk-profiles', 'POST', { essai: true })).statut;
         d.codeEnLecture = (await env('/risk-profiles', 'GET')).statut;
+        // Ensuite l'enregistrement par le geste de l'écran. **Un comptage sur
+        // `/risk-profiles` ne le verrait pas** : la ronde a vidé l'état pour que
+        // l'organisme redevienne candidat, mais PR le couvre toujours côté
+        // serveur — et la règle de l'union veut que l'évaluation l'emporte. Le
+        // profil est donc écrit *et masqué*. Ce qui le prouve est le **cycle**,
+        // que la même transformation pose sur le prestataire.
         d.avant = (await jget('/risk-profiles')).length;
+        // L'organisme retenu se lit dans la liste **avant** l'enregistrement :
+        // la fenêtre se referme après, et son `<select>` part avec elle.
+        const organisme = (document.getElementById('rpPrestataire') || {}).value || '';
+        // `d.organisme` porte déjà le relevé de la cascade, trente lignes plus
+        // haut : écrire dessus faisait tomber le contrôle voisin, sur une
+        // assertion qui n'avait rien à voir. *Un relevé se nomme par ce qu'il
+        // mesure, et deux mesures ne partagent pas un nom.*
+        d.organismeRetenu = !!organisme;
+        const cycleAvant = (await jget('/prestataires-risques'))
+          .find((p) => p.id === organisme) || {};
+        d.cycleAvant = cycleAvant.debut_cycle || '';
         document.querySelector('[onclick*="planSaveRiskProfile"]')?.click();
         await a(3500);
         d.apres = (await jget('/risk-profiles')).length;
-        d.rienEnregistre = d.apres === d.avant;
-        // La fenêtre reste ouverte : `planCloseModal` est après l'appel, et
-        // l'appel a levé.
+        // Masqué par la règle de l'union, et c'est attendu.
+        d.masqueParLUnion = d.apres === d.avant;
+        const cycleApres = (await jget('/prestataires-risques'))
+          .find((p) => p.id === organisme) || {};
+        d.cycleApres = cycleApres.debut_cycle || '';
+        d.cyclePose = d.cycleApres === '2031-01-15' && d.cycleApres !== d.cycleAvant;
+        // La fin se déduit du début et du CSRBO, **côté serveur** : six mois.
+        d.finDeduite = (cycleApres.fin_cycle || '') === '2031-07-15';
+        // Et la fenêtre se referme d'elle-même : `planCloseModal` suit l'appel,
+        // qui ne lève plus. Elle restait ouverte tant que la route manquait.
         d.fenetreResteOuverte = !!document.getElementById('rpPrestataire');
         document.querySelector('[onclick*="planCloseModal"]')?.click();
         await a(1500);
@@ -2051,16 +2093,35 @@ module.exports = async function planificationNavigateurSmoke(port) {
 
         // ── Un début postérieur à la fin est refusé ──
         //
-        // `oasisDatesValider` prend les deux champs de la ligne : mon premier
-        // essai posait une date **après** la fin en place, et le module l'a
-        // refusée en silence — ce n'était pas un défaut, c'était la règle. On
-        // l'éprouve donc comme telle, avant de poser une date valide.
-        debut.value = '2031-03-10';
+        // `oasisDatesValider` prend les deux champs **de la ligne** : mon premier
+        // essai posait une date après la fin en place, et le module l'a refusée
+        // en silence — ce n'était pas un défaut, c'était la règle. On l'éprouve
+        // donc comme telle, avant de poser une date valide.
+        //
+        // ── Et la date à poser se lit dans le document, non dans l'état ──
+        //
+        // Elle était écrite en dur (« 2031-03-10 »), choisie d'après la fin que
+        // l'état portait. Le jour où le bloc précédent a su enregistrer un
+        // profil, il a changé le cycle de cet organisme **en base** et la page
+        // s'est redessinée avec ; la ronde avait par ailleurs restauré l'état
+        // d'avant. La date en dur n'était plus après la fin affichée, et le
+        // contrôle a dénoncé une règle qui tenait. *Ce qu'on pose au document se
+        // décide d'après le document ; l'état peut en diverger, et il l'a fait.*
+        const ligne = debut.closest('tr');
+        const champFin = ligne ? [...ligne.querySelectorAll('.cycle-date-input')]
+          .find((x) => (x.getAttribute('onchange') || '').includes("'fin_cycle'")) : null;
+        d.finAffichee = champFin ? (champFin.value || '') : '';
+        const apresLaFin = d.finAffichee
+          ? `${Number(d.finAffichee.slice(0, 4)) + 1}${d.finAffichee.slice(4)}` : '2099-12-31';
+        d.posee = apresLaFin;
+        debut.value = apresLaFin;
         debut.dispatchEvent(new Event('change', { bubbles: true }));
         await a(2800);
         const refus = await jget('/prestataires-risques');
         const apresRefus = (Array.isArray(refus) ? refus : []).find((p) => p.id === id) || {};
-        d.refuseApresLaFin = (apresRefus.debut_cycle || '') === d.debutAvant;
+        // Le serveur n'a pas bougé : on le lit **chez lui**, et non dans l'état.
+        d.debutEnBaseAvant = apresRefus.debut_cycle || '';
+        d.refuseApresLaFin = (apresRefus.debut_cycle || '') !== apresLaFin;
 
         // ── Une date antérieure à la fin passe, et part en base ──
         const champDebut = [...document.querySelectorAll('.cycle-date-input')]
@@ -2129,23 +2190,27 @@ module.exports = async function planificationNavigateurSmoke(port) {
         // Et la ronde rend l'état qu'elle a vidé.
         && Fe.etatRendu === true,
         JSON.stringify(Fe).slice(0, 460));
-      verifier('l’enregistrement du profil n’a pas de route : les profils appartiennent au module qui les produit, non à celui qui les lit',
-        // Le geste existe, la fiche est complète, la fin de cycle est laissée
-        // au calcul — et rien n'est enregistré, le serveur n'offrant qu'un GET.
+      verifier('le geste d’enregistrement du profil atteint sa route, un corps vide y est refusé, et le cycle prouve l’écriture que l’union masque',
+        // La fiche est complète et la fin de cycle laissée au calcul.
         Fe.finLaisseeVide === true
-        // Le serveur lit les profils, et refuse de les écrire.
-        && Fe.codeEnLecture === 200 && Fe.codeEnEcriture === 404
-        && typeof Fe.avant === 'number' && Fe.rienEnregistre === true
-        // La fenêtre ne se referme pas : l'appel lève avant `planCloseModal`.
-        && Fe.fenetreResteOuverte === true
-        // Elle se ferme par son propre geste.
+        // Le serveur lit les profils, et refuse un corps qui n'a rien.
+        && Fe.codeEnLecture === 200 && Fe.codeEnEcriture === 400
+        // Le profil est écrit, et **masqué** : PR couvre ce couple, et
+        // l'évaluation l'emporte sur la saisie directe.
+        && typeof Fe.avant === 'number' && Fe.masqueParLUnion === true
+        // Ce qui prouve l'écriture, c'est le cycle que la même transformation
+        // pose — avec sa fin déduite côté serveur.
+        && Fe.organismeRetenu === true && Fe.cyclePose === true && Fe.finDeduite === true
+        // Et la fenêtre se referme d'elle-même : l'appel ne lève plus.
+        && Fe.fenetreResteOuverte === false
         && Fe.fermee === true,
         JSON.stringify({ lecture: Fe.codeEnLecture, ecriture: Fe.codeEnEcriture,
-          avant: Fe.avant, apres: Fe.apres,
+          profils: [Fe.avant, Fe.apres], cycle: [Fe.cycleAvant, Fe.cycleApres],
+          finDeduite: Fe.finDeduite,
           ouverte: Fe.fenetreResteOuverte, fermee: Fe.fermee }));
       verifier('le cycle se règle en ligne, un début postérieur à la fin est refusé, et un début valide part en base sans toucher à la fin',
         Cy.champs >= 1 && Cy.champDebut === true && Cy.organisme === true
-        && Cy.finAvant !== ''
+        && Cy.finAffichee !== '' && !!Cy.posee
         // Une date après la fin ne passe pas : rien n'a changé en base.
         && Cy.refuseApresLaFin === true
         // Une date avant la fin passe, et la fin reste celle qu'elle était.

@@ -2,6 +2,7 @@
 // constatations FNC/PAC (reprise intégrale des routes PESSCO).
 const XLSX = require('xlsx');
 const { asynchrone } = require('../../route');
+const telechargement = require('../../telechargement');
 const referentiels = require('../../referentiels');
 const db = require('./store');
 const refModele = require('./references');
@@ -30,6 +31,26 @@ module.exports = function register(app, deps, M) {
     const p = parId('prestataires', prestataireId) || {};
     const s = parId('secteurs', p.secteur_id) || {};
     return { domaine_id: p.domaine_id || s.domaine_id || '', secteur_id: p.secteur_id || '', prestataire_id: prestataireId || '' };
+  };
+
+  // ── La portée d'un objet du dossier ──
+  //
+  // Son **secteur**, et le domaine de ce secteur. Le secteur d'un dossier vient
+  // de la notification qui l'a ouvert ; à défaut — un objet qui n'en porte pas —
+  // on retombe sur celui de l'organisme surveillé, qui est la portée dans
+  // laquelle il a été inscrit.
+  //
+  // C'est la même notion que `perimetreActivite` des « États », et c'est voulu :
+  // les cinq routes destructrices du module doivent se garder sur la même
+  // portée, sans quoi l'une refuse ce que l'autre accepte (n° 5.f.75).
+  const perimetreDe = (objet) => {
+    const sid = (objet && objet.secteur_id) || '';
+    if (!sid) return perimetrePrestataire(objet && objet.prestataire_id);
+    const s = parId('secteurs', sid) || {};
+    return {
+      domaine_id: (objet && objet.domaine_id) || s.domaine_id || '',
+      secteur_id: sid,
+    };
   };
 
   // Restriction par processus sur le circuit de la constatation.
@@ -175,14 +196,82 @@ module.exports = function register(app, deps, M) {
     res.status(201).json({ status: 'ok', id: rec.id, reference: rec.reference });
   }));
 
+  // ── Les champs que cette route n'écrit pas, et pourquoi ──
+  //
+  // Elle sert l'enregistrement du **contenu** d'un dossier : la réalisation, la
+  // rédaction, les annexes, les checklists retenues. Elle recopiait dans
+  // l'enregistrement tout ce qu'on lui donnait, à deux clés près — et le cycle
+  // de vie du dossier en faisait partie.
+  //
+  // Mesuré le 8 novembre 2026, sur un dossier ouvert, le même compte pour les
+  // deux appels :
+  //
+  // | Appel | Réponse |
+  // |---|---|
+  // | `PUT /dossiers/:id/close` | **400** — « Un rapport transmis est requis pour clôturer » |
+  // | `PUT /dossiers/:id` avec `{ statut: 'cloture' }` | **200**, et le dossier est clos |
+  //
+  // *Toutes les gardes de transition étaient donc facultatives.* Et celle-là
+  // n'est pas une formalité : clôturer rend les constatations **opposables** à
+  // l'organisme — `/close` fait les deux d'un seul geste, pour qu'un échec au
+  // milieu ne laisse pas un dossier clos dont les constatations ne le sont pas.
+  // Clôturer par ici sautait la seconde moitié, et laissait des constatations
+  // inopposables pour toujours.
+  //
+  // La même mesure a montré trois autres passages : `archive: 1` avec un auteur
+  // forgé et une date de 1970 — ce que la route d'archivage réserve au
+  // super-administrateur et refuse sur un dossier non clos ; un statut qui
+  // n'existe nulle part (`nimporte_quoi`), accepté et conservé ; et un champ
+  // inventé par le client, persisté tel quel.
+  //
+  // La route refuse donc ces clés, au lieu de les écarter en silence : un
+  // appelant qui croit avoir écrit est pire qu'un appelant refusé. Les **deux**
+  // seuls appelants de cette route n'en envoient aucune — mesuré
+  // (`exec-dossier-actions.js`, `exec-activites.js`) : ils n'écrivent que du
+  // contenu. Les transitions ont leurs routes, qui portent leurs gardes.
+  //
+  // Ce n'est pas une liste blanche des champs de contenu : il en existe une
+  // trentaine, et en oublier un ferait échouer un enregistrement sans que
+  // personne le voie. C'est une liste des clés qui **ne s'écrivent pas ici**,
+  // et elle se lit comme telle. (ADR-003, n° 5.f.73)
+  //
+  // ── Pourquoi celle-ci refuse, là où sa voisine écarte en silence ──
+  //
+  // Le PUT des constatations, quelques centaines de lignes plus bas, tient trois
+  // listes du même genre et se contente d'en **ignorer** les clés. Ce n'est pas
+  // une incohérence : ses appelants renvoient le **formulaire entier**, champs
+  // réservés compris — un organisme surveillé poste `prestataire_id` parce qu'il
+  // est dans le formulaire, non parce qu'il prétend le changer. Refuser y
+  // casserait l'enregistrement ordinaire ; écarter est le seul choix tenable.
+  //
+  // Les deux appelants de cette route-ci n'en envoient **aucune**, mesuré. Le
+  // refus y est donc gratuit, et il est préférable : un appelant qui croit avoir
+  // écrit le statut et ne l'a pas écrit est exactement le genre de défaut que ce
+  // dépôt passe son temps à chercher.
+  const CLES_RESERVEES = [
+    // Identité et provenance : ni le client ni cette route ne les refont.
+    'id', 'notification_id', 'reference', 'instance', 'created_by', 'date_creation',
+    // Cycle de vie : `/submit`, `/return`, `/close`, `/close-realisation`.
+    'statut', 'current_step', 'statut_avant_arret',
+    // Archivage : `/archiver` et `/desarchiver`, réservés et horodatés.
+    'archive', 'date_archivage', 'archive_par',
+  ];
+
   app.put(`${M}/dossiers/:id`, requireAuth, asynchrone(async (req, res) => {
     const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
     if (!R.canContribute(req.user, perimetrePrestataire(d.prestataire_id), referentiels)) return refuser(res);
-    const patch = {};
-    Object.entries(req.body || {}).forEach(([k, v]) => {
-      if (k !== 'id' && k !== 'notification_id') patch[k] = v;
-    });
+    const corps = req.body || {};
+    const reservees = CLES_RESERVEES.filter((k) => Object.prototype.hasOwnProperty.call(corps, k));
+    if (reservees.length) {
+      return res.status(400).json({
+        error: 'champs_reserves',
+        champs: reservees,
+        message: 'Ces champs ne s’écrivent pas par cette route : le cycle de vie du'
+          + ' dossier et son identité ont leurs propres routes, qui portent leurs gardes.',
+      });
+    }
+    const patch = { ...corps };
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Aucun champ à mettre à jour' });
     patch.date_maj = db.now();
     await db.update('dossiers', d.id, patch);
@@ -305,9 +394,17 @@ module.exports = function register(app, deps, M) {
   }));
 
   app.delete(`${M}/dossiers/:id`, requireAuth, asynchrone(async (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
+    // Le dossier d'abord : sa **portée** décide, et on ne la connaît pas avant
+    // de l'avoir lu. L'ordre est celui des « États », pour la même raison.
     const d = await db.get('dossiers', req.params.id);
     if (!d) return introuvable(res, 'dossier');
+    if (!R.peutDetruire(req.user, perimetreDe(d), referentiels)) {
+      // `gestionnaire_portee` et non `administrateurs` : le refus doit dire la
+      // **portée**, sinon un gestionnaire qui en détient une se croit sans
+      // privilège. Le socle traduit déjà ce code — « au gestionnaire du module,
+      // sur sa portée » —, et `reinitialiser` des « États » l'employait seul.
+      return reserve(res, 'gestionnaire_portee');
+    }
     // Une constatation reprise par « Mesures d'Application » fonde ce qui y a
     // été décidé : le dossier qui la porte ne se supprime plus.
     const fncs = (await db.list('constatations')).filter((c) => c.dossier_id === d.id).map((c) => c.id);
@@ -393,7 +490,8 @@ module.exports = function register(app, deps, M) {
   // pas, et qui ne se manifeste qu'au démarrage du serveur. Un relais le résout
   // **à l'appel**, ce qui garde l'ordre des routes et la place de la définition.
   const exportConstatations = (req, res, next) => exporterConstatations(req, res, next);
-  app.get(`${M}/constatations/export-xlsx`, requireAuth, exportConstatations);
+  app.get(`${M}/constatations/export-xlsx`, requireAuth,
+    telechargement.pageDeRefus, exportConstatations);
   app.post(`${M}/constatations/export-xlsx`, requireAuth, exportConstatations);
 
   app.get(`${M}/constatations/:id`, requireAuth, asynchrone(async (req, res) => {
@@ -505,10 +603,38 @@ module.exports = function register(app, deps, M) {
     XLSX.utils.book_append_sheet(wb, ws, 'Constatations');
     const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
     const nom = `constatations-${new Date().toISOString().slice(0, 10)}.xlsx`;
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename="${nom}"`);
-    return res.send(buffer);
+    const type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+
+    // ── Le POST ne sert pas le fichier : il le prépare ──
+    //
+    // Une sélection de plusieurs centaines d'identifiants ne tient pas dans une
+    // adresse, et l'écran repasse alors par un POST. Or **un POST ne peut pas
+    // être une navigation** : le garde d'origine (SEC-06) refuse toute écriture
+    // sans `X-OASIS-Request`, en-tête qu'un formulaire de navigation ne peut pas
+    // poser — et c'est bien ce qui arrête un POST forgé depuis un autre site.
+    //
+    // L'écran devait donc fabriquer son téléchargement, ce qui échoue sans bruit
+    // quand la préparation prend quelques secondes. Le POST dépose désormais la
+    // pièce sous un jeton, à usage unique, lié au compte et périssable, et rend
+    // l'adresse d'un GET que le navigateur suit. C'est le détour que RAMP avait
+    // trouvé pour son générateur de tables ; il vit maintenant une seule fois,
+    // dans `src/telechargement.js`.
+    if (req.method === 'POST') {
+      const jeton = telechargement.deposer({
+        contenu: buffer, nom, type, utilisateur: req.user.username,
+      });
+      return res.json({ jeton, url: `${M}/constatations/fichier/${jeton}`, lignes: rows.length });
+    }
+    return telechargement.piece(res, { nom, type }, buffer);
   });
+
+  // La pièce préparée, que le navigateur vient chercher. Le refus est une page
+  // lisible et non un objet JSON : c'est le navigateur qui l'affiche.
+  app.get(`${M}/constatations/fichier/:jeton`, requireAuth, telechargement.pageDeRefus,
+    (req, res) => {
+      if (telechargement.servir(res, req.params.jeton, req.user.username)) return undefined;
+      return res.status(404).json({ error: 'piece_expiree' });
+    });
 
   // Montés **après** la déclaration, et non réenveloppés dans une flèche. Deux
   // raisons, l'une après l'autre : l'enveloppe reçoit `next` d'Express, et une
@@ -591,7 +717,24 @@ module.exports = function register(app, deps, M) {
       date_ouverture: d.date_ouverture || maintenant.slice(0, 10),
       source: d.source || (direct ? 'direct' : 'audit'),
       criticite: d.criticite || d.gravite || 'mineur',
-      cas_type: d.cas_type || d.titre || '',
+      // ── Le titre et le type de cas sont deux champs, et non un ──
+      //
+      // Jusqu'ici cette route ne portait **pas** `titre` : le formulaire de la
+      // constatation hors activités l'écrit, la route de modification
+      // l'accepte, le volet le rend en section B — et la création le jetait.
+      // Mesuré le 9 novembre 2026 : créée avec « UN TITRE QUE LA RONDE
+      // SAISIT », la constatation relue ne porte **aucune clé** `titre`, et son
+      // champ « Titre » rend « — » à qui la rouvre. Le titre ne revenait qu'au
+      // premier enregistrement suivant, par le PUT.
+      //
+      // Le repli `cas_type: … || d.titre` compensait cette absence : faute de
+      // garder le titre, on le logeait dans le type de cas — un `<select>` de
+      // types dont aucune option ne vaut une phrase libre, de sorte que le
+      // titre disparaissait de l'un sans paraître dans l'autre. Les deux
+      // champs sont distincts partout ailleurs — section B « Constat » pour le
+      // titre, section C « Traitement » pour le cas —, ils le sont ici aussi.
+      titre: d.titre || '',
+      cas_type: d.cas_type || '',
       description: d.description || '',
       ref_reglementaires: d.ref_reglementaires || d.exigence_ref || '',
       delai_solde: d.delai_solde || d.delai_correction || '30',
@@ -629,11 +772,48 @@ module.exports = function register(app, deps, M) {
       'transmis_le', 'transmis_par', 'transmis_a'];
     const estPrest = R.estPrestataire(req.user);
     const opposable = STATUTS_OPPOSABLES.includes(c.statut);
+    // ── Un champ écarté doit être dit, et non retiré en silence ──
+    //
+    // Les champs opposables sont retirés du patch, à bon droit : une fois la
+    // constatation notifiée, ils ne se réécrivent que par l'ajustement, motivé
+    // et confirmé par mot de passe. Mais ils l'étaient **sans un mot**, et la
+    // route répondait « ok ».
+    //
+    // L'écran, lui, offre le geste : la table des constatations du dossier
+    // remplace « Modifier » par « Consulter » dès qu'un rapport est validé —
+    // *sauf pour un compte d'administration*, qui garde le crayon
+    // (`_execIsAdmin` dans `_dossierOngletConstatations`). Mesuré le 11 novembre
+    // 2026 : cet administrateur rouvre la fiche, change la description et la
+    // criticité, enregistre, lit « Constatation modifiée » — et **rien n'a
+    // changé**. Les sept champs non opposables du formulaire suffisaient à
+    // éviter le 400 « aucun champ à mettre à jour », seul signe qui aurait
+    // pu alerter.
+    //
+    // *Un écran qui dit « enregistré » pour ce qui n'a pas été écrit est pire
+    // qu'un refus : le refus, on le lit.*
+    //
+    // La route rend donc la liste de ce qu'elle a écarté, et l'écran la dit.
+    // Elle **n'échoue pas** : le formulaire réémet tous ses champs, et refuser
+    // un envoi qui ne fait que renvoyer des valeurs inchangées empêcherait
+    // d'enregistrer ce qui a vraiment changé à côté. Seuls les champs dont la
+    // valeur **diverge** sont nommés — à la normalisation près, car se tromper
+    // ici ne coûte qu'un avertissement de trop, jamais un enregistrement perdu.
+    const memeValeur = (champ, propose, enPlace) => {
+      const n = (x) => String(x === undefined || x === null ? '' : x).trim();
+      if (champ === 'date_ouverture' || champ === 'date_due_cloture') {
+        return n(propose).slice(0, 10) === n(enPlace).slice(0, 10);
+      }
+      return n(propose) === n(enPlace);
+    };
+    const nonEcrits = [];
     const patch = {};
     Object.entries(req.body || {}).forEach(([k, v]) => {
       if (CHAMPS_INTERDITS.includes(k)) return;
       if (estPrest && CHAMPS_AAC.includes(k)) return;
-      if (opposable && CHAMPS_OPPOSABLES.includes(k)) return;
+      if (opposable && CHAMPS_OPPOSABLES.includes(k)) {
+        if (!memeValeur(k, v, c[k])) nonEcrits.push(k);
+        return;
+      }
       patch[k] = v;
     });
     if (!Object.keys(patch).length) return res.status(400).json({ error: 'Aucun champ à mettre à jour' });
@@ -644,7 +824,7 @@ module.exports = function register(app, deps, M) {
       patch.commentaire_evaluation = fusionEvaluationPostulant(c, patch.commentaire_evaluation, false);
     }
     await db.update('constatations', c.id, patch);
-    res.json({ status: 'ok' });
+    res.json({ status: 'ok', ...(nonEcrits.length ? { non_ecrits: nonEcrits } : {}) });
   }));
 
   // ── Ajustement d'une constatation déjà opposable ────────────────────
@@ -997,8 +1177,23 @@ module.exports = function register(app, deps, M) {
   }));
 
   app.delete(`${M}/constatations/:id`, requireAuth, asynchrone(async (req, res) => {
-    if (!R.isAdmin(req.user, referentiels)) return reserve(res, 'administrateurs');
-    if (!await db.get('constatations', req.params.id)) return introuvable(res, 'constatation');
+    const c = await db.get('constatations', req.params.id);
+    if (!c) return introuvable(res, 'constatation');
+    // Une constatation porte son domaine ; son secteur vient du dossier qui la
+    // porte, ou de l'organisme quand elle a été relevée directement.
+    const dc = c.dossier_id ? await db.get('dossiers', c.dossier_id) : null;
+    const cible = perimetreDe({
+      domaine_id: c.domaine_id || '',
+      secteur_id: (dc || {}).secteur_id || c.secteur_id || '',
+      prestataire_id: c.prestataire_id || '',
+    });
+    if (!R.peutDetruire(req.user, cible, referentiels)) {
+      // `gestionnaire_portee` et non `administrateurs` : le refus doit dire la
+      // **portée**, sinon un gestionnaire qui en détient une se croit sans
+      // privilège. Le socle traduit déjà ce code — « au gestionnaire du module,
+      // sur sa portée » —, et `reinitialiser` des « États » l'employait seul.
+      return reserve(res, 'gestionnaire_portee');
+    }
     if (await suitesCare.refusSiSuites(res, suitesCare.clesSurv([req.params.id]))) return undefined;
     // Retirée, non détruite : une mesure d'application a pu être prononcée dessus
     // entre la vérification ci-dessus et cette ligne, et elle garde son fondement

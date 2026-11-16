@@ -44,7 +44,9 @@
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
-const { demarrer, verifier, bilan, abandonsAttendus } = require('./harness');
+const {
+  demarrer, verifier, bilan, abandonsAttendus, refusDeclares, adresseDeConsole,
+} = require('./harness');
 // Un serveur de messagerie d'essai : sans lui, la transmission d'un rapport
 // n'était mesurable que par son refus (voir `messagerie-essai.js`).
 const messagerie = require('./messagerie-essai');
@@ -121,13 +123,22 @@ async function surModule({
     let etape = 'montage';
     // ── Les refus déclarés laissent aussi une trace en console ──
     //
-    // « Failed to load resource: … 409 », **sans l'adresse** — c'est la cécité
-    // du message que 5.f.6 avait déjà relevée. On tient donc le compte des
-    // refus déclarés rencontrés, et l'on dispense le message de console qui
-    // porte **le même code**. Rien de plus large : un 409 non déclaré garde son
-    // message, et un message dont le code n'a pas été déclaré reste un
-    // incident.
-    const codesAttendus = new Set();
+    // « Failed to load resource: … 409 », **sans l'adresse** dans son texte —
+    // c'est la cécité que 5.f.6 avait relevée. Mais sa `location` la porte.
+    //
+    // La règle tenait le compte des codes déclarés **déjà rencontrés** par
+    // l'écouteur des réponses, et dispensait le message du même code. Elle
+    // supposait la réponse rendue avant la console, ce que rien ne garantit :
+    // Puppeteer retient la réponse jusqu'à `responseReceivedExtraInfo`, qui
+    // vient du processus réseau, tandis que la console vient du rendu. Mesuré
+    // le 15 novembre 2026 : les deux se suivent à une milliseconde, et la
+    // campagne 27 a vu la console passer la première — le seul 400 de
+    // `surv-parametres`, déclaré, devenu incident.
+    //
+    // La ligne se confronte désormais aux déclarations par son adresse
+    // (`refusDeclares`, dans le harnais) : l'ordre d'arrivée ne compte plus, et
+    // un 400 sur un autre chemin garde son message.
+    const refusVus = refusDeclares(refus);
     // ── Et les traces que l'écran écrit **lui-même** ──
     //
     // Un refus déclaré dispense le message qui porte son code. Il ne dispense
@@ -144,11 +155,15 @@ async function surModule({
     page.on('console', (m) => {
       if (!dansLeModule || m.type() !== 'error') return;
       const texte = m.text();
-      const code = (/status of (\d{3})/.exec(texte) || [])[1];
-      if (code && codesAttendus.has(Number(code))) return;
+      const adresse = adresseDeConsole(m);
+      if (refusVus.console(texte, adresse)) return;
       const declare = MESSAGES_ATTENDUS.find((x) => x.motif.test(texte));
       if (declare) { declare.vus += 1; return; }
-      incidents.push(`[${etape}] console : ${texte.slice(0, 160)}`);
+      // L'adresse dite avec l'incident : sans elle, « Failed to load resource »
+      // ne dit pas quelle requête chercher.
+      const ou = /Failed to load resource/.test(texte) && adresse
+        ? ` (${adresse.replace(srv.base, '').slice(0, 120)})` : '';
+      incidents.push(`[${etape}] console : ${texte.slice(0, 160)}${ou}`);
     });
     page.on('pageerror', (e) => {
       if (dansLeModule) incidents.push(`[${etape}] exception : ${String(e.message).slice(0, 160)}`);
@@ -186,10 +201,12 @@ async function surModule({
     page.on('response', (r) => {
       if (!dansLeModule || r.status() < 400) return;
       const chemin = r.url().replace(srv.base, '');
-      const attendu = refus.some((x) => x.code === r.status()
-        && x.methode === r.request().method() && x.chemin.test(chemin));
-      if (attendu) { codesAttendus.add(r.status()); return; }
-      incidents.push(`[${etape}] ${r.status()} ${chemin.slice(0, 120)}`);
+      if (refusVus.reponse(r.status(), r.request().method(), chemin)) return;
+      // La méthode et ce que le serveur a répondu : un 400 se lit par son
+      // message, et le relevé le complète dès que le corps est lu — avant le
+      // contrôle de fin, qui vient bien après.
+      const i = incidents.push(`[${etape}] ${r.request().method()} ${r.status()} ${chemin.slice(0, 120)}`) - 1;
+      r.text().then((c) => { if (c) incidents[i] += ` — ${c.slice(0, 160)}`; }, () => {});
     });
 
     // ── La session, puis l'écran ──

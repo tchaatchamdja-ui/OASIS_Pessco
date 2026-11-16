@@ -1754,6 +1754,54 @@ function verrouDeCampagne() {
 // Il lit `suites.js`, qui ne porte que des chaînes — nom, port, fichier. La
 // table était dans le lanceur, construite avec des `require` : la lire chargeait
 // les vingt suites, puppeteer compris, et aucun contrôle ne pouvait l'éprouver.
+// ── Un refus déclaré, et sa trace en console qui arrive la première ──
+//
+// Le 15 novembre 2026, `surv-parametres` a rougi une fois en campagne sur
+// « Failed to load resource : … 400 » — le 400 qu'elle provoque exprès sur
+// l'import d'un classeur sans en-tête. La réponse était déclarée ; la ligne de
+// console, arrivée **avant** que Puppeteer ne rende la réponse, ne l'était pas
+// encore. Ces contrôles jouent les deux ordres, sans navigateur : un retour à la
+// dispense par code seul fait rougir le premier.
+function refusEtConsole() {
+  const { refusDeclares } = require('./harness');
+  const DECL = [{ code: 400, methode: 'POST', chemin: /\/checklists\/[^/]+\/import-xlsx$/ }];
+  const TRACE = 'Failed to load resource: the server responded with a status of 400 (Bad Request)';
+  const URL_REFUS = 'http://localhost:4807/api/m/execution/checklists/CL-1/import-xlsx';
+
+  // L'ordre de la campagne rouge : la console d'abord, la réponse ensuite.
+  const a = refusDeclares(DECL);
+  const consoleDabord = a.console(TRACE, URL_REFUS);
+  const reponseEnsuite = a.reponse(400, 'POST', '/api/m/execution/checklists/CL-1/import-xlsx');
+  verifier('refus déclaré : sa trace en console est dispensée même si elle précède la réponse',
+    consoleDabord === true && reponseEnsuite === true,
+    JSON.stringify({ consoleDabord, reponseEnsuite }));
+
+  // L'ordre habituel reste dispensé.
+  const b = refusDeclares(DECL);
+  const r1 = b.reponse(400, 'POST', '/api/m/execution/checklists/CL-1/import-xlsx');
+  const c1 = b.console(TRACE, URL_REFUS);
+  verifier('refus déclaré : l’ordre habituel, la réponse puis la console, reste dispensé',
+    r1 === true && c1 === true, JSON.stringify({ r1, c1 }));
+
+  // La dispense n'est pas plus large que la déclaration : un 400 ailleurs,
+  // même après le refus déclaré, garde sa trace — l'ancienne règle le taisait.
+  const autre = b.console(TRACE, 'http://localhost:4807/api/m/execution/exec-checklist-items');
+  const autreCode = b.console(TRACE.replace('400 (Bad Request)', '409 (Conflict)'), URL_REFUS);
+  const autreMethode = b.reponse(400, 'PUT', '/api/m/execution/checklists/CL-1/import-xlsx');
+  verifier('refus déclaré : un autre chemin, un autre code ou une autre méthode restent des incidents',
+    autre === false && autreCode === false && autreMethode === false,
+    JSON.stringify({ autre, autreCode, autreMethode }));
+
+  // Sans adresse, la seule règle disponible : le code d'une réponse déjà vue.
+  const c = refusDeclares(DECL);
+  const sansAdresseAvant = c.console(TRACE, '');
+  c.reponse(400, 'POST', '/api/m/execution/checklists/CL-1/import-xlsx');
+  const sansAdresseApres = c.console(TRACE, '');
+  verifier('refus déclaré : sans adresse en console, on retombe sur le code d’une réponse déjà vue',
+    sansAdresseAvant === false && sansAdresseApres === true && c.console('autre erreur', '') === false,
+    JSON.stringify({ sansAdresseAvant, sansAdresseApres }));
+}
+
 function tableDesSuites() {
   const { SUITES, choisir } = require('./suites');
 
@@ -2023,6 +2071,7 @@ module.exports = async function unitairesSmoke() {
     nommeurDeGestes();
     await baremeDeRisque();
     telechargements();
+    refusEtConsole();
     tableDesSuites();
     verrouDeCampagne();
   } finally {

@@ -39,7 +39,9 @@ const puppeteer = require('puppeteer');
 // un classeur : la ronde en **écrit** un avec, et le serveur le relit.
 // Deux paquets qui se répondent finiraient par ne plus se répondre.
 const XLSX = require('xlsx');
-const { demarrer, verifier, bilan, abandonsAttendus } = require('./harness');
+const {
+  demarrer, verifier, bilan, abandonsAttendus, refusDeclares, adresseDeConsole,
+} = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
 const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'ramp', 'js', 'ramp-app.js');
@@ -170,12 +172,14 @@ module.exports = async function rampNavigateurSmoke(port) {
     // Le mécanisme vit dans le harnais depuis que PR en a besoin aussi
     // (n° 5.f.71) : les déclarations restent ici, la mécanique est commune.
     const abandons = abandonsAttendus(ABANDONS_ATTENDUS);
-    const codesAttendus = new Set();
+    // La règle vit dans le harnais (`refusDeclares`) : la ligne de console se
+    // confronte aux déclarations par son adresse, et non au code d'une réponse
+    // que Puppeteer peut rendre après elle (15 novembre 2026).
+    const refusVus = refusDeclares(REFUS_ATTENDUS);
     page.on('console', (m) => {
       if (!ramp || m.type() !== 'error') return;
       const texte = m.text();
-      const code = (/status of (\d{3})/.exec(texte) || [])[1];
-      if (code && codesAttendus.has(Number(code))) return;
+      if (refusVus.console(texte, adresseDeConsole(m))) return;
       incidents.push(`[${etape}] console : ${texte.slice(0, 160)}`);
     });
     page.on('pageerror', (e) => {
@@ -213,9 +217,7 @@ module.exports = async function rampNavigateurSmoke(port) {
     page.on('response', (r) => {
       if (!ramp || r.status() < 400) return;
       const chemin = r.url().replace(srv.base, '');
-      const attendu = REFUS_ATTENDUS.some((x) => x.code === r.status()
-        && x.methode === r.request().method() && x.chemin.test(chemin));
-      if (attendu) { codesAttendus.add(r.status()); return; }
+      if (refusVus.reponse(r.status(), r.request().method(), chemin)) return;
       incidents.push(`[${etape}] ${r.status()} ${chemin.slice(0, 120)}`);
     });
 

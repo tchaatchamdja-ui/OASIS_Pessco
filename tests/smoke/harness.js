@@ -441,6 +441,64 @@ function refusAttendus() {
   };
 }
 
+// ── Les refus qu'une suite déclare pour toute sa durée, et leur trace en console ──
+//
+// Trois suites de navigateur — le socle des modules, RAMP, PLAN — déclarent
+// leurs refus par code, méthode et chemin, et le navigateur dit chacun deux
+// fois : la **réponse**, et la ligne de console « Failed to load resource : …
+// status of 400 ». Les trois tenaient la même règle, copiée : la réponse
+// déclarée versait son code dans un ensemble, et la ligne de console était
+// dispensée si son code y était déjà.
+//
+// **Déjà** : c'est là qu'était le défaut. Puppeteer ne rend pas la réponse dès
+// que Chrome l'annonce — il attend `Network.responseReceivedExtraInfo`, qui
+// vient du processus réseau, tandis que la ligne de console vient du rendu.
+// Les deux chemins ne s'attendent pas — CDP dit lui-même que l'ExtraInfo peut
+// venir avant ou après `responseReceived`. Mesuré le 15 novembre 2026 sur
+// `surv-parametres`, au niveau du protocole : ExtraInfo, `responseReceived`,
+// puis `Log.entryAdded`, le tout en une milliseconde. Qu'ExtraInfo glisse d'une
+// milliseconde et la console passe la première ; le premier refus déclaré
+// d'une suite — l'ensemble encore vide — devient alors un incident. C'est
+// arrivé une fois en vingt-sept campagnes, jamais sur un tir seul, et quatre
+// tirs sous une charge processeur délibérée ne l'ont pas reproduit : ce n'est
+// pas la charge du processeur seule qui le décide.
+//
+// La ligne de console porte pourtant l'adresse de la ressource (`location`).
+// On la confronte donc **aux déclarations elles-mêmes**, code et chemin, et
+// l'ordre d'arrivée cesse de compter. La méthode, que la console ne dit pas,
+// reste éprouvée sur la réponse : toute réponse passe par `reponse()`, et un
+// refus non déclaré y devient un incident quoi que la console en ait dit.
+//
+// Sans adresse — un navigateur qui ne la donnerait pas —, on retombe sur
+// l'ancienne règle, la seule disponible.
+const sansOrigine = (url) => String(url || '').replace(/^[a-z][a-z0-9+.-]*:\/\/[^/]+/i, '');
+
+function refusDeclares(declarations) {
+  const codesVus = new Set();
+  return {
+    // Vrai si cette réponse est l'un des refus déclarés.
+    reponse(statut, methode, chemin) {
+      const attendu = declarations.some((x) => x.code === statut
+        && x.methode === methode && x.chemin.test(chemin));
+      if (attendu) codesVus.add(statut);
+      return attendu;
+    },
+    // Vrai si cette ligne de console est la trace d'un refus déclaré.
+    console(texte, url) {
+      const code = Number((/status of (\d{3})/.exec(String(texte || '')) || [])[1]);
+      if (!code) return false;
+      const chemin = sansOrigine(url);
+      if (!chemin) return codesVus.has(code);
+      return declarations.some((x) => x.code === code && x.chemin.test(chemin));
+    },
+  };
+}
+
+// L'adresse que porte une ligne de console, quand le navigateur la donne.
+const adresseDeConsole = (m) => {
+  try { return ((m.location && m.location()) || {}).url || ''; } catch { return ''; }
+};
+
 // ── Les abandons de navigation qu'une ronde provoque exprès ──
 //
 // Un refus se déclare par son code ; un **abandon** n'en a pas. Un
@@ -544,5 +602,7 @@ const urlSocle = (nom) => `/shared/${fs.existsSync(path.join(RACINE, 'frontend',
 module.exports = {
   demarrer, verifier, horsPortee, bilan, etat, cheminSocle, sourceSocle, urlSocle,
   refusAttendus,
+  refusDeclares,
+  adresseDeConsole,
   abandonsAttendus,
 };

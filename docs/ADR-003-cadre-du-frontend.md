@@ -14396,3 +14396,23 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Façade | retirée |
            | Relevé des gestes | inchangé — 93 noms, 87 exercés ; seules les lignes ont changé, `index.html` ayant perdu une balise |
            | Campagne | **1 857, 33 suites** — deux contrôles de plus : les gestes en ligne, et la réponse tardive des discussions |
+
+       5.f.113 [x] **SURV et PR : les deux façades restantes retirées** — fait
+           le 16 novembre 2026.
+
+           `window.EXEC` et `window.PR` étaient du modèle de `window.PL`
+           (n° 5.f.111) : posées au chargement, sans un lecteur — ni le
+           portail, ni le chrome partagé, ni un autre module, ni une suite ;
+           les seules mentions des deux noms sont des commentaires. Elles
+           avaient le même défaut : chacune capturait la navigation **avant**
+           que la page l'enveloppe pour prévenir le portail (`exec:page`,
+           `pr:page`). Qui s'y serait fié aurait changé de page sans que le
+           portail le sache.
+
+           Retirées : `exec-namespace.js`, `pr-namespace.js`, et leur balise.
+           Plus aucun écran ne publie de façade.
+
+           | | |
+           |---|---|
+           | Relevé des gestes | SURV et PR inchangés ; seule la date du relevé a changé |
+           | Campagne | **1 857, 33 suites**, 0 rouge |

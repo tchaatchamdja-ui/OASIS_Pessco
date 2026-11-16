@@ -27,6 +27,20 @@
 // La saisie d'une carence, elle, ne demande rien : elle crée la sienne et la
 // retire. Aucune ronde ne provoque de refus HTTP — les deux refus mesurés ici
 // (sans catégorie, sans objet) se tiennent dans la fenêtre, avant tout envoi.
+//
+// ── Puis les pièces jointes, et la barre supérieure ──
+//
+// Six noms restaient sur les pièces : déposer et retirer, à la qualification,
+// au suivi et au recours. Un seul dossier les porte, dans l'ordre où l'écran
+// les offre — la qualification d'abord, puis le suivi, puis le recul en
+// qualification par le geste du suivi. Chaque dépôt passe par le **vrai
+// sélecteur de fichiers** du navigateur, comme la ronde du traitement.
+//
+// Enfin la barre : l'instance regardée, et le renvoi vers la gestion des
+// droits — en dernier, puisqu'il quitte l'écran.
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const { verifier } = require('./harness');
 const { surModule } = require('./module-socle');
 
@@ -460,6 +474,353 @@ module.exports = async function mesuresGestesSmoke(port) {
         && L.partie === true && L.lignePartie === true
         && L.compteApres === L.siennes - 1,
         JSON.stringify(L));
+
+      // ══════════════════════════════════════════════════════════════════
+      //  Les pièces jointes : qualification, suivi, recours
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // Le bouton « Ajouter une pièce » ne fait qu'un geste : il clique
+      // l'`input` caché derrière lui, dont le `onchange` dépose. Un
+      // `uploadFile` posé sur l'`input` sauterait le bouton ; on attend donc le
+      // sélecteur que le navigateur ouvre, et c'est le chemin de l'agent, entier.
+      jalon('CARE : pièces jointes');
+      const PIECE = `piece-gestes-${MARQUE}.csv`;
+      const cheminPiece = path.join(os.tmpdir(), PIECE);
+      fs.writeFileSync(cheminPiece, 'colonne\nvaleur\n');
+      const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+      const deposer = async (motif) => {
+        try {
+          const [selecteur] = await Promise.all([
+            page.waitForFileChooser({ timeout: 15000 }),
+            page.evaluate((m) => {
+              const b = [...document.querySelectorAll('button')]
+                .find((x) => new RegExp(m).test(x.getAttribute('onclick') || ''));
+              if (!b) throw new Error(`bouton introuvable : ${m}`);
+              b.click();
+            }, motif),
+          ]);
+          await selecteur.accept([cheminPiece]);
+          await attendre(4000);
+          return true;
+        } catch (e) { return String((e && e.message) || e); }
+      };
+      // Les aides de page, remises à chaque évaluation.
+      const AIDES = `({
+        a: (ms) => new Promise((r) => setTimeout(r, ms)),
+        T: () => (window.MES_STATE || {}).traitement || {},
+        bouton: (texte) => [...document.querySelectorAll('button')]
+          .find((b) => (b.getAttribute('onclick') || '') === texte),
+        volet: (cle) => [...document.querySelectorAll('[onclick*="mesQualVoirVolet("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes("'" + cle + "'")),
+        lignes: (sel) => [...document.querySelectorAll(sel + ' .mes-preuve')],
+      })`;
+
+      // ── 1. Le dossier, mené à la qualification par les routes, puis ouvert ──
+      const P = await page.evaluate(async (marque, aides) => {
+        // eslint-disable-next-line no-eval
+        const { a, volet } = eval(aides);
+        const d = {};
+        const p = (chemin, methode, corps) => window.mesApi(chemin, {
+          method: methode, ...(corps ? { body: JSON.stringify(corps) } : {}),
+        });
+        window.mesFermerSlider();
+        const cree = await p('/constatations', 'POST', {
+          titre: `Dossier des pièces ${marque}`, description: 'Bâti pour la ronde des pièces',
+          origine_libelle: 'Inspection inopinée', date_ouverture: '2026-10-22',
+        });
+        d.id = cree && cree.id;
+        if (!d.id) return d;
+        const r = `/constatations/${encodeURIComponent(d.id)}`;
+        await p(`${r}/traitement`, 'PUT', { informations: 'Constats recueillis' });
+        await p(`${r}/decision`, 'POST', { decision: 'investiguer' });
+        await p(`${r}/investigation`, 'PUT', { equipe: ['insp1'], travaux: [], rapport: 'Faits établis' });
+        await p(`${r}/investigation/soumettre`, 'POST');
+        await p(`${r}/qualification`, 'PUT', {
+          infraction_constituee: true, nature: 'Manquement', caracterisation: 'Première',
+          mesures: [{ categorie: 'administrative', type_mesure: 'lettre_correction', commentaire: 'Pièces', suivi_requis: true }],
+        });
+        await window.mesLoadData();
+        document.querySelector('.nav-btn[data-page="critiques"]')?.click();
+        await a(3000);
+        const ouvrir = [...document.querySelectorAll('[onclick*="mesMesureDepuisConstatation("]')]
+          .find((b) => (b.getAttribute('onclick') || '').includes(d.id));
+        d.ouvert = !!ouvrir;
+        ouvrir?.click();
+        await a(3200);
+        volet('mesures')?.click();
+        await a(2400);
+        d.zone = !!document.getElementById('mesQualPieces');
+        return d;
+      }, MARQUE, AIDES);
+
+      // ── 2. La pièce de la décision, en qualification ──
+      const Q = { depot: P.zone ? await deposer("mesQualFichier'") : 'zone absente' };
+      Object.assign(Q, await page.evaluate(async (nom, aides) => {
+        // eslint-disable-next-line no-eval
+        const { a, T, bouton, lignes } = eval(aides);
+        const d = {};
+        const vues = lignes('#mesQualPieces');
+        d.lignes = vues.length;
+        d.nom = vues.length ? (vues[0].querySelector('input') || {}).value === nom : false;
+        d.lien = vues.length ? !!vues[0].querySelector('a[href*="/uploads/"]') : false;
+        d.etat = ((T().qualification || {}).pieces || []).length;
+        bouton('mesQualRetirerPiece(0)')?.click();
+        await a(1600);
+        d.lignesApres = lignes('#mesQualPieces').length;
+        d.etatApres = ((T().qualification || {}).pieces || []).length;
+        return d;
+      }, PIECE, AIDES));
+      verifier('une pièce de décision se dépose en qualification par le sélecteur du navigateur, paraît sous son nom, et se retire',
+        Q.depot === true && Q.lignes === 1 && Q.nom === true && Q.lien === true && Q.etat === 1
+        && Q.lignesApres === 0 && Q.etatApres === 0,
+        JSON.stringify({ P, Q }));
+
+      // ── 3. La pièce du suivi : déposée, enregistrée, retirée, enregistrée ──
+      //
+      // Au suivi, la mesure est **contestée** au même enregistrement : c'est ce
+      // qui ouvrira le recul vers le recours.
+      const Sv = await page.evaluate(async (id, aides) => {
+        // eslint-disable-next-line no-eval
+        const { a } = eval(aides);
+        const d = {};
+        window.mesFermerSlider();
+        await window.mesApi(`/constatations/${encodeURIComponent(id)}/qualification/suivi`, { method: 'POST' });
+        await window.mesLoadData();
+        // La table s'ouvre sur ce dossier par le geste du volet des carences :
+        // la ronde précédente l'a laissée filtrée sur le sien.
+        window.mesOuvrirTableMesures(id);
+        await a(3000);
+        const m = (window.MES_STATE.data.mesures || []).find((x) => x.constatation_id === id);
+        d.mesure = m && m.id;
+        if (!m) return d;
+        [...document.querySelectorAll('button')]
+          .find((b) => (b.getAttribute('onclick') || '') === `mesFaireLeSuivi('${m.id}')`)?.click();
+        await a(2600);
+        d.etapeVue = window.MES_STATE.etapeVue;
+        return d;
+      }, P.id, AIDES);
+      Sv.depot = Sv.etapeVue === 'suivi' ? await deposer("mesSuiviFichier_0'") : 'suivi non ouvert';
+      Object.assign(Sv, await page.evaluate(async (mesure, aides) => {
+        // eslint-disable-next-line no-eval
+        const { a, T, bouton, lignes } = eval(aides);
+        const d = {};
+        const serveur = async () => (await window.mesApi('/mesures')).find((x) => x.id === mesure) || {};
+        d.lignes = lignes('.mes-bloc[data-rang="0"] .mes-suivi-pieces').length;
+        d.etat = (((T().mesures || [])[0] || {}).suivi_pieces || []).length;
+        document.querySelector('.mes-bloc[data-rang="0"] [data-champ="recours_intente"]')?.click();
+        await a(1600);
+        bouton('mesEnregistrerSuivi()')?.click();
+        await a(3600);
+        const s1 = await serveur();
+        d.auServeur = (s1.suivi_pieces || []).length;
+        d.contestee = s1.recours_intente === true;
+        bouton('mesSuiviRetirerPiece(0, 0)')?.click();
+        await a(1600);
+        d.lignesApres = lignes('.mes-bloc[data-rang="0"] .mes-suivi-pieces').length;
+        bouton('mesEnregistrerSuivi()')?.click();
+        await a(3600);
+        const s2 = await serveur();
+        d.auServeurApres = (s2.suivi_pieces || []).length;
+        d.toujoursContestee = s2.recours_intente === true;
+        return d;
+      }, Sv.mesure, AIDES));
+      verifier('une pièce de suivi se dépose sur sa mesure, parvient au serveur à l’enregistrement, et retirée n’y reste pas',
+        Sv.depot === true && Sv.lignes === 1 && Sv.etat === 1 && Sv.auServeur === 1
+        && Sv.lignesApres === 0 && Sv.auServeurApres === 0,
+        JSON.stringify(Sv));
+
+      // ── 4. Les pièces du recours, de deux genres qui ne se mêlent pas ──
+      //
+      // Le bloc d'une mesure contestée porte deux listes : les pièces du
+      // recours (`pieces`) et celles de la décision de l'instance
+      // (`decision_pieces`). Un dépôt dans l'une ne doit rien écrire dans
+      // l'autre.
+      const Rc = await page.evaluate(async (aides) => {
+        // eslint-disable-next-line no-eval
+        const { a, T, volet } = eval(aides);
+        const d = {};
+        d.contestee = true;
+        const action = [...document.querySelectorAll('.mes-proc-actions button')]
+          .find((b) => /mesSuiviActionRecours/.test(b.getAttribute('onclick') || ''));
+        d.bouton = !!action;
+        if (!action) return d;
+        action.click();
+        await a(1600);
+        document.getElementById('mesConfirmCase')?.click();
+        await a(600);
+        document.getElementById('mesConfirmValider')?.click();
+        await a(4600);
+        d.etape = T().etape;
+        volet('recours')?.click();
+        await a(2600);
+        const bouton = [...document.querySelectorAll('button')]
+          .find((b) => /mesRecoursFichier_\d+_recours'/.test(b.getAttribute('onclick') || ''));
+        d.rang = bouton ? Number(/mesRecoursFichier_(\d+)_/.exec(bouton.getAttribute('onclick'))[1]) : null;
+        return d;
+      }, AIDES);
+      const compterRecours = (rang) => page.evaluate((i, aides) => {
+        // eslint-disable-next-line no-eval
+        const { T, lignes } = eval(aides);
+        const r = (((T().qualification || {}).mesures || [])[i] || {}).recours || {};
+        return {
+          recours: lignes('#mesRecoursBlocs .mes-recours-pieces[data-genre="recours"]').length,
+          decision: lignes('#mesRecoursBlocs .mes-recours-pieces[data-genre="decision"]').length,
+          etatRecours: (r.pieces || []).length,
+          etatDecision: (r.decision_pieces || []).length,
+        };
+      }, rang, AIDES);
+      if (Rc.rang !== null && Rc.rang !== undefined) {
+        Rc.depotRecours = await deposer(`mesRecoursFichier_${Rc.rang}_recours'`);
+        Rc.apresRecours = await compterRecours(Rc.rang);
+        Rc.depotDecision = await deposer(`mesRecoursFichier_${Rc.rang}_decision'`);
+        Rc.apresDecision = await compterRecours(Rc.rang);
+        await page.evaluate(async (i, aides) => {
+          // eslint-disable-next-line no-eval
+          const { a, bouton } = eval(aides);
+          bouton(`mesRecoursRetirerPiece(${i}, 'recours', 0)`)?.click();
+          await a(1600);
+        }, Rc.rang, AIDES);
+        Rc.apresRetrait = await compterRecours(Rc.rang);
+      }
+      const egal = (x, y) => JSON.stringify(x) === JSON.stringify(y);
+      verifier('au recours, une pièce se dépose dans le genre de son bouton sans rien écrire dans l’autre, et se retire de lui seul',
+        Rc.bouton === true && Rc.etape === 'qualification'
+        && Rc.depotRecours === true
+        && egal(Rc.apresRecours, { recours: 1, decision: 0, etatRecours: 1, etatDecision: 0 })
+        && Rc.depotDecision === true
+        && egal(Rc.apresDecision, { recours: 1, decision: 1, etatRecours: 1, etatDecision: 1 })
+        && egal(Rc.apresRetrait, { recours: 0, decision: 1, etatRecours: 0, etatDecision: 1 }),
+        JSON.stringify(Rc));
+      try { fs.unlinkSync(cheminPiece); } catch { /* déjà parti */ }
+
+      // ══════════════════════════════════════════════════════════════════
+      //  La barre supérieure : l'instance regardée, puis la gestion des droits
+      // ══════════════════════════════════════════════════════════════════
+      //
+      // La même barre que SURV et PLAN, la même discipline : reprendre
+      // l'instance déjà regardée ne fait rien ; une autre est retenue par le
+      // serveur et le module se recharge sur elle ; le même geste ramène
+      // l'origine — et la route ne la rétablit que si le geste a échoué, ce
+      // que le contrôle refuse.
+      jalon('CARE : instance regardée');
+      await page.evaluate(() => window.mesFermerSlider());
+      const SELECT = '.oasis-module-actions select[title="Instance regardée"]';
+      const monte = async () => {
+        await page.waitForSelector('.nav-btn[data-page]', { timeout: 20000 }).catch(() => {});
+        await page.waitForFunction(() => {
+          const el = document.getElementById('mes-content');
+          return el && el.textContent.trim().length > 100;
+        }, { timeout: 20000 }).catch(() => {});
+        await attendre(1200);
+      };
+      const lireInstance = () => page.evaluate(async () => window.mesApi('/instance'));
+      const liste = () => page.evaluate((sel) => {
+        const s = document.querySelector(sel);
+        return s ? { valeur: s.value, options: [...s.options].map((o) => o.value) } : null;
+      }, SELECT);
+      const choisir = async (valeur) => {
+        await Promise.all([
+          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {}),
+          page.evaluate((sel, v) => {
+            const s = document.querySelector(sel);
+            if (!s) return;
+            s.value = v;
+            s.dispatchEvent(new Event('change', { bubbles: true }));
+          }, SELECT, valeur),
+        ]);
+        await monte();
+      };
+      const avant = await lireInstance();
+      const l0 = await liste();
+      const inst = { disponible: avant.disponible === true, liste: !!l0, origine: avant.courante || '' };
+      const autre = l0 && l0.options.find((v) => v !== inst.origine);
+      inst.autre = autre === undefined ? null : autre;
+      try {
+        if (l0 && inst.autre !== null) {
+          inst.sansEffet = await page.evaluate(async (sel, v) => {
+            let ecritures = 0;
+            const vrai = window.fetch;
+            window.fetch = (u, o) => {
+              if (/\/instance$/.test(String(u)) && ((o || {}).method || 'GET') === 'PUT') ecritures += 1;
+              return vrai(u, o);
+            };
+            window.__marqueCare = true;
+            try {
+              const s = document.querySelector(sel);
+              s.value = v;
+              s.dispatchEvent(new Event('change', { bubbles: true }));
+              await new Promise((ok) => setTimeout(ok, 1500));
+            } finally { window.fetch = vrai; }
+            return { ecritures, resteLa: window.__marqueCare === true };
+          }, SELECT, inst.origine).catch(async () => { await monte(); return { rechargee: true }; });
+          await choisir(inst.autre);
+          inst.retenue = (await lireInstance()).courante || '';
+          inst.listeApres = (await liste() || {}).valeur;
+          inst.recharge = await page.evaluate(() => window.__marqueCare !== true);
+          await choisir(inst.origine);
+          inst.revenue = (await lireInstance()).courante || '';
+          inst.listeRevenue = (await liste() || {}).valeur;
+        }
+      } finally {
+        if (((await lireInstance()).courante || '') !== inst.origine) {
+          await page.evaluate(async (v) => window.mesApi('/instance', {
+            method: 'PUT', body: JSON.stringify({ instance: v }),
+          }), inst.origine);
+          inst.retabliParLaRoute = true;
+          await page.reload({ waitUntil: 'networkidle2' });
+          await monte();
+        }
+      }
+      verifier('reprendre l’instance déjà regardée ne fait rien : ni écriture, ni rechargement',
+        inst.disponible && inst.liste && inst.autre !== null && !!inst.sansEffet
+        && inst.sansEffet.ecritures === 0 && inst.sansEffet.resteLa === true,
+        JSON.stringify(inst));
+      verifier('une autre instance est retenue, le module rechargé sur elle, et le même geste ramène l’origine',
+        inst.autre !== null && inst.retenue === inst.autre && inst.listeApres === inst.autre
+        && inst.recharge === true && inst.revenue === inst.origine
+        && inst.listeRevenue === inst.origine && !inst.retabliParLaRoute,
+        JSON.stringify(inst));
+
+      // ── Le renvoi vers la gestion des droits, et le retour ──
+      jalon('CARE : gestion des droits');
+      const BOUTON_DROITS = '.oasis-module-actions button[title="Gestion des Droits"]';
+      const dr = { bouton: await page.evaluate((s) => !!document.querySelector(s), BOUTON_DROITS) };
+      if (dr.bouton) {
+        await Promise.all([
+          page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {}),
+          page.evaluate((s) => document.querySelector(s).click(), BOUTON_DROITS),
+        ]);
+        await page.waitForFunction(() => {
+          const el = document.getElementById('app');
+          return el && !el.querySelector('[data-oasis-loader]') && el.textContent.trim().length > 100;
+        }, { timeout: 20000 }).catch(() => {});
+        await attendre(1200);
+        Object.assign(dr, await page.evaluate(() => ({
+          chemin: location.pathname + location.search,
+          module: window.DR_MODULE,
+          rendu: (document.getElementById('app')?.textContent || '').trim().length,
+          retour: !!document.querySelector('.oasis-module-actions button[title="Retour au module"]'),
+        })));
+        if (dr.retour) {
+          await Promise.all([
+            page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 30000 }).catch(() => {}),
+            page.evaluate(() => document
+              .querySelector('.oasis-module-actions button[title="Retour au module"]').click()),
+          ]);
+          await monte();
+          Object.assign(dr, await page.evaluate(() => ({
+            revenu: location.pathname,
+            barreDebout: !!document.querySelector('.nav-btn[data-page]'),
+          })));
+        }
+      }
+      verifier('« Gestion des Droits » mène à l’écran des droits, réglé sur le module CARE, qui se rend',
+        dr.bouton === true && dr.chemin === '/modules/droits/index.html?module=CARE'
+        && dr.module === 'CARE' && dr.rendu > 100,
+        JSON.stringify(dr));
+      verifier('l’écran des droits ramène à CARE par « Retour au module »',
+        dr.retour === true && dr.revenu === '/modules/mesures/index.html' && dr.barreDebout === true,
+        JSON.stringify(dr));
     },
   });
 };

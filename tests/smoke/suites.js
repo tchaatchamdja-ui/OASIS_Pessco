@@ -119,6 +119,10 @@ const SUITES = [
   // pas — l'instance, les notifications, le calendrier, un amendement et la
   // synchronisation des risques.
   { nom: 'plan-gestes', port: 4818, fichier: './plan-gestes.smoke' },
+  // CARE, avant sa conversion, de même : le type de mesure et le retrait d'une
+  // catégorie, une carence saisie dans son volet, et les mesures d'une carence
+  // — trois rondes qui auraient fait passer sa suite d'origine hors budget.
+  { nom: 'mesures-gestes', port: 4819, fichier: './mesures-gestes.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

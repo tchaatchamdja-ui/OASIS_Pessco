@@ -189,7 +189,11 @@ ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: 'profil-risqu
 ECRANS.planification = {
   ...ecranDeModule('planification'), suite: ['planification-navigateur', 'plan-gestes'],
 };
-ECRANS.mesures = { ...ecranDeModule('mesures'), suite: 'mesures-navigateur' };
+// CARE de même depuis le 16 novembre 2026 : sa suite d'origine était pile à son
+// budget, et les gestes qui restaient sont partis dans une seconde.
+ECRANS.mesures = {
+  ...ecranDeModule('mesures'), suite: ['mesures-navigateur', 'mesures-gestes'],
+};
 ECRANS.droits = { ...ecranDeModule('droits'), suite: 'droits-navigateur' };
 
 // ── Nommer un gestionnaire JSX ──

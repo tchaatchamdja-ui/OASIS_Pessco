@@ -1805,8 +1805,8 @@ function refusEtConsole() {
 function tableDesSuites() {
   const { SUITES, choisir } = require('./suites');
 
-  verifier('suites : la table en porte trente-trois, et chacune dit son nom, son port et son fichier',
-    SUITES.length === 33
+  verifier('suites : la table en porte trente-quatre, et chacune dit son nom, son port et son fichier',
+    SUITES.length === 34
     && SUITES.every((s) => typeof s.nom === 'string' && s.nom.length > 2
       && Number.isInteger(s.port) && typeof s.fichier === 'string'),
     `${SUITES.length} suites`);

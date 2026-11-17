@@ -95,6 +95,8 @@ const SORTIE_SAS = {
   // l'a été : ses sas sortent à côté de ses scripts restés en JavaScript, sous
   // `app/` au lieu de `js/` (ADR-003, n° 5.f.101).
   planification: join('modules', 'planification', 'app'),
+  // CARE, de même, à partir du 17 novembre 2026 (ADR-003, n° 5.f.116).
+  mesures: join('modules', 'mesures', 'app'),
 };
 
 const ensembles = readdirSync(ICI, { withFileTypes: true })

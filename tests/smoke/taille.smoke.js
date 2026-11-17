@@ -2343,7 +2343,8 @@ module.exports = async function tailleSmoke() {
       // les 2 000 clés de l'autre, ou ne les aurait plus vues (n° 5.f.101).
       { nom: 'PLAN', table: 'PLAN_TR', dir: 'public/modules/planification/js', ts: 'frontend/planification', fn: ['pt', 'tp'] },
       { nom: 'RAMP', table: 'RAMP_TR', dir: 'public/modules/ramp/js', fn: ['tr', 'rt'] },
-      { nom: 'CARE', table: 'MES_TR', dir: 'public/modules/mesures/js', fn: ['tm', 'mt'] },
+      // CARE de même depuis le 17 novembre 2026 (n° 5.f.116).
+      { nom: 'CARE', table: 'MES_TR', dir: 'public/modules/mesures/js', ts: 'frontend/mesures', fn: ['tm', 'mt'] },
       { nom: 'PR', table: 'TRANSLATIONS', dir: 'public/modules/profil_risque/js', fn: ['pt', 't'] },
     ];
     const orphelines = [];

@@ -866,7 +866,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
            | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **converti** — 13 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles, la coquille (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.109) ; plus aucun fichier en JavaScript ; l'état déclaré en un seul endroit, la façade `window.PL` retirée, une course des discussions corrigée (n° 5.f.110 à 5.f.112) |
-           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 86 exercés** — le plafond : aucun reste non exercé —, 3 indécidables — idem, 4 novembre 2026, repris le 16 novembre et mesuré par **deux** suites, `mesures-navigateur` et `mesures-gestes` (n° 5.f.114, 5.f.115) |
+           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 86 exercés** — le plafond : aucun reste non exercé —, 3 indécidables — idem, 4 novembre 2026, repris le 16 novembre et mesuré par **deux** suites, `mesures-navigateur` et `mesures-gestes` (n° 5.f.114, 5.f.115) ; **en conversion** — 1 fichier sur 9 : les libellés (n° 5.f.116) |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
            | SURV (`execution`) | 24 162 | **323 gestes nommés, 320 exercés** (99 %) — tous les décidables —, 512 occurrences sur 518 dont 6 indécidables — mesuré par **treize** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers`, `surv-barre`, `surv-constatations`, `surv-prestataire` et `surv-fenetres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.98) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 59 sur 60, les activités à 66 sur 67 — leurs restes indécidables —, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. **Plus aucun nom décidable n'est sans ronde.** `execViewFNC` et `execAccuserReception`, qu'on disait ici hors de portée — offerts au seul compte qui ne gouverne pas —, le sont en vue Prestataire, que la barre offre au super-administrateur (n° 5.f.97, qui corrige cette phrase). `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). La remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire sont exercés, `exec-dashboard.js` 29 sur 29 (n° 5.f.96) ; l'accusé de réception et la consultation d'une constatation, du côté de l'organisme, le sont aussi — et le dernier « non exercé », `e`, était un paramètre que le relevé lisait comme un nom (n° 5.f.97). Les fonctions fléchées posées en propriété, que le relevé laissait dehors — seize, et non sept —, sont nommées par leur texte des deux côtés ; les cinq renoncements qu'aucune suite ne pressait le sont par `surv-fenetres` (n° 5.f.98). |
@@ -14511,3 +14511,76 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|
            | Relevé des gestes | CARE **78 → 86 sur 89** — le plafond : les trois restants sont indécidables |
            | Campagne | **1 882, 34 suites**, 0 rouge |
+
+       5.f.116 [x] **CARE en TypeScript, premier fichier : les libellés — un
+           état qui reste où il est** — fait le 17 novembre 2026. La conversion
+           de CARE commence (5.c) comme celle de PLAN (n° 5.f.101), par le
+           fichier sans interface : `mes-i18n.js`, 1 720 lignes, la table
+           `MES_TR` et sa lecture `mt`.
+
+           ── Ce qui est converti ──
+
+           | Source | Devient |
+           |---|---|
+           | la table `MES_TR`, trois volets de 515 clés | `traductions.fr.ts`, `.en.ts`, `.pt.ts` — le français définit les clés, les deux autres sont typés par lui |
+           | `mt` | `traductions.ts` |
+           | ce que la page lisait en globales | le sas `globales/mes-i18n.ts`, construit vers `modules/mesures/app/mes-i18n.js` |
+
+           Les volets sont le bloc de la table **transporté**, commentaires de
+           section compris, et non resérialisé : PLAN avait perdu les siens à
+           la génération. L'égalité est établie par la comparaison, non par la
+           recopie.
+
+           ── Un état qui reste où il est ──
+
+           PLAN portait son état dans le fichier des libellés, et la conversion
+           l'en a sorti (`etat.ts`). CARE le porte dans `mes-app.js`, sa
+           coquille : il n'a rien à faire dans cette étape. Mais `mt` en lit la
+           langue, et l'ancien la lisait en identifiant nu sur une globale
+           **lexicale** — qu'un module ne voit pas.
+
+           Mesuré dans la page avant d'écrire : `mes-app.js` **pose lui-même**
+           `MES_STATE` sur `window` (`Object.assign(window, { MES_STATE, … })`),
+           et c'est le même objet. `mt` l'y lit ; le nom est déclaré, optionnel,
+           à la frontière de la cohabitation (`restant.d.ts`), et en partira
+           avec la coquille. Une seule fenêtre où les deux lectures diffèrent :
+           le premier niveau de `mes-app.js`, entre la déclaration et la pose —
+           l'état y vaut `lang: 'fr'`, et le repli est le français.
+
+           ── La preuve d'équivalence ──
+
+           L'ancien fichier, pris dans `git`, et le paquet construit, chacun
+           dans un contexte isolé : **28 137 comparaisons, aucun écart** —
+           chaque clé et six clés pièges (`constructor`, `__proto__`…), sous six
+           jeux d'arguments, sans état puis sous huit langues dont une inconnue,
+           une vide, `null` et `__proto__` ; les exceptions comparées comme des
+           résultats (`mt('constructor', 'A')` lève, et lève encore).
+
+           Le banc a d'abord rendu **6 089 faux écarts** : V8, après des
+           milliers d'appels sans `MES_STATE`, optimise `typeof MES_STATE` et ne
+           revient pas sur sa lecture quand la globale lexicale paraît ensuite.
+           Un contexte neuf par scénario l'a levé. C'est un défaut du banc, et
+           un argument de plus pour la lecture sur `window`.
+
+           Contre-essayée cinq fois — `{0}` remplacé à sa première occurrence
+           seulement (180 écarts), la langue ignorée (6 089), une traduction
+           altérée (7), `MES_TR` non posé (l'exécution s'arrête), le repli sur
+           la clé remplacé par une chaîne vide (54) —, la comparaison a mordu
+           chaque fois.
+
+           ── Contre-tests ──
+
+           | | Défaut réintroduit | Ce qui rougit |
+           |---|---|---|
+           | CR | le sas ne pose plus `mt` | `mesures-navigateur` : l'écran ne se monte plus — 37 contrôles rouges, 4 verts |
+           | CS | la page demande encore l'ancien chemin | la construction elle-même : « un sas que rien n'atteint » |
+           | CT | `mt` ignore la langue de l'écran | `mesures-navigateur` : la langue change, les libellés de la barre ne suivent pas |
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **1 sur 9** — 1 720 lignes sur 6 422 |
+           | Restent | `mes-instances.js` (67), puis les sept qui portent l'interface |
+           | Contrôles de CARE | 84 HTTP, 40 + 21 de navigateur — inchangés, tous verts |
+           | Campagne | **1 882, 34 suites**, 0 rouge — inchangée : la conversion n’ajoute ni ne retire aucun contrôle |

@@ -14,6 +14,7 @@ public/modules/*/app/
 public/shared/app/
 public/app/
 public/modules/planification/app/
+public/modules/mesures/app/
 .DS_Store
 *.log
 *.tmp

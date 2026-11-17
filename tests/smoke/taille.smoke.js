@@ -2507,7 +2507,10 @@ module.exports = async function tailleSmoke() {
     // fichiers périmés à son premier passage. Cette suite grandit par contrôles
     // unitaires de règles : c'est son office, et elle n'a de chaîne à partager
     // avec personne.
-    'unitaires.smoke.js': 1997,
+    // 1 997 → 2 106 : les deux contrôles du nommeur qui reconnaît une action de
+    // barre sous la forme que la construction réimprime (n° 5.f.117). Sans eux,
+    // un geste pressé de CARE passait pour non exercé dès sa conversion.
+    'unitaires.smoke.js': 2106,
     'ramp.smoke.js': 1447,
     // Franchi le 11 novembre 2026, au tour suivant la pose de ce garde : la
     // ronde de portée des notifications l'a mené de 995 à 1 174 lignes, et le

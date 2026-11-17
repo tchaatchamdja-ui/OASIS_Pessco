@@ -1,5 +1,5 @@
 {
- "releve": "2026-11-16",
+ "releve": "2026-11-17",
  "gestesNommes": 89,
  "occurrences": 144,
  "exerces": 86,
@@ -447,24 +447,6 @@
    "evenement": "click",
    "source": "mesOuvrirTableMesures('${c.id}')",
    "nom": "mesOuvrirTableMesures",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-instances.js",
-   "ligne": 52,
-   "forme": "action de barre",
-   "evenement": "change",
-   "nom": "mesAppliquerInstance",
-   "source": "(v) => mesAppliquerInstance(v)",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-instances.js",
-   "ligne": 58,
-   "forme": "action de barre",
-   "evenement": "click",
-   "nom": "{ window.location.href = '/modules/droits/index.",
-   "source": "() => { window.location.href = '/modules/droits/index.html?module=CARE'; }",
    "exerce": true
   },
   {
@@ -1310,6 +1292,24 @@
    "evenement": "click",
    "source": "mesConfirmationRepondre(true)",
    "nom": "mesConfirmationRepondre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/globales/mes-instances.ts",
+   "ligne": 71,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "mesAppliquerInstance",
+   "source": "(v) => mesAppliquerInstance(v)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/globales/mes-instances.ts",
+   "ligne": 77,
+   "forme": "action de barre",
+   "evenement": "click",
+   "nom": "{ window.location.href = '/modules/droits/index.",
+   "source": "() => { window.location.href = '/modules/droits/index.html?module=CARE'; }",
    "exerce": true
   }
  ]

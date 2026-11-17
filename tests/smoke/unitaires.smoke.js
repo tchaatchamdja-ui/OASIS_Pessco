@@ -1260,6 +1260,21 @@ function nommeurDeGestes() {
     /formeDeFleche\(fleche, /.test(source)
     && /formeDeFleche\(String\(v\.source/.test(source),
     'la source et le mouchard doivent passer par formeDeFleche');
+
+  // ── Une action de barre écrite en TypeScript, et la même servie ──
+  //
+  // Son nom est son corps tel qu'écrit, et esbuild le réimprime : sans seconde
+  // clé, « Gestion des Droits » de CARE comptait pour non exercé une fois son
+  // fichier converti (n° 5.f.117).
+  const ecriteBarre = "() => { window.location.href = '/modules/droits/index.html?module=CARE'; }";
+  const servieBarre = '() => {\n          window.location.href = "/modules/droits/index.html?module=CARE";\n        }';
+  verifier('nommeur : une action de barre écrite et la même servie par esbuild ont une seule clé',
+    fleche(ecriteBarre, 'ts') !== null && fleche(ecriteBarre, 'ts') === fleche(servieBarre),
+    `${fleche(ecriteBarre, 'ts')} · ${fleche(servieBarre)}`);
+  verifier('nommeur : une action de barre se rapproche aussi par son texte mis en forme, des deux côtés',
+    /barreFormes\.has\(formeDeFleche\(g\.source/.test(source)
+    && /\(exerces\.barre \|\| \[\]\)\.map\(\(src\) => formeDeFleche\(String\(src\)\)\)/.test(source),
+    'la source et le mouchard doivent passer par formeDeFleche');
 }
 
 function sondeDesSauvegardes() {

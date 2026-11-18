@@ -659,206 +659,6 @@
    "exerce": null
   },
   {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 111,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesVoirEtape('${_mesAttr(e.cle)}')",
-   "nom": "mesVoirEtape",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 159,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesPrendreDecision('${d.cle}')",
-   "nom": "mesPrendreDecision",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 173,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "this.parentElement.classList.toggle('ouverte')",
-   "nom": "this.parentElement.classList.toggle",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 265,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesRetirerPieceTraitement(${i})",
-   "nom": "mesRetirerPieceTraitement",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 279,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesTeleverserPieceTraitement(this.files)",
-   "nom": "mesTeleverserPieceTraitement",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 281,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "document.getElementById('mesTrtFichier').click()",
-   "nom": "document.getElementById",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 344,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${geste}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "sans nom",
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 388,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesInvRetirerPiece('${cle}',${i})",
-   "nom": "mesInvRetirerPiece",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 392,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesInvTeleverser('${cle}', this.files)",
-   "nom": "mesInvTeleverser",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 394,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "document.getElementById('mesInvFichier_${cle}').click()",
-   "nom": "document.getElementById",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 422,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesInvRetirerEnqueteur(${i})",
-   "nom": "mesInvRetirerEnqueteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 434,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesInvAjouterEnqueteur()",
-   "nom": "mesInvAjouterEnqueteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 449,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesInvRetirerTravail(${i})",
-   "nom": "mesInvRetirerTravail",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 454,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesInvMajTitre(${i}, this.value)",
-   "nom": "mesInvMajTitre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 475,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesInvAjouterTravail()",
-   "nom": "mesInvAjouterTravail",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 620,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSoumettreInvestigation()",
-   "nom": "mesSoumettreInvestigation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 644,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesConfirmationRepondre(false)",
-   "nom": "mesConfirmationRepondre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 645,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 649,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesConfirmationRepondre(false)",
-   "nom": "mesConfirmationRepondre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 662,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesConfirmationCocher(this.checked)",
-   "nom": "mesConfirmationCocher",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 668,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesConfirmationRepondre(false)",
-   "nom": "mesConfirmationRepondre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-traitement.js",
-   "ligne": 671,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesConfirmationRepondre(true)",
-   "nom": "mesConfirmationRepondre",
-   "exerce": true
-  },
-  {
    "fichier": "frontend/mesures/etats.ts",
    "ligne": 301,
    "forme": "en ligne",
@@ -922,6 +722,69 @@
    "exerce": true
   },
   {
+   "fichier": "frontend/mesures/fil-commun.ts",
+   "ligne": 121,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "this.parentElement.classList.toggle('ouverte')",
+   "nom": "this.parentElement.classList.toggle",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/fil-commun.ts",
+   "ligne": 170,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesConfirmationRepondre(false)",
+   "nom": "mesConfirmationRepondre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/fil-commun.ts",
+   "ligne": 171,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/fil-commun.ts",
+   "ligne": 175,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesConfirmationRepondre(false)",
+   "nom": "mesConfirmationRepondre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/fil-commun.ts",
+   "ligne": 188,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesConfirmationCocher(this.checked)",
+   "nom": "mesConfirmationCocher",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/fil-commun.ts",
+   "ligne": 194,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesConfirmationRepondre(false)",
+   "nom": "mesConfirmationRepondre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/fil-commun.ts",
+   "ligne": 197,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesConfirmationRepondre(true)",
+   "nom": "mesConfirmationRepondre",
+   "exerce": true
+  },
+  {
    "fichier": "frontend/mesures/globales/mes-instances.ts",
    "ligne": 71,
    "forme": "action de barre",
@@ -937,6 +800,87 @@
    "evenement": "click",
    "nom": "{ window.location.href = '/modules/droits/index.",
    "source": "() => { window.location.href = '/modules/droits/index.html?module=CARE'; }",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/investigation.ts",
+   "ligne": 32,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesInvRetirerPiece('${cle}',${i})",
+   "nom": "mesInvRetirerPiece",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/investigation.ts",
+   "ligne": 36,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesInvTeleverser('${cle}', this.files)",
+   "nom": "mesInvTeleverser",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/investigation.ts",
+   "ligne": 38,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "document.getElementById('mesInvFichier_${cle}').click()",
+   "nom": "document.getElementById",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/investigation.ts",
+   "ligne": 66,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesInvRetirerEnqueteur(${i})",
+   "nom": "mesInvRetirerEnqueteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/investigation.ts",
+   "ligne": 78,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesInvAjouterEnqueteur()",
+   "nom": "mesInvAjouterEnqueteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/investigation.ts",
+   "ligne": 93,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesInvRetirerTravail(${i})",
+   "nom": "mesInvRetirerTravail",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/investigation.ts",
+   "ligne": 98,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesInvMajTitre(${i}, this.value)",
+   "nom": "mesInvMajTitre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/investigation.ts",
+   "ligne": 119,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesInvAjouterTravail()",
+   "nom": "mesInvAjouterTravail",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/investigation.ts",
+   "ligne": 269,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSoumettreInvestigation()",
+   "nom": "mesSoumettreInvestigation",
    "exerce": true
   },
   {
@@ -1258,7 +1202,7 @@
   },
   {
    "fichier": "frontend/mesures/suivi.ts",
-   "ligne": 98,
+   "ligne": 99,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesSuiviRetirerPiece(${i}, ${k})",
@@ -1267,7 +1211,7 @@
   },
   {
    "fichier": "frontend/mesures/suivi.ts",
-   "ligne": 147,
+   "ligne": 148,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSuiviRecours(${i}, this.checked)",
@@ -1276,7 +1220,7 @@
   },
   {
    "fichier": "frontend/mesures/suivi.ts",
-   "ligne": 152,
+   "ligne": 153,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSuiviStatut(${i}, this.value)",
@@ -1285,7 +1229,7 @@
   },
   {
    "fichier": "frontend/mesures/suivi.ts",
-   "ligne": 163,
+   "ligne": 164,
    "forme": "en ligne",
    "evenement": "change",
    "source": "mesSuiviTeleverser(${i}, this.files)",
@@ -1294,7 +1238,7 @@
   },
   {
    "fichier": "frontend/mesures/suivi.ts",
-   "ligne": 165,
+   "ligne": 166,
    "forme": "en ligne",
    "evenement": "click",
    "source": "document.getElementById('mesSuiviFichier_${i}').click()",
@@ -1303,7 +1247,63 @@
   },
   {
    "fichier": "frontend/mesures/suivi.ts",
-   "ligne": 313,
+   "ligne": 314,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${geste}",
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "sans nom",
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/mesures/traitement.ts",
+   "ligne": 73,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesVoirEtape('${esc(e.cle)}')",
+   "nom": "mesVoirEtape",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/traitement.ts",
+   "ligne": 121,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesPrendreDecision('${d.cle}')",
+   "nom": "mesPrendreDecision",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/traitement.ts",
+   "ligne": 208,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesRetirerPieceTraitement(${i})",
+   "nom": "mesRetirerPieceTraitement",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/traitement.ts",
+   "ligne": 222,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesTeleverserPieceTraitement(this.files)",
+   "nom": "mesTeleverserPieceTraitement",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/traitement.ts",
+   "ligne": 224,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "document.getElementById('mesTrtFichier').click()",
+   "nom": "document.getElementById",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/traitement.ts",
+   "ligne": 287,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${geste}",

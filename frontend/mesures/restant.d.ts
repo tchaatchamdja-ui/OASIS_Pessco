@@ -101,8 +101,6 @@ declare global {
     mesBadgeStatutCare?: (cle: string | undefined) => string;
     /** `mes-app.js` — le libellé de l'origine d'une carence. */
     mesOrigine?: (code: string) => string;
-    /** `mes-traitement.js` — le nom d'une étape du traitement. */
-    mesNomEtape?: (cle: string) => string;
     /**
      * `mes-app.js` — les droits du compte sur le module, le chemin sûr d'une
      * pièce, le libellé d'un type de mesure. Quatre `const`, posés sur `window`
@@ -121,25 +119,14 @@ declare global {
     mesAfficherSlider?: (o?: { anime?: boolean }) => void;
     /** `mes-app.js` — relire `/mesures`, puis redessiner. */
     mesRechargerMesures?: () => Promise<void>;
-    /**
-     * `mes-traitement.js` — une section lettrée du volet. Un `const`, posé sur
-     * `window` pour l'étape du suivi (n° 5.f.120).
-     */
-    mesSection?: (lettre: string, titre: string, corps: string) => string;
-    /** `mes-traitement.js` — le dossier clos, ou classé. */
-    mesTraitementClos?: () => boolean;
-    /** `mes-traitement.js` — la fenêtre qui confirme un passage d'étape. */
-    mesConfirmerEtape?: (o: Record<string, unknown>) => Promise<boolean>;
     /** `mes-app.js` — la racine de l'API du module. */
     MES_API?: string;
-    /** `mes-traitement.js` — les décisions de la première étape, et leur nom. */
-    MES_DECISIONS?: { cle: string; [champ: string]: unknown }[];
-    mesNomDecision?: (cle: string) => string;
     /**
-     * `mes-traitement.js` — une ligne de fiche, libellé et valeur. Un `const`,
-     * posé sur `window` pour les mesures d'une carence (n° 5.f.121).
+     * `mes-qualification.js` — les actions de l'étape, et sa clôture. Le fil du
+     * traitement les lit **si elles existent** (`typeof … === 'function'`).
      */
-    mesLigneFiche?: (libelle: string, valeur: unknown) => string;
+    mesActionsQualification?: () => string;
+    mesQualClose?: () => boolean;
   }
 }
 

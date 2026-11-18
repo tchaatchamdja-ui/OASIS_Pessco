@@ -12,6 +12,7 @@
 // Converti à la lettre depuis `mes-suivi.js` : le balisage est rendu caractère
 // pour caractère, chaque requête part avec le même corps.
 import { etat, mt, requis } from './partage';
+import type { Confirmation } from './fil-commun';
 
 /** Une pièce jointe, telle que `/upload` la rend et que le suivi la garde. */
 interface PieceSuivi { nom?: string; path?: string; size?: number }
@@ -323,7 +324,7 @@ export function mesActionsSuivi(): string {
 
 // Les deux issues enregistrent d'abord ce qui est saisi : le serveur relit le
 // suivi pour vérifier qu'un recours a bien été coché.
-export async function mesSuiviIssue(chemin: string, confirmation: Record<string, unknown>, fait: string): Promise<void> {
+export async function mesSuiviIssue(chemin: string, confirmation: Confirmation, fait: string): Promise<void> {
   const E = etat();
   const c = E.carenceEnCours as { id: string } | null | undefined;
   if (!c) return;

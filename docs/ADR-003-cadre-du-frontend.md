@@ -866,7 +866,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
            | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **converti** — 13 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles, la coquille (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.109) ; plus aucun fichier en JavaScript ; l'état déclaré en un seul endroit, la façade `window.PL` retirée, une course des discussions corrigée (n° 5.f.110 à 5.f.112) |
-           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 86 exercés** — le plafond : aucun reste non exercé —, 3 indécidables — idem, 4 novembre 2026, repris le 16 novembre et mesuré par **deux** suites, `mesures-navigateur` et `mesures-gestes` (n° 5.f.114, 5.f.115) ; **en conversion** — 6 fichiers sur 9 : les libellés, la barre, les Paramètres, le menu « États », le Suivi, les états exportables (n° 5.f.116 à 5.f.121) |
+           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 86 exercés** — le plafond : aucun reste non exercé —, 3 indécidables — idem, 4 novembre 2026, repris le 16 novembre et mesuré par **deux** suites, `mesures-navigateur` et `mesures-gestes` (n° 5.f.114, 5.f.115) ; **en conversion** — 7 fichiers sur 9 : les libellés, la barre, les Paramètres, le menu « États », le Suivi, les états exportables, le traitement (n° 5.f.116 à 5.f.122) |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
            | SURV (`execution`) | 24 162 | **323 gestes nommés, 320 exercés** (99 %) — tous les décidables —, 512 occurrences sur 518 dont 6 indécidables — mesuré par **treize** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers`, `surv-barre`, `surv-constatations`, `surv-prestataire` et `surv-fenetres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.98) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 59 sur 60, les activités à 66 sur 67 — leurs restes indécidables —, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. **Plus aucun nom décidable n'est sans ronde.** `execViewFNC` et `execAccuserReception`, qu'on disait ici hors de portée — offerts au seul compte qui ne gouverne pas —, le sont en vue Prestataire, que la barre offre au super-administrateur (n° 5.f.97, qui corrige cette phrase). `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). La remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire sont exercés, `exec-dashboard.js` 29 sur 29 (n° 5.f.96) ; l'accusé de réception et la consultation d'une constatation, du côté de l'organisme, le sont aussi — et le dernier « non exercé », `e`, était un paramètre que le relevé lisait comme un nom (n° 5.f.97). Les fonctions fléchées posées en propriété, que le relevé laissait dehors — seize, et non sept —, sont nommées par leur texte des deux côtés ; les cinq renoncements qu'aucune suite ne pressait le sont par `surv-fenetres` (n° 5.f.98). |
@@ -14853,6 +14853,58 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | | |
            |---|---|
            | Fichiers convertis | **6 sur 9** — 3 126 lignes sur 6 422 |
+           | Relevé des gestes | **86 sur 89**, inchangé — seules les adresses des gestes changent |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
+           | Campagne | entière au terme des six conversions (n° 5.f.123) |
+
+       5.f.122 [x] **CARE en TypeScript, septième fichier : le traitement —
+           et cinq `const` qu'on lisait d'ailleurs par leur nom** — fait le
+           18 novembre 2026. `mes-traitement.js` (836 lignes) : le fil
+           d'avancement, l'étape « Suite à donner », l'étape « Investigations »,
+           la fenêtre qui confirme un passage d'étape.
+
+           ── La surface, et ce que la mesure a changé ──
+
+           Cinquante-sept noms ; quarante-deux sur `window`. Quinze `const`
+           n'y étaient pas, et **cinq sont lus ailleurs par leur nom nu** — ce
+           qu'un script classique permet à un autre script classique, et qu'un
+           module interdit : `mesRangAtteint` par la qualification,
+           `mesEtapeCourante` et `mesMajTraitement` par le volet de
+           `mes-app.js`, `mesSection` et `mesLigneFiche` par la
+           qualification, le suivi et les états. Le sas les pose — la leçon de
+           `CURRENT_LANG` (n° 5.c.1). Les deux poses provisoires des n° 5.f.120
+           et 5.f.121 disparaissent avec le fichier qui les portait.
+
+           Les dix autres partent, dont `MES_CONFIRMATION`, la promesse de la
+           fenêtre en attente : un `let` du module, que seules ses deux
+           fonctions lisent et écrivent.
+
+           Les `typeof mesActionsQualification === 'function'` deviennent des
+           lectures sur `window` : même réponse, puisque aucun `const` ne
+           masque le nom.
+
+           | | |
+           |---|---|
+           | Scénarios comparés | **74**, onglet neuf — **0 écart** : vingt états du traitement, la navigation dans le fil, onze gestes d'investigation, les dépôts, la fenêtre de confirmation ouverte, cochée, décochée, acceptée et refusée, les quatre décisions, les refus du serveur à chaque requête |
+           | Mutations du paquet | **10, toutes mordantes** — dont le focus posé sur la case de la fenêtre, que la comparaison ne relevait d'abord qu'après sa fermeture |
+           | Différence de surface | dix noms partis, cinq posés — déclarés |
+
+           ── Trois fichiers, et non un ──
+
+           Converti, le module faisait 879 lignes ; le garde de taille refuse un
+           fichier du frontend au-delà de 600. Il est partagé en trois, **sans
+           cycle** : `fil-commun.ts` (types, aides, étapes, section lettrée,
+           clôture, fenêtre de confirmation — 220 lignes), que les deux autres
+           importent ; `investigation.ts` (313), qui l'importe ;
+           `traitement.ts` (381 — le fil, la suite à donner, la barre), qui
+           importe les deux. Le code est déplacé, non réécrit : la comparaison
+           rejouée sur le paquet recomposé rend **0 écart**, à la même surface.
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **7 sur 9** — 3 962 lignes sur 6 422 |
            | Relevé des gestes | **86 sur 89**, inchangé — seules les adresses des gestes changent |
            | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
            | Campagne | entière au terme des six conversions (n° 5.f.123) |

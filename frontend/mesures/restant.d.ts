@@ -121,12 +121,6 @@ declare global {
     mesRechargerMesures?: () => Promise<void>;
     /** `mes-app.js` — la racine de l'API du module. */
     MES_API?: string;
-    /**
-     * `mes-qualification.js` — les actions de l'étape, et sa clôture. Le fil du
-     * traitement les lit **si elles existent** (`typeof … === 'function'`).
-     */
-    mesActionsQualification?: () => string;
-    mesQualClose?: () => boolean;
   }
 }
 

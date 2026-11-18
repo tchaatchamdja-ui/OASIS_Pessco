@@ -92,6 +92,19 @@ declare global {
     mesLibelleCategorie?: (code: string | undefined) => string;
     mesTypesInvestigation?: () => ElementParametreCare[];
     mesComites?: () => ElementParametreCare[];
+    /**
+     * `mes-app.js` — le jour, la date courte, le badge du statut d'une carence.
+     * Trois `const`, posés sur `window` pour le menu « États » (n° 5.f.119).
+     */
+    mesJour?: () => string;
+    mesDate?: (v: unknown) => string;
+    mesBadgeStatutCare?: (cle: string | undefined) => string;
+    /** `mes-app.js` — le libellé de l'origine d'une carence. */
+    mesOrigine?: (code: string) => string;
+    /** `mes-etats.js` — les icônes de l'historique et des exports. */
+    MES_ICONES_ETAT?: Record<string, string>;
+    /** `mes-traitement.js` — le nom d'une étape du traitement. */
+    mesNomEtape?: (cle: string) => string;
   }
 }
 

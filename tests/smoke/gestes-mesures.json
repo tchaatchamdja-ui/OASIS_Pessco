@@ -304,7 +304,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1287,
+   "ligne": 1289,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -313,7 +313,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1291,
+   "ligne": 1293,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -322,7 +322,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1313,
+   "ligne": 1315,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'ouverture\\')",
@@ -331,7 +331,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1315,
+   "ligne": 1317,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai('delai')",
@@ -340,7 +340,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1317,
+   "ligne": 1319,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'echeance\\')",
@@ -349,7 +349,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1322,
+   "ligne": 1324,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -358,7 +358,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1323,
+   "ligne": 1325,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesEnregistrerConstat()",
@@ -367,7 +367,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1441,
+   "ligne": 1443,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${action}('${s.cle}')",
@@ -447,42 +447,6 @@
    "evenement": "click",
    "source": "mesOuvrirTableMesures('${c.id}')",
    "nom": "mesOuvrirTableMesures",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-page-etats.js",
-   "ligne": 105,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesMesureDepuisConstatation('${id}')",
-   "nom": "mesMesureDepuisConstatation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-page-etats.js",
-   "ligne": 107,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesHistorique('${id}')",
-   "nom": "mesHistorique",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-page-etats.js",
-   "ligne": 110,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "if(!event.target.closest('button'))mesMesureDepuisConstatation('${c.id}')",
-   "nom": "mesMesureDepuisConstatation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-page-etats.js",
-   "ligne": 226,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesEtatsVoir('${o.cle}')",
-   "nom": "mesEtatsVoir",
    "exerce": true
   },
   {
@@ -1029,6 +993,42 @@
    "evenement": "click",
    "nom": "{ window.location.href = '/modules/droits/index.",
    "source": "() => { window.location.href = '/modules/droits/index.html?module=CARE'; }",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/page-etats.ts",
+   "ligne": 144,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesMesureDepuisConstatation('${id}')",
+   "nom": "mesMesureDepuisConstatation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/page-etats.ts",
+   "ligne": 146,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesHistorique('${id}')",
+   "nom": "mesHistorique",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/page-etats.ts",
+   "ligne": 149,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "if(!event.target.closest('button'))mesMesureDepuisConstatation('${c.id}')",
+   "nom": "mesMesureDepuisConstatation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/page-etats.ts",
+   "ligne": 265,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesEtatsVoir('${o.cle}')",
+   "nom": "mesEtatsVoir",
    "exerce": true
   },
   {

@@ -1233,6 +1233,8 @@ Object.assign(window, {
     // Des `const` du premier niveau, que l'écran des Paramètres — converti, donc
     // un module — ne peut pas lire par leur nom (ADR-003, n° 5.f.118).
     mesCategories, mesTypes, mesTypesDe, mesLibelleCategorie,
+    // De même pour le menu « États » (n° 5.f.119).
+    mesJour, mesDate, mesBadgeStatutCare,
 });
 
 // ══════════════════════════════════════

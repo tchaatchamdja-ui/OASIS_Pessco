@@ -833,4 +833,7 @@ Object.assign(window, {
     mesInvTeleverser, mesInvRetirerPiece, mesEnregistrerInvestigation,
     mesActionsInvestigation, mesSoumettreInvestigation, mesRenvoisInvestigation,
     mesTraitementClos, mesTraitementModifiable,
+    // Un `const`, que l'étape du suivi — convertie, donc un module — ne peut
+    // pas lire par son nom (ADR-003, n° 5.f.120).
+    mesSection,
 });

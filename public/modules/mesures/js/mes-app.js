@@ -1235,6 +1235,8 @@ Object.assign(window, {
     mesCategories, mesTypes, mesTypesDe, mesLibelleCategorie,
     // De même pour le menu « États » (n° 5.f.119).
     mesJour, mesDate, mesBadgeStatutCare,
+    // Et pour l'étape du suivi (n° 5.f.120).
+    mesPeutEcrire, mesPeutDecider, _mesChemin, mesLibelleType,
 });
 
 // ══════════════════════════════════════

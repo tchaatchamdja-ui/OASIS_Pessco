@@ -304,7 +304,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1289,
+   "ligne": 1291,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -313,7 +313,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1293,
+   "ligne": 1295,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -322,7 +322,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1315,
+   "ligne": 1317,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'ouverture\\')",
@@ -331,7 +331,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1317,
+   "ligne": 1319,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai('delai')",
@@ -340,7 +340,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1319,
+   "ligne": 1321,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'echeance\\')",
@@ -349,7 +349,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1324,
+   "ligne": 1326,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -358,7 +358,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1325,
+   "ligne": 1327,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesEnregistrerConstat()",
@@ -367,7 +367,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1443,
+   "ligne": 1445,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${action}('${s.cle}')",
@@ -713,62 +713,6 @@
   {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
    "ligne": 885,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${geste}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "sans nom",
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-suivi.js",
-   "ligne": 59,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSuiviRetirerPiece(${i}, ${k})",
-   "nom": "mesSuiviRetirerPiece",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-suivi.js",
-   "ligne": 108,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSuiviRecours(${i}, this.checked)",
-   "nom": "mesSuiviRecours",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-suivi.js",
-   "ligne": 113,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSuiviStatut(${i}, this.value)",
-   "nom": "mesSuiviStatut",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-suivi.js",
-   "ligne": 124,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSuiviTeleverser(${i}, this.files)",
-   "nom": "mesSuiviTeleverser",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-suivi.js",
-   "ligne": 126,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "document.getElementById('mesSuiviFichier_${i}').click()",
-   "nom": "document.getElementById",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-suivi.js",
-   "ligne": 269,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${geste}",
@@ -1311,6 +1255,62 @@
    "source": "mesEnregistrerType()",
    "nom": "mesEnregistrerType",
    "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/suivi.ts",
+   "ligne": 98,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSuiviRetirerPiece(${i}, ${k})",
+   "nom": "mesSuiviRetirerPiece",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/suivi.ts",
+   "ligne": 147,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSuiviRecours(${i}, this.checked)",
+   "nom": "mesSuiviRecours",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/suivi.ts",
+   "ligne": 152,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSuiviStatut(${i}, this.value)",
+   "nom": "mesSuiviStatut",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/suivi.ts",
+   "ligne": 163,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSuiviTeleverser(${i}, this.files)",
+   "nom": "mesSuiviTeleverser",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/suivi.ts",
+   "ligne": 165,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "document.getElementById('mesSuiviFichier_${i}').click()",
+   "nom": "document.getElementById",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/suivi.ts",
+   "ligne": 313,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${geste}",
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "sans nom",
+   "exerce": null
   }
  ]
 }

@@ -105,6 +105,33 @@ declare global {
     MES_ICONES_ETAT?: Record<string, string>;
     /** `mes-traitement.js` — le nom d'une étape du traitement. */
     mesNomEtape?: (cle: string) => string;
+    /**
+     * `mes-app.js` — les droits du compte sur le module, le chemin sûr d'une
+     * pièce, le libellé d'un type de mesure. Quatre `const`, posés sur `window`
+     * pour l'étape du suivi (n° 5.f.120).
+     */
+    mesPeutEcrire?: () => boolean;
+    mesPeutDecider?: () => boolean;
+    _mesChemin?: (v: unknown) => string;
+    mesLibelleType?: (code: string | undefined) => string;
+    /** `mes-app.js` — les statuts du suivi d'une mesure, leurs libellés et leurs aides. */
+    MES_SUIVI?: Record<string, unknown>;
+    mesStatutSuivi?: (m: unknown) => string;
+    mesLibelleSuivi?: (cle: string) => string;
+    mesAideSuivi?: (cle: string) => string;
+    /** `mes-app.js` — redessiner le volet du dossier ouvert. */
+    mesAfficherSlider?: (o?: { anime?: boolean }) => void;
+    /** `mes-app.js` — relire `/mesures`, puis redessiner. */
+    mesRechargerMesures?: () => Promise<void>;
+    /**
+     * `mes-traitement.js` — une section lettrée du volet. Un `const`, posé sur
+     * `window` pour l'étape du suivi (n° 5.f.120).
+     */
+    mesSection?: (lettre: string, titre: string, corps: string) => string;
+    /** `mes-traitement.js` — le dossier clos, ou classé. */
+    mesTraitementClos?: () => boolean;
+    /** `mes-traitement.js` — la fenêtre qui confirme un passage d'étape. */
+    mesConfirmerEtape?: (o: Record<string, unknown>) => Promise<boolean>;
   }
 }
 

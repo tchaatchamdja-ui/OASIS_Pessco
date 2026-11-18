@@ -9,15 +9,20 @@
 // propre balisage — la page, ses sous-menus, ses quatre fenêtres. La dernière,
 // `mesAfficherModal`, n'est lue par personne : le fichier l'appelle lui-même.
 //
-// Le sas les pose **toutes**, une à une — un `Object.assign` ne vérifierait
+// Le sas les posait **toutes**, une à une — un `Object.assign` ne vérifierait
 // aucun type. Retirer un nom n'est pas l'objet d'une conversion, et la
 // photographie de la page le vérifie : même surface avant et après.
+//
+// ── La façade retirée (n° 5.f.125) ──
+//
+// `mesAfficherModal` n'est plus posé : personne ne le lit sur `window` — ni un
+// gestionnaire en ligne, ni un autre paquet, ni la page. Le sas ne pose plus
+// que les seize qu'on y lit.
 import {
-  mesAfficherModal, mesBasculerBarreParam, mesEnregistrerCategorie, mesEnregistrerComite,
-  mesEnregistrerType, mesEnregistrerTypeInvestigation, mesFermerModal, mesOuvrirCategorie,
-  mesOuvrirComite, mesOuvrirType, mesOuvrirTypeInvestigation, mesParamSousMenu,
-  mesRenderParametres, mesSupprimerCategorie, mesSupprimerComite, mesSupprimerType,
-  mesSupprimerTypeInvestigation,
+  mesBasculerBarreParam, mesEnregistrerCategorie, mesEnregistrerComite, mesEnregistrerType,
+  mesEnregistrerTypeInvestigation, mesFermerModal, mesOuvrirCategorie, mesOuvrirComite,
+  mesOuvrirType, mesOuvrirTypeInvestigation, mesParamSousMenu, mesRenderParametres,
+  mesSupprimerCategorie, mesSupprimerComite, mesSupprimerType, mesSupprimerTypeInvestigation,
 } from '../parametres';
 
 declare global {
@@ -26,7 +31,6 @@ declare global {
     mesRenderParametres?: typeof mesRenderParametres;
     mesParamSousMenu?: typeof mesParamSousMenu;
     mesBasculerBarreParam?: typeof mesBasculerBarreParam;
-    mesAfficherModal?: typeof mesAfficherModal;
     mesFermerModal?: typeof mesFermerModal;
     mesOuvrirCategorie?: typeof mesOuvrirCategorie;
     mesOuvrirType?: typeof mesOuvrirType;
@@ -46,7 +50,6 @@ declare global {
 window.mesRenderParametres = mesRenderParametres;
 window.mesParamSousMenu = mesParamSousMenu;
 window.mesBasculerBarreParam = mesBasculerBarreParam;
-window.mesAfficherModal = mesAfficherModal;
 window.mesFermerModal = mesFermerModal;
 window.mesOuvrirCategorie = mesOuvrirCategorie;
 window.mesOuvrirType = mesOuvrirType;

@@ -14,25 +14,24 @@
 // Lus ailleurs : `mesRenderEtats`, par l'aiguillage de `mes-app.js` ;
 // `mesEtatsVoir` par les onglets ; `MES_ETATS` par le `ontoggle` de chaque
 // volet d'étape — c'est **le même objet** que le module tient, posé une fois,
-// jamais remplacé. Le sas pose les onze, un à un.
+// jamais remplacé. Le sas posait les onze, un à un.
+//
+// ── La façade retirée (n° 5.f.125) ──
+//
+// Huit noms ne sont plus posés : personne ne les lit sur `window` — ni un
+// gestionnaire en ligne, ni un autre paquet, ni la page. Le sas ne pose plus
+// que les trois qu'on y lit. Les noms retirés : `MES_ETATS_ETAPES`,
+// `mesEtatsRepartir`, `mesEtatsDelai`, `mesEtatsTableau`,
+// `mesEtatsPanATraiter`, `mesEtatsPanEnCours`, `mesEtatsPanCloturees`,
+// `mesEtatsPanClassees`.
 import {
-  MES_ETATS, MES_ETATS_ETAPES, mesEtatsDelai, mesEtatsPanATraiter, mesEtatsPanClassees,
-  mesEtatsPanCloturees, mesEtatsPanEnCours, mesEtatsRepartir, mesEtatsTableau, mesEtatsVoir,
-  mesRenderEtats,
+  MES_ETATS, mesEtatsVoir, mesRenderEtats,
 } from '../page-etats';
 
 declare global {
   interface Window {
     /** Le sous-menu ouvert et les volets dépliés — lu par les `ontoggle`. */
     MES_ETATS?: typeof MES_ETATS;
-    MES_ETATS_ETAPES?: typeof MES_ETATS_ETAPES;
-    mesEtatsRepartir?: typeof mesEtatsRepartir;
-    mesEtatsDelai?: typeof mesEtatsDelai;
-    mesEtatsTableau?: typeof mesEtatsTableau;
-    mesEtatsPanATraiter?: typeof mesEtatsPanATraiter;
-    mesEtatsPanEnCours?: typeof mesEtatsPanEnCours;
-    mesEtatsPanCloturees?: typeof mesEtatsPanCloturees;
-    mesEtatsPanClassees?: typeof mesEtatsPanClassees;
     /** Le menu « États » — lu par l'aiguillage de `mes-app.js`. */
     mesRenderEtats?: typeof mesRenderEtats;
     mesEtatsVoir?: typeof mesEtatsVoir;
@@ -40,13 +39,5 @@ declare global {
 }
 
 window.MES_ETATS = MES_ETATS;
-window.MES_ETATS_ETAPES = MES_ETATS_ETAPES;
-window.mesEtatsRepartir = mesEtatsRepartir;
-window.mesEtatsDelai = mesEtatsDelai;
-window.mesEtatsTableau = mesEtatsTableau;
-window.mesEtatsPanATraiter = mesEtatsPanATraiter;
-window.mesEtatsPanEnCours = mesEtatsPanEnCours;
-window.mesEtatsPanCloturees = mesEtatsPanCloturees;
-window.mesEtatsPanClassees = mesEtatsPanClassees;
 window.mesRenderEtats = mesRenderEtats;
 window.mesEtatsVoir = mesEtatsVoir;

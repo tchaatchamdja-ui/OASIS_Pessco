@@ -17,65 +17,56 @@
 // sont lus par personne : ils quittent la portée globale, et c'est la
 // différence déclarée.
 //
-// Le sas pose les cinquante, un à un, depuis les quatre parties de l'étape. `mesActionsQualification` et
+// Le sas posait les cinquante, un à un, depuis les quatre parties de l'étape. `mesActionsQualification` et
 // `mesQualClose` quittent la frontière (`restant.d.ts`) : c'est lui qui les
 // déclare désormais.
+//
+// ── La façade retirée (n° 5.f.125) ──
+//
+// Dix-huit noms ne sont plus posés : personne ne les lit sur `window` — ni un
+// gestionnaire en ligne, ni un autre paquet, ni la page. Le sas ne pose plus
+// que les trente-deux qu'on y lit. Les noms retirés : `mesQualification`,
+// `mesQualModifiable`, `MES_QUAL_VOLETS`, `mesQualARecours`, `mesQualVolet`,
+// `mesQualOnglets`, `mesSectionRapportInvestigation`, `mesSectionInstance`,
+// `mesSectionQualification`, `mesQualVersionPrecedente`,
+// `mesSectionMesuresArretees`, `mesBlocRecours`, `mesSectionRecours`,
+// `mesCollecterRecours`, `mesCollecterQualification`, `mesQualModifier`,
+// `mesAjouterDuree`, `mesQualIssue`.
 import {
-  MES_QUAL_VOLETS, mesCollecterQualification, mesCollecterRecours, mesMajQualification,
-  mesQualARecours, mesQualClose, mesQualification, mesQualModifiable, mesQualModifier,
-  mesQualVolet,
+  mesMajQualification, mesQualClose,
 } from '../qualification-commun';
 import {
-  mesBlocRecours, mesRecoursAjouterMembre, mesRecoursDecision, mesRecoursRetirerMembre,
-  mesRecoursRetirerPiece, mesRecoursTeleverser, mesSectionRecours,
+  mesRecoursAjouterMembre, mesRecoursDecision, mesRecoursRetirerMembre, mesRecoursRetirerPiece,
+  mesRecoursTeleverser,
 } from '../recours';
 import {
-  mesAjouterDuree, mesDatesSanction, mesQualAjouterMesure, mesQualCategorieMesure,
-  mesQualDureeVersTerme, mesQualPorteeMesure, mesQualRetirerMesure, mesQualRetirerPiece,
-  mesQualSuiviRequis, mesQualTeleverser, mesQualTermeVersDuree, mesQualVersionPrecedente,
-  mesSectionMesuresArretees,
+  mesDatesSanction, mesQualAjouterMesure, mesQualCategorieMesure, mesQualDureeVersTerme,
+  mesQualPorteeMesure, mesQualRetirerMesure, mesQualRetirerPiece, mesQualSuiviRequis,
+  mesQualTeleverser, mesQualTermeVersDuree,
 } from '../mesures-arretees';
 import {
-  mesActionsQualification, mesEnregistrerQualification, mesQualAjouterMembre,
-  mesQualAjouterReunion, mesQualBasculerInfraction, mesQualBasculerNonInfraction,
-  mesQualBasculerRenvoi, mesQualClasser, mesQualCloturer, mesQualCorps, mesQualIssue,
-  mesQualOnglets, mesQualRenvoyer, mesQualRetirerMembre, mesQualRetirerReunion, mesQualSuivi,
-  mesQualVoirVolet, mesSectionInstance, mesSectionQualification, mesSectionRapportInvestigation,
+  mesActionsQualification, mesEnregistrerQualification, mesQualAjouterMembre, mesQualAjouterReunion,
+  mesQualBasculerInfraction, mesQualBasculerNonInfraction, mesQualBasculerRenvoi, mesQualClasser,
+  mesQualCloturer, mesQualCorps, mesQualRenvoyer, mesQualRetirerMembre, mesQualRetirerReunion,
+  mesQualSuivi, mesQualVoirVolet,
 } from '../qualification';
 
 declare global {
   interface Window {
-    mesQualification?: typeof mesQualification;
     mesQualClose?: typeof mesQualClose;
-    mesQualModifiable?: typeof mesQualModifiable;
-    MES_QUAL_VOLETS?: typeof MES_QUAL_VOLETS;
-    mesQualARecours?: typeof mesQualARecours;
-    mesQualVolet?: typeof mesQualVolet;
     mesQualVoirVolet?: typeof mesQualVoirVolet;
-    mesQualOnglets?: typeof mesQualOnglets;
     mesQualCorps?: typeof mesQualCorps;
-    mesSectionRapportInvestigation?: typeof mesSectionRapportInvestigation;
-    mesSectionInstance?: typeof mesSectionInstance;
-    mesSectionQualification?: typeof mesSectionQualification;
-    mesQualVersionPrecedente?: typeof mesQualVersionPrecedente;
-    mesSectionMesuresArretees?: typeof mesSectionMesuresArretees;
-    mesBlocRecours?: typeof mesBlocRecours;
-    mesSectionRecours?: typeof mesSectionRecours;
-    mesCollecterRecours?: typeof mesCollecterRecours;
     mesRecoursAjouterMembre?: typeof mesRecoursAjouterMembre;
     mesRecoursRetirerMembre?: typeof mesRecoursRetirerMembre;
     mesRecoursRetirerPiece?: typeof mesRecoursRetirerPiece;
     mesRecoursDecision?: typeof mesRecoursDecision;
     mesRecoursTeleverser?: typeof mesRecoursTeleverser;
-    mesCollecterQualification?: typeof mesCollecterQualification;
     mesMajQualification?: typeof mesMajQualification;
-    mesQualModifier?: typeof mesQualModifier;
     mesQualAjouterMembre?: typeof mesQualAjouterMembre;
     mesQualRetirerMembre?: typeof mesQualRetirerMembre;
     mesQualAjouterReunion?: typeof mesQualAjouterReunion;
     mesQualRetirerReunion?: typeof mesQualRetirerReunion;
     mesQualAjouterMesure?: typeof mesQualAjouterMesure;
-    mesAjouterDuree?: typeof mesAjouterDuree;
     mesQualDureeVersTerme?: typeof mesQualDureeVersTerme;
     mesDatesSanction?: typeof mesDatesSanction;
     mesQualTermeVersDuree?: typeof mesQualTermeVersDuree;
@@ -89,7 +80,6 @@ declare global {
     mesQualCategorieMesure?: typeof mesQualCategorieMesure;
     mesQualTeleverser?: typeof mesQualTeleverser;
     mesActionsQualification?: typeof mesActionsQualification;
-    mesQualIssue?: typeof mesQualIssue;
     mesQualRenvoyer?: typeof mesQualRenvoyer;
     mesQualClasser?: typeof mesQualClasser;
     mesQualSuivi?: typeof mesQualSuivi;
@@ -98,37 +88,20 @@ declare global {
   }
 }
 
-window.mesQualification = mesQualification;
 window.mesQualClose = mesQualClose;
-window.mesQualModifiable = mesQualModifiable;
-window.MES_QUAL_VOLETS = MES_QUAL_VOLETS;
-window.mesQualARecours = mesQualARecours;
-window.mesQualVolet = mesQualVolet;
 window.mesQualVoirVolet = mesQualVoirVolet;
-window.mesQualOnglets = mesQualOnglets;
 window.mesQualCorps = mesQualCorps;
-window.mesSectionRapportInvestigation = mesSectionRapportInvestigation;
-window.mesSectionInstance = mesSectionInstance;
-window.mesSectionQualification = mesSectionQualification;
-window.mesQualVersionPrecedente = mesQualVersionPrecedente;
-window.mesSectionMesuresArretees = mesSectionMesuresArretees;
-window.mesBlocRecours = mesBlocRecours;
-window.mesSectionRecours = mesSectionRecours;
-window.mesCollecterRecours = mesCollecterRecours;
 window.mesRecoursAjouterMembre = mesRecoursAjouterMembre;
 window.mesRecoursRetirerMembre = mesRecoursRetirerMembre;
 window.mesRecoursRetirerPiece = mesRecoursRetirerPiece;
 window.mesRecoursDecision = mesRecoursDecision;
 window.mesRecoursTeleverser = mesRecoursTeleverser;
-window.mesCollecterQualification = mesCollecterQualification;
 window.mesMajQualification = mesMajQualification;
-window.mesQualModifier = mesQualModifier;
 window.mesQualAjouterMembre = mesQualAjouterMembre;
 window.mesQualRetirerMembre = mesQualRetirerMembre;
 window.mesQualAjouterReunion = mesQualAjouterReunion;
 window.mesQualRetirerReunion = mesQualRetirerReunion;
 window.mesQualAjouterMesure = mesQualAjouterMesure;
-window.mesAjouterDuree = mesAjouterDuree;
 window.mesQualDureeVersTerme = mesQualDureeVersTerme;
 window.mesDatesSanction = mesDatesSanction;
 window.mesQualTermeVersDuree = mesQualTermeVersDuree;
@@ -142,7 +115,6 @@ window.mesQualBasculerRenvoi = mesQualBasculerRenvoi;
 window.mesQualCategorieMesure = mesQualCategorieMesure;
 window.mesQualTeleverser = mesQualTeleverser;
 window.mesActionsQualification = mesActionsQualification;
-window.mesQualIssue = mesQualIssue;
 window.mesQualRenvoyer = mesQualRenvoyer;
 window.mesQualClasser = mesQualClasser;
 window.mesQualSuivi = mesQualSuivi;

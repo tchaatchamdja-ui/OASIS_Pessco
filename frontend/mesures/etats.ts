@@ -61,19 +61,20 @@ export const mesParametresMesures = (): string => {
 // l'épuiser — le rendu d'un PDF prend quelques secondes. Un lien n'a pas cette
 // fragilité, et la réponse porte « Content-Disposition: attachment », qui dit
 // au navigateur d'enregistrer plutôt que d'ouvrir.
-/** Les deux fabriques, par leur nom sur `window` — le seul qu'une liste puisse nommer. */
-type Fabrique = 'mesParametresCarences' | 'mesParametresMesures';
-export const MES_EXPORTS: Record<string, Fabrique | undefined> = {
-  constatations: 'mesParametresCarences',
-  mesures: 'mesParametresMesures',
+//
+// Chaque base nomme sa fabrique. Elle la nommait par une **chaîne**, cherchée
+// sur `window` : le module se relisait par la page, et ses deux fabriques n'y
+// étaient posées que pour lui (ADR-003, n° 5.f.125). La table porte désormais
+// les fonctions elles-mêmes.
+export const MES_EXPORTS: Record<string, (() => string) | undefined> = {
+  constatations: mesParametresCarences,
+  mesures: mesParametresMesures,
 };
 
 export function mesUrlExport(base: string, format: string): string {
-  // La fabrique se cherche sur `window`, par son nom : c'était déjà le cas. Une
-  // base inconnue ne nomme rien, et l'adresse part sans paramètres.
-  const nom = MES_EXPORTS[base];
-  const fabrique = nom ? window[nom] : undefined;
-  const requete = typeof fabrique === 'function' ? fabrique() : '';
+  // Une base inconnue ne nomme rien, et l'adresse part sans paramètres.
+  const fabrique = MES_EXPORTS[base];
+  const requete = fabrique ? fabrique() : '';
   return `${requis('MES_API')}/${base}/export.${format}${requete ? `?${requete}` : ''}`;
 }
 

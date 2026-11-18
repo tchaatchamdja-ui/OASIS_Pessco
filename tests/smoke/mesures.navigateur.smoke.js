@@ -630,11 +630,15 @@ module.exports = async function mesuresNavigateurSmoke(port) {
         // l'appelait et relevait une chaîne vide, qu'il prenait pour l'état de
         // l'écran. On relève donc ce que l'écran porte vraiment — l'étape
         // **regardée** reste vide, le fil s'ouvrant sur l'étape atteinte — et
-        // c'est `mesQualModifiable()`, elle exportée, qui atteste que l'étape
-        // courante est bien la qualification : elle est fausse dès que le rang
-        // atteint diffère.
+        // c'est la saisie ouverte qui atteste que l'étape courante est bien la
+        // qualification : `mesQualModifiable()` la ferme (`disabled`) dès que le
+        // rang atteint diffère. Le test lisait cette fonction sur `window` ; elle
+        // n'y est plus (n° 5.f.125), et l'écran dit la même chose.
         d.etapeVue = (S().etapeVue || '');
-        d.modifiable = window.mesQualModifiable ? window.mesQualModifiable() : null;
+        d.modifiable = (() => {
+          const c = document.getElementById('mesQualComite');
+          return c ? !c.disabled : null;
+        })();
         // Les sections de l'étape : la carence, le rapport, l'instance, la
         // qualification.
         d.instance = vu('#mesQualComite');

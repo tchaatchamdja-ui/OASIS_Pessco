@@ -20,25 +20,32 @@
 // `MES_CONFIRMATION` — ne sont lus par personne : ils quittent la portée
 // globale, et c'est la différence déclarée.
 //
-// Le sas pose les quarante-sept, un à un, depuis les trois parties du
+// Le sas posait les quarante-sept, un à un, depuis les trois parties du
 // traitement (`fil-commun.ts`, `investigation.ts`, `traitement.ts`).
+//
+// ── La façade retirée (n° 5.f.125) ──
+//
+// Huit noms ne sont plus posés : personne ne les lit sur `window` — ni un
+// gestionnaire en ligne, ni un autre paquet, ni la page. Le sas ne pose plus
+// que les trente-neuf qu'on y lit. Les noms retirés : `mesAideDecision`,
+// `mesEtapeInfo`, `mesEtatEtape`, `mesActionsEtape`, `mesPiecesHtml`,
+// `mesCollecterInvestigation`, `mesActionsInvestigation`,
+// `mesCollecterTraitement`.
 import {
-  MES_DECISIONS, MES_ETAPES, mesAideDecision, mesConfirmationCocher, mesConfirmationRepondre,
-  mesConfirmerEtape, mesEtapeCourante, mesLigneFiche, mesNomDecision, mesNomEtape, mesRangAtteint,
-  mesSection, mesTraitementClos, mesTraitementModifiable,
+  MES_DECISIONS, MES_ETAPES, mesConfirmationCocher, mesConfirmationRepondre, mesConfirmerEtape,
+  mesEtapeCourante, mesLigneFiche, mesNomDecision, mesNomEtape, mesRangAtteint, mesSection,
+  mesTraitementClos, mesTraitementModifiable,
 } from '../fil-commun';
 import {
-  mesActionsInvestigation, mesCollecterInvestigation, mesEnregistrerInvestigation,
-  mesInvAjouterEnqueteur, mesInvAjouterTravail, mesInvMajTitre, mesInvRetirerEnqueteur,
-  mesInvRetirerPiece, mesInvRetirerTravail, mesInvTeleverser, mesPiecesHtml,
+  mesEnregistrerInvestigation, mesInvAjouterEnqueteur, mesInvAjouterTravail, mesInvMajTitre,
+  mesInvRetirerEnqueteur, mesInvRetirerPiece, mesInvRetirerTravail, mesInvTeleverser,
   mesRenvoisInvestigation, mesSectionAutresElements, mesSectionEquipe, mesSectionRapport,
   mesSectionTravaux, mesSoumettreInvestigation,
 } from '../investigation';
 import {
-  mesActionsEtape, mesBarreInferieure, mesCollecterTraitement, mesEnregistrerTraitement,
-  mesEtapeInfo, mesEtatEtape, mesFilAvancement, mesMajTraitement, mesPrendreDecision,
-  mesRetirerPieceTraitement, mesSectionCarence, mesSectionDecision, mesSectionInformations,
-  mesSectionPac, mesTeleverserPieceTraitement, mesVoirEtape,
+  mesBarreInferieure, mesEnregistrerTraitement, mesFilAvancement, mesMajTraitement,
+  mesPrendreDecision, mesRetirerPieceTraitement, mesSectionCarence, mesSectionDecision,
+  mesSectionInformations, mesSectionPac, mesTeleverserPieceTraitement, mesVoirEtape,
 } from '../traitement';
 
 declare global {
@@ -47,14 +54,10 @@ declare global {
     mesNomEtape?: typeof mesNomEtape;
     MES_DECISIONS?: typeof MES_DECISIONS;
     mesNomDecision?: typeof mesNomDecision;
-    mesAideDecision?: typeof mesAideDecision;
     mesRangAtteint?: typeof mesRangAtteint;
     mesEtapeCourante?: typeof mesEtapeCourante;
     mesVoirEtape?: typeof mesVoirEtape;
-    mesEtapeInfo?: typeof mesEtapeInfo;
     mesFilAvancement?: typeof mesFilAvancement;
-    mesEtatEtape?: typeof mesEtatEtape;
-    mesActionsEtape?: typeof mesActionsEtape;
     mesSection?: typeof mesSection;
     mesLigneFiche?: typeof mesLigneFiche;
     mesSectionCarence?: typeof mesSectionCarence;
@@ -64,13 +67,11 @@ declare global {
     mesBarreInferieure?: typeof mesBarreInferieure;
     mesTraitementClos?: typeof mesTraitementClos;
     mesTraitementModifiable?: typeof mesTraitementModifiable;
-    mesPiecesHtml?: typeof mesPiecesHtml;
     mesRenvoisInvestigation?: typeof mesRenvoisInvestigation;
     mesSectionEquipe?: typeof mesSectionEquipe;
     mesSectionTravaux?: typeof mesSectionTravaux;
     mesSectionAutresElements?: typeof mesSectionAutresElements;
     mesSectionRapport?: typeof mesSectionRapport;
-    mesCollecterInvestigation?: typeof mesCollecterInvestigation;
     mesInvAjouterEnqueteur?: typeof mesInvAjouterEnqueteur;
     mesInvRetirerEnqueteur?: typeof mesInvRetirerEnqueteur;
     mesInvAjouterTravail?: typeof mesInvAjouterTravail;
@@ -78,13 +79,11 @@ declare global {
     mesInvMajTitre?: typeof mesInvMajTitre;
     mesInvRetirerPiece?: typeof mesInvRetirerPiece;
     mesInvTeleverser?: typeof mesInvTeleverser;
-    mesActionsInvestigation?: typeof mesActionsInvestigation;
     mesConfirmerEtape?: typeof mesConfirmerEtape;
     mesConfirmationCocher?: typeof mesConfirmationCocher;
     mesConfirmationRepondre?: typeof mesConfirmationRepondre;
     mesSoumettreInvestigation?: typeof mesSoumettreInvestigation;
     mesEnregistrerInvestigation?: typeof mesEnregistrerInvestigation;
-    mesCollecterTraitement?: typeof mesCollecterTraitement;
     mesMajTraitement?: typeof mesMajTraitement;
     mesRetirerPieceTraitement?: typeof mesRetirerPieceTraitement;
     mesTeleverserPieceTraitement?: typeof mesTeleverserPieceTraitement;
@@ -97,14 +96,10 @@ window.MES_ETAPES = MES_ETAPES;
 window.mesNomEtape = mesNomEtape;
 window.MES_DECISIONS = MES_DECISIONS;
 window.mesNomDecision = mesNomDecision;
-window.mesAideDecision = mesAideDecision;
 window.mesRangAtteint = mesRangAtteint;
 window.mesEtapeCourante = mesEtapeCourante;
 window.mesVoirEtape = mesVoirEtape;
-window.mesEtapeInfo = mesEtapeInfo;
 window.mesFilAvancement = mesFilAvancement;
-window.mesEtatEtape = mesEtatEtape;
-window.mesActionsEtape = mesActionsEtape;
 window.mesSection = mesSection;
 window.mesLigneFiche = mesLigneFiche;
 window.mesSectionCarence = mesSectionCarence;
@@ -114,13 +109,11 @@ window.mesSectionDecision = mesSectionDecision;
 window.mesBarreInferieure = mesBarreInferieure;
 window.mesTraitementClos = mesTraitementClos;
 window.mesTraitementModifiable = mesTraitementModifiable;
-window.mesPiecesHtml = mesPiecesHtml;
 window.mesRenvoisInvestigation = mesRenvoisInvestigation;
 window.mesSectionEquipe = mesSectionEquipe;
 window.mesSectionTravaux = mesSectionTravaux;
 window.mesSectionAutresElements = mesSectionAutresElements;
 window.mesSectionRapport = mesSectionRapport;
-window.mesCollecterInvestigation = mesCollecterInvestigation;
 window.mesInvAjouterEnqueteur = mesInvAjouterEnqueteur;
 window.mesInvRetirerEnqueteur = mesInvRetirerEnqueteur;
 window.mesInvAjouterTravail = mesInvAjouterTravail;
@@ -128,13 +121,11 @@ window.mesInvRetirerTravail = mesInvRetirerTravail;
 window.mesInvMajTitre = mesInvMajTitre;
 window.mesInvRetirerPiece = mesInvRetirerPiece;
 window.mesInvTeleverser = mesInvTeleverser;
-window.mesActionsInvestigation = mesActionsInvestigation;
 window.mesConfirmerEtape = mesConfirmerEtape;
 window.mesConfirmationCocher = mesConfirmationCocher;
 window.mesConfirmationRepondre = mesConfirmationRepondre;
 window.mesSoumettreInvestigation = mesSoumettreInvestigation;
 window.mesEnregistrerInvestigation = mesEnregistrerInvestigation;
-window.mesCollecterTraitement = mesCollecterTraitement;
 window.mesMajTraitement = mesMajTraitement;
 window.mesRetirerPieceTraitement = mesRetirerPieceTraitement;
 window.mesTeleverserPieceTraitement = mesTeleverserPieceTraitement;

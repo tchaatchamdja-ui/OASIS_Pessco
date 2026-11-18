@@ -1,5 +1,5 @@
 {
- "releve": "2026-11-17",
+ "releve": "2026-11-18",
  "gestesNommes": 89,
  "occurrences": 144,
  "exerces": 86,
@@ -304,7 +304,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1284,
+   "ligne": 1287,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -313,7 +313,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1288,
+   "ligne": 1291,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -322,7 +322,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1310,
+   "ligne": 1313,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'ouverture\\')",
@@ -331,7 +331,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1312,
+   "ligne": 1315,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai('delai')",
@@ -340,7 +340,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1314,
+   "ligne": 1317,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'echeance\\')",
@@ -349,7 +349,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1319,
+   "ligne": 1322,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -358,7 +358,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1320,
+   "ligne": 1323,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesEnregistrerConstat()",
@@ -367,7 +367,7 @@
   },
   {
    "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1438,
+   "ligne": 1441,
    "forme": "en ligne",
    "evenement": "click",
    "source": "${action}('${s.cle}')",
@@ -483,287 +483,6 @@
    "evenement": "click",
    "source": "mesEtatsVoir('${o.cle}')",
    "nom": "mesEtatsVoir",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 24,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesOuvrirCategorie('${c.id}')",
-   "nom": "mesOuvrirCategorie",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 26,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSupprimerCategorie('${c.id}')",
-   "nom": "mesSupprimerCategorie",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 35,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesOuvrirType('${t.id}')",
-   "nom": "mesOuvrirType",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 37,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSupprimerType('${t.id}')",
-   "nom": "mesSupprimerType",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 46,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesOuvrirTypeInvestigation('${t.id}')",
-   "nom": "mesOuvrirTypeInvestigation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 48,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSupprimerTypeInvestigation('${t.id}')",
-   "nom": "mesSupprimerTypeInvestigation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 57,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesOuvrirComite('${c.id}')",
-   "nom": "mesOuvrirComite",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 59,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSupprimerComite('${c.id}')",
-   "nom": "mesSupprimerComite",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 70,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${ouvrir}()",
-   "nom": "${}()",
-   "indecidable": true,
-   "raison": "sans nom",
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 100,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesParamSousMenu('${o.cle}')",
-   "nom": "mesParamSousMenu",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 112,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesBasculerBarreParam()",
-   "nom": "mesBasculerBarreParam",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 170,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 171,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 174,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 187,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 188,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesEnregistrerComite()",
-   "nom": "mesEnregistrerComite",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 196,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 197,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 200,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 211,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 212,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesEnregistrerTypeInvestigation()",
-   "nom": "mesEnregistrerTypeInvestigation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 220,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 221,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 224,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 235,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 236,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesEnregistrerCategorie()",
-   "nom": "mesEnregistrerCategorie",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 244,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 245,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 248,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 267,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerModal()",
-   "nom": "mesFermerModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-parametres.js",
-   "ligne": 268,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesEnregistrerType()",
-   "nom": "mesEnregistrerType",
    "exerce": true
   },
   {
@@ -1310,6 +1029,287 @@
    "evenement": "click",
    "nom": "{ window.location.href = '/modules/droits/index.",
    "source": "() => { window.location.href = '/modules/droits/index.html?module=CARE'; }",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 45,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesOuvrirCategorie('${c.id}')",
+   "nom": "mesOuvrirCategorie",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 47,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSupprimerCategorie('${c.id}')",
+   "nom": "mesSupprimerCategorie",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 56,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesOuvrirType('${t.id}')",
+   "nom": "mesOuvrirType",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 58,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSupprimerType('${t.id}')",
+   "nom": "mesSupprimerType",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 67,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesOuvrirTypeInvestigation('${t.id}')",
+   "nom": "mesOuvrirTypeInvestigation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 69,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSupprimerTypeInvestigation('${t.id}')",
+   "nom": "mesSupprimerTypeInvestigation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 78,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesOuvrirComite('${c.id}')",
+   "nom": "mesOuvrirComite",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 80,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSupprimerComite('${c.id}')",
+   "nom": "mesSupprimerComite",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 90,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${ouvrir}()",
+   "nom": "${}()",
+   "indecidable": true,
+   "raison": "sans nom",
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 121,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesParamSousMenu('${o.cle}')",
+   "nom": "mesParamSousMenu",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 133,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesBasculerBarreParam()",
+   "nom": "mesBasculerBarreParam",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 194,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 195,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 198,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 211,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 212,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesEnregistrerComite()",
+   "nom": "mesEnregistrerComite",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 220,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 221,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 224,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 235,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 236,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesEnregistrerTypeInvestigation()",
+   "nom": "mesEnregistrerTypeInvestigation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 244,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 245,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 248,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 259,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 260,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesEnregistrerCategorie()",
+   "nom": "mesEnregistrerCategorie",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 268,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 269,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 272,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 291,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerModal()",
+   "nom": "mesFermerModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/parametres.ts",
+   "ligne": 292,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesEnregistrerType()",
+   "nom": "mesEnregistrerType",
    "exerce": true
   }
  ]

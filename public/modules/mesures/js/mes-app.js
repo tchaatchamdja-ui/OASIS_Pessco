@@ -1230,6 +1230,9 @@ Object.assign(window, {
     mesSupprimerMesure, mesMesureDepuisConstatation, mesBoutonTraitement,
     mesTypesInvestigation, mesComites, mesRechargerParametres,
     mesFiltreCarence, mesOuvrirTableMesures,
+    // Des `const` du premier niveau, que l'écran des Paramètres — converti, donc
+    // un module — ne peut pas lire par leur nom (ADR-003, n° 5.f.118).
+    mesCategories, mesTypes, mesTypesDe, mesLibelleCategorie,
 });
 
 // ══════════════════════════════════════

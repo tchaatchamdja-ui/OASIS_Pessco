@@ -19,6 +19,29 @@ declare global {
     locale?: string;
   }
 
+  /** Une catégorie de mesure, telle que `/parametres` la rend. */
+  interface CategorieCare { id: string; code: string; libelle: string }
+  /** Un type de mesure, rattaché à sa catégorie par le code de celle-ci. */
+  interface TypeMesureCare { id: string; code?: string; libelle: string; categorie_code?: string }
+  /** Un type d'investigation ou un comité : un libellé, un code. */
+  interface ElementParametreCare { id: string; code?: string; libelle: string }
+
+  /** Ce que `/parametres` rend : les quatre listes, et ce que le compte y peut. */
+  interface ParametresCare {
+    modifiable?: boolean;
+    supprimable?: boolean;
+    categories?: CategorieCare[];
+    types?: TypeMesureCare[];
+    types_investigation?: ElementParametreCare[];
+    comites?: ElementParametreCare[];
+  }
+
+  /** Les données chargées de l'écran. Seules celles lues d'ici sont nommées. */
+  interface DonneesCare {
+    parametres: ParametresCare;
+    [nom: string]: unknown;
+  }
+
   /**
    * L'état de l'écran, tel que les fichiers convertis le lisent. Seuls les champs
    * lus d'ici sont nommés ; les fichiers en JavaScript en écrivent bien d'autres,
@@ -28,6 +51,17 @@ declare global {
     lang?: string;
     user?: { role?: string } | null;
     instances?: EtatInstanceCare;
+    data: DonneesCare;
+    /** Le sous-menu ouvert des Paramètres, et la bande repliée ou non. */
+    paramSousMenu?: string;
+    paramBarreRepliee?: boolean;
+    /** L'élément qu'une fenêtre des Paramètres modifie — `{}` pour un nouveau. */
+    categorieEnCours?: Partial<CategorieCare> | null;
+    typeEnCours?: Partial<TypeMesureCare> | null;
+    typeInvestigationEnCours?: Partial<ElementParametreCare> | null;
+    comiteEnCours?: Partial<ElementParametreCare> | null;
+    /** La constatation du volet de saisie — `mes-app.js` ; la fenêtre la referme. */
+    constatEnCours?: unknown;
     [champ: string]: unknown;
   }
 
@@ -41,6 +75,23 @@ declare global {
     mesApi?: (chemin: string, options?: RequestInit) => Promise<unknown>;
     /** `mes-app.js` — un message éphémère, par le toast du socle. */
     mesToast?: (message: string, type?: string) => unknown;
+    /** `mes-app.js` — les icônes de l'écran, par nom. */
+    MES_ICONS?: Record<string, string>;
+    /** `mes-app.js` — redessiner la page courante. */
+    mesRenderPage?: () => void;
+    /** `mes-app.js` — relire `/parametres`, puis redessiner. */
+    mesRechargerParametres?: () => Promise<void>;
+    /**
+     * `mes-app.js` — les listes du paramétrage. Les quatre premières étaient des
+     * `const` du premier niveau, invisibles à un module : `mes-app.js` les pose
+     * désormais sur `window` (n° 5.f.118).
+     */
+    mesCategories?: () => CategorieCare[];
+    mesTypes?: () => TypeMesureCare[];
+    mesTypesDe?: (categorie: string) => TypeMesureCare[];
+    mesLibelleCategorie?: (code: string | undefined) => string;
+    mesTypesInvestigation?: () => ElementParametreCare[];
+    mesComites?: () => ElementParametreCare[];
   }
 }
 

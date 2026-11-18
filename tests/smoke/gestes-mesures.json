@@ -387,69 +387,6 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/mesures/js/mes-etats.js",
-   "ligne": 243,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerHistorique()",
-   "nom": "mesFermerHistorique",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-etats.js",
-   "ligne": 244,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-etats.js",
-   "ligne": 248,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerHistorique()",
-   "nom": "mesFermerHistorique",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-etats.js",
-   "ligne": 328,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerHistorique()",
-   "nom": "mesFermerHistorique",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-etats.js",
-   "ligne": 329,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();",
-   "nom": "event.stopPropagation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-etats.js",
-   "ligne": 333,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerHistorique()",
-   "nom": "mesFermerHistorique",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-etats.js",
-   "ligne": 344,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesOuvrirTableMesures('${c.id}')",
-   "nom": "mesOuvrirTableMesures",
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/mesures/js/mes-qualification.js",
    "ligne": 71,
    "forme": "en ligne",
@@ -919,6 +856,69 @@
    "evenement": "click",
    "source": "mesConfirmationRepondre(true)",
    "nom": "mesConfirmationRepondre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/etats.ts",
+   "ligne": 301,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerHistorique()",
+   "nom": "mesFermerHistorique",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/etats.ts",
+   "ligne": 302,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/etats.ts",
+   "ligne": 306,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerHistorique()",
+   "nom": "mesFermerHistorique",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/etats.ts",
+   "ligne": 391,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerHistorique()",
+   "nom": "mesFermerHistorique",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/etats.ts",
+   "ligne": 392,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();",
+   "nom": "event.stopPropagation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/etats.ts",
+   "ligne": 396,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerHistorique()",
+   "nom": "mesFermerHistorique",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/etats.ts",
+   "ligne": 407,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesOuvrirTableMesures('${c.id}')",
+   "nom": "mesOuvrirTableMesures",
    "exerce": true
   },
   {

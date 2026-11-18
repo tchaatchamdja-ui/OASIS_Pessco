@@ -836,4 +836,6 @@ Object.assign(window, {
     // Un `const`, que l'étape du suivi — convertie, donc un module — ne peut
     // pas lire par son nom (ADR-003, n° 5.f.120).
     mesSection,
+    // Et la ligne de fiche, pour les mesures d'une carence (n° 5.f.121).
+    mesLigneFiche,
 });

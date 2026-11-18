@@ -101,8 +101,6 @@ declare global {
     mesBadgeStatutCare?: (cle: string | undefined) => string;
     /** `mes-app.js` — le libellé de l'origine d'une carence. */
     mesOrigine?: (code: string) => string;
-    /** `mes-etats.js` — les icônes de l'historique et des exports. */
-    MES_ICONES_ETAT?: Record<string, string>;
     /** `mes-traitement.js` — le nom d'une étape du traitement. */
     mesNomEtape?: (cle: string) => string;
     /**
@@ -132,6 +130,16 @@ declare global {
     mesTraitementClos?: () => boolean;
     /** `mes-traitement.js` — la fenêtre qui confirme un passage d'étape. */
     mesConfirmerEtape?: (o: Record<string, unknown>) => Promise<boolean>;
+    /** `mes-app.js` — la racine de l'API du module. */
+    MES_API?: string;
+    /** `mes-traitement.js` — les décisions de la première étape, et leur nom. */
+    MES_DECISIONS?: { cle: string; [champ: string]: unknown }[];
+    mesNomDecision?: (cle: string) => string;
+    /**
+     * `mes-traitement.js` — une ligne de fiche, libellé et valeur. Un `const`,
+     * posé sur `window` pour les mesures d'une carence (n° 5.f.121).
+     */
+    mesLigneFiche?: (libelle: string, valeur: unknown) => string;
   }
 }
 

@@ -6,305 +6,8 @@
  "indecidables": 3,
  "gestes": [
   {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 331,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesNavigateTo('${cle}')",
-   "nom": "mesNavigateTo",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 354,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSetTheme('${th}')",
-   "nom": "mesSetTheme",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 359,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSetLang('${l.toLowerCase()}')",
-   "nom": "mesSetLang",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 362,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesToggleSidebar()",
-   "nom": "mesToggleSidebar",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 364,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesToggleSidebar()",
-   "nom": "mesToggleSidebar",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 368,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesToggleSidebar()",
-   "nom": "mesToggleSidebar",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 386,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerSlider()",
-   "nom": "mesFermerSlider",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 688,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('db_prest',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 692,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('db_cat',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 696,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('db_type',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 700,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('db_statut',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 704,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('db_echeance',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 710,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesResetFiltresDashboard()",
-   "nom": "mesResetFiltresDashboard",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 748,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSetFiltre('mes_carence','')",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 810,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFaireLeSuivi('${m.id}')",
-   "nom": "mesFaireLeSuivi",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 815,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSupprimerMesure('${m.id}')",
-   "nom": "mesSupprimerMesure",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 866,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('mes_categorie',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 870,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('mes_statut',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 874,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('mes_prest',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 879,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "mesRechercher('mes_recherche', this.value)",
-   "nom": "mesRechercher",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 881,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesResetFiltresMesures()",
-   "nom": "mesResetFiltresMesures",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 935,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesMesureDepuisConstatation('${c.id}')",
-   "nom": "mesMesureDepuisConstatation",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 992,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesHistorique('${c.id}')",
-   "nom": "mesHistorique",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 995,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesMesuresDeCarence('${c.id}')",
-   "nom": "mesMesuresDeCarence",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 998,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesOuvrirConstat('${c.id}')",
-   "nom": "mesOuvrirConstat",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1002,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesSupprimerConstat('${c.id}')",
-   "nom": "mesSupprimerConstat",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1019,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesOuvrirConstat()",
-   "nom": "mesOuvrirConstat",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1026,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('crit_origine',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1031,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('crit_statut',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1036,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "mesSetFiltre('crit_prest',this.value)",
-   "nom": "mesSetFiltre",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1042,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "mesRechercher('crit_recherche', this.value)",
-   "nom": "mesRechercher",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1043,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesResetFiltresCritiques()",
-   "nom": "mesResetFiltresCritiques",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1162,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "mesFermerSlider()",
-   "nom": "mesFermerSlider",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1291,
+   "fichier": "frontend/mesures/constats.ts",
+   "ligne": 90,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -312,8 +15,8 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1295,
+   "fichier": "frontend/mesures/constats.ts",
+   "ligne": 94,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -321,8 +24,8 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1317,
+   "fichier": "frontend/mesures/constats.ts",
+   "ligne": 116,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'ouverture\\')",
@@ -330,8 +33,8 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1319,
+   "fichier": "frontend/mesures/constats.ts",
+   "ligne": 118,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai('delai')",
@@ -339,8 +42,8 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1321,
+   "fichier": "frontend/mesures/constats.ts",
+   "ligne": 120,
    "forme": "en ligne",
    "evenement": "input",
    "source": "mesConstatDelai(\\'echeance\\')",
@@ -348,8 +51,8 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1326,
+   "fichier": "frontend/mesures/constats.ts",
+   "ligne": 125,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesFermerVolet()",
@@ -357,8 +60,8 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1327,
+   "fichier": "frontend/mesures/constats.ts",
+   "ligne": 126,
    "forme": "en ligne",
    "evenement": "click",
    "source": "mesEnregistrerConstat()",
@@ -366,19 +69,80 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1445,
+   "fichier": "frontend/mesures/coquille.ts",
+   "ligne": 67,
    "forme": "en ligne",
    "evenement": "click",
-   "source": "${action}('${s.cle}')",
-   "nom": "${}('${}')",
-   "indecidable": true,
-   "raison": "sans nom",
-   "exerce": null
+   "source": "mesNavigateTo('${cle}')",
+   "nom": "mesNavigateTo",
+   "exerce": true
   },
   {
-   "fichier": "public/modules/mesures/js/mes-app.js",
-   "ligne": 1122,
+   "fichier": "frontend/mesures/coquille.ts",
+   "ligne": 89,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSetTheme('${th}')",
+   "nom": "mesSetTheme",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/coquille.ts",
+   "ligne": 94,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSetLang('${l.toLowerCase()}')",
+   "nom": "mesSetLang",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/coquille.ts",
+   "ligne": 97,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesToggleSidebar()",
+   "nom": "mesToggleSidebar",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/coquille.ts",
+   "ligne": 99,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesToggleSidebar()",
+   "nom": "mesToggleSidebar",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/coquille.ts",
+   "ligne": 103,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesToggleSidebar()",
+   "nom": "mesToggleSidebar",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/coquille.ts",
+   "ligne": 121,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerSlider()",
+   "nom": "mesFermerSlider",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/coquille.ts",
+   "ligne": 306,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFermerSlider()",
+   "nom": "mesFermerSlider",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/coquille.ts",
+   "ligne": 266,
    "forme": "écouteur",
    "evenement": "resize",
    "nom": "window:resize",
@@ -609,6 +373,177 @@
    "evenement": "click",
    "source": "mesSoumettreInvestigation()",
    "nom": "mesSoumettreInvestigation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 35,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSetFiltre('mes_carence','')",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 96,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesFaireLeSuivi('${m.id}')",
+   "nom": "mesFaireLeSuivi",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 101,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSupprimerMesure('${m.id}')",
+   "nom": "mesSupprimerMesure",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 152,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('mes_categorie',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 156,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('mes_statut',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 160,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('mes_prest',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 165,
+   "forme": "en ligne",
+   "evenement": "input",
+   "source": "mesRechercher('mes_recherche', this.value)",
+   "nom": "mesRechercher",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 167,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesResetFiltresMesures()",
+   "nom": "mesResetFiltresMesures",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 208,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesMesureDepuisConstatation('${c.id}')",
+   "nom": "mesMesureDepuisConstatation",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 265,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesHistorique('${c.id}')",
+   "nom": "mesHistorique",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 268,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesMesuresDeCarence('${c.id}')",
+   "nom": "mesMesuresDeCarence",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 271,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesOuvrirConstat('${c.id}')",
+   "nom": "mesOuvrirConstat",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 275,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesSupprimerConstat('${c.id}')",
+   "nom": "mesSupprimerConstat",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 291,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesOuvrirConstat()",
+   "nom": "mesOuvrirConstat",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 298,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('crit_origine',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 303,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('crit_statut',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 308,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('crit_prest',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 314,
+   "forme": "en ligne",
+   "evenement": "input",
+   "source": "mesRechercher('crit_recherche', this.value)",
+   "nom": "mesRechercher",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/listes.ts",
+   "ligne": 315,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesResetFiltresCritiques()",
+   "nom": "mesResetFiltresCritiques",
    "exerce": true
   },
   {
@@ -1252,6 +1187,71 @@
    "evenement": "click",
    "source": "${geste}",
    "nom": "${}",
+   "indecidable": true,
+   "raison": "sans nom",
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/mesures/tableau-de-bord.ts",
+   "ligne": 199,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('db_prest',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/tableau-de-bord.ts",
+   "ligne": 203,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('db_cat',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/tableau-de-bord.ts",
+   "ligne": 207,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('db_type',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/tableau-de-bord.ts",
+   "ligne": 211,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('db_statut',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/tableau-de-bord.ts",
+   "ligne": 215,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "mesSetFiltre('db_echeance',this.value)",
+   "nom": "mesSetFiltre",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/tableau-de-bord.ts",
+   "ligne": 221,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "mesResetFiltresDashboard()",
+   "nom": "mesResetFiltresDashboard",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/mesures/tableau-de-bord.ts",
+   "ligne": 293,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${action}('${s.cle}')",
+   "nom": "${}('${}')",
    "indecidable": true,
    "raison": "sans nom",
    "exerce": null

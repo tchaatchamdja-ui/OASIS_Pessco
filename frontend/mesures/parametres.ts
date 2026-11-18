@@ -12,8 +12,8 @@
 // les montre, non ce fichier qui les cache.
 //
 // L'état et les libellés sont lus sur la page (`partage.ts`) ; les aides de
-// `mes-app.js`, que `restant.d.ts` déclare, sont exigées au moment de l'appel,
-// comme l'ancien les lisait par leur nom.
+// la coquille, que son sas déclare (`globales/mes-app.ts`), sont exigées au
+// moment de l'appel, comme l'ancien les lisait par leur nom.
 import { etat, mt, requis } from './partage';
 
 // L'échappement est celui du socle : `_mesEsc` et `_mesAttr` n'en étaient que

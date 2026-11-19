@@ -3,130 +3,28 @@
 //
 // Ils vivaient en tête de `mes-app.js`, la coquille. Ils sont la feuille du
 // paquet : tout le reste de la coquille les importe, eux n'importent rien
-// d'elle. Les autres paquets de CARE ne les importent pas — ils fabriqueraient
-// un second état — : ils lisent celui-ci sur `window`, où le sas le pose
-// (`partage.ts`).
+// d'elle. Les autres paquets de CARE n'en importent pas les valeurs — ils
+// fabriqueraient un second état — : ils lisent celui-ci sur `window`, où le
+// sas le pose (`partage.ts`). Ils en importent le **type**, déclaré ici une
+// fois, qu'esbuild efface (n° 5.f.126).
 //
 // Converti à la lettre : le balisage est rendu caractère pour caractère,
 // chaque requête part avec le même corps.
 import { requis } from './partage';
+import type {
+  CategorieCare, CompteCare, ConstatSaisie, ConstatationCare, ElementParametreCare, EtatInstanceCare,
+  MesureCare, ParametresCare, PrestataireCare, TraitementCare, TypeMesureCare,
+} from './formes';
 
-declare global {
-  /** Ce que `/instance` rend : l'instance retenue, et celles qu'on peut prendre. */
-  interface EtatInstanceCare {
-    disponible?: boolean;
-    courante?: string;
-    instances?: string[];
-    locale?: string;
-  }
-
-  /** Une catégorie de mesure, telle que `/parametres` la rend. */
-  interface CategorieCare { id: string; code: string; libelle: string }
-  /** Un type de mesure, rattaché à sa catégorie par le code de celle-ci. */
-  interface TypeMesureCare { id: string; code?: string; libelle: string; categorie_code?: string }
-  /** Un type d'investigation ou un comité : un libellé, un code. */
-  interface ElementParametreCare { id: string; code?: string; libelle: string }
-
-  /** Ce que `/parametres` rend : les quatre listes, et ce que le compte y peut. */
-  interface ParametresCare {
-    modifiable?: boolean;
-    supprimable?: boolean;
-    categories?: CategorieCare[];
-    types?: TypeMesureCare[];
-    types_investigation?: ElementParametreCare[];
-    comites?: ElementParametreCare[];
-  }
-
-  /**
-   * Les données chargées de l'écran, telles que les **autres** paquets les
-   * lisent. Seules celles qu'ils lisent sont nommées ; la coquille, qui les
-   * charge, en tient la forme entière (`DonneesCoquille`, ci-dessous).
-   */
-  interface DonneesCare {
-    parametres: ParametresCare;
-    [nom: string]: unknown;
-  }
-
-  /**
-   * L'état de l'écran, tel que les autres paquets le lisent. Seuls les champs
-   * qu'ils lisent sont nommés, d'où la signature d'index ; la coquille en tient
-   * la forme entière (`EtatCoquille`).
-   */
-  interface EtatCare {
-    lang?: string;
-    user?: { role?: string } | null;
-    instances?: EtatInstanceCare;
-    data: DonneesCare;
-    /** Le sous-menu ouvert des Paramètres, et la bande repliée ou non. */
-    paramSousMenu?: string;
-    paramBarreRepliee?: boolean;
-    /** L'élément qu'une fenêtre des Paramètres modifie — `{}` pour un nouveau. */
-    categorieEnCours?: Partial<CategorieCare> | null;
-    typeEnCours?: Partial<TypeMesureCare> | null;
-    typeInvestigationEnCours?: Partial<ElementParametreCare> | null;
-    comiteEnCours?: Partial<ElementParametreCare> | null;
-    /** La constatation du volet de saisie ; la fenêtre la referme. */
-    constatEnCours?: unknown;
-    [champ: string]: unknown;
-  }
+/** Les données chargées de l'écran. */
+export interface DonneesCare {
+  mesures: MesureCare[];
+  constatations: ConstatationCare[];
+  prestataires: PrestataireCare[];
+  domaines: unknown[];
+  secteurs: unknown[];
+  parametres: ParametresCare;
 }
-
-/** Le compte connecté, tel que `/context` le rend. */
-export interface CompteCare { role?: string; role_m4?: string; nom?: string; prenom?: string }
-
-/** Un organisme, tel que `/referentiels` le rend. */
-export interface PrestataireCare { id: string; nom?: string }
-
-/** Une mesure du registre — les champs que la coquille lit. */
-export interface MesureCare {
-  id: string;
-  reference?: string;
-  objet?: string;
-  description?: string;
-  prestataire_id?: string;
-  prestataire_nom?: string;
-  categorie?: string;
-  type_mesure?: string;
-  statut?: string;
-  date_emission?: string;
-  date_sanction?: string;
-  date_echeance?: string;
-  date_notification?: string;
-  date_cloture?: string;
-  portee?: string;
-  duree_valeur?: number | string;
-  duree_unite?: string;
-  constatation_id?: string;
-  constatation_ref?: string;
-  suivi_statut?: string;
-  recours_intente?: unknown;
-}
-
-/** Une carence — relevée par un module, ou saisie ici. */
-export interface ConstatationCare {
-  id: string;
-  reference?: string;
-  titre?: string;
-  description?: string;
-  prestataire_id?: string;
-  prestataire_nom?: string;
-  criticite?: string;
-  statut?: string;
-  statut_care?: string;
-  origine?: string;
-  origine_libelle?: string;
-  date_ouverture?: string;
-  date_due_cloture?: string;
-  date_cloture?: string;
-  delai_jours?: string | number;
-  classee?: unknown;
-  traitement_clos?: unknown;
-  traitement_etape?: string;
-  mesures_liees?: number;
-}
-
-/** La constatation du volet de saisie : celle qu'on modifie, ou `{}`. */
-export type ConstatSaisie = Partial<Record<keyof ConstatationCare, unknown>> & { id?: string };
 
 /** La mesure qu'un dossier ouvert prépare. */
 export interface MesureEnCours {
@@ -137,41 +35,52 @@ export interface MesureEnCours {
   statut?: string;
 }
 
-/** Les données chargées, sous leur forme entière. */
-export interface DonneesCoquille extends DonneesCare {
-  mesures: MesureCare[];
-  constatations: ConstatationCare[];
-  prestataires: PrestataireCare[];
-  domaines: unknown[];
-  secteurs: unknown[];
-}
-
 /** Les filtres des trois écrans, par préfixe : tableau de bord, mesures, carences. */
 export type CleFiltre =
   | 'db_prest' | 'db_cat' | 'db_type' | 'db_statut' | 'db_echeance'
   | 'mes_categorie' | 'mes_statut' | 'mes_prest' | 'mes_recherche' | 'mes_carence'
   | 'crit_statut' | 'crit_prest' | 'crit_origine' | 'crit_recherche';
 
-/** L'état de l'écran, sous sa forme entière — celle que la coquille écrit. */
-export interface EtatCoquille extends EtatCare {
+/**
+ * L'état de l'écran — déclaré ici, une fois, pour la coquille et pour les sept
+ * autres paquets qui le lisent sur la page (n° 5.f.126).
+ *
+ * Il l'était deux fois : `EtatCare`, lâche, avec une signature d'index, pour
+ * les paquets ; `EtatCoquille`, qui l'étendait, pour la coquille. Un champ que
+ * la coquille ne déclarait pas — le volet de la qualification, l'historique
+ * ouvert — passait par la signature, et chaque lecteur le convertissait au type
+ * qu'il supposait.
+ */
+export interface EtatCare {
   user: CompteCare | null;
   privilege: string;
   instances: EtatInstanceCare;
   currentPage: string;
+  /** Le sous-menu ouvert des Paramètres, et la bande repliée ou non. */
   paramSousMenu: string;
   paramBarreRepliee: boolean;
   sidebarCollapsed: boolean;
   theme: string;
   lang: string;
-  data: DonneesCoquille;
+  data: DonneesCare;
   filtres: Record<CleFiltre, string>;
   mesureEnCours: MesureEnCours | null;
+  /** La carence dont le traitement est ouvert, et son traitement. */
   carenceEnCours: ConstatationCare | null;
-  traitement: unknown;
+  traitement: TraitementCare | null;
+  /** L'étape du fil que l'on regarde ; l'étape atteinte vient du traitement. */
   etapeVue: string;
+  /** Le volet ouvert de la qualification — posé au premier choix. */
+  qualVolet?: string;
+  /** L'historique d'une carence est-il ouvert ? Posé à la première ouverture. */
+  histoOuvert?: boolean;
+  /** L'élément qu'une fenêtre des Paramètres modifie — `{}` pour un nouveau. */
   categorieEnCours: Partial<CategorieCare> | null;
   typeEnCours: Partial<TypeMesureCare> | null;
+  typeInvestigationEnCours?: Partial<ElementParametreCare> | null;
+  comiteEnCours?: Partial<ElementParametreCare> | null;
   sliderOpen: boolean;
+  /** La constatation du volet de saisie ; la fenêtre la referme. */
   constatEnCours?: ConstatSaisie | null;
   /** La source et la catégorie retenues aux graphiques du tableau de bord. */
   sourceGraphe?: string;
@@ -180,7 +89,7 @@ export interface EtatCoquille extends EtatCare {
 
 export const MES_API = '/api/m/mesures';
 
-export const MES_STATE: EtatCoquille = {
+export const MES_STATE: EtatCare = {
   user: null,
   privilege: '',
   // Instance regardée, servie par le contexte : { disponible, locale,

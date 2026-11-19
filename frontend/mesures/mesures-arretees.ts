@@ -8,7 +8,7 @@ import {
   champId, chemin, date, esc, icone, messageDe, mesMajQualification, mesQualification,
   mesQualModifiable, mesQualModifier, mesQualRedessiner, section, traitementPresent,
 } from './qualification-commun';
-import type { MesureQual, Piece, Recours, VersionPrecedente } from './qualification-commun';
+import type { MesureQual, Piece, Recours, VersionPrecedente } from './formes';
 
 // ── Section E — les mesures arrêtées ──
 // Elle ne s'ouvre que si l'infraction est constituée : sans infraction, il n'y

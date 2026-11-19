@@ -10,6 +10,8 @@
 // cette carence », « Ouvrir la table des Mesures » — le sont encore : la
 // conversion ne corrige rien.
 import { etat, mt, requis } from './partage';
+import type { CleFiltre } from './etat';
+import type { Investigation, MesureCare, Qualification, TraitementCare } from './formes';
 
 // ══════════════════════════════════════
 //  États exportables
@@ -34,8 +36,7 @@ export const MES_ICONES_ETAT: Record<string, string> = {
 };
 
 /** Les filtres de l'écran — ceux que les deux exports reprennent. */
-type Filtres = Record<string, string | undefined>;
-const filtres = (): Filtres => etat().filtres as Filtres;
+const filtres = (): Record<CleFiltre, string> => etat().filtres;
 
 export const mesParametresCarences = (): string => {
   const F = filtres();
@@ -114,34 +115,8 @@ const MES_HISTO_ETAPES = ['suite', 'investigations', 'qualification', 'suivi'];
 interface Jalon { date: string; libelle: string; acteur: string; detail: string; alerte: boolean }
 interface EtapeHisto { id: string; titre: string; sous: { nom: string; jalons: Jalon[] }[] }
 
-/** Une mesure, telle que le registre ou la qualification la portent — les champs lus d'ici. */
-interface MesureHisto {
-  reference?: string; categorie?: string; type_mesure?: string; description?: string;
-  date_creation?: string; created_by?: string; constatation_id?: string;
-  date_sanction?: string; date_emission?: string; date_echeance?: string;
-  portee?: string; duree_valeur?: number | string; duree_unite?: string;
-  suivi_commentaire?: string;
-  recours_intente?: boolean; recours?: { decision?: string; commentaire?: string };
-}
-/** Le traitement d'une carence, tel que `/traitement` le rend — les champs lus d'ici. */
-interface Traitement {
-  etape?: string; mesures?: MesureHisto[];
-  date_creation?: string; created_by?: string;
-  decide_le?: string; decide_par?: string; decision?: string; decision_motif?: string;
-  investigation?: {
-    equipe?: unknown[]; travaux?: unknown[]; soumise_le?: string; soumise_par?: string;
-    renvois?: { renvoye_le?: string; renvoye_par?: string; motif?: string }[];
-  };
-  qualification?: {
-    membres?: unknown[]; reunions?: { date?: string; objet?: string; resultat?: string }[];
-    infraction_constituee?: boolean; infraction_non_constituee?: boolean; nature?: string;
-    mesures?: MesureHisto[];
-  };
-  qualifie_le?: string; qualifie_par?: string; classe_le?: string; classe_par?: string;
-  recours_ouvert_le?: string; recours_ouvert_par?: string;
-  suivi?: { maj_le?: string; maj_par?: string };
-  cloture_le?: string; cloture_par?: string;
-}
+// La mesure, le traitement et la carence : leurs formes sont déclarées une
+// fois, dans `formes.ts` (n° 5.f.126). L'historique en tenait ses vues.
 
 // Les jalons se composent par `&&` : une condition fausse donne `false`, `0`
 // ou `''`, que le filtre écarte. Le type le dit, plutôt que de le taire. La
@@ -151,12 +126,12 @@ interface Traitement {
 type Peut<T> = T | false | 0 | '' | null | undefined;
 const garder = <T>(l: Peut<T>[]): T[] => l.filter(Boolean) as T[];
 
-export function mesHistoriqueEtapes(t: Traitement, mesures: MesureHisto[] | undefined): EtapeHisto[] {
+export function mesHistoriqueEtapes(t: TraitementCare, mesures: MesureCare[] | undefined): EtapeHisto[] {
   const j = (date: unknown, libelle: string, acteur?: unknown, detail?: unknown, alerte?: unknown): Jalon | null => (date || detail ? {
     date: (date || '') as string, libelle, acteur: (acteur || '') as string, detail: (detail || '') as string, alerte: !!alerte,
   } : null);
-  const inv: NonNullable<Traitement['investigation']> = t.investigation || {};
-  const q: NonNullable<Traitement['qualification']> = t.qualification || {};
+  const inv: Partial<Investigation> = t.investigation || {};
+  const q: Partial<Qualification> = t.qualification || {};
   const dec = (cle: string): string => (requis('MES_DECISIONS').some((d) => d.cle === cle) ? requis('mesNomDecision')(cle) : cle);
 
   return [
@@ -246,15 +221,12 @@ export function mesHistoriqueEtapes(t: Traitement, mesures: MesureHisto[] | unde
   ];
 }
 
-/** Une carence, telle que les listes la portent — les champs lus d'ici. */
-interface CarenceListe { id: string; titre?: string; reference?: string; prestataire_nom?: string }
-
 export async function mesHistorique(constatationId: string): Promise<void> {
-  const c = (etat().data.constatations as CarenceListe[]).find((x) => x.id === constatationId);
+  const c = etat().data.constatations.find((x) => x.id === constatationId);
   if (!c) return;
-  let t: Traitement = {};
+  let t: TraitementCare = {};
   try {
-    t = await requis('mesApi')(`/constatations/${encodeURIComponent(constatationId)}/traitement`) as Traitement;
+    t = await requis('mesApi')(`/constatations/${encodeURIComponent(constatationId)}/traitement`) as TraitementCare;
   } catch (e) { requis('mesToast')(messageDe(e) || mt('h_indisponible'), 'error'); return; }
 
   const atteinte = MES_HISTO_ETAPES.indexOf(t.etape || 'suite');
@@ -337,13 +309,13 @@ export function mesFermerHistorique(): void {
 
 export function mesMesuresDeCarence(constatationId: string): void {
   const E = etat();
-  const c = ((E.data.constatations || []) as CarenceListe[]).find((x) => x.id === constatationId);
+  const c = (E.data.constatations || []).find((x) => x.id === constatationId);
   if (!c) return;
-  const liees = ((E.data.mesures || []) as MesureHisto[])
+  const liees = (E.data.mesures || [])
     .filter((m) => m.constatation_id === constatationId)
     .sort((a, b) => String(a.reference || '').localeCompare(String(b.reference || '')));
 
-  const portee = (m: MesureHisto): string => {
+  const portee = (m: MesureCare): string => {
     const nom = ({ temporelle: mt('limitee_temps'), illimitee: mt('illimitee'), sans_objet: mt('sans_objet') } as Record<string, string>)[m.portee as string];
     if (!nom) return '';
     const duree = m.portee === 'temporelle' && m.duree_valeur

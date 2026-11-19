@@ -9,8 +9,9 @@
 // Converti à la lettre depuis `mes-app.js`. Redessiner passe par la page,
 // comme l'ancien fichier appelait le nom nu.
 import {
-  MES_STATE, _mesAttr, _mesEsc, mesApi, mesToast, messageDe, type ConstatationCare, type ConstatSaisie,
+  MES_STATE, _mesAttr, _mesEsc, mesApi, mesToast, messageDe,
 } from './etat';
+import type { ConstatationCare, ConstatSaisie } from './formes';
 import { MES_ICONS } from './libelles';
 import { mt, requis } from './partage';
 

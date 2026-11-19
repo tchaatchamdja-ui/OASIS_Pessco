@@ -14,48 +14,26 @@
 import { etat, mt, requis } from './partage';
 import type { Confirmation } from './fil-commun';
 
-/** Une pièce jointe, telle que `/upload` la rend et que le suivi la garde. */
-interface PieceSuivi { nom?: string; path?: string; size?: number }
-/** Une mesure du registre, vue par le suivi — les champs lus d'ici. */
-export interface MesureSuivi {
-  id?: string;
-  reference?: string;
-  categorie?: string;
-  type_mesure?: string;
-  description?: string;
-  date_sanction?: string;
-  date_emission?: string;
-  date_echeance?: string;
-  date_fin_sanction?: string;
-  suivi_commentaire?: string;
-  suivi_statut?: string;
-  suivi_pieces?: PieceSuivi[];
-  recours_intente?: boolean;
-  [champ: string]: unknown;
-}
-/** Le traitement d'une carence, vu par le suivi. */
-interface TraitementSuivi {
-  suivi?: { commentaire_general?: string; [champ: string]: unknown };
-  mesures?: MesureSuivi[];
-  qualification?: { nature?: string; [champ: string]: unknown };
-  cloture_le?: string;
-  [champ: string]: unknown;
-}
+// La mesure du registre, la pièce, le traitement : leurs formes sont déclarées
+// une fois, dans `formes.ts` (n° 5.f.126). Le suivi en tenait sa vue, avec une
+// signature d'index qui laissait passer tout champ.
+import type { ConstatationCare, MesureCare, Piece, Qualification, SuiviCare, TraitementCare } from './formes';
+
 /** Ce que la saisie relève, et ce que le serveur reçoit. */
 interface SaisieSuivi {
   commentaire_general: string;
   mesures: { id: string; suivi_commentaire: string; suivi_statut: string; recours_intente: boolean; suivi_pieces: { nom: string; path: string }[] }[];
 }
 
-const traitement = (): TraitementSuivi => (etat().traitement || {}) as TraitementSuivi;
+const traitement = (): TraitementCare => etat().traitement || {};
 // L'échappement est celui du socle : `_mesEsc` et `_mesAttr` n'en étaient que
 // deux noms.
 const esc = (v: unknown): string => window.oasisEsc(v);
 const icone = (nom: string): string => requis('MES_ICONS')[nom] as string;
 const messageDe = (e: unknown): string | undefined => (e as { message?: string }).message;
 
-export const mesSuivi = (): { commentaire_general?: string; [champ: string]: unknown } => traitement().suivi || { commentaire_general: '' };
-export const mesSuiviMesures = (): MesureSuivi[] => (traitement().mesures) || [];
+export const mesSuivi = (): SuiviCare => traitement().suivi || { commentaire_general: '' };
+export const mesSuiviMesures = (): MesureCare[] => (traitement().mesures) || [];
 
 // Un dossier classé, ou clôturé faute de suivi à conduire, ne se saisit plus :
 // l'étape se consulte. Le serveur repose la même garde.
@@ -66,8 +44,8 @@ export const mesSuiviModifiable = (): boolean => requis('mesPeutEcrire')() && !m
 // La carence et la nature de l'infraction : de quoi se souvenir, en tête de
 // l'étape, de ce qui a valu les mesures. Rien n'y est modifiable.
 export function mesSectionSuiviMesures(): string {
-  const c = (etat().carenceEnCours || {}) as { description?: string };
-  const q = traitement().qualification || {};
+  const c: Partial<ConstatationCare> = etat().carenceEnCours || {};
+  const q: Partial<Qualification> = traitement().qualification || {};
   return requis('mesSection')('A', mt('nav_mesures'), `
         <div class="mes-champ">
             <label>${mt('description_carence')}</label>
@@ -84,7 +62,7 @@ export function mesSectionSuiviMesures(): string {
 // ── Section B — le plan d'action, mesure par mesure ──
 // Un bloc par mesure : à gauche ce que l'instance a arrêté, en lecture ; à
 // droite et en dessous, ce que le suivi y ajoute.
-export function mesBlocSuiviMesure(m: MesureSuivi, i: number): string {
+export function mesBlocSuiviMesure(m: MesureCare, i: number): string {
   const off = mesSuiviModifiable() ? '' : 'disabled';
   const ro = !!off;
   const statut = m.suivi_statut || requis('mesStatutSuivi')(m);
@@ -217,13 +195,13 @@ export const mesMajSuivi = (): void => {
   etat().traitement = {
     ...t,
     suivi: { ...(t.suivi || {}), commentaire_general: saisi.commentaire_general },
-    mesures: (t.mesures || []).map((m) => (parId.has(m.id as string) ? { ...m, ...parId.get(m.id as string) } : m)),
+    mesures: (t.mesures || []).map((m) => (parId.has(m.id) ? { ...m, ...parId.get(m.id) } : m)),
   };
 };
 
 const mesSuiviRedessiner = (): void => { requis('mesAfficherSlider')({ anime: false }); };
 
-export function mesSuiviModifier(action: (mesures: MesureSuivi[]) => void): void {
+export function mesSuiviModifier(action: (mesures: MesureCare[]) => void): void {
   mesMajSuivi();
   const t = traitement();
   const mesures = (t.mesures || []).slice();
@@ -248,7 +226,7 @@ export const mesSuiviRecours = (i: number, coche: boolean): void => mesSuiviModi
     recours_intente: !!coche,
     suivi_statut: coche ? 'recours'
       : (m.suivi_statut === 'recours' ? '' : m.suivi_statut),
-  } as MesureSuivi;
+  } as MesureCare;
 });
 
 export const mesSuiviRetirerPiece = (i: number, k: number): void => mesSuiviModifier((mesures) => {
@@ -271,7 +249,7 @@ export async function mesSuiviTeleverser(i: number, fichiers: FileList | File[] 
       const corps = new FormData();
       corps.append('file', f);
       const r = await requis('mesApi')('/upload', { method: 'POST', body: corps }) as { filename?: string; path?: string; size?: number };
-      pieces.push({ nom: r.filename, path: r.path, size: r.size } as PieceSuivi);
+      pieces.push({ nom: r.filename, path: r.path, size: r.size } as Piece);
     } catch (e) { requis('mesToast')(messageDe(e) || mt('depot_impossible'), 'error'); }
   }
   mesures[i] = { ...m, suivi_pieces: pieces };
@@ -280,7 +258,7 @@ export async function mesSuiviTeleverser(i: number, fichiers: FileList | File[] 
 }
 
 export async function mesEnregistrerSuivi(): Promise<void> {
-  const c = etat().carenceEnCours as { id: string } | null | undefined;
+  const c = etat().carenceEnCours;
   if (!c) return;
   mesMajSuivi();
   const corps = mesCollecterSuivi();
@@ -292,9 +270,9 @@ export async function mesEnregistrerSuivi(): Promise<void> {
     });
     // Le registre a bougé : la liste des mesures et celle des carences le
     // disent, l'une par ses statuts de suivi, l'autre par sa clôture.
-    etat().traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`);
+    etat().traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`) as TraitementCare;
     await requis('mesRechargerMesures')();
-    etat().data.constatations = await api('/constatations');
+    etat().data.constatations = await api('/constatations') as ConstatationCare[];
     requis('mesToast')(mt('suivi_enregistre'));
     mesSuiviRedessiner();
   } catch (e) { requis('mesToast')(messageDe(e) || mt('enregistrement_impossible'), 'error'); }
@@ -326,7 +304,7 @@ export function mesActionsSuivi(): string {
 // suivi pour vérifier qu'un recours a bien été coché.
 export async function mesSuiviIssue(chemin: string, confirmation: Confirmation, fait: string): Promise<void> {
   const E = etat();
-  const c = E.carenceEnCours as { id: string } | null | undefined;
+  const c = E.carenceEnCours;
   if (!c) return;
   if (!await requis('mesConfirmerEtape')(confirmation)) return;
   mesMajSuivi();
@@ -339,10 +317,10 @@ export async function mesSuiviIssue(chemin: string, confirmation: Confirmation, 
       });
     }
     await api(`/constatations/${encodeURIComponent(c.id)}/suivi/${chemin}`, { method: 'POST' });
-    E.traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`);
+    E.traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`) as TraitementCare;
     E.etapeVue = '';
     await requis('mesRechargerMesures')();
-    E.data.constatations = await api('/constatations');
+    E.data.constatations = await api('/constatations') as ConstatationCare[];
     requis('mesToast')(fait);
     mesSuiviRedessiner();
     if (E.currentPage === 'critiques') requis('mesRenderPage')();

@@ -6,7 +6,7 @@ import {
   carence, champ, chemin, date, esc, icone, messageDe, mesConfirmerEtape, mesInvestigation,
   mesInvModifiable, mesInvSoumise, mesSection, mesTraitementClos, mesTraitementModifiable, traitement,
 } from './fil-commun';
-import type { Investigation, Piece, TraitementCare } from './fil-commun';
+import type { ConstatationCare, Investigation, Piece, TraitementCare } from './formes';
 
 // ══════════════════════════════════════
 //  Étape « Investigations »
@@ -289,9 +289,9 @@ export async function mesSoumettreInvestigation(): Promise<void> {
       method: 'PUT', body: JSON.stringify(mesInvestigation()),
     });
     await api(`/constatations/${encodeURIComponent(c.id)}/investigation/soumettre`, { method: 'POST' });
-    E.traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`);
+    E.traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`) as TraitementCare;
     E.etapeVue = '';
-    E.data.constatations = await api('/constatations');
+    E.data.constatations = await api('/constatations') as ConstatationCare[];
     requis('mesToast')(mt('investigation_soumise'));
     requis('mesAfficherSlider')({ anime: false });
     if (E.currentPage === 'critiques') requis('mesRenderPage')();

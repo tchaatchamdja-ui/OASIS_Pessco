@@ -10,8 +10,9 @@
 import {
   MES_STATE, _mesAttr, _mesEsc, _mesNorm, mesApi, mesCategories, mesDate, mesEstAdmin,
   mesEstSuperAdmin, mesJour, mesLibelleCategorie, mesLibelleType, mesPeutEcrire, mesRechargerMesures,
-  mesToast, messageDe, type ConstatationCare,
+  mesToast, messageDe,
 } from './etat';
+import type { ConstatationCare, TraitementCare } from './formes';
 import {
   MES_CLES_ORIGINE, MES_ICONS, MES_STATUT_CARE, MES_SUIVI, mesBadgeStatutCare, mesEnRetard,
   mesLibelleCare, mesLibelleEtape, mesOrigine, mesStatutMesure, mesStatutSuivi,
@@ -133,7 +134,7 @@ export async function mesFaireLeSuivi(id: string): Promise<void> {
   }
   MES_STATE.carenceEnCours = c;
   MES_STATE.mesureEnCours = null;
-  try { MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`); }
+  try { MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`) as TraitementCare; }
   catch (e) { mesToast(messageDe(e) || mt('traitement_illisible'), 'error'); return; }
   // On ouvre là où le suivi se fait, quelle que soit l'étape atteinte.
   MES_STATE.etapeVue = 'suivi';
@@ -351,7 +352,7 @@ export async function mesMesureDepuisConstatation(constatationId: string): Promi
   MES_STATE.etapeVue = '';
   // Le plan d'actions vient du module qui a relevé la carence : il arrive
   // avec le traitement, en une seule demande.
-  try { MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`); }
+  try { MES_STATE.traitement = await mesApi(`/constatations/${encodeURIComponent(c.id)}/traitement`) as TraitementCare; }
   catch (e) { MES_STATE.traitement = null; mesToast(messageDe(e) || mt('traitement_illisible'), 'error'); }
   requis('mesAfficherSlider')();
 }

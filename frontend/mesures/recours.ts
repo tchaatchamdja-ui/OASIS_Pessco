@@ -6,7 +6,7 @@ import {
   champId, chemin, date, esc, icone, messageDe, mesMajQualification, mesQualification,
   mesQualModifiable, mesQualModifier, mesQualRedessiner, section, traitementPresent,
 } from './qualification-commun';
-import type { MesureQual, Piece, Recours, VersionPrecedente } from './qualification-commun';
+import type { MesureQual, Piece, Recours, VersionPrecedente } from './formes';
 
 // ══════════════════════════════════════
 //  Saisie : relevé, ajouts, retraits

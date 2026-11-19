@@ -17,7 +17,7 @@ import {
   mesConfirmerEtape, mesEtapeAtteinte, mesEtapeCourante, mesInvSoumise, mesLigneFiche, mesNomDecision, mesNomEtape,
   mesRangAtteint, mesSection, mesStatutOrigine, mesTraitementModifiable, traitement,
 } from './fil-commun';
-import type { Investigation, Piece } from './fil-commun';
+import type { ConstatationCare, Investigation, Piece, TraitementCare } from './formes';
 import { mesActionsInvestigation } from './investigation';
 
 export function mesVoirEtape(cle: string): void {
@@ -128,7 +128,7 @@ export function mesActionsEtape(): string {
 export function mesSectionCarence(): string {
   const c = carence();
   if (!c) return '';
-  const prest = ((etat().data.prestataires || []) as { id?: string; nom?: string }[]).find((p) => p.id === c.prestataire_id);
+  const prest = (etat().data.prestataires || []).find((p) => p.id === c.prestataire_id);
   const source = c.origine === 'CARE' ? (c.origine_libelle || mt('relevee_par'))
     : requis('mesOrigine')(c.origine === 'RAMP' ? 'RAMP' : 'SURV');
   // Deux colonnes pour les repères, qui tiennent sur une ligne chacun. La
@@ -369,8 +369,8 @@ export async function mesPrendreDecision(decision: string): Promise<void> {
     await api(`/constatations/${encodeURIComponent(c.id)}/decision`, {
       method: 'POST', body: JSON.stringify({ decision, motif }),
     });
-    E.traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`);
-    E.data.constatations = await api('/constatations');
+    E.traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`) as TraitementCare;
+    E.data.constatations = await api('/constatations') as ConstatationCare[];
     // La vue suit l'étape que la décision vient de faire atteindre.
     E.etapeVue = '';
     requis('mesToast')(mt('decision_enregistree', nomDecision));

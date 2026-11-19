@@ -20,7 +20,7 @@ import {
   mesQualClose, mesQualification, mesQualModifiable, mesQualModifier, mesQualRedessiner, mesQualVolet,
   MES_QUAL_VOLETS, section, traitement, traitementPresent,
 } from './qualification-commun';
-import type { TraitementQual } from './qualification-commun';
+import type { ConstatationCare, Investigation, TraitementCare } from './formes';
 import { mesSectionMesuresArretees } from './mesures-arretees';
 import { mesSectionRecours } from './recours';
 
@@ -59,8 +59,8 @@ export function mesQualCorps(): string {
 // l'investigation entière : équipe, travaux, éléments collectés, synthèse.
 export function mesSectionRapportInvestigation(): string {
   const t = traitement() || {};
-  const inv: NonNullable<TraitementQual['investigation']> = t.investigation || {};
-  const c = (etat().carenceEnCours || {}) as { id?: string };
+  const inv: Partial<Investigation> = t.investigation || {};
+  const c: Partial<ConstatationCare> = etat().carenceEnCours || {};
   // La suite à donner peut mener droit ici : « Prendre des mesures » saute
   // l'investigation. La section le dit plutôt que d'offrir un rapport vide
   // et un PDF qui n'a rien à rendre.
@@ -287,7 +287,7 @@ export function mesActionsQualification(): string {
 // dessus, et le serveur relit la qualification pour vérifier la case cochée.
 export async function mesQualIssue(cheminIssue: string, confirmation: Confirmation, fait: string): Promise<void> {
   const E = etat();
-  const c = E.carenceEnCours as { id: string } | null | undefined;
+  const c = E.carenceEnCours;
   if (!c) return;
   if (!await requis('mesConfirmerEtape')(confirmation)) return;
   mesMajQualification();
@@ -297,9 +297,9 @@ export async function mesQualIssue(cheminIssue: string, confirmation: Confirmati
       method: 'PUT', body: JSON.stringify(mesQualification()),
     });
     await api(`/constatations/${encodeURIComponent(c.id)}/qualification/${cheminIssue}`, { method: 'POST' });
-    E.traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`);
+    E.traitement = await api(`/constatations/${encodeURIComponent(c.id)}/traitement`) as TraitementCare;
     E.etapeVue = '';
-    E.data.constatations = await api('/constatations');
+    E.data.constatations = await api('/constatations') as ConstatationCare[];
     requis('mesToast')(fait);
     requis('mesAfficherSlider')({ anime: false });
     if (E.currentPage === 'critiques') requis('mesRenderPage')();
@@ -343,7 +343,7 @@ export const mesQualCloturer = (): Promise<void> => mesQualIssue('cloturer', {
 }, mt('q_toast_cloturer'));
 
 export async function mesEnregistrerQualification(): Promise<void> {
-  const c = etat().carenceEnCours as { id: string } | null | undefined;
+  const c = etat().carenceEnCours;
   if (!c) return;
   mesMajQualification();
   try {

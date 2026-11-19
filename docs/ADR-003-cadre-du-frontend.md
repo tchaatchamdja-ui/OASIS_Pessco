@@ -866,7 +866,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
            | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **converti** — 13 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles, la coquille (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.109) ; plus aucun fichier en JavaScript ; l'état déclaré en un seul endroit, la façade `window.PL` retirée, une course des discussions corrigée (n° 5.f.110 à 5.f.112) |
-           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 86 exercés** — le plafond : aucun reste non exercé —, 3 indécidables — idem, 4 novembre 2026, repris le 16 novembre et mesuré par **deux** suites, `mesures-navigateur` et `mesures-gestes` (n° 5.f.114, 5.f.115) ; **converti** — 9 fichiers sur 9 : les libellés, les instances, les Paramètres, les états et leur page, le suivi, le traitement, la qualification, la coquille (n° 5.f.116 à 5.f.124) ; plus aucun fichier en JavaScript, la frontière `restant.d.ts` retirée ; la façade retirée — 73 noms posés pour personne, 160 gardés, chacun avec un lecteur (n° 5.f.125) |
+           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 86 exercés** — le plafond : aucun reste non exercé —, 3 indécidables — idem, 4 novembre 2026, repris le 16 novembre et mesuré par **deux** suites, `mesures-navigateur` et `mesures-gestes` (n° 5.f.114, 5.f.115) ; **converti** — 9 fichiers sur 9 : les libellés, les instances, les Paramètres, les états et leur page, le suivi, le traitement, la qualification, la coquille (n° 5.f.116 à 5.f.124) ; plus aucun fichier en JavaScript, la frontière `restant.d.ts` retirée ; la façade retirée — 73 noms posés pour personne, 160 gardés, chacun avec un lecteur (n° 5.f.125) ; l'état et les formes de l'API déclarés une fois, sans signature d'index (n° 5.f.126) |
            | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
            | SURV (`execution`) | 24 162 | **323 gestes nommés, 320 exercés** (99 %) — tous les décidables —, 512 occurrences sur 518 dont 6 indécidables — mesuré par **treize** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers`, `surv-barre`, `surv-constatations`, `surv-prestataire` et `surv-fenetres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.98) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 59 sur 60, les activités à 66 sur 67 — leurs restes indécidables —, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. **Plus aucun nom décidable n'est sans ronde.** `execViewFNC` et `execAccuserReception`, qu'on disait ici hors de portée — offerts au seul compte qui ne gouverne pas —, le sont en vue Prestataire, que la barre offre au super-administrateur (n° 5.f.97, qui corrige cette phrase). `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). La remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire sont exercés, `exec-dashboard.js` 29 sur 29 (n° 5.f.96) ; l'accusé de réception et la consultation d'une constatation, du côté de l'organisme, le sont aussi — et le dernier « non exercé », `e`, était un paramètre que le relevé lisait comme un nom (n° 5.f.97). Les fonctions fléchées posées en propriété, que le relevé laissait dehors — seize, et non sept —, sont nommées par leur texte des deux côtés ; les cinq renoncements qu'aucune suite ne pressait le sont par `surv-fenetres` (n° 5.f.98). |
@@ -15139,3 +15139,85 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            Reste, pour CARE, l'état déclaré en un seul endroit (comme PLAN au
            n° 5.f.110) : `EtatCare`, lâche, que lisent les autres paquets, et
            `EtatCoquille`, qui l'étend.
+
+       5.f.126 [x] **CARE : l'état déclaré en un seul endroit — et le
+           traitement d'une carence, qui l'était cinq fois** — fait le
+           18 novembre 2026.
+
+           L'état de l'écran était déclaré deux fois. `EtatCare`, lâche et muni
+           d'une signature d'index, pour les sept paquets qui le lisent sur la
+           page ; `EtatCoquille`, qui l'étendait, pour la coquille qui l'écrit.
+           Un champ que la coquille ne déclarait pas — le volet de la
+           qualification, l'historique ouvert — passait par la signature, et
+           chaque lecteur le convertissait au type qu'il supposait.
+
+           La signature en avait appelé d'autres, comme chez PLAN (n° 5.f.110) :
+           le champ `traitement` étant `unknown`, chaque paquet déclarait sa vue
+           de ce que `/traitement` rend, et la lisait par une conversion.
+
+           | Forme | Déclarée | Par |
+           |---|---|---|
+           | Le traitement d'une carence | **5 fois** | l'état (`unknown`), le fil du traitement, la qualification, le suivi, l'historique |
+           | La carence | **4 fois**, et six conversions en ligne | l'état, le fil du traitement, la page des états, l'historique |
+           | La mesure du registre | **3 fois** | l'état, le suivi (avec une signature d'index), l'historique |
+           | La pièce jointe | **3 fois** | le fil du traitement, la qualification, le suivi |
+           | L'état de l'écran | **2 fois** | `EtatCare`, `EtatCoquille` |
+
+           Chacune l'est désormais **une fois**. Les formes que l'API rend
+           vivent dans `formes.ts`, un fichier de types seuls qu'esbuild efface ;
+           l'état, dans `etat.ts`, qui les porte. Les sept paquets en importent
+           le **type** — non la valeur, qui fabriquerait un second état
+           (n° 5.f.104) — et lisent `etat()` tel quel. Plus aucune signature
+           d'index dans CARE : il y en avait **sept**.
+
+           Trois champs étaient en désaccord d'une vue à l'autre — `classee`,
+           `traitement_clos`, `recours_intente` : `unknown` ici, booléen là. Le
+           serveur tranche : il les rend booléens (`routes-mesures.js`, `!!` et
+           `=== true`). La forme unique dit booléen.
+
+           ── Les conversions ──
+
+           **Dix-neuf** conversions vers une vue locale sont retirées. Douze
+           sont ajoutées, toutes au même endroit : là où la réponse de l'API
+           entre dans l'état (`await api(…/traitement) as TraitementCare`,
+           `as ConstatationCare[]`). Avant, la réponse y entrait sans type — le
+           champ était `unknown` —, et c'était chaque lecteur qui affirmait
+           une forme, chacun la sienne. L'affirmation est faite une fois, à
+           l'entrée, comme `mesLoadData` le faisait déjà.
+
+           ── Rien ne change à l'exécution ──
+
+           Les neuf paquets construits avant et après sont **identiques à
+           l'octet**. Le changement ne touche que des types : aucune
+           comparaison dans un navigateur n'aurait rien à départager.
+
+           Ce que `tsc` n'aurait pas lu, s'il y en avait : aucun geste en ligne
+           de CARE n'écrit l'état, à la différence de PLAN — seule la page de
+           démarrage y pose cinq champs, tous déclarés.
+
+           ── Contre-tests ──
+
+           Chacun appliqué à l'arbre d'avant et à celui d'après, `tsc` juge.
+
+           | Défaut réintroduit | Avant | Après |
+           |---|---|---|
+           | CE — l'historique écrit `histoOuvet` | **tsc muet** | tsc refuse |
+           | CF — le suivi écrit `suivi_statutt` sur une mesure | **tsc muet** | tsc refuse |
+           | CG — l'investigation replie la saisie sous `investigaton` | **tsc muet** | tsc refuse |
+           | CH — la qualification pose un nombre pour volet | **tsc muet** | tsc refuse |
+           | CJ — le suivi écrit le traitement sous `mesure` | **tsc muet** | tsc refuse |
+           | CI — la page des états lit `date_due_clotur` | tsc refuse | tsc refuse |
+
+           CI est un témoin : la vue locale de la page des états l'attrapait
+           déjà. Il ne départage rien, et il le dit — les cinq autres
+           départagent.
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **9 sur 9** ; l'état déclaré en un seul endroit, sans signature d'index |
+           | Façade | retirée (n° 5.f.125) |
+           | Relevé des gestes | **86 sur 89**, inchangé — 144 occurrences, 3 indécidables |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes ; le relevé ne change que de lignes |
+           | Campagne | n° 42, sur l'arbre où l'état est déclaré une fois : **1 884 contrôles, aucun rouge**, sortie 0 |

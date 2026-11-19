@@ -14,35 +14,18 @@
 // caractère pour caractère. Les libellés écrits en dur — « j de retard »,
 // « Aujourd’hui », « j » — le sont encore : la conversion ne corrige rien.
 import { etat, mt, requis } from './partage';
+// La carence : sa forme est déclarée une fois, dans `formes.ts` (n° 5.f.126).
+import type { ConstatationCare } from './formes';
 
-/** Une carence, telle que `/constatations` la rend — les champs lus d'ici. */
-interface CarenceEtats {
-  id: string;
-  reference?: string;
-  origine?: string;
-  titre?: string;
-  prestataire_nom?: string;
-  date_ouverture?: string;
-  date_due_cloture?: string;
-  date_cloture?: string;
-  classee?: boolean;
-  classement_motif?: string;
-  traitement_etape?: string;
-  traitement_decision?: string;
-  traitement_clos?: boolean;
-  traitement_cloture_le?: string;
-  mesures_liees?: number;
-  statut_care?: string;
-}
 /** Une carence qui attend : son retard, et les jours qui restent. */
-interface CarenceDelai extends CarenceEtats { retard: boolean; reste: number | null }
+interface CarenceDelai extends ConstatationCare { retard: boolean; reste: number | null }
 
 export interface Repartition {
   jours: (echeance: string | undefined) => number | null;
   aTraiter: CarenceDelai[];
   enCours: CarenceDelai[];
-  cloturees: CarenceEtats[];
-  classees: CarenceEtats[];
+  cloturees: ConstatationCare[];
+  classees: ConstatationCare[];
 }
 
 /** Le sous-menu ouvert, et les volets des étapes qu'on a dépliés ou repliés. */
@@ -68,9 +51,9 @@ const date = (v: unknown): string => requis('mesDate')(v);
 // dans un seul seau, et les comptes s'en déduisent.
 export function mesEtatsRepartir(): Repartition {
   const jour = requis('mesJour')();
-  const carences = (etat().data.constatations || []) as CarenceEtats[];
+  const carences = etat().data.constatations || [];
 
-  const enRetard = (c: CarenceEtats): boolean => !!c.date_due_cloture && c.date_due_cloture < jour;
+  const enRetard = (c: ConstatationCare): boolean => !!c.date_due_cloture && c.date_due_cloture < jour;
   const jours = (echeance: string | undefined): number | null => {
     if (!echeance) return null;
     const d = new Date(`${echeance}T00:00:00Z`);
@@ -145,13 +128,13 @@ const mesEtatsActions = (id: string): string => `
     <button class="btn btn-outline btn-sm mes-btn-icone" title="${esc(mt('historique_traitement'))}" aria-label="${esc(mt('historique_traitement'))}"
             onclick="mesHistorique('${id}')">${requis('MES_ICONES_ETAT')['clock'] as string}</button>`;
 
-const mesEtatsLigneCarence = (c: CarenceEtats, colonnes: string): string => `
+const mesEtatsLigneCarence = (c: ConstatationCare, colonnes: string): string => `
     <tr class="mes-etats-ligne" onclick="if(!event.target.closest('button'))mesMesureDepuisConstatation('${c.id}')">
         ${colonnes}
         <td class="mes-actions mes-etats-actions">${mesEtatsActions(c.id)}</td>
     </tr>`;
 
-const mesEtatsReperes = (c: CarenceEtats): string => `
+const mesEtatsReperes = (c: ConstatationCare): string => `
     <td><strong>${esc(c.reference || '—')}</strong>
         <div class="mes-sous-titre">${esc(c.origine ? requis('mesOrigine')(c.origine) : '')}</div></td>
     <td>${esc(c.titre || '—')}</td>

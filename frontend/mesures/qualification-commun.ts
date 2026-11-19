@@ -10,46 +10,13 @@
 // la conversion, déplacé et non réécrit.
 import { etat, mt, requis } from './partage';
 
-export interface Piece { nom?: string; path?: string; size?: number }
-export interface Membre { nom?: string; prenom?: string; email?: string; contact?: string }
-export interface Reunion { date?: string; objet?: string; resultat?: string }
-/** Le recours qu'un prestataire forme contre une mesure, et ce que l'instance en décide. */
-export interface Recours {
-  intente_texte?: string; pieces?: Piece[]; instance_code?: string; membres?: Membre[];
-  commentaire?: string; decision?: string; decision_pieces?: Piece[];
-}
-/** Une mesure telle que la qualification l'arrête. */
-export interface MesureQual {
-  categorie?: string; type_mesure?: string; date_sanction?: string; portee?: string;
-  duree_valeur?: number | string; duree_unite?: string; date_fin?: string; commentaire?: string;
-  suivi_requis?: boolean; recours_intente?: boolean; recours?: Recours | null;
-  statut_recours?: string; version_precedente?: VersionPrecedente | null;
-}
-/** Ce que la mesure était avant que le recours ne la fasse modifier. */
-export interface VersionPrecedente {
-  portee?: string; duree_valeur?: number | string; duree_unite?: string; categorie?: string;
-  type_mesure?: string; date_sanction?: string; date_fin?: string; commentaire?: string;
-}
-/**
- * La qualification d'une carence. Les quatre listes sont tenues pour présentes,
- * comme l'ancien le tenait : il y ajoutait sans vérifier.
- */
-export interface Qualification {
-  comite_code?: string; membres: Membre[]; reunions: Reunion[];
-  infraction_constituee?: boolean; infraction_non_constituee?: boolean;
-  renvoi_demande?: boolean; renvoi_motif?: string;
-  nature?: string; caracterisation?: string; circonstances?: string;
-  mesures: MesureQual[]; pieces: Piece[];
-}
-/** Le traitement, vu par la qualification — les champs lus d'ici. */
-export interface TraitementQual {
-  qualification?: Qualification; cloture_le?: string; decision_motif?: string;
-  investigation?: { soumise_le?: string; soumise_par?: string; rapport?: string; travaux?: unknown[]; equipe?: unknown[] };
-}
+// La qualification, ses mesures et leurs recours : leurs formes sont déclarées
+// une fois, dans `formes.ts` (n° 5.f.126), avec le traitement qui les porte.
+import type { MesureQual, Piece, Qualification, Recours, TraitementCare } from './formes';
 
-export const traitement = (): TraitementQual | undefined => etat().traitement as TraitementQual | undefined;
+export const traitement = (): TraitementCare | null => etat().traitement;
 /** Le traitement, tenu pour présent : l'ancien y écrivait sans vérifier. */
-export const traitementPresent = (): TraitementQual => etat().traitement as TraitementQual;
+export const traitementPresent = (): TraitementCare => etat().traitement as TraitementCare;
 
 // L'échappement est celui du socle : `_mesEsc` et `_mesAttr` n'en étaient que
 // deux noms.
@@ -101,7 +68,7 @@ export const mesNomVolet = (cle: string): string => mt(`onglet_${cle}`);
 export const mesQualARecours = (): boolean => (mesQualification().mesures || []).some((m) => m.recours_intente);
 
 export const mesQualVolet = (): string => {
-  const vu = (etat().qualVolet as string | undefined) || 'infraction';
+  const vu = etat().qualVolet || 'infraction';
   return vu === 'recours' && !mesQualARecours() ? 'infraction' : vu;
 };
 

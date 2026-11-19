@@ -10,46 +10,18 @@
 // les deux. Le code est celui de la conversion, déplacé et non réécrit.
 import { etat, mt, requis } from './partage';
 
-/** Une pièce jointe, telle que `/upload` la rend. */
-export interface Piece { nom?: string; path?: string; size?: number }
-interface Enqueteur { nom?: string; prenom?: string; email?: string; contact?: string }
-interface Travail { type?: string; resultats?: string; pieces?: Piece[] }
-interface Renvoi { renvoye_le?: string; renvoye_par?: string; motif?: string }
-/**
- * L'investigation d'une carence. Les trois listes sont tenues pour présentes,
- * comme l'ancien le tenait : il y ajoutait sans vérifier.
- */
-export interface Investigation {
-  equipe: Enqueteur[]; travaux: Travail[]; autres_texte?: string; autres_pieces: Piece[]; rapport?: string;
-  soumise_le?: string; soumise_par?: string; renvois?: Renvoi[];
-}
-interface PreuvePac { action?: string; intitule?: string; depose_le?: string; commentaire?: string }
-/** Le plan d'actions du prestataire, tel que son module le publie. */
-interface Pac {
-  preuves?: PreuvePac[]; cause_primaire?: string; action_curative?: string; curative_date_prevue?: string;
-  actions_correctives?: string; corrective_date_prevue?: string; statut?: string; date_soumission?: string;
-  motif_rejet?: string;
-}
-/** Le traitement d'une carence, tel que `/traitement` le rend — les champs lus d'ici. */
-export interface TraitementCare {
-  etape?: string; decision?: string; decide_le?: string; decide_par?: string; decision_motif?: string;
-  investigation?: Investigation; mesures?: { suivi_statut?: string }[]; cloture_le?: string; classe_le?: string;
-  pac?: Pac; pieces?: Piece[]; informations?: string;
-}
-/** La carence dont le volet est ouvert. */
-export interface CarenceCare {
-  id: string; classee?: boolean; prestataire_id?: string; origine?: string; origine_libelle?: string;
-  reference?: string; titre?: string; prestataire_nom?: string; criticite?: string;
-  date_ouverture?: string; date_due_cloture?: string; statut?: string; description?: string;
-}
+// Le traitement, l'investigation, la carence : leurs formes sont déclarées une
+// fois, dans `formes.ts` (n° 5.f.126). Les champs lus d'ici n'y sont plus redits.
+import type { ConstatationCare, Investigation, Piece, TraitementCare } from './formes';
+
 /** Ce que la fenêtre de confirmation reçoit. */
 export interface Confirmation {
   titre?: string; depuis?: string; vers?: string; consequence?: string; points?: string[];
   aveu?: string; libelle?: string; classe?: string;
 }
 
-export const traitement = (): TraitementCare | undefined => etat().traitement as TraitementCare | undefined;
-export const carence = (): CarenceCare | null | undefined => etat().carenceEnCours as CarenceCare | null | undefined;
+export const traitement = (): TraitementCare | null => etat().traitement;
+export const carence = (): ConstatationCare | null => etat().carenceEnCours;
 
 // L'échappement est celui du socle : `_mesEsc` et `_mesAttr` n'en étaient que
 // deux noms.
@@ -107,7 +79,7 @@ export const mesStatutOrigine = (v: unknown): string => {
 // consulte ce qu'une étape franchie porte sans revenir en arrière.
 export const mesEtapeAtteinte = (): string => (traitement() || {}).etape || 'suite';
 export const mesRangAtteint = (): number => Math.max(0, MES_ETAPES.findIndex((e) => e.cle === mesEtapeAtteinte()));
-export const mesEtapeCourante = (): string => (etat().etapeVue as string | undefined) || mesEtapeAtteinte();
+export const mesEtapeCourante = (): string => etat().etapeVue || mesEtapeAtteinte();
 
 // Section repliable, sur le modèle du formulaire de notification du module
 // « Exécution de la Surveillance » : une carte par section, sa lettre d'ordre,
@@ -138,7 +110,7 @@ export const mesInvSoumise = (): boolean => !!mesInvestigation().soumise_le;
 // Un traitement clos ne se réécrit plus, à aucune de ses étapes : la carence a
 // été classée. Le dossier se consulte.
 export const mesTraitementClos = (): boolean => {
-  const c: Partial<CarenceCare> = carence() || {};
+  const c: Partial<ConstatationCare> = carence() || {};
   const t = traitement() || {};
   return !!(c.classee || t.classe_le);
 };

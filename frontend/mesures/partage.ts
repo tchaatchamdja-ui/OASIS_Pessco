@@ -9,7 +9,9 @@
 //
 // Seul le sas `mes-i18n` importe donc les libellés, et les publie. Les autres
 // modules lisent ici, sur `window`, au moment de l'appel — comme les fichiers
-// en JavaScript les lisaient par leur nom (n° 5.f.117).
+// en JavaScript les lisaient par leur nom (n° 5.f.117). Ils en importent le
+// **type** seul, qu'esbuild efface (n° 5.f.126).
+import type { EtatCare } from './etat';
 
 /** L'état de la page — celui que `mes-app.js` a posé. */
 export function etat(): EtatCare {

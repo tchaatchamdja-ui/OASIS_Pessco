@@ -709,15 +709,6 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/profil_risque/js/pr-instances.js",
-   "ligne": 41,
-   "forme": "action de barre",
-   "evenement": "change",
-   "nom": "prAppliquerInstance",
-   "source": "(v) => prAppliquerInstance(v)",
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
    "ligne": 25,
    "forme": "en ligne",
@@ -1513,6 +1504,15 @@
    "source": "ta.addEventListener('input', grow);",
    "id": null,
    "exerce": null
+  },
+  {
+   "fichier": "frontend/profil_risque/instances.ts",
+   "ligne": 49,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "prAppliquerInstance",
+   "source": "(v) => prAppliquerInstance(v)",
+   "exerce": true
   }
  ]
 }

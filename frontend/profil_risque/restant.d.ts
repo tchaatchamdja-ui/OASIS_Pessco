@@ -41,7 +41,7 @@ declare global {
     indices?: IndicesPr;
     plans?: PlanPr[];
     /** L'AAC de l'instance — son nom ouvre le rapport. */
-    aac?: { nom?: string };
+    aac?: { nom?: string; logo_data?: string; ville?: string; etat?: string; sigle?: string };
     /** Les référentiels bruts, avant le filtre de l'instance, quand la coquille les garde. */
     _rawSecteurs?: SecteurPr[];
     _rawSousActivites?: SousActivitePr[];
@@ -75,14 +75,16 @@ declare global {
     renderPage?: () => void;
     /** Le fichier choisi pour la bibliothèque, entre le choix et l'envoi. */
     _pendingDocFile?: File | null;
-    /** `pr-profils.js` — la page des statistiques, que le tableau de bord porte en pied. */
-    renderStatistiques?: () => string;
     /** `pr-shell.js` — le privilège de validation, sur un secteur ou en général. */
     prCanValidate?: (secteurId?: string) => boolean;
     /** `pr-evaluation-fiche.js` — l'échappement d'un texte libre des généralités. */
     _genEsc?: (s: unknown) => string;
     /** `pr-evaluation-fiche.js` — ouvrir la fiche d'une évaluation. */
     openEvalDetail?: (evalId: string) => void;
+    /** `pr-shell.js` — ouvrir le volet latéral. */
+    openSlicer?: (titre: string, corps: string, pied?: string, options?: { drawer?: boolean; retour?: boolean }) => void;
+    /** `pr-shell.js` — déplier ou replier une section. */
+    toggleAccordion?: (id: string) => void;
   }
 
   /**

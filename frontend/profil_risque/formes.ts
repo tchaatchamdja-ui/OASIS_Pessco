@@ -14,7 +14,7 @@ export interface PrestatairePr {
 /** Un secteur, rattaché à son domaine. */
 export interface SecteurPr { id: string; code?: string; nom?: string; domaine_id?: string; csn?: number | string }
 /** Un domaine. */
-export interface DomainePr { id: string; code?: string; nom?: string }
+export interface DomainePr { id: string; code?: string; nom?: string; actif?: boolean | number }
 
 /** Le résultat global d'une évaluation : l'indice de risque, le CSRBO, les indices. */
 export interface ResultatGlobalPr {
@@ -35,6 +35,7 @@ export interface ResultatGlobalPr {
 export interface ResultatSaPr {
   idc_s?: number | string; idp_s?: number | string; ids_s?: string; ide_s?: number | string;
   safetyIndex?: { val?: string }; risk?: string; risk_desc?: string; freq?: number | string;
+  tauxConf?: number; tauxComp?: number;
   globalRisk?: { label?: string; risk?: string; freq?: number | string };
 }
 

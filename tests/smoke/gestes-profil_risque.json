@@ -1,8 +1,8 @@
 {
- "releve": "2026-11-16",
+ "releve": "2026-11-19",
  "gestesNommes": 88,
  "occurrences": 167,
- "exerces": 78,
+ "exerces": 85,
  "indecidables": 3,
  "gestes": [
   {
@@ -282,7 +282,7 @@
    "evenement": "click",
    "source": "soumettreMesNotes('${evalId}')",
    "nom": "soumettreMesNotes",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -498,7 +498,7 @@
    "evenement": "click",
    "source": "deleteEval('${ev.id}')",
    "nom": "deleteEval",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -597,7 +597,7 @@
    "evenement": "click",
    "source": "exportEvalReport('${ev.id}','word')",
    "nom": "exportEvalReport",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -606,7 +606,7 @@
    "evenement": "click",
    "source": "exportEvalReport('${ev.id}','pdf')",
    "nom": "exportEvalReport",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -615,7 +615,7 @@
    "evenement": "click",
    "source": "deleteEval('${ev.id}')",
    "nom": "deleteEval",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -633,7 +633,7 @@
    "evenement": "change",
    "source": "updateCycleDate('${ev.id}','debut',this.value,${csrbo || 0},this)",
    "nom": "updateCycleDate",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -642,7 +642,7 @@
    "evenement": "change",
    "source": "updateCycleDate('${ev.id}','fin',this.value,${csrbo || 0},this)",
    "nom": "updateCycleDate",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -696,7 +696,7 @@
    "evenement": "click",
    "source": "createEval()",
    "nom": "createEval",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
@@ -706,7 +706,7 @@
    "nom": "document.getElementById('evalPrestId'):change",
    "source": "document.getElementById('evalPrestId').addEventListener('change', function() {",
    "id": "evalPrestId",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-instances.js",
@@ -715,7 +715,7 @@
    "evenement": "change",
    "nom": "prAppliquerInstance",
    "source": "(v) => prAppliquerInstance(v)",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-parametres.js",
@@ -1067,7 +1067,7 @@
    "evenement": "click",
    "source": "exportEvalReport('${ev.id}','word')",
    "nom": "exportEvalReport",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1076,7 +1076,7 @@
    "evenement": "click",
    "source": "exportEvalReport('${ev.id}','pdf')",
    "nom": "exportEvalReport",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1085,7 +1085,7 @@
    "evenement": "click",
    "source": "deleteEval('${ev.id}')",
    "nom": "deleteEval",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",
@@ -1121,7 +1121,7 @@
    "evenement": "click",
    "source": "exportEvalReport('${ev.id}','pdf')",
    "nom": "exportEvalReport",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-profils.js",

@@ -188,6 +188,17 @@ function bornes() {
   verifier('un nom de champ hors barème est refusé',
     !jouer(valider.enveloppe, { 'champ avec espaces': 1 }).passe
     && !jouer(valider.enveloppe, { '<script>': 1 }).passe);
+  // Une adresse est un nom de champ : les notes d'un évaluateur de PR sont
+  // rangées sous la sienne, et la garde les refusait (ADR-003, n° 5.f.127).
+  const adresse = 'evaluateur.designe+pr@aac.example';
+  const notes = { notes_per_evaluator_draft: { perf: { [adresse]: { ind1: 2 } } } };
+  const longue = `${'a'.repeat(242)}@aac.example`;
+  verifier('une adresse électronique est un nom de champ, aux deux gardes, jusqu’à 254 caractères',
+    jouer(valider.enveloppe, notes).passe
+    && jouer(valider.enregistrement(), notes).passe
+    && longue.length === 254 && jouer(valider.enveloppe, { [longue]: 1 }).passe
+    && !jouer(valider.enveloppe, { [`a${longue}`]: 1 }).passe
+    && !jouer(valider.enveloppe, { 'a"b@c': 1 }).passe);
   const refus = jouer(valider.enveloppe, { 'mauvais nom': 1 });
   verifier('le refus est une erreur normalisée',
     refus.rendu && refus.rendu.code === 400 && refus.rendu.corps.error === 'corps_invalide',
@@ -1820,8 +1831,8 @@ function refusEtConsole() {
 function tableDesSuites() {
   const { SUITES, choisir } = require('./suites');
 
-  verifier('suites : la table en porte trente-quatre, et chacune dit son nom, son port et son fichier',
-    SUITES.length === 34
+  verifier('suites : la table en porte trente-cinq, et chacune dit son nom, son port et son fichier',
+    SUITES.length === 35
     && SUITES.every((s) => typeof s.nom === 'string' && s.nom.length > 2
       && Number.isInteger(s.port) && typeof s.fichier === 'string'),
     `${SUITES.length} suites`);

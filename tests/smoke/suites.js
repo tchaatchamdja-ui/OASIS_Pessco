@@ -123,6 +123,10 @@ const SUITES = [
   // catégorie, une carence saisie dans son volet, et les mesures d'une carence
   // — trois rondes qui auraient fait passer sa suite d'origine hors budget.
   { nom: 'mesures-gestes', port: 4819, fichier: './mesures-gestes.smoke' },
+  // PR, avant sa conversion : une évaluation créée et retirée, les dates du
+  // cycle, le rapport, les notes d'un évaluateur désigné, les fonds des
+  // fenêtres et l'instance — les dix noms que sa suite d'origine ne pressait pas.
+  { nom: 'pr-gestes', port: 4820, fichier: './pr-gestes.smoke' },
   { nom: 'ramp-navigateur', port: 4801, fichier: './ramp.navigateur.smoke' },
   { nom: 'droits-navigateur', port: 4802, fichier: './droits.navigateur.smoke' },
   { nom: 'planification-navigateur', port: 4803, fichier: './planification.navigateur.smoke' },

@@ -867,7 +867,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
            | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **converti** — 13 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles, la coquille (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.109) ; plus aucun fichier en JavaScript ; l'état déclaré en un seul endroit, la façade `window.PL` retirée, une course des discussions corrigée (n° 5.f.110 à 5.f.112) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 86 exercés** — le plafond : aucun reste non exercé —, 3 indécidables — idem, 4 novembre 2026, repris le 16 novembre et mesuré par **deux** suites, `mesures-navigateur` et `mesures-gestes` (n° 5.f.114, 5.f.115) ; **converti** — 9 fichiers sur 9 : les libellés, les instances, les Paramètres, les états et leur page, le suivi, le traitement, la qualification, la coquille (n° 5.f.116 à 5.f.124) ; plus aucun fichier en JavaScript, la frontière `restant.d.ts` retirée ; la façade retirée — 73 noms posés pour personne, 160 gardés, chacun avec un lecteur (n° 5.f.125) ; l'état et les formes de l'API déclarés une fois, sans signature d'index (n° 5.f.126) |
-           | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
+           | PR (`profil_risque`) | 7 154 | **88 gestes nommés, 85 exercés** — le plafond : les trois restants sont des écouteurs indécidables, exercés par `pr-gestes` —, 3 indécidables — relevé du 5 novembre 2026 (n° 5.f.69 et 5.f.70), repris le 19 novembre et mesuré par **deux** suites, `profil-risque-navigateur` et `pr-gestes` (n° 5.f.127) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
            | SURV (`execution`) | 24 162 | **323 gestes nommés, 320 exercés** (99 %) — tous les décidables —, 512 occurrences sur 518 dont 6 indécidables — mesuré par **treize** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers`, `surv-barre`, `surv-constatations`, `surv-prestataire` et `surv-fenetres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.98) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 59 sur 60, les activités à 66 sur 67 — leurs restes indécidables —, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. **Plus aucun nom décidable n'est sans ronde.** `execViewFNC` et `execAccuserReception`, qu'on disait ici hors de portée — offerts au seul compte qui ne gouverne pas —, le sont en vue Prestataire, que la barre offre au super-administrateur (n° 5.f.97, qui corrige cette phrase). `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). La remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire sont exercés, `exec-dashboard.js` 29 sur 29 (n° 5.f.96) ; l'accusé de réception et la consultation d'une constatation, du côté de l'organisme, le sont aussi — et le dernier « non exercé », `e`, était un paramètre que le relevé lisait comme un nom (n° 5.f.97). Les fonctions fléchées posées en propriété, que le relevé laissait dehors — seize, et non sept —, sont nommées par leur texte des deux côtés ; les cinq renoncements qu'aucune suite ne pressait le sont par `surv-fenetres` (n° 5.f.98). |
 
@@ -15221,3 +15221,103 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Relevé des gestes | **86 sur 89**, inchangé — 144 occurrences, 3 indécidables |
            | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes ; le relevé ne change que de lignes |
            | Campagne | n° 42, sur l'arbre où l'état est déclaré une fois : **1 884 contrôles, aucun rouge**, sortie 0 |
+
+       5.f.127 [x] **PR : les dix gestes restants couverts avant la
+           conversion — et un évaluateur désigné qui ne pouvait plus noter
+           depuis deux mois** — fait le 19 novembre 2026.
+
+           PR est le prochain écran à convertir, et la règle est de le mesurer
+           d'abord, comme PLAN (n° 5.f.99) et CARE (n° 5.f.114). Sur 88 noms,
+           sept restaient non exercés, et trois indécidables — des écouteurs
+           posés sur une variable locale, que le relevé ne sait pas rapprocher.
+           Les dix sont pressés par une seconde suite, `pr-gestes`, sur le socle
+           commun des suites de module :
+
+           - **une évaluation neuve** : sans organisme, refusée dans la
+             fenêtre avant tout envoi ; le choix de l'organisme règle son
+             secteur ; « Ajouter » fait au serveur un brouillon pour ce
+             couple ; le retrait se confirme, et un refus ne retire rien ;
+           - **les dates du cycle** d'une évaluation validée : le début
+             recalcule la fin — début + CSRBO mois — au serveur ; une fin
+             antérieure au début est refusée par la règle commune des dates,
+             sans envoi ; une fin valide se pose seule ;
+           - **le rapport**, en Word — le fichier reçu par le navigateur, et
+             lu — et en PDF — la fenêtre d'impression, et son document ;
+           - **les notes d'un évaluateur désigné** : incomplètes, refusées
+             sans confirmation ni envoi ; complètes, confirmées, publiées, le
+             brouillon vidé, la soumission plus offerte ;
+           - **trois écouteurs** : la zone de texte qui grandit, dans une
+             fenêtre et dans le volet ; le fond de la fenêtre et celui du
+             volet, qui referment — un clic dedans ne ferme rien ;
+           - **l'instance regardée**, avec la discipline de SURV, PLAN et
+             CARE.
+
+           Le compte de la suite est super-administrateur et gestionnaire ;
+           la soumission n'est offerte qu'à un évaluateur désigné qui n'est
+           pas validateur. Comme la ronde de la bibliothèque, la suite pose le
+           privilège Contributeur **dans l'état que la page lit**, puis relit
+           le vrai du serveur. Aucun compte n'est créé.
+
+           ── Le défaut que la ronde des notes a trouvé ──
+
+           La première exécution s'est arrêtée sur « La saisie n'est pas
+           valide ». Les notes d'un évaluateur désigné sont rangées **sous son
+           identifiant**, qui est son adresse électronique :
+           `notes_per_evaluator.perf[<adresse>]`. Or la garde commune des
+           corps de requête (`src/valider.js`, n° SEC/FONC-01) n'admettait
+           dans un nom de champ que lettres, chiffres, `_`, `.` et `-` :
+           « @ » refusé, `400 corps_invalide`.
+
+           Reproduit par le vrai geste de l'écran — un évaluateur désigné note
+           un indicateur et enregistre son brouillon —, et non par la route :
+           refus, toast d'échec, rien d'enregistré. La garde date du
+           10 septembre 2026 (`ed8a74d`) ; les notes publiées sous une adresse
+           que portent les données lui sont antérieures. Depuis, aucun
+           évaluateur désigné n'a pu enregistrer ni soumettre ses notes, et
+           `saveEvalScores` renvoyant `notes_per_evaluator` à chaque fois,
+           **une évaluation qui en portait ne s'enregistrait plus du tout**,
+           pas même par son validateur. Aucune suite ne le voyait : le jeu de
+           référence n'a pas de notes d'évaluateur sur une évaluation qu'on
+           modifie.
+
+           Décision de la maîtrise d'ouvrage : élargir la garde, plutôt que
+           changer la clé des notes et reprendre les données. Un nom de champ
+           admet désormais « @ » et « + », jusqu'à 254 caractères — la
+           longueur d'une adresse ; espaces, chevrons, guillemets restent
+           refusés. Les deux gardes, celle de la route et celle du préfixe de
+           module, lisent la même règle. Un contrôle unitaire l'éprouve au
+           caractère près, et `pr-gestes` porte la régression par l'écran.
+
+           ── Contre-essais ──
+
+           | | Défaut réintroduit | Rouge |
+           |---|---|---|
+           | DA | le choix de l'organisme ne règle plus le secteur | l'ajout, et le retrait qui en dépend |
+           | DB | l'ajout sans organisme n'est plus refusé | le refus, l'ajout |
+           | DC | le retrait sans confirmation | le retrait |
+           | DD | la fin n'est plus recalculée sur le CSRBO | les deux contrôles du cycle |
+           | DE | la règle commune des dates retirée | la fin antérieure |
+           | DF | le rapport composé vide | le rapport |
+           | DG | la complétude des notes non vérifiée | les notes incomplètes |
+           | DH | le brouillon non vidé à la soumission | la soumission |
+           | DI | le fond de la fenêtre ferme à tout clic | cinq contrôles — la fenêtre de création se ferme sous le geste |
+           | DJ | le fond du volet n'écoute plus | le volet |
+           | DK | reprendre l'instance regardée réécrit et recharge | l'instance reprise |
+           | DL | la zone ne grandit plus | les deux zones |
+           | DM | la garde rendue à son ancienne règle | le brouillon par l'écran, et ce qui suit |
+
+           DM a d'abord paru muet à mon relevé des contre-essais, qui ne lisait
+           que les contrôles rouges. La suite était rouge, mais par une
+           exception : la ronde levait sur la première écriture refusée et
+           s'arrêtait avant le contrôle qui nomme la régression. Elle relève
+           désormais l'erreur, et c'est ce contrôle qui rougit.
+
+           DI, DJ et DL disent aussi ce que le relevé ne peut pas dire : les
+           trois écouteurs qu'il classe indécidables sont **exercés** — leur
+           défaut fait rougir la suite.
+
+           | | |
+           |---|---|
+           | Relevé des gestes | PR **78 → 85 sur 88** — le plafond : les trois restants sont les écouteurs indécidables, exercés par `pr-gestes` (DI, DJ, DL) ; relevé figé le 19 novembre 2026 |
+           | Suites | `pr-gestes` 14, `unitaires` 182, `taille` 76 — vertes ; la table des suites en porte trente-cinq ; le registre des gestes non couverts déclare PR à 85 |
+           | Campagne | n° 43 : **1 892 contrôles, trois rouges**. `taille` : le registre des gestes non couverts déclarait encore PR à 78 — oubli, corrigé, 76/76. `surv-barre` et `surv-constatations` : deux exceptions du protocole du navigateur sous la charge de la campagne — cadre détaché, délai dépassé —, rejouées seules **vertes** (8 et 6). La campagne suivante, n° 44, porte sur l'arbre qui contient ce pas |

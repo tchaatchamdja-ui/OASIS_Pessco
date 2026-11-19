@@ -118,7 +118,14 @@ const RESERVES = ['id', 'instance', 'created_by', 'createdAt', 'updatedAt', 'aut
 const MAX_CHAMPS = 100;
 const MAX_TEXTE = 20000;
 const MAX_LISTE = 500;
-const NOM_CHAMP = /^[A-Za-z0-9_.-]{1,64}$/;
+// Un nom de champ peut être une **adresse électronique** : les notes d'un
+// évaluateur désigné de PR sont rangées sous son identifiant, qui en est une
+// (`notes_per_evaluator.perf[<adresse>]`). La garde refusait « @ », et depuis
+// le 10 septembre 2026 un évaluateur désigné ne pouvait plus ni enregistrer ni
+// soumettre ses notes — ni personne enregistrer une évaluation qui en portait
+// (ADR-003, n° 5.f.127). « @ » et « + » sont admis, jusqu'à 254 caractères, la
+// longueur d'une adresse. Espaces, chevrons, guillemets restent refusés.
+const NOM_CHAMP = /^[A-Za-z0-9_.+@-]{1,254}$/;
 
 // Une valeur acceptable : un scalaire, ou une liste / un objet de scalaires
 // jusqu'à la profondeur donnée.

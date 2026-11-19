@@ -183,7 +183,7 @@ ECRANS.execution = {
 // aucune couverture**. Le défaut implicite, lui, est supprimé : un écran sans
 // `suite` est désormais refusé plutôt que mesuré de travers.
 ECRANS.ramp = { ...ecranDeModule('ramp'), suite: 'ramp-navigateur' };
-ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: 'profil-risque-navigateur' };
+ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: ['profil-risque-navigateur', 'pr-gestes'] };
 // PLAN porte deux suites depuis le 14 novembre 2026 : la sienne, et celle des
 // gestes qu'elle ne pressait pas (ADR-003, n° 5.f.99).
 ECRANS.planification = {

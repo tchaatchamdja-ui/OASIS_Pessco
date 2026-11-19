@@ -6,60 +6,6 @@
  "indecidables": 3,
  "gestes": [
   {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 46,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "triggerFileUpload()",
-   "nom": "triggerFileUpload",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 47,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "handleDocFileSelected(event)",
-   "nom": "handleDocFileSelected",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 57,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "downloadDoc('${d.id}')",
-   "nom": "downloadDoc",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 58,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "deleteDoc('${d.id}')",
-   "nom": "deleteDoc",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 93,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "closeModal()",
-   "nom": "closeModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 94,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "uploadDocWithFile()",
-   "nom": "uploadDocWithFile",
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
    "ligne": 254,
    "forme": "en ligne",
@@ -1504,6 +1450,60 @@
    "source": "ta.addEventListener('input', grow);",
    "id": null,
    "exerce": null
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 52,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "triggerFileUpload()",
+   "nom": "triggerFileUpload",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 53,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "handleDocFileSelected(event)",
+   "nom": "handleDocFileSelected",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 63,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "downloadDoc('${d.id}')",
+   "nom": "downloadDoc",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 64,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "deleteDoc('${d.id}')",
+   "nom": "deleteDoc",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 100,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "closeModal()",
+   "nom": "closeModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 101,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "uploadDocWithFile()",
+   "nom": "uploadDocWithFile",
+   "exerce": true
   },
   {
    "fichier": "frontend/profil_risque/instances.ts",

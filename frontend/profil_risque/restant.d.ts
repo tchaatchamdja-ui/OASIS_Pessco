@@ -21,8 +21,34 @@ declare global {
    * est celle du socle (`EtatShellModule`) ; PR y ajoute ce que ses fichiers
    * convertis lisent, et rien d'autre.
    */
+  /** Un document de la bibliothèque, tel que `/api/documents` le rend. */
+  interface DocumentPr { id: string; nom?: string; type?: string; taille?: number; date_upload?: string }
+
+  /** `pr-shell.js` — les données chargées de l'écran, la part qu'on lit converti. */
+  interface DonneesPr {
+    documents?: DocumentPr[];
+  }
+
   interface EtatShellModule {
     instances?: EtatInstancePr;
+    data?: DonneesPr;
+  }
+
+  interface Window {
+    /** `pr-shell.js` — le privilège du compte sur un secteur, le privilège de base pour `''`. */
+    prPrivilegeOn?: (secteurId?: string) => string;
+    /** `pr-shell.js` — la fenêtre modale de l'écran. */
+    showModal?: (titre: string, corps: string, pied?: string, taille?: string) => void;
+    /** `pr-shell.js` — la refermer. */
+    closeModal?: () => void;
+    /** `pr-shell.js` — recharger toutes les données de l'écran. */
+    loadAllData?: () => Promise<void>;
+    /** `pr-shell.js` — redessiner la page courante. */
+    renderPage?: () => void;
+    /** `pr-parametres.js` — un fichier, encodé en base64. */
+    fileToBase64?: (fichier: File) => Promise<string>;
+    /** Le fichier choisi pour la bibliothèque, entre le choix et l'envoi. */
+    _pendingDocFile?: File | null;
   }
 
   /**
@@ -31,6 +57,8 @@ declare global {
    * n'est pas sur `window`.
    */
   const MODULE_API: string;
+  /** `pr-shell.js` — les privilèges qui contribuent. Globale lexicale. */
+  const PR_PRIV_CONTRIB: string[];
 }
 
 export {};

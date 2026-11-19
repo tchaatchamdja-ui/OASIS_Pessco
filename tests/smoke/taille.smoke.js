@@ -2345,7 +2345,8 @@ module.exports = async function tailleSmoke() {
       { nom: 'RAMP', table: 'RAMP_TR', dir: 'public/modules/ramp/js', fn: ['tr', 'rt'] },
       // CARE de même depuis le 17 novembre 2026 (n° 5.f.116).
       { nom: 'CARE', table: 'MES_TR', dir: 'public/modules/mesures/js', ts: 'frontend/mesures', fn: ['tm', 'mt'] },
-      { nom: 'PR', table: 'TRANSLATIONS', dir: 'public/modules/profil_risque/js', fn: ['pt', 't'] },
+      // PR de même depuis le 19 novembre 2026 (n° 5.f.128).
+      { nom: 'PR', table: 'TRANSLATIONS', dir: 'public/modules/profil_risque/js', ts: 'frontend/profil_risque', fn: ['pt', 't'] },
     ];
     const orphelines = [];
     let demandees = 0;

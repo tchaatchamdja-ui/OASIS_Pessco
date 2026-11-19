@@ -201,7 +201,15 @@ function controlerAccentsPortugais() {
   const tables = [
     ...TABLES.map(repertoire),
     'public/shared/js',
-  ].flatMap((d) => scripts(d)).filter((f) => /i18n|pr-utils|oasis-messages-serveur|oasis-dates|oasis-commun/.test(f))
+  // ── Et `traductions`, le nom des tables converties ──
+  //
+  // Le filtre lisait les fichiers par leur nom d'origine — `i18n`, `pr-utils`.
+  // Une table convertie s'appelle `traductions.pt.ts` : celles de PLAN et de
+  // CARE n'étaient lues par personne depuis leur conversion, et celle de PR
+  // aurait cessé de l'être le jour de la sienne. Troisième fois que ce contrôle
+  // se tait au changement de forme d'une table ; trouvé en convertissant PR,
+  // non par un rouge (ADR-003, n° 5.f.128).
+  ].flatMap((d) => scripts(d)).filter((f) => /i18n|traductions|pr-utils|oasis-messages-serveur|oasis-dates|oasis-commun/.test(f))
     .concat(scripts('frontend/socle'));
   const fautes = [];
   const motif = new RegExp(`\\b(${SANS_ACCENT_PT.join('|')})\\b`, 'i');

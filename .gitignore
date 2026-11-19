@@ -41,3 +41,4 @@ public/app/
 public/modules/planification/app/
 # CARE en cours de conversion (ADR-003, n° 5.f.116), selon la même règle que PLAN.
 public/modules/mesures/app/
+public/modules/profil_risque/app/

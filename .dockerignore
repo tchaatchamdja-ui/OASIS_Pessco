@@ -15,6 +15,7 @@ public/shared/app/
 public/app/
 public/modules/planification/app/
 public/modules/mesures/app/
+public/modules/profil_risque/app/
 .DS_Store
 *.log
 *.tmp

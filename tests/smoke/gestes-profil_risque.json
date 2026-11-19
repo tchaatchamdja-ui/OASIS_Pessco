@@ -6,51 +6,6 @@
  "indecidables": 3,
  "gestes": [
   {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 254,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashFilters.domaine=this.value;renderPage();",
-   "nom": "window._dashFilters.domaine",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 259,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashFilters.secteur=this.value;renderPage();",
-   "nom": "window._dashFilters.secteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 264,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashFilters.prestataire=this.value;renderPage();",
-   "nom": "window._dashFilters.prestataire",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 268,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "window._dashFilters={domaine:'',secteur:'',prestataire:''};renderPage();",
-   "nom": "window._dashFilters",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 275,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('dashPrintStart')",
-   "nom": "printPage",
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
    "ligne": 161,
    "forme": "en ligne",
@@ -1512,6 +1467,51 @@
    "evenement": "change",
    "nom": "prAppliquerInstance",
    "source": "(v) => prAppliquerInstance(v)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 291,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashFilters.domaine=this.value;renderPage();",
+   "nom": "window._dashFilters.domaine",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 296,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashFilters.secteur=this.value;renderPage();",
+   "nom": "window._dashFilters.secteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 301,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashFilters.prestataire=this.value;renderPage();",
+   "nom": "window._dashFilters.prestataire",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 305,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window._dashFilters={domaine:'',secteur:'',prestataire:''};renderPage();",
+   "nom": "window._dashFilters",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 312,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "printPage('dashPrintStart')",
+   "nom": "printPage",
    "exerce": true
   }
  ]

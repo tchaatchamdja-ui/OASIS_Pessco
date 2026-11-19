@@ -1,9 +1,39 @@
-/* Module « Profils de Risques » — dashboard
-   Tableau de bord et statistiques.
-   Toutes les parties partagent la portée globale de la page : le découpage
-   est physique (lisibilité), pas fonctionnel. Ordre de chargement : voir
-   index.html. Socle commun : /shared/app/oasis-utils.js
-   ─────────────────────────────────────────────────────────────────────── */
+// OASIS — « Profils de Risque » (PR) — le tableau de bord (ADR-003, 5.c —
+// n° 5.f.131).
+//
+// Converti à la lettre depuis `pr-dashboard.js` : le balisage est rendu
+// caractère pour caractère. Les noms de la coquille et de `pr-profils.js` —
+// encore en JavaScript — se lisent sur la page au moment de l'appel ; ceux du
+// socle, sur `window`, où il les pose. Les comparaisons de dates passent par
+// `getTime`, qui rend la valeur numérique que `>` et `isNaN` lisaient.
+import type { EvaluationPr, PrestatairePr } from './formes';
+import { requis, t } from './partage';
+
+/** Un niveau de risque, tel que la matrice le nomme. */
+export type NiveauRisque = 'very_low' | 'low' | 'moderate' | 'high' | 'very_high';
+
+/** Ce que les cartes du tableau de bord reçoivent. */
+export interface ContexteCartes {
+  filteredEvals: EvaluationPr[];
+  riskCounts: Partial<Record<NiveauRisque, number>>;
+  totalPrest: number;
+  brouillons: number;
+  D: unknown;
+}
+
+/** Le décompte d'une liste d'évaluations : risques, sécurité, matrice. */
+interface Agregat {
+  riskCounts: Record<NiveauRisque, number>;
+  perfSecCounts: Record<string, number>;
+  matrixPositions: Record<string, string[]>;
+}
+
+declare global {
+  interface Window {
+    /** Les filtres du tableau de bord, que ses gestes en ligne écrivent. */
+    _dashFilters?: { domaine: string; secteur: string; prestataire: string };
+  }
+}
 
 // ══════════════════════════════════════
 //  DASHBOARD
@@ -15,7 +45,7 @@
 // élevé » quand le libellé écrit est « Très Élevé » — tout profil du niveau le
 // plus haut était donc compté parmi les « élevés ». Le libellé ne sert plus
 // que de recours pour les enregistrements sans case.
-const PR_NIVEAU_DE_CASE = {
+export const PR_NIVEAU_DE_CASE: Record<string, NiveauRisque | undefined> = {
     '1A': 'very_low',
     '2A': 'low', '1B': 'low',
     '3A': 'moderate', '2B': 'moderate', '1C': 'moderate',
@@ -23,7 +53,7 @@ const PR_NIVEAU_DE_CASE = {
     '3C': 'very_high', '2D': 'very_high', '3D': 'very_high',
 };
 
-function prNiveauRisque(ev) {
+export function prNiveauRisque(ev: EvaluationPr | null | undefined): NiveauRisque | '' {
     const g = ((ev || {}).resultats || {}).global || {};
     const parCase = PR_NIVEAU_DE_CASE[String((g.globalRisk || {}).label || '').toUpperCase()];
     if (parCase) return parCase;
@@ -36,8 +66,8 @@ function prNiveauRisque(ev) {
     return '';
 }
 
-function prCompterRisques(evals) {
-    const c = { very_high: 0, high: 0, moderate: 0, low: 0, very_low: 0 };
+export function prCompterRisques(evals: EvaluationPr[] | null | undefined): Record<NiveauRisque, number> {
+    const c: Record<NiveauRisque, number> = { very_high: 0, high: 0, moderate: 0, low: 0, very_low: 0 };
     (evals || []).forEach((ev) => { const n = prNiveauRisque(ev); if (n) c[n] += 1; });
     return c;
 }
@@ -47,39 +77,41 @@ function prCompterRisques(evals) {
 // validation — augmenté du CSRBO. Le tableau de bord lisait jusqu'ici une
 // `date_butoir` du prestataire que rien n'écrit : la carte « Échéances
 // Proches » et le bandeau qui la double restaient à zéro quoi qu'il arrive.
-function prFinDeCycle(ev) {
-    const e = ev || {};
+export function prFinDeCycle(ev: EvaluationPr | null | undefined): Date | null {
+    const e: Partial<EvaluationPr> = ev || {};
     if (e.date_fin_cycle) {
         const f = new Date(e.date_fin_cycle);
-        if (!isNaN(f)) return f;
+        // `isNaN` d'une date lit sa valeur numérique, que `getTime` rend.
+        if (!isNaN(f.getTime())) return f;
     }
     const depart = e.date_debut_cycle || e.date_validation;
     const csrbo = Number(((e.resultats || {}).global || {}).csrbo || 0);
     if (!depart || !csrbo) return null;
     const d = new Date(depart);
-    if (isNaN(d)) return null;
+    if (isNaN(d.getTime())) return null;
     d.setMonth(d.getMonth() + csrbo);
     return d;
 }
 
 // Profils en vigueur dont le cycle s'achève dans les `mois` à venir.
-function prEcheancesProches(evals, mois) {
+export function prEcheancesProches(evals: EvaluationPr[] | null | undefined, mois?: number): EvaluationPr[] {
     const aujourdhui = new Date();
     const limite = new Date();
     limite.setMonth(limite.getMonth() + (mois || 3));
     return (evals || []).filter((ev) => {
         const f = prFinDeCycle(ev);
-        return f && f >= aujourdhui && f <= limite;
+        // Les dates se comparent par leur valeur numérique, que `getTime` rend.
+        return !!f && f.getTime() >= aujourdhui.getTime() && f.getTime() <= limite.getTime();
     });
 }
 
 // ── Indicateurs du tableau de bord ───────────────────────────────
 // Deux groupes : ce que le parc représente, et ce que les évaluations en
 // disent. Les figures viennent du socle (/shared/app/oasis-kpi.js).
-function _prCartesIndicateurs(ctx) {
-    const c = ctx || {};
+export function _prCartesIndicateurs(ctx: ContexteCartes | null | undefined): string {
+    const c: Partial<ContexteCartes> = ctx || {};
     const evals = c.filteredEvals || [];
-    const risques = c.riskCounts || {};
+    const risques: Partial<Record<NiveauRisque, number>> = c.riskCounts || {};
     const totalPrest = Number(c.totalPrest || 0);
     const brouillons = Number(c.brouillons || 0);
     const couverture = totalPrest ? Math.round((evals.length / totalPrest) * 100) : 0;
@@ -91,42 +123,42 @@ function _prCartesIndicateurs(ctx) {
     const repartition = [risques.very_low, risques.low, risques.moderate,
         risques.high, risques.very_high].map((v) => Number(v || 0));
     // Position du curseur sur l'échelle : part des profils du niveau montré.
-    const part = (n) => (evals.length ? Math.round((n / evals.length) * 100) : 0);
+    const part = (n: number): number => (evals.length ? Math.round((n / evals.length) * 100) : 0);
 
     return `
     <div class="oasis-kpi-groupes pr-kpi-ligne">
-        ${oasisKpiGroupe(t('providers'), [
-            oasisKpiCarte({
+        ${window.oasisKpiGroupe(t('providers'), [
+            window.oasisKpiCarte({
                 titre: t('coverage_rate'), couleur: '#2563eb',
                 valeur: totalPrest ? `${couverture}%` : '-',
                 precision: `${evals.length} ${t('of_short')} ${totalPrest} ${t('evaluated_short')}`,
                 figure: { type: 'jauge', pct: couverture },
             }),
-            oasisKpiCarte({
+            window.oasisKpiCarte({
                 titre: t('due_soon'), couleur: '#dc2626', alerte: !!echeances,
                 valeur: echeances, precision: t('due_soon_hint'),
                 figure: { type: 'retard', pastille: t('deadline_short'), legende: t('due_date_short') },
             }),
         ])}
-        ${oasisKpiGroupe(t('active_profiles'), [
-            oasisKpiCarte({
+        ${window.oasisKpiGroupe(t('active_profiles'), [
+            window.oasisKpiCarte({
                 titre: t('validated'), couleur: '#10b981',
                 valeur: evals.length, precision: t('validated_hint'),
                 figure: { type: 'cloture', pct: couverture },
             }),
-            oasisKpiCarte({
+            window.oasisKpiCarte({
                 titre: t('high_risk'), couleur: '#f97316', alerte: !!eleves,
                 valeur: eleves, precision: t('high_risk_hint'),
                 figure: { type: 'echelle', position: Math.max(10, part(eleves)),
                     min: t('risk_low'), max: t('risk_high') },
             }),
-            oasisKpiCarte({
+            window.oasisKpiCarte({
                 titre: t('very_high_risk'), couleur: '#dc2626', alerte: !!tresEleves,
                 valeur: tresEleves, precision: t('very_high_risk_hint'),
                 figure: { type: 'echelle', position: Math.max(10, part(tresEleves)),
                     min: t('risk_low'), max: t('risk_high') },
             }),
-            oasisKpiCarte({
+            window.oasisKpiCarte({
                 titre: t('draft'), couleur: '#8b5cf6',
                 valeur: brouillons, precision: t('draft_hint'),
                 figure: { type: 'barres', valeurs: repartition },
@@ -136,14 +168,19 @@ function _prCartesIndicateurs(ctx) {
 }
 
 
-function renderDashboard() {
-    const D = APP_STATE.data;
+export function renderDashboard(): string {
+    // L'ancien lisait l'état sans vérifier : `!` le dit, et la lecture qui suit
+    // lève de même s'il manquait.
+    const D = requis('APP_STATE').data!;
     const allValids = (D.evaluations || []).filter(e => e.statut === 'valide');
     // Get latest per prestataire
-    const latestMap = {};
+    const latestMap: Record<string, EvaluationPr> = {};
     allValids.forEach(ev => {
-        const k = ev.prestataire_id;
-        if (!latestMap[k] || new Date(ev.date_validation || ev.date) > new Date(latestMap[k].date_validation || latestMap[k].date)) latestMap[k] = ev;
+        const k = ev.prestataire_id as string;
+        // `new Date(undefined)` est une date invalide, comme l'ancien la faisait ;
+        // `getTime` en rend la valeur que `>` comparait.
+        const actuel = latestMap[k];
+        if (!actuel || new Date((ev.date_validation || ev.date) as string).getTime() > new Date((actuel.date_validation || actuel.date) as string).getTime()) latestMap[k] = ev;
     });
     const validEvals = Object.values(latestMap);
 
@@ -151,18 +188,18 @@ function renderDashboard() {
     // place de chaque profil dans la matrice complexité (1-3) × sécurité (A-D).
     // Le même décompte servait deux fois, écrit deux fois : filtres posés ou
     // non, c'est désormais le même passage.
-    const _agreger = (liste) => {
-        const perf = { A: 0, B: 0, C: 0, D: 0 };
-        const positions = {};
+    const _agreger = (liste: EvaluationPr[]): Agregat => {
+        const perf: Record<string, number> = { A: 0, B: 0, C: 0, D: 0 };
+        const positions: Record<string, string[]> = {};
         (liste || []).forEach(ev => {
             const safety = String(ev.resultats?.global?.ids_g || ev.resultats?.global?.safetyIndex?.val || '').toUpperCase();
-            if (perf[safety] !== undefined) perf[safety]++;
+            if (perf[safety] !== undefined) perf[safety] = (perf[safety] as number) + 1;
             const ide = ev.resultats?.global?.ide_g || 1;
             const compLevel = ide >= 3 ? 3 : ide >= 2 ? 2 : 1;
             const key = `${compLevel}${safety || 'D'}`;
             const prest = (D.prestataires || []).find(p => p.id === ev.prestataire_id);
             if (!positions[key]) positions[key] = [];
-            positions[key].push(prest?.trigramme || prest?.nom?.substring(0, 3) || '?');
+            (positions[key] as string[]).push(prest?.trigramme || prest?.nom?.substring(0, 3) || '?');
         });
         return { riskCounts: prCompterRisques(liste), perfSecCounts: perf, matrixPositions: positions };
     };
@@ -170,7 +207,7 @@ function renderDashboard() {
     let { riskCounts, perfSecCounts, matrixPositions } = _agreger(validEvals);
 
     // Matrix cell colors (risk gradient)
-    const mColors = {
+    const mColors: Record<string, string | undefined> = {
         '1A':'#2A852C',
         '2A':'#B9E884', '1B':'#B9E884',
         '3A':'#F1F50A', '2B':'#F1F50A', '1C':'#F1F50A',
@@ -201,7 +238,7 @@ function renderDashboard() {
 
     // Un prestataire relève d'un domaine et d'un secteur : les filtres du
     // tableau de bord le retiennent ou l'écartent, lui comme ses profils.
-    const _prestPasse = (p) => {
+    const _prestPasse = (p: PrestatairePr): boolean => {
         const sect = (D.secteurs || []).find(s => s.id === p.secteur_id);
         const dom = sect ? (D.domaines || []).find(d => d.id === sect.domaine_id) : null;
         if (df.domaine && (dom?.id || p.domaine_id) !== df.domaine) return false;
@@ -219,7 +256,7 @@ function renderDashboard() {
     let filteredEvals = validEvals;
     let brouillons = (D.evaluations || []).filter(e => e.statut === 'brouillon');
     if (df.domaine || df.secteur || df.prestataire) {
-        const _passes = (ev) => {
+        const _passes = (ev: EvaluationPr): boolean => {
             const prest = (D.prestataires || []).find(p => p.id === ev.prestataire_id);
             const sect = (D.secteurs || []).find(s => s.id === ev.secteur_id);
             const dom = sect ? (D.domaines || []).find(d => d.id === sect.domaine_id) : null;
@@ -263,9 +300,9 @@ function renderDashboard() {
             <div class="filter-group"><label>${t('provider')}</label>
                 <select onchange="window._dashFilters.prestataire=this.value;renderPage();">
                     <option value="">${t('all_providers')}</option>
-                    ${dashPrestList.map(p => `<option value="${p.id}" ${df.prestataire===p.id?'selected':''}>${escapeHtml(p.nom)}</option>`).join('')}
+                    ${dashPrestList.map(p => `<option value="${p.id}" ${df.prestataire===p.id?'selected':''}>${window.escapeHtml(p.nom)}</option>`).join('')}
                 </select></div>
-            <button class="btn btn-outline btn-sm" title="${t('reset_filters')}" onclick="window._dashFilters={domaine:'',secteur:'',prestataire:''};renderPage();">${ICONS.refresh}</button>
+            <button class="btn btn-outline btn-sm" title="${t('reset_filters')}" onclick="window._dashFilters={domaine:'',secteur:'',prestataire:''};renderPage();">${window.ICONS['refresh']}</button>
         </div>
     </div>`;
 
@@ -283,9 +320,10 @@ function renderDashboard() {
         // mois — la même règle que la carte « Échéances Proches », qu'il double.
         const upcoming = prEcheancesProches(filteredEvals, 3);
         if (!upcoming.length) return '';
-        const _esc = oasisEsc;
-        const nom = (ev) => _esc((D.prestataires || []).find(p => p.id === ev.prestataire_id)?.nom || '?');
-        const fin = (ev) => prFinDeCycle(ev).toISOString().slice(0, 10);
+        const _esc = window.oasisEsc;
+        const nom = (ev: EvaluationPr): string => _esc((D.prestataires || []).find(p => p.id === ev.prestataire_id)?.nom || '?');
+        // Une échéance proche a une fin de cycle : `prEcheancesProches` l'a vérifié.
+        const fin = (ev: EvaluationPr): string => (prFinDeCycle(ev) as Date).toISOString().slice(0, 10);
         return `<div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px;padding:0.6rem 0.85rem;margin-bottom:0.75rem;">
             <div style="font-weight:700;color:#92400e;font-size:0.88rem;margin-bottom:0.3rem;">⚠ ${upcoming.length} prestataire(s) à évaluer dans les 3 mois (Chap. 4 §4.2.2.b)</div>
             <div style="display:flex;flex-wrap:wrap;gap:0.4rem;font-size:0.8rem;">
@@ -300,5 +338,5 @@ function renderDashboard() {
             <div style="padding:0.75rem;">${matrixHtml}</div>
         </div>
     </div>
-    ${renderStatistiques()}`;
+    ${requis('renderStatistiques')()}`;
 }

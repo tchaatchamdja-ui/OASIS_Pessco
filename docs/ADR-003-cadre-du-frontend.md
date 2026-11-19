@@ -867,7 +867,7 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
            | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **converti** — 13 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles, la coquille (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.109) ; plus aucun fichier en JavaScript ; l'état déclaré en un seul endroit, la façade `window.PL` retirée, une course des discussions corrigée (n° 5.f.110 à 5.f.112) |
            | CARE (`mesures`) | 6 422 | **89 gestes nommés, 86 exercés** — le plafond : aucun reste non exercé —, 3 indécidables — idem, 4 novembre 2026, repris le 16 novembre et mesuré par **deux** suites, `mesures-navigateur` et `mesures-gestes` (n° 5.f.114, 5.f.115) ; **converti** — 9 fichiers sur 9 : les libellés, les instances, les Paramètres, les états et leur page, le suivi, le traitement, la qualification, la coquille (n° 5.f.116 à 5.f.124) ; plus aucun fichier en JavaScript, la frontière `restant.d.ts` retirée ; la façade retirée — 73 noms posés pour personne, 160 gardés, chacun avec un lecteur (n° 5.f.125) ; l'état et les formes de l'API déclarés une fois, sans signature d'index (n° 5.f.126) |
-           | PR (`profil_risque`) | 7 154 | **88 gestes nommés, 85 exercés** — le plafond : les trois restants sont des écouteurs indécidables, exercés par `pr-gestes` —, 3 indécidables — relevé du 5 novembre 2026 (n° 5.f.69 et 5.f.70), repris le 19 novembre et mesuré par **deux** suites, `profil-risque-navigateur` et `pr-gestes` (n° 5.f.127) ; **en conversion** — 3 fichiers sur 9 : les libellés et les indices, l'instance regardée, la bibliothèque (n° 5.f.128 à 5.f.130) |
+           | PR (`profil_risque`) | 7 154 | **88 gestes nommés, 85 exercés** — le plafond : les trois restants sont des écouteurs indécidables, exercés par `pr-gestes` —, 3 indécidables — relevé du 5 novembre 2026 (n° 5.f.69 et 5.f.70), repris le 19 novembre et mesuré par **deux** suites, `profil-risque-navigateur` et `pr-gestes` (n° 5.f.127) ; **en conversion** — 4 fichiers sur 9 : les libellés et les indices, l'instance regardée, la bibliothèque, le tableau de bord (n° 5.f.128 à 5.f.131) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
            | SURV (`execution`) | 24 162 | **323 gestes nommés, 320 exercés** (99 %) — tous les décidables —, 512 occurrences sur 518 dont 6 indécidables — mesuré par **treize** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers`, `surv-barre`, `surv-constatations`, `surv-prestataire` et `surv-fenetres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.98) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 59 sur 60, les activités à 66 sur 67 — leurs restes indécidables —, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. **Plus aucun nom décidable n'est sans ronde.** `execViewFNC` et `execAccuserReception`, qu'on disait ici hors de portée — offerts au seul compte qui ne gouverne pas —, le sont en vue Prestataire, que la barre offre au super-administrateur (n° 5.f.97, qui corrige cette phrase). `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). La remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire sont exercés, `exec-dashboard.js` 29 sur 29 (n° 5.f.96) ; l'accusé de réception et la consultation d'une constatation, du côté de l'organisme, le sont aussi — et le dernier « non exercé », `e`, était un paramètre que le relevé lisait comme un nom (n° 5.f.97). Les fonctions fléchées posées en propriété, que le relevé laissait dehors — seize, et non sept —, sont nommées par leur texte des deux côtés ; les cinq renoncements qu'aucune suite ne pressait le sont par `surv-fenetres` (n° 5.f.98). |
 
@@ -15482,3 +15482,49 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Relevé des gestes | **85 sur 88**, inchangé — les cinq gestes en ligne de la page restent vus ; seules les adresses changent |
            | Suites | `taille` 76, `unitaires` 182, `frontend` 13, `traductions` 24, `profil-risque` 33, et les deux suites de navigateur par le relevé — dont le vrai dépôt d'un document par le sélecteur du navigateur — toutes vertes |
            | Campagne | portée par le quatrième fichier (n° 5.f.131) |
+
+       5.f.131 [x] **PR en TypeScript, quatrième fichier : le tableau de bord
+           — et les formes de l'API déclarées une fois dès le départ** — fait
+           le 19 novembre 2026. `pr-dashboard.js` (304 lignes) : le niveau de
+           risque d'un profil, la fin de son cycle, les échéances proches, les
+           cartes d'indicateurs, la matrice et ses filtres.
+
+           ── La leçon de CARE, appliquée d'emblée ──
+
+           Le tableau de bord est le premier fichier converti qui lit les
+           évaluations, les organismes, les secteurs et les domaines. Plutôt
+           qu'une vue de plus — ce qui a fait cinq déclarations du traitement
+           de CARE (n° 5.f.126) —, leurs formes vivent dans `formes.ts`, un
+           fichier de types seuls ; la frontière les porte dans l'état de
+           l'écran, et chaque fichier converti à venir **complétera** ces
+           formes au lieu d'en écrire une à lui.
+
+           ── Ce que la conversion écrit autrement, et qui est le même ──
+
+           L'ancien comparait des dates par `>` et passait une date à `isNaN`.
+           TypeScript refuse l'un et l'autre ; `getTime()` rend la valeur
+           numérique que ces deux opérations lisaient, et c'est elle qui est
+           comparée. `renderStatistiques`, de `pr-profils.js`, se lit sur la
+           page au moment du rendu.
+
+           ── La comparaison, dans un navigateur, l'horloge figée ──
+
+           | | |
+           |---|---|
+           | Scénarios | **34, 0 écart** — quatre jeux de données (vide, sans évaluation, complet, sans référentiels) sous huit filtres ; les cinq fonctions sur vingt-trois évaluations et leurs cas limites — cases en minuscules, libellés en trois langues, dates invalides, fins de cycle à une heure près du moment figé ; les cartes sans contexte et avec ; les gestes en ligne des filtres joués tels qu'écrits |
+           | Un relevé qui ne relevait rien | la première version comparait les fins de cycle **telles que la page les rend** : une `Date` se sérialise en `{}` des deux côtés, et toutes étaient égales. Relevées en ISO, elles se comparent |
+           | Différence déclarée | `PR_NIVEAU_DE_CASE` posé sur `window` — une `const` lexicale |
+           | Mutations | **9, toutes mordantes** — de 1 à 13 écarts : le CSRBO non ajouté, l'horizon des échéances, le dernier profil d'un organisme pris à l'envers, les brouillons ou le parc non filtrés, la casse de la case, le seuil de complexité, la date de l'échéance tronquée, une fin de cycle invalide gardée |
+
+           ── Les quatre paquets, comparés une dernière fois ──
+
+           Construits ensemble, chacun contre son ancien fichier : `pr-utils`
+           52 540 scénarios, `pr-instances` 432, `pr-bibliotheque` 41,
+           `pr-dashboard` 34 — **0 écart**.
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **4 sur 9** — restent `pr-shell.js`, `pr-profils.js`, `pr-evaluations.js`, `pr-evaluation-fiche.js`, `pr-parametres.js` |
+           | Relevé des gestes | **85 sur 88**, inchangé — les quatre gestes en ligne des filtres restent vus ; seules les adresses changent |
+           | Suites | `taille` 76, `unitaires` 182, `frontend` 13, `traductions` 24, `profil-risque` 33, et les deux suites de navigateur par le relevé — toutes vertes |
+           | Campagne | n° 44, sur l'arbre qui porte la couverture de PR et ses quatre premiers fichiers convertis (n° 5.f.127 à 5.f.131) : **1 899 contrôles, aucun rouge**, sortie 0 |

@@ -7,6 +7,10 @@
 //
 // Chaque ligne part avec la conversion du fichier qui définit le nom : alors
 // c'est lui, et lui seul, qui le déclarera — la règle de 5.b.
+import type {
+  DocumentPr, DomainePr, EvaluationPr, PrestatairePr, SecteurPr,
+} from './formes';
+
 declare global {
   /** Ce que `/instance` rend : l'instance retenue, et celles qu'on peut prendre. */
   interface EtatInstancePr {
@@ -21,12 +25,13 @@ declare global {
    * est celle du socle (`EtatShellModule`) ; PR y ajoute ce que ses fichiers
    * convertis lisent, et rien d'autre.
    */
-  /** Un document de la bibliothèque, tel que `/api/documents` le rend. */
-  interface DocumentPr { id: string; nom?: string; type?: string; taille?: number; date_upload?: string }
-
   /** `pr-shell.js` — les données chargées de l'écran, la part qu'on lit converti. */
   interface DonneesPr {
     documents?: DocumentPr[];
+    evaluations?: EvaluationPr[];
+    prestataires?: PrestatairePr[];
+    secteurs?: SecteurPr[];
+    domaines?: DomainePr[];
   }
 
   interface EtatShellModule {
@@ -49,6 +54,8 @@ declare global {
     fileToBase64?: (fichier: File) => Promise<string>;
     /** Le fichier choisi pour la bibliothèque, entre le choix et l'envoi. */
     _pendingDocFile?: File | null;
+    /** `pr-profils.js` — la page des statistiques, que le tableau de bord porte en pied. */
+    renderStatistiques?: () => string;
   }
 
   /**

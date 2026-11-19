@@ -8,7 +8,8 @@
 // Chaque ligne part avec la conversion du fichier qui définit le nom : alors
 // c'est lui, et lui seul, qui le déclarera — la règle de 5.b.
 import type {
-  DocumentPr, DomainePr, EvaluationPr, PrestatairePr, SecteurPr,
+  AccesPr, DocumentPr, DomainePr, EvaluationPr, IndicateurPr, IndicesPr, PlanPr, PrestatairePr, SecteurPr,
+  SousActivitePr, UtilisateurPr,
 } from './formes';
 
 declare global {
@@ -32,11 +33,33 @@ declare global {
     prestataires?: PrestatairePr[];
     secteurs?: SecteurPr[];
     domaines?: DomainePr[];
+    sousActivites?: SousActivitePr[];
+    users?: UtilisateurPr[];
+    indConf?: IndicateurPr[];
+    indPerf?: IndicateurPr[];
+    indComplex?: IndicateurPr[];
+    indices?: IndicesPr;
+    plans?: PlanPr[];
+    /** L'AAC de l'instance — son nom ouvre le rapport. */
+    aac?: { nom?: string };
+    /** Les référentiels bruts, avant le filtre de l'instance, quand la coquille les garde. */
+    _rawSecteurs?: SecteurPr[];
+    _rawSousActivites?: SousActivitePr[];
   }
 
   interface EtatShellModule {
     instances?: EtatInstancePr;
     data?: DonneesPr;
+    /** La sous-vue ouverte de la page courante. */
+    currentSub?: string;
+    /** La bande latérale des Paramètres, repliée ou non. */
+    paramBarreRepliee?: boolean;
+    /** Le compte connecté — son identifiant, une adresse, et son rôle portail. */
+    user?: { id?: string; role?: string } | null;
+    /** Les droits du compte sur le module. */
+    access?: AccesPr;
+    /** L'évaluation dont la fiche est ouverte. */
+    currentEvalId?: string | null;
   }
 
   interface Window {
@@ -50,12 +73,16 @@ declare global {
     loadAllData?: () => Promise<void>;
     /** `pr-shell.js` — redessiner la page courante. */
     renderPage?: () => void;
-    /** `pr-parametres.js` — un fichier, encodé en base64. */
-    fileToBase64?: (fichier: File) => Promise<string>;
     /** Le fichier choisi pour la bibliothèque, entre le choix et l'envoi. */
     _pendingDocFile?: File | null;
     /** `pr-profils.js` — la page des statistiques, que le tableau de bord porte en pied. */
     renderStatistiques?: () => string;
+    /** `pr-shell.js` — le privilège de validation, sur un secteur ou en général. */
+    prCanValidate?: (secteurId?: string) => boolean;
+    /** `pr-evaluation-fiche.js` — l'échappement d'un texte libre des généralités. */
+    _genEsc?: (s: unknown) => string;
+    /** `pr-evaluation-fiche.js` — ouvrir la fiche d'une évaluation. */
+    openEvalDetail?: (evalId: string) => void;
   }
 
   /**
@@ -66,6 +93,8 @@ declare global {
   const MODULE_API: string;
   /** `pr-shell.js` — les privilèges qui contribuent. Globale lexicale. */
   const PR_PRIV_CONTRIB: string[];
+  /** `pr-shell.js` — les pages et leurs sous-vues. Globale lexicale. */
+  const NAV_CONFIG: Record<string, { labelKey?: string; icon?: string; subs?: { id: string; labelKey: string; icon?: string }[] }>;
 }
 
 export {};

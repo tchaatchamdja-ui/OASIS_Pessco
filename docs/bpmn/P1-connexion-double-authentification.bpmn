@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_P1" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:collaboration id="Collab_P1">
+    <bpmn:documentation>Ouverture d'une session : mot de passe, puis code à usage unique si la MFA est active. Routes server.js:227-284 ; règles src/auth.js:227-273 et src/mfa.js.</bpmn:documentation>
+    <bpmn:participant id="Part_P1_Agent" name="Agent de l'AAC" processRef="Proc_P1_Agent"></bpmn:participant>
+    <bpmn:participant id="Part_P1_Messagerie" name="Messagerie (SMTP)"><bpmn:documentation>src/email.js — le SMS passe par le même registre (src/mfa.js:87-88)</bpmn:documentation></bpmn:participant>
+    <bpmn:participant id="Part_P1_Oasis" name="OASIS" processRef="Proc_P1_Oasis"></bpmn:participant>
+    <bpmn:messageFlow id="Msg_P1_1" name="identifiant, mot de passe" sourceRef="a_saisir" targetRef="p_soumis" />
+    <bpmn:messageFlow id="Msg_P1_2" name="code" sourceRef="sv_envoi" targetRef="Part_P1_Messagerie" />
+    <bpmn:messageFlow id="Msg_P1_3" name="courriel du code" sourceRef="Part_P1_Messagerie" targetRef="a_code" />
+    <bpmn:messageFlow id="Msg_P1_4" name="code, renvoi ou annulation" sourceRef="a_code" targetRef="p_etape" />
+    <bpmn:messageFlow id="Msg_P1_5" name="page d'accueil" sourceRef="p_aller" targetRef="Part_P1_Agent" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_P1_Agent" name="Agent — se connecter" isExecutable="false">
+    <bpmn:startEvent id="a_debut" name="Besoin d'accéder à OASIS">
+      <bpmn:outgoing>Flow_P1_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="a_saisir" name="Saisir identifiant et mot de passe">
+      <bpmn:documentation>frontend/portail/pages/login-page.ts:97-120</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="a_gw" name="Un code est-il demandé ?">
+      <bpmn:incoming>Flow_P1_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="a_code" name="Lire le code reçu et le saisir">
+      <bpmn:documentation>login-page.ts:183-197</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_5</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="a_fin" name="Accueil ouvert ou refus affiché">
+      <bpmn:incoming>Flow_P1_4</bpmn:incoming>
+      <bpmn:incoming>Flow_P1_5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P1_1" sourceRef="a_debut" targetRef="a_saisir" />
+    <bpmn:sequenceFlow id="Flow_P1_2" sourceRef="a_saisir" targetRef="a_gw" />
+    <bpmn:sequenceFlow id="Flow_P1_3" name="oui" sourceRef="a_gw" targetRef="a_code" />
+    <bpmn:sequenceFlow id="Flow_P1_4" name="non" sourceRef="a_gw" targetRef="a_fin" />
+    <bpmn:sequenceFlow id="Flow_P1_5" sourceRef="a_code" targetRef="a_fin" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P1_Oasis" name="P1_Connexion" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_P1_Oasis">
+      <bpmn:lane id="Lane_P1_Portail" name="Portail — page de connexion">
+        <bpmn:flowNodeRef>p_soumis</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_post</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_etape</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_gw_geste</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_fin_annule</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_resend</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_post_mfa</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_restants</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_aller</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P1_Serveur" name="Serveur">
+        <bpmn:flowNodeRef>sv_debit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_429</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_fournis</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_400</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_compte</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_inconnu</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_bloque</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_locked</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_temp</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_temp</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_mdp</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_mfa</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_session</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_inst1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_inst1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_inst2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_inst2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_envoi</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_renvoi</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_verdict</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_expire</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_essais</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_actif</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_inactif</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_session2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_cookie</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P1_Magasin" name="Magasin">
+        <bpmn:flowNodeRef>m_annuaire</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_echec</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_fin_echec</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_raz</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_defi</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_verif</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="p_soumis" name="Formulaire soumis">
+      <bpmn:documentation>login-page.ts:97</bpmn:documentation>
+      <bpmn:outgoing>Flow_P1_6</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="p_soumis_def" />
+    </bpmn:startEvent>
+    <bpmn:task id="p_post" name="Bloquer le bouton ; POST /api/login">
+      <bpmn:documentation>login-page.ts:99-120</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:receiveTask id="p_etape" name="Afficher l'étape du code ; attendre le geste">
+      <bpmn:documentation>login-page.ts:131, 147-166</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_31</bpmn:incoming>
+      <bpmn:incoming>Flow_P1_43</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_32</bpmn:outgoing>
+    </bpmn:receiveTask>
+    <bpmn:exclusiveGateway id="p_gw_geste" name="Geste de l'agent ?">
+      <bpmn:incoming>Flow_P1_32</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_33</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_34</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_35</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="p_fin_annule" name="Retour au formulaire">
+      <bpmn:documentation>mfaCancel : login-page.ts:168-181</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_33</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="p_resend" name="POST /api/login/mfa/resend (challengeId, username)">
+      <bpmn:documentation>login-page.ts:199 et suivantes</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_34</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_36</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="p_post_mfa" name="POST /api/login/mfa (challengeId, code)">
+      <bpmn:documentation>login-page.ts:183-191</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_35</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_38</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="p_restants" name="Afficher les essais restants">
+      <bpmn:documentation>login-page.ts:193-196</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_42</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_43</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="p_aller" name="Aller à / (portail)">
+      <bpmn:documentation>login-page.ts:132, 191. Écart : la page quittée n'est pas retenue.</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_49</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_50</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="p_fin" name="Session ouverte">
+      <bpmn:incoming>Flow_P1_50</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_debit" name="Plus de 20 essais en 15 min depuis cette IP ?">
+      <bpmn:documentation>limiterAuth : src/protections.js:66-89</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_429" name="429 too_many_attempts (AUTH_DEBIT_DEPASSE)">
+      <bpmn:documentation>src/protections.js:82-86</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="m_annuaire" name="Relire l'annuaire">
+      <bpmn:documentation>server.js:231</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="sv_gw_fournis" name="Identifiant et mot de passe fournis ?">
+      <bpmn:documentation>server.js:234</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_11</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_400" name="400 invalid">
+      <bpmn:documentation>server.js:234</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_compte" name="Compte connu et actif ?">
+      <bpmn:documentation>src/auth.js:230-233 (LOGIN_ECHEC journalisé, S1)</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_13</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_inconnu" name="401 invalid">
+      <bpmn:documentation>src/auth.js:232</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_bloque" name="Compte bloqué ?">
+      <bpmn:documentation>src/auth.js:234-237. Écart mineur : « locked » distinct de « invalid » révèle un compte existant.</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_15</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_16</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_locked" name="401 locked">
+      <bpmn:documentation>src/auth.js:236</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_temp" name="Mot de passe temporaire expiré (48 h) ?">
+      <bpmn:documentation>src/auth.js:239-242 ; durée server.js:40</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_17</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_temp" name="401 temp_expired">
+      <bpmn:documentation>src/auth.js:241</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_mdp" name="Mot de passe juste (scrypt) ?">
+      <bpmn:documentation>src/auth.js:48-51, 243</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_19</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_21</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="m_echec" name="Incrémenter failedAttempts ; bloquer au seuil (5)">
+      <bpmn:documentation>Décompte arrêté dans la transformation atomique ; COMPTE_BLOQUE ou LOGIN_ECHEC (S1), avis : src/auth.js:244-262</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_20</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="m_fin_echec" name="401 invalid ou locked">
+      <bpmn:documentation>src/auth.js:263</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_20</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="m_raz" name="Remettre failedAttempts à 0">
+      <bpmn:documentation>src/auth.js:265-267</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_22</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="sv_gw_mfa" name="MFA active ?">
+      <bpmn:documentation>OASIS_MFA l'emporte sur security.mfaEnabled : server.js:220-225, 235 ; src/auth.js:269</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_23</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_27</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="sv_session" name="Créer la session ; journaliser LOGIN (S1)">
+      <bpmn:documentation>Session unique : les autres sessions du compte sont retirées. src/auth.js:192-200, 270-271</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_23</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_24</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_gw_inst1" name="Instance du compte désactivée ?">
+      <bpmn:documentation>server.js:241</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_24</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_25</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_26</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_inst1" name="403 instance_desactivee — session et LOGIN déjà posés (écart)">
+      <bpmn:documentation>server.js:242 ; la session créée par src/auth.js:270 reste dans la table, sans cookie.</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_25</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_inst2" name="Instance du compte désactivée ?">
+      <bpmn:documentation>server.js:241</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_27</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_28</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_29</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_inst2" name="403 instance_desactivee">
+      <bpmn:documentation>server.js:242</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_28</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="m_defi" name="Poser le défi : code à 6 chiffres, empreinte salée, 10 min">
+      <bpmn:documentation>src/mfa.js:65-85</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_29</bpmn:incoming>
+      <bpmn:incoming>Flow_P1_37</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_30</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sendTask id="sv_envoi" name="Envoyer le code (sans attendre) ; journaliser MFA_CODE_ENVOYE">
+      <bpmn:documentation>Un échec d'envoi ne part qu'aux traces : src/mfa.js:93-103</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_30</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_31</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:task id="sv_renvoi" name="Retirer l'ancien défi ; en poser un pour le compte du corps (écart)">
+      <bpmn:documentation>server.js:273-277 ; src/mfa.js:145-155. Écart mesuré : le défi n'est pas lié au compte, un défi valide permet d'en obtenir un pour un autre compte.</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_36</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_37</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="m_verif" name="Vérifier le code dans la transformation atomique">
+      <bpmn:documentation>src/mfa.js:112-139</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_38</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_39</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="sv_gw_verdict" name="Verdict ?">
+      <bpmn:documentation>src/mfa.js:119-135</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_39</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_40</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_41</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_42</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_44</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_expire" name="401 mfa_expired">
+      <bpmn:documentation>src/mfa.js:119 ; server.js:263</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_40</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="sv_fin_essais" name="401 mfa_too_many_attempts">
+      <bpmn:documentation>src/mfa.js:121-126</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_41</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_actif" name="Compte actif ?">
+      <bpmn:documentation>server.js:264-265. Écart : ni l'instance désactivée ni le blocage ne sont revérifiés ici.</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_44</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_45</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P1_46</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_inactif" name="401 invalid">
+      <bpmn:documentation>server.js:265</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_45</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="sv_session2" name="Créer la session ; journaliser LOGIN mfa (S1)">
+      <bpmn:documentation>server.js:266-267</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_46</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_47</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_fus" name="">
+      <bpmn:incoming>Flow_P1_26</bpmn:incoming>
+      <bpmn:incoming>Flow_P1_47</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_48</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="sv_cookie" name="Poser le cookie HttpOnly, SameSite=Lax (Secure en production)">
+      <bpmn:documentation>server.js:208-212, 254, 268</bpmn:documentation>
+      <bpmn:incoming>Flow_P1_48</bpmn:incoming>
+      <bpmn:outgoing>Flow_P1_49</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_P1_6" sourceRef="p_soumis" targetRef="p_post" />
+    <bpmn:sequenceFlow id="Flow_P1_7" sourceRef="p_post" targetRef="sv_debit" />
+    <bpmn:sequenceFlow id="Flow_P1_8" name="oui" sourceRef="sv_debit" targetRef="sv_fin_429" />
+    <bpmn:sequenceFlow id="Flow_P1_9" name="non" sourceRef="sv_debit" targetRef="m_annuaire" />
+    <bpmn:sequenceFlow id="Flow_P1_10" sourceRef="m_annuaire" targetRef="sv_gw_fournis" />
+    <bpmn:sequenceFlow id="Flow_P1_11" name="non" sourceRef="sv_gw_fournis" targetRef="sv_fin_400" />
+    <bpmn:sequenceFlow id="Flow_P1_12" name="oui" sourceRef="sv_gw_fournis" targetRef="sv_gw_compte" />
+    <bpmn:sequenceFlow id="Flow_P1_13" name="non" sourceRef="sv_gw_compte" targetRef="sv_fin_inconnu" />
+    <bpmn:sequenceFlow id="Flow_P1_14" name="oui" sourceRef="sv_gw_compte" targetRef="sv_gw_bloque" />
+    <bpmn:sequenceFlow id="Flow_P1_15" name="oui" sourceRef="sv_gw_bloque" targetRef="sv_fin_locked" />
+    <bpmn:sequenceFlow id="Flow_P1_16" name="non" sourceRef="sv_gw_bloque" targetRef="sv_gw_temp" />
+    <bpmn:sequenceFlow id="Flow_P1_17" name="oui" sourceRef="sv_gw_temp" targetRef="sv_fin_temp" />
+    <bpmn:sequenceFlow id="Flow_P1_18" name="non" sourceRef="sv_gw_temp" targetRef="sv_gw_mdp" />
+    <bpmn:sequenceFlow id="Flow_P1_19" name="non" sourceRef="sv_gw_mdp" targetRef="m_echec" />
+    <bpmn:sequenceFlow id="Flow_P1_20" sourceRef="m_echec" targetRef="m_fin_echec" />
+    <bpmn:sequenceFlow id="Flow_P1_21" name="oui" sourceRef="sv_gw_mdp" targetRef="m_raz" />
+    <bpmn:sequenceFlow id="Flow_P1_22" sourceRef="m_raz" targetRef="sv_gw_mfa" />
+    <bpmn:sequenceFlow id="Flow_P1_23" name="non" sourceRef="sv_gw_mfa" targetRef="sv_session" />
+    <bpmn:sequenceFlow id="Flow_P1_24" sourceRef="sv_session" targetRef="sv_gw_inst1" />
+    <bpmn:sequenceFlow id="Flow_P1_25" name="oui" sourceRef="sv_gw_inst1" targetRef="sv_fin_inst1" />
+    <bpmn:sequenceFlow id="Flow_P1_26" name="non" sourceRef="sv_gw_inst1" targetRef="sv_fus" />
+    <bpmn:sequenceFlow id="Flow_P1_27" name="oui" sourceRef="sv_gw_mfa" targetRef="sv_gw_inst2" />
+    <bpmn:sequenceFlow id="Flow_P1_28" name="oui" sourceRef="sv_gw_inst2" targetRef="sv_fin_inst2" />
+    <bpmn:sequenceFlow id="Flow_P1_29" name="non" sourceRef="sv_gw_inst2" targetRef="m_defi" />
+    <bpmn:sequenceFlow id="Flow_P1_30" sourceRef="m_defi" targetRef="sv_envoi" />
+    <bpmn:sequenceFlow id="Flow_P1_31" sourceRef="sv_envoi" targetRef="p_etape" />
+    <bpmn:sequenceFlow id="Flow_P1_32" sourceRef="p_etape" targetRef="p_gw_geste" />
+    <bpmn:sequenceFlow id="Flow_P1_33" name="annulation" sourceRef="p_gw_geste" targetRef="p_fin_annule" />
+    <bpmn:sequenceFlow id="Flow_P1_34" name="renvoi demandé" sourceRef="p_gw_geste" targetRef="p_resend" />
+    <bpmn:sequenceFlow id="Flow_P1_35" name="code saisi" sourceRef="p_gw_geste" targetRef="p_post_mfa" />
+    <bpmn:sequenceFlow id="Flow_P1_36" sourceRef="p_resend" targetRef="sv_renvoi" />
+    <bpmn:sequenceFlow id="Flow_P1_37" sourceRef="sv_renvoi" targetRef="m_defi" />
+    <bpmn:sequenceFlow id="Flow_P1_38" sourceRef="p_post_mfa" targetRef="m_verif" />
+    <bpmn:sequenceFlow id="Flow_P1_39" sourceRef="m_verif" targetRef="sv_gw_verdict" />
+    <bpmn:sequenceFlow id="Flow_P1_40" name="défi absent ou expiré" sourceRef="sv_gw_verdict" targetRef="sv_fin_expire" />
+    <bpmn:sequenceFlow id="Flow_P1_41" name="5 essais atteints" sourceRef="sv_gw_verdict" targetRef="sv_fin_essais" />
+    <bpmn:sequenceFlow id="Flow_P1_42" name="code faux" sourceRef="sv_gw_verdict" targetRef="p_restants" />
+    <bpmn:sequenceFlow id="Flow_P1_43" sourceRef="p_restants" targetRef="p_etape" />
+    <bpmn:sequenceFlow id="Flow_P1_44" name="code juste" sourceRef="sv_gw_verdict" targetRef="sv_gw_actif" />
+    <bpmn:sequenceFlow id="Flow_P1_45" name="non" sourceRef="sv_gw_actif" targetRef="sv_fin_inactif" />
+    <bpmn:sequenceFlow id="Flow_P1_46" name="oui" sourceRef="sv_gw_actif" targetRef="sv_session2" />
+    <bpmn:sequenceFlow id="Flow_P1_47" sourceRef="sv_session2" targetRef="sv_fus" />
+    <bpmn:sequenceFlow id="Flow_P1_48" sourceRef="sv_fus" targetRef="sv_cookie" />
+    <bpmn:sequenceFlow id="Flow_P1_49" sourceRef="sv_cookie" targetRef="p_aller" />
+    <bpmn:sequenceFlow id="Flow_P1_50" sourceRef="p_aller" targetRef="p_fin" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P1" name="P1 — Connexion et double authentification">
+    <bpmndi:BPMNPlane id="Plane_P1" bpmnElement="Collab_P1">
+      <bpmndi:BPMNShape id="Part_P1_Agent_di" bpmnElement="Part_P1_Agent" isHorizontal="true"><dc:Bounds x="100" y="60" width="4970" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P1_Messagerie_di" bpmnElement="Part_P1_Messagerie" isHorizontal="true"><dc:Bounds x="100" y="220" width="4970" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P1_Oasis_di" bpmnElement="Part_P1_Oasis" isHorizontal="true"><dc:Bounds x="100" y="320" width="4970" height="960" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P1_Portail_di" bpmnElement="Lane_P1_Portail" isHorizontal="true"><dc:Bounds x="130" y="320" width="4940" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P1_Serveur_di" bpmnElement="Lane_P1_Serveur" isHorizontal="true"><dc:Bounds x="130" y="560" width="4940" height="480" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P1_Magasin_di" bpmnElement="Lane_P1_Magasin" isHorizontal="true"><dc:Bounds x="130" y="1040" width="4940" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_debut_di" bpmnElement="a_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_saisir_di" bpmnElement="a_saisir"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_gw_di" bpmnElement="a_gw" isMarkerVisible="true"><dc:Bounds x="2125" y="95" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_code_di" bpmnElement="a_code"><dc:Bounds x="2895" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_fin_di" bpmnElement="a_fin"><dc:Bounds x="4852" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_soumis_di" bpmnElement="p_soumis"><dc:Bounds x="532" y="362" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_post_di" bpmnElement="p_post"><dc:Bounds x="655" y="340" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_etape_di" bpmnElement="p_etape"><dc:Bounds x="2895" y="340" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_gw_geste_di" bpmnElement="p_gw_geste" isMarkerVisible="true"><dc:Bounds x="3085" y="355" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_fin_annule_di" bpmnElement="p_fin_annule"><dc:Bounds x="3092" y="482" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_resend_di" bpmnElement="p_resend"><dc:Bounds x="3215" y="460" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_post_mfa_di" bpmnElement="p_post_mfa"><dc:Bounds x="3375" y="340" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_restants_di" bpmnElement="p_restants"><dc:Bounds x="3695" y="460" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_aller_di" bpmnElement="p_aller"><dc:Bounds x="4655" y="340" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_fin_di" bpmnElement="p_fin"><dc:Bounds x="4852" y="362" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_debit_di" bpmnElement="sv_debit" isMarkerVisible="true"><dc:Bounds x="845" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_429_di" bpmnElement="sv_fin_429"><dc:Bounds x="852" y="722" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_annuaire_di" bpmnElement="m_annuaire"><dc:Bounds x="975" y="1060" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_fournis_di" bpmnElement="sv_gw_fournis" isMarkerVisible="true"><dc:Bounds x="1165" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_400_di" bpmnElement="sv_fin_400"><dc:Bounds x="1172" y="722" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_compte_di" bpmnElement="sv_gw_compte" isMarkerVisible="true"><dc:Bounds x="1325" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_inconnu_di" bpmnElement="sv_fin_inconnu"><dc:Bounds x="1332" y="722" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_bloque_di" bpmnElement="sv_gw_bloque" isMarkerVisible="true"><dc:Bounds x="1485" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_locked_di" bpmnElement="sv_fin_locked"><dc:Bounds x="1492" y="722" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_temp_di" bpmnElement="sv_gw_temp" isMarkerVisible="true"><dc:Bounds x="1645" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_temp_di" bpmnElement="sv_fin_temp"><dc:Bounds x="1652" y="722" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_mdp_di" bpmnElement="sv_gw_mdp" isMarkerVisible="true"><dc:Bounds x="1805" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_echec_di" bpmnElement="m_echec"><dc:Bounds x="1775" y="1060" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_fin_echec_di" bpmnElement="m_fin_echec"><dc:Bounds x="1812" y="1202" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_raz_di" bpmnElement="m_raz"><dc:Bounds x="1935" y="1060" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_mfa_di" bpmnElement="sv_gw_mfa" isMarkerVisible="true"><dc:Bounds x="2125" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_session_di" bpmnElement="sv_session"><dc:Bounds x="2255" y="940" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_inst1_di" bpmnElement="sv_gw_inst1" isMarkerVisible="true"><dc:Bounds x="2445" y="955" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_inst1_di" bpmnElement="sv_fin_inst1"><dc:Bounds x="2452" y="842" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_inst2_di" bpmnElement="sv_gw_inst2" isMarkerVisible="true"><dc:Bounds x="2285" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_inst2_di" bpmnElement="sv_fin_inst2"><dc:Bounds x="2292" y="722" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_defi_di" bpmnElement="m_defi"><dc:Bounds x="2575" y="1060" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_envoi_di" bpmnElement="sv_envoi"><dc:Bounds x="2735" y="580" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_renvoi_di" bpmnElement="sv_renvoi"><dc:Bounds x="3215" y="700" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_verif_di" bpmnElement="m_verif"><dc:Bounds x="3535" y="1060" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_verdict_di" bpmnElement="sv_gw_verdict" isMarkerVisible="true"><dc:Bounds x="3725" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_expire_di" bpmnElement="sv_fin_expire"><dc:Bounds x="3732" y="722" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_essais_di" bpmnElement="sv_fin_essais"><dc:Bounds x="3892" y="842" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_actif_di" bpmnElement="sv_gw_actif" isMarkerVisible="true"><dc:Bounds x="4045" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_inactif_di" bpmnElement="sv_fin_inactif"><dc:Bounds x="4052" y="722" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_session2_di" bpmnElement="sv_session2"><dc:Bounds x="4175" y="580" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fus_di" bpmnElement="sv_fus" isMarkerVisible="true"><dc:Bounds x="4365" y="595" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_cookie_di" bpmnElement="sv_cookie"><dc:Bounds x="4495" y="580" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P1_1_di" bpmnElement="Flow_P1_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_2_di" bpmnElement="Flow_P1_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="2125" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_3_di" bpmnElement="Flow_P1_3">
+        <di:waypoint x="2175" y="120" />
+        <di:waypoint x="2895" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_4_di" bpmnElement="Flow_P1_4">
+        <di:waypoint x="2175" y="120" />
+        <di:waypoint x="4852" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_5_di" bpmnElement="Flow_P1_5">
+        <di:waypoint x="3005" y="120" />
+        <di:waypoint x="4852" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_6_di" bpmnElement="Flow_P1_6">
+        <di:waypoint x="568" y="380" />
+        <di:waypoint x="655" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_7_di" bpmnElement="Flow_P1_7">
+        <di:waypoint x="765" y="380" />
+        <di:waypoint x="785" y="380" />
+        <di:waypoint x="785" y="620" />
+        <di:waypoint x="845" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_8_di" bpmnElement="Flow_P1_8">
+        <di:waypoint x="870" y="645" />
+        <di:waypoint x="870" y="722" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_9_di" bpmnElement="Flow_P1_9">
+        <di:waypoint x="895" y="620" />
+        <di:waypoint x="955" y="620" />
+        <di:waypoint x="955" y="1100" />
+        <di:waypoint x="975" y="1100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_10_di" bpmnElement="Flow_P1_10">
+        <di:waypoint x="1085" y="1100" />
+        <di:waypoint x="1105" y="1100" />
+        <di:waypoint x="1105" y="620" />
+        <di:waypoint x="1165" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_11_di" bpmnElement="Flow_P1_11">
+        <di:waypoint x="1190" y="645" />
+        <di:waypoint x="1190" y="722" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_12_di" bpmnElement="Flow_P1_12">
+        <di:waypoint x="1215" y="620" />
+        <di:waypoint x="1325" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_13_di" bpmnElement="Flow_P1_13">
+        <di:waypoint x="1350" y="645" />
+        <di:waypoint x="1350" y="722" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_14_di" bpmnElement="Flow_P1_14">
+        <di:waypoint x="1375" y="620" />
+        <di:waypoint x="1485" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_15_di" bpmnElement="Flow_P1_15">
+        <di:waypoint x="1510" y="645" />
+        <di:waypoint x="1510" y="722" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_16_di" bpmnElement="Flow_P1_16">
+        <di:waypoint x="1535" y="620" />
+        <di:waypoint x="1645" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_17_di" bpmnElement="Flow_P1_17">
+        <di:waypoint x="1670" y="645" />
+        <di:waypoint x="1670" y="722" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_18_di" bpmnElement="Flow_P1_18">
+        <di:waypoint x="1695" y="620" />
+        <di:waypoint x="1805" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_19_di" bpmnElement="Flow_P1_19">
+        <di:waypoint x="1830" y="645" />
+        <di:waypoint x="1830" y="1060" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_20_di" bpmnElement="Flow_P1_20">
+        <di:waypoint x="1830" y="1140" />
+        <di:waypoint x="1830" y="1202" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_21_di" bpmnElement="Flow_P1_21">
+        <di:waypoint x="1855" y="620" />
+        <di:waypoint x="1915" y="620" />
+        <di:waypoint x="1915" y="1100" />
+        <di:waypoint x="1935" y="1100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_22_di" bpmnElement="Flow_P1_22">
+        <di:waypoint x="2045" y="1100" />
+        <di:waypoint x="2065" y="1100" />
+        <di:waypoint x="2065" y="620" />
+        <di:waypoint x="2125" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_23_di" bpmnElement="Flow_P1_23">
+        <di:waypoint x="2150" y="645" />
+        <di:waypoint x="2150" y="980" />
+        <di:waypoint x="2255" y="980" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_24_di" bpmnElement="Flow_P1_24">
+        <di:waypoint x="2365" y="980" />
+        <di:waypoint x="2445" y="980" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_25_di" bpmnElement="Flow_P1_25">
+        <di:waypoint x="2470" y="955" />
+        <di:waypoint x="2470" y="878" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_26_di" bpmnElement="Flow_P1_26">
+        <di:waypoint x="2495" y="980" />
+        <di:waypoint x="4390" y="980" />
+        <di:waypoint x="4390" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_27_di" bpmnElement="Flow_P1_27">
+        <di:waypoint x="2175" y="620" />
+        <di:waypoint x="2285" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_28_di" bpmnElement="Flow_P1_28">
+        <di:waypoint x="2310" y="645" />
+        <di:waypoint x="2310" y="722" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_29_di" bpmnElement="Flow_P1_29">
+        <di:waypoint x="2335" y="620" />
+        <di:waypoint x="2555" y="620" />
+        <di:waypoint x="2555" y="1100" />
+        <di:waypoint x="2575" y="1100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_30_di" bpmnElement="Flow_P1_30">
+        <di:waypoint x="2685" y="1100" />
+        <di:waypoint x="2705" y="1100" />
+        <di:waypoint x="2705" y="620" />
+        <di:waypoint x="2735" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_31_di" bpmnElement="Flow_P1_31">
+        <di:waypoint x="2845" y="620" />
+        <di:waypoint x="2865" y="620" />
+        <di:waypoint x="2865" y="380" />
+        <di:waypoint x="2895" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_32_di" bpmnElement="Flow_P1_32">
+        <di:waypoint x="3005" y="380" />
+        <di:waypoint x="3085" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_33_di" bpmnElement="Flow_P1_33">
+        <di:waypoint x="3110" y="405" />
+        <di:waypoint x="3110" y="482" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_34_di" bpmnElement="Flow_P1_34">
+        <di:waypoint x="3135" y="380" />
+        <di:waypoint x="3195" y="380" />
+        <di:waypoint x="3195" y="500" />
+        <di:waypoint x="3215" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_35_di" bpmnElement="Flow_P1_35">
+        <di:waypoint x="3135" y="380" />
+        <di:waypoint x="3375" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_36_di" bpmnElement="Flow_P1_36">
+        <di:waypoint x="3270" y="540" />
+        <di:waypoint x="3270" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_37_di" bpmnElement="Flow_P1_37">
+        <di:waypoint x="3270" y="780" />
+        <di:waypoint x="3270" y="1158" />
+        <di:waypoint x="2630" y="1158" />
+        <di:waypoint x="2630" y="1140" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_38_di" bpmnElement="Flow_P1_38">
+        <di:waypoint x="3485" y="380" />
+        <di:waypoint x="3505" y="380" />
+        <di:waypoint x="3505" y="1100" />
+        <di:waypoint x="3535" y="1100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_39_di" bpmnElement="Flow_P1_39">
+        <di:waypoint x="3645" y="1100" />
+        <di:waypoint x="3665" y="1100" />
+        <di:waypoint x="3665" y="620" />
+        <di:waypoint x="3725" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_40_di" bpmnElement="Flow_P1_40">
+        <di:waypoint x="3750" y="645" />
+        <di:waypoint x="3750" y="722" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_41_di" bpmnElement="Flow_P1_41">
+        <di:waypoint x="3775" y="620" />
+        <di:waypoint x="3872" y="620" />
+        <di:waypoint x="3872" y="860" />
+        <di:waypoint x="3892" y="860" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_42_di" bpmnElement="Flow_P1_42">
+        <di:waypoint x="3750" y="595" />
+        <di:waypoint x="3750" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_43_di" bpmnElement="Flow_P1_43">
+        <di:waypoint x="3750" y="460" />
+        <di:waypoint x="3750" y="442" />
+        <di:waypoint x="2950" y="442" />
+        <di:waypoint x="2950" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_44_di" bpmnElement="Flow_P1_44">
+        <di:waypoint x="3775" y="620" />
+        <di:waypoint x="4045" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_45_di" bpmnElement="Flow_P1_45">
+        <di:waypoint x="4070" y="645" />
+        <di:waypoint x="4070" y="722" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_46_di" bpmnElement="Flow_P1_46">
+        <di:waypoint x="4095" y="620" />
+        <di:waypoint x="4175" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_47_di" bpmnElement="Flow_P1_47">
+        <di:waypoint x="4285" y="620" />
+        <di:waypoint x="4365" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_48_di" bpmnElement="Flow_P1_48">
+        <di:waypoint x="4415" y="620" />
+        <di:waypoint x="4495" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_49_di" bpmnElement="Flow_P1_49">
+        <di:waypoint x="4605" y="620" />
+        <di:waypoint x="4625" y="620" />
+        <di:waypoint x="4625" y="380" />
+        <di:waypoint x="4655" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P1_50_di" bpmnElement="Flow_P1_50">
+        <di:waypoint x="4765" y="380" />
+        <di:waypoint x="4852" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P1_1_di" bpmnElement="Msg_P1_1">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="200" />
+        <di:waypoint x="550" y="200" />
+        <di:waypoint x="550" y="362" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P1_2_di" bpmnElement="Msg_P1_2">
+        <di:waypoint x="2790" y="580" />
+        <di:waypoint x="2790" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P1_3_di" bpmnElement="Msg_P1_3">
+        <di:waypoint x="2950" y="220" />
+        <di:waypoint x="2950" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P1_4_di" bpmnElement="Msg_P1_4">
+        <di:waypoint x="3030" y="160" />
+        <di:waypoint x="3030" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P1_5_di" bpmnElement="Msg_P1_5">
+        <di:waypoint x="4710" y="340" />
+        <di:waypoint x="4710" y="180" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

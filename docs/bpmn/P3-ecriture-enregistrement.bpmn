@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_P3" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:collaboration id="Collab_P3">
+    <bpmn:documentation>Patron commun aux écritures des modules. Exemple suivi : POST /api/m/pr/evaluations/:id/soumettre-directeur (src/modules/profil_risque/routes-workflow.js:28-40). Les gardes du socle sont posées par src/module_loader.js:59-69 et server.js:108-136.</bpmn:documentation>
+    <bpmn:participant id="Part_P3_Agent" name="Agent de l'AAC" processRef="Proc_P3_Agent"></bpmn:participant>
+    <bpmn:participant id="Part_P3_Oasis" name="OASIS" processRef="Proc_P3_Oasis"></bpmn:participant>
+    <bpmn:messageFlow id="Msg_P3_1" name="formulaire" sourceRef="a_saisir" targetRef="m_debut" />
+    <bpmn:messageFlow id="Msg_P3_2" name="résultat" sourceRef="m_afficher" targetRef="a_lire" />
+    <bpmn:messageFlow id="Msg_P3_3" name="refus traduit (messages-serveur.ts)" sourceRef="Part_P3_Oasis" targetRef="a_lire" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_P3_Agent" name="Agent — enregistrer" isExecutable="false">
+    <bpmn:startEvent id="a_debut" name="Enregistrer une saisie">
+      <bpmn:outgoing>Flow_P3_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="a_saisir" name="Remplir et valider le formulaire">
+      <bpmn:incoming>Flow_P3_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_lire" name="Lire le résultat ou le refus">
+      <bpmn:incoming>Flow_P3_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="a_fin" name="Saisie traitée">
+      <bpmn:incoming>Flow_P3_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P3_1" sourceRef="a_debut" targetRef="a_saisir" />
+    <bpmn:sequenceFlow id="Flow_P3_2" sourceRef="a_saisir" targetRef="a_lire" />
+    <bpmn:sequenceFlow id="Flow_P3_3" sourceRef="a_lire" targetRef="a_fin" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P3_Oasis" name="P3_Ecriture" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_P3_Oasis">
+      <bpmn:lane id="Lane_P3_Module" name="Module (écran)">
+        <bpmn:flowNodeRef>m_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_post</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_afficher</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P3_Serveur" name="Serveur">
+        <bpmn:flowNodeRef>sv_gw_origine</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_origine</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_enveloppe</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_forme</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_ecoute</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_s2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_session</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_session</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_schema</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_schema</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_existe</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_404a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_priv</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_priv</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_403</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_present</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_404b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_s1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_repondre</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_par</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_journal_module</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_inscrit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_journal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_trace</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P3_Magasin" name="Magasin">
+        <bpmn:flowNodeRef>mg_lire</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>mg_ecrire</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="m_debut" name="Enregistrement demandé">
+      <bpmn:outgoing>Flow_P3_4</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="m_debut_def" />
+    </bpmn:startEvent>
+    <bpmn:task id="m_post" name="json() : POST, PUT ou DELETE vers /api/…">
+      <bpmn:documentation>frontend/socle/commun.ts:318-338 ; en-tête X-OASIS-Request posé par requete.ts:115-118</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_gw_origine" name="En-tête X-OASIS-Request présent ?">
+      <bpmn:documentation>Origine applicative des écritures sur /api/ : src/protections.js:197-205 (posée par server.js:90, avant toute route)</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P3_7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_origine" name="403 origine_non_reconnue">
+      <bpmn:documentation>src/protections.js:203</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_enveloppe" name="Corps de forme acceptable ?">
+      <bpmn:documentation>Profondeur 8, 120 champs, 2 000 éléments, noms de champ bornés : src/valider.js:191-219 ; posée sur chaque préfixe de module par src/module_loader.js:64-66</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P3_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_forme" name="400 corps_invalide">
+      <bpmn:documentation>src/valider.js:214-216</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="sv_ecoute" name="Poser l'écoute d'audit du module (sur « finish »)">
+      <bpmn:documentation>src/module_loader.js:68 ; src/module_audit.js:193-196</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:callActivity id="sv_s2" name="Contrôler la session (S2)" calledElement="Proc_S2_Oasis">
+      <bpmn:incoming>Flow_P3_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_11</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="sv_gw_session" name="Session valide et sous le plafond ?">
+      <bpmn:incoming>Flow_P3_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_12</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P3_13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_session" name="401 ou 429">
+      <bpmn:documentation>Voir S2</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_schema" name="Champs conformes au schéma de la route ?">
+      <bpmn:documentation>Seulement sur les routes qui déclarent valider() ou enregistrement() : src/valider.js:71-106, 153-175 (ex. routes-partage.js:214, routes-parametres.js:204). La route suivie n'en déclare pas : la branche « oui » est alors directe.</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_14</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P3_15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_schema" name="400 corps_invalide (manquants, invalides)">
+      <bpmn:documentation>src/valider.js:96-102, 159-169</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="mg_lire" name="Lire l'enregistrement courant">
+      <bpmn:documentation>routes-workflow.js:29 ; src/magasin_module.js:126-128 (les retirés sont écartés)</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_16</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="sv_gw_existe" name="L'enregistrement existe ?">
+      <bpmn:documentation>routes-workflow.js:30</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_17</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P3_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_404a" name="404 not_found">
+      <bpmn:documentation>routes-workflow.js:30</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="sv_priv" name="Calculer le privilège effectif : accès, portée secteur, portée domaine, privilège de base">
+      <bpmn:documentation>src/module_rights.js:95-122 ; prestataire exclu : profil_risque/roles.js:23-26</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_19</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_gw_priv" name="Rang du privilège ≥ rang requis ?">
+      <bpmn:documentation>GESTIONNAIRE &gt; VALIDATEUR &gt; CONTRIBUTEUR &gt; LECTEUR &gt; AUCUN : src/module_rights.js:20, 124-131 ; requis CONTRIBUTEUR ici : routes-workflow.js:31</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_20</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P3_21</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_403" name="403 privilege_insuffisant">
+      <bpmn:documentation>profil_risque/roles.js:34</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_20</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="mg_ecrire" name="Transformer atomiquement : file par collection, relire, appliquer, fichier temporaire puis renommage">
+      <bpmn:documentation>src/magasin.js:154-161, 206-215 ; src/magasin_module.js:148-163 ; src/store.js:74-83. Écart : l'état et le privilège lus avant ne sont pas revérifiés dans la transformation (routes-workflow.js:29-36).</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_22</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="sv_gw_present" name="Écriture faite ?">
+      <bpmn:documentation>update rend null si l'enregistrement a disparu : magasin_module.js:154 ; routes-workflow.js:37</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_23</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P3_24</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_404b" name="404 not_found">
+      <bpmn:documentation>routes-workflow.js:37</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_23</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="sv_s1" name="Journal du socle : action propre à la route (S1)" calledElement="Proc_S1_Oasis">
+      <bpmn:documentation>PR_SOUMISSION_DIRECTEUR : routes-workflow.js:38. Attendu avant la réponse, mais après l'écriture : un échec ici rend 500 avec l'écriture déjà faite.</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_24</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_25</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:task id="sv_repondre" name="Répondre 2xx avec l'enregistrement">
+      <bpmn:documentation>routes-workflow.js:39</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_25</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_26</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:parallelGateway id="sv_par" name="Réponse partie">
+      <bpmn:incoming>Flow_P3_26</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_27</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P3_29</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="m_afficher" name="Afficher le résultat">
+      <bpmn:incoming>Flow_P3_27</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_28</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="m_fin" name="Écran à jour">
+      <bpmn:incoming>Flow_P3_28</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="sv_journal_module" name="Journal du module (S1), sans être attendu" calledElement="Proc_S1_Oasis">
+      <bpmn:documentation>Action et objet déduits de l'URL, détails tirés du corps reçu — non de ce qui a été écrit : src/module_audit.js:173-227</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_29</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_30</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="sv_gw_inscrit" name="Inscription réussie ?">
+      <bpmn:incoming>Flow_P3_30</bpmn:incoming>
+      <bpmn:outgoing>Flow_P3_31</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P3_32</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_journal" name="Entrée chaînée au journal du module">
+      <bpmn:incoming>Flow_P3_31</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:endEvent id="sv_fin_trace" name="Trace « journal du module non inscrit » seulement (écart)">
+      <bpmn:documentation>src/module_audit.js:221-227</bpmn:documentation>
+      <bpmn:incoming>Flow_P3_32</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P3_4" sourceRef="m_debut" targetRef="m_post" />
+    <bpmn:sequenceFlow id="Flow_P3_5" sourceRef="m_post" targetRef="sv_gw_origine" />
+    <bpmn:sequenceFlow id="Flow_P3_6" name="non" sourceRef="sv_gw_origine" targetRef="sv_fin_origine" />
+    <bpmn:sequenceFlow id="Flow_P3_7" name="oui" sourceRef="sv_gw_origine" targetRef="sv_enveloppe" />
+    <bpmn:sequenceFlow id="Flow_P3_8" name="non" sourceRef="sv_enveloppe" targetRef="sv_fin_forme" />
+    <bpmn:sequenceFlow id="Flow_P3_9" name="oui" sourceRef="sv_enveloppe" targetRef="sv_ecoute" />
+    <bpmn:sequenceFlow id="Flow_P3_10" sourceRef="sv_ecoute" targetRef="sv_s2" />
+    <bpmn:sequenceFlow id="Flow_P3_11" sourceRef="sv_s2" targetRef="sv_gw_session" />
+    <bpmn:sequenceFlow id="Flow_P3_12" name="non" sourceRef="sv_gw_session" targetRef="sv_fin_session" />
+    <bpmn:sequenceFlow id="Flow_P3_13" name="oui" sourceRef="sv_gw_session" targetRef="sv_gw_schema" />
+    <bpmn:sequenceFlow id="Flow_P3_14" name="non" sourceRef="sv_gw_schema" targetRef="sv_fin_schema" />
+    <bpmn:sequenceFlow id="Flow_P3_15" name="oui ou sans schéma" sourceRef="sv_gw_schema" targetRef="mg_lire" />
+    <bpmn:sequenceFlow id="Flow_P3_16" sourceRef="mg_lire" targetRef="sv_gw_existe" />
+    <bpmn:sequenceFlow id="Flow_P3_17" name="non" sourceRef="sv_gw_existe" targetRef="sv_fin_404a" />
+    <bpmn:sequenceFlow id="Flow_P3_18" name="oui" sourceRef="sv_gw_existe" targetRef="sv_priv" />
+    <bpmn:sequenceFlow id="Flow_P3_19" sourceRef="sv_priv" targetRef="sv_gw_priv" />
+    <bpmn:sequenceFlow id="Flow_P3_20" name="non" sourceRef="sv_gw_priv" targetRef="sv_fin_403" />
+    <bpmn:sequenceFlow id="Flow_P3_21" name="oui" sourceRef="sv_gw_priv" targetRef="mg_ecrire" />
+    <bpmn:sequenceFlow id="Flow_P3_22" sourceRef="mg_ecrire" targetRef="sv_gw_present" />
+    <bpmn:sequenceFlow id="Flow_P3_23" name="non" sourceRef="sv_gw_present" targetRef="sv_fin_404b" />
+    <bpmn:sequenceFlow id="Flow_P3_24" name="oui" sourceRef="sv_gw_present" targetRef="sv_s1" />
+    <bpmn:sequenceFlow id="Flow_P3_25" sourceRef="sv_s1" targetRef="sv_repondre" />
+    <bpmn:sequenceFlow id="Flow_P3_26" sourceRef="sv_repondre" targetRef="sv_par" />
+    <bpmn:sequenceFlow id="Flow_P3_27" sourceRef="sv_par" targetRef="m_afficher" />
+    <bpmn:sequenceFlow id="Flow_P3_28" sourceRef="m_afficher" targetRef="m_fin" />
+    <bpmn:sequenceFlow id="Flow_P3_29" sourceRef="sv_par" targetRef="sv_journal_module" />
+    <bpmn:sequenceFlow id="Flow_P3_30" sourceRef="sv_journal_module" targetRef="sv_gw_inscrit" />
+    <bpmn:sequenceFlow id="Flow_P3_31" name="oui" sourceRef="sv_gw_inscrit" targetRef="sv_fin_journal" />
+    <bpmn:sequenceFlow id="Flow_P3_32" name="non" sourceRef="sv_gw_inscrit" targetRef="sv_fin_trace" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P3" name="P3 — Écriture d'un enregistrement (patron des modules)">
+    <bpmndi:BPMNPlane id="Plane_P3" bpmnElement="Collab_P3">
+      <bpmndi:BPMNShape id="Part_P3_Agent_di" bpmnElement="Part_P3_Agent" isHorizontal="true"><dc:Bounds x="100" y="60" width="3690" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P3_Oasis_di" bpmnElement="Part_P3_Oasis" isHorizontal="true"><dc:Bounds x="100" y="220" width="3690" height="720" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P3_Module_di" bpmnElement="Lane_P3_Module" isHorizontal="true"><dc:Bounds x="130" y="220" width="3660" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P3_Serveur_di" bpmnElement="Lane_P3_Serveur" isHorizontal="true"><dc:Bounds x="130" y="340" width="3660" height="480" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P3_Magasin_di" bpmnElement="Lane_P3_Magasin" isHorizontal="true"><dc:Bounds x="130" y="820" width="3660" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_debut_di" bpmnElement="a_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_saisir_di" bpmnElement="a_saisir"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_lire_di" bpmnElement="a_lire"><dc:Bounds x="3215" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_fin_di" bpmnElement="a_fin"><dc:Bounds x="3572" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_debut_di" bpmnElement="m_debut"><dc:Bounds x="532" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_post_di" bpmnElement="m_post"><dc:Bounds x="655" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_origine_di" bpmnElement="sv_gw_origine" isMarkerVisible="true"><dc:Bounds x="845" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_origine_di" bpmnElement="sv_fin_origine"><dc:Bounds x="852" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_enveloppe_di" bpmnElement="sv_enveloppe" isMarkerVisible="true"><dc:Bounds x="1005" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_forme_di" bpmnElement="sv_fin_forme"><dc:Bounds x="1012" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_ecoute_di" bpmnElement="sv_ecoute"><dc:Bounds x="1135" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s2_di" bpmnElement="sv_s2"><dc:Bounds x="1295" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_session_di" bpmnElement="sv_gw_session" isMarkerVisible="true"><dc:Bounds x="1485" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_session_di" bpmnElement="sv_fin_session"><dc:Bounds x="1492" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_schema_di" bpmnElement="sv_gw_schema" isMarkerVisible="true"><dc:Bounds x="1645" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_schema_di" bpmnElement="sv_fin_schema"><dc:Bounds x="1652" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mg_lire_di" bpmnElement="mg_lire"><dc:Bounds x="1775" y="840" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_existe_di" bpmnElement="sv_gw_existe" isMarkerVisible="true"><dc:Bounds x="1965" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_404a_di" bpmnElement="sv_fin_404a"><dc:Bounds x="1972" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_priv_di" bpmnElement="sv_priv"><dc:Bounds x="2095" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_priv_di" bpmnElement="sv_gw_priv" isMarkerVisible="true"><dc:Bounds x="2285" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_403_di" bpmnElement="sv_fin_403"><dc:Bounds x="2292" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mg_ecrire_di" bpmnElement="mg_ecrire"><dc:Bounds x="2415" y="840" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_present_di" bpmnElement="sv_gw_present" isMarkerVisible="true"><dc:Bounds x="2605" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_404b_di" bpmnElement="sv_fin_404b"><dc:Bounds x="2612" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s1_di" bpmnElement="sv_s1"><dc:Bounds x="2735" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_repondre_di" bpmnElement="sv_repondre"><dc:Bounds x="2895" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_par_di" bpmnElement="sv_par"><dc:Bounds x="3085" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_afficher_di" bpmnElement="m_afficher"><dc:Bounds x="3215" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_fin_di" bpmnElement="m_fin"><dc:Bounds x="3412" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_journal_module_di" bpmnElement="sv_journal_module"><dc:Bounds x="3215" y="600" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_inscrit_di" bpmnElement="sv_gw_inscrit" isMarkerVisible="true"><dc:Bounds x="3405" y="615" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_journal_di" bpmnElement="sv_fin_journal"><dc:Bounds x="3572" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_trace_di" bpmnElement="sv_fin_trace"><dc:Bounds x="3412" y="742" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P3_1_di" bpmnElement="Flow_P3_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_2_di" bpmnElement="Flow_P3_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="3215" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_3_di" bpmnElement="Flow_P3_3">
+        <di:waypoint x="3325" y="120" />
+        <di:waypoint x="3572" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_4_di" bpmnElement="Flow_P3_4">
+        <di:waypoint x="568" y="280" />
+        <di:waypoint x="655" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_5_di" bpmnElement="Flow_P3_5">
+        <di:waypoint x="765" y="280" />
+        <di:waypoint x="785" y="280" />
+        <di:waypoint x="785" y="400" />
+        <di:waypoint x="845" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_6_di" bpmnElement="Flow_P3_6">
+        <di:waypoint x="870" y="425" />
+        <di:waypoint x="870" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_7_di" bpmnElement="Flow_P3_7">
+        <di:waypoint x="895" y="400" />
+        <di:waypoint x="1005" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_8_di" bpmnElement="Flow_P3_8">
+        <di:waypoint x="1030" y="425" />
+        <di:waypoint x="1030" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_9_di" bpmnElement="Flow_P3_9">
+        <di:waypoint x="1055" y="400" />
+        <di:waypoint x="1135" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_10_di" bpmnElement="Flow_P3_10">
+        <di:waypoint x="1245" y="400" />
+        <di:waypoint x="1295" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_11_di" bpmnElement="Flow_P3_11">
+        <di:waypoint x="1405" y="400" />
+        <di:waypoint x="1485" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_12_di" bpmnElement="Flow_P3_12">
+        <di:waypoint x="1510" y="425" />
+        <di:waypoint x="1510" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_13_di" bpmnElement="Flow_P3_13">
+        <di:waypoint x="1535" y="400" />
+        <di:waypoint x="1645" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_14_di" bpmnElement="Flow_P3_14">
+        <di:waypoint x="1670" y="425" />
+        <di:waypoint x="1670" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_15_di" bpmnElement="Flow_P3_15">
+        <di:waypoint x="1695" y="400" />
+        <di:waypoint x="1755" y="400" />
+        <di:waypoint x="1755" y="880" />
+        <di:waypoint x="1775" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_16_di" bpmnElement="Flow_P3_16">
+        <di:waypoint x="1885" y="880" />
+        <di:waypoint x="1905" y="880" />
+        <di:waypoint x="1905" y="400" />
+        <di:waypoint x="1965" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_17_di" bpmnElement="Flow_P3_17">
+        <di:waypoint x="1990" y="425" />
+        <di:waypoint x="1990" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_18_di" bpmnElement="Flow_P3_18">
+        <di:waypoint x="2015" y="400" />
+        <di:waypoint x="2095" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_19_di" bpmnElement="Flow_P3_19">
+        <di:waypoint x="2205" y="400" />
+        <di:waypoint x="2285" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_20_di" bpmnElement="Flow_P3_20">
+        <di:waypoint x="2310" y="425" />
+        <di:waypoint x="2310" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_21_di" bpmnElement="Flow_P3_21">
+        <di:waypoint x="2335" y="400" />
+        <di:waypoint x="2395" y="400" />
+        <di:waypoint x="2395" y="880" />
+        <di:waypoint x="2415" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_22_di" bpmnElement="Flow_P3_22">
+        <di:waypoint x="2525" y="880" />
+        <di:waypoint x="2545" y="880" />
+        <di:waypoint x="2545" y="400" />
+        <di:waypoint x="2605" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_23_di" bpmnElement="Flow_P3_23">
+        <di:waypoint x="2630" y="425" />
+        <di:waypoint x="2630" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_24_di" bpmnElement="Flow_P3_24">
+        <di:waypoint x="2655" y="400" />
+        <di:waypoint x="2735" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_25_di" bpmnElement="Flow_P3_25">
+        <di:waypoint x="2845" y="400" />
+        <di:waypoint x="2895" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_26_di" bpmnElement="Flow_P3_26">
+        <di:waypoint x="3005" y="400" />
+        <di:waypoint x="3085" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_27_di" bpmnElement="Flow_P3_27">
+        <di:waypoint x="3110" y="375" />
+        <di:waypoint x="3110" y="280" />
+        <di:waypoint x="3215" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_28_di" bpmnElement="Flow_P3_28">
+        <di:waypoint x="3325" y="280" />
+        <di:waypoint x="3412" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_29_di" bpmnElement="Flow_P3_29">
+        <di:waypoint x="3110" y="425" />
+        <di:waypoint x="3110" y="640" />
+        <di:waypoint x="3215" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_30_di" bpmnElement="Flow_P3_30">
+        <di:waypoint x="3325" y="640" />
+        <di:waypoint x="3405" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_31_di" bpmnElement="Flow_P3_31">
+        <di:waypoint x="3455" y="640" />
+        <di:waypoint x="3572" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P3_32_di" bpmnElement="Flow_P3_32">
+        <di:waypoint x="3430" y="665" />
+        <di:waypoint x="3430" y="742" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P3_1_di" bpmnElement="Msg_P3_1">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="200" />
+        <di:waypoint x="550" y="200" />
+        <di:waypoint x="550" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P3_2_di" bpmnElement="Msg_P3_2">
+        <di:waypoint x="3270" y="240" />
+        <di:waypoint x="3270" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P3_3_di" bpmnElement="Msg_P3_3">
+        <di:waypoint x="3190" y="220" />
+        <di:waypoint x="3190" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

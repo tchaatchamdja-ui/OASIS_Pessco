@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_S2" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:collaboration id="Collab_S2">
+    <bpmn:documentation>Sous-processus traversé par toute route protégée : server.js:108-136.</bpmn:documentation>
+    <bpmn:participant id="Part_S2_Oasis" name="OASIS — socle serveur" processRef="Proc_S2_Oasis"></bpmn:participant>
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_S2_Oasis" name="S2_ControlerSession" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_S2_Oasis">
+      <bpmn:lane id="Lane_S2_Serveur" name="Serveur">
+        <bpmn:flowNodeRef>s2_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_cookie</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_gw_connue</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_fin_inconnue</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_gw_inactif</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_fin_expiree</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_activite</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_gw_compte</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_fin_compte</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_gw_ecriture</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_compter</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_gw_plafond</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_debit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_fin_429</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_fusion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_fin_ok</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_S2_Magasin" name="Magasin">
+        <bpmn:flowNodeRef>s2_retirer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s2_instantane</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="s2_debut" name="Requête protégée reçue">
+      <bpmn:documentation>server.js:108</bpmn:documentation>
+      <bpmn:outgoing>Flow_S2_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="s2_cookie" name="Lire le cookie oasis_session">
+      <bpmn:documentation>server.js:99-110</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="s2_gw_connue" name="Jeton dans la table des sessions ?">
+      <bpmn:documentation>La table en mémoire fait foi : src/auth.js:26, 208</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S2_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="s2_fin_inconnue" name="401 unauthenticated">
+      <bpmn:documentation>server.js:112</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="s2_gw_inactif" name="Inactive depuis plus de sessionTimeoutMinutes ?">
+      <bpmn:documentation>30 min par défaut : src/auth.js:210-211</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S2_7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="s2_retirer" name="Retirer la session ; persister la table sans attendre">
+      <bpmn:documentation>Un échec de persistance part aux traces : src/auth.js:212-215</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="s2_fin_expiree" name="401 unauthenticated (expirée)">
+      <bpmn:documentation>server.js:112</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="s2_activite" name="Repousser lastActivity">
+      <bpmn:documentation>src/auth.js:217</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="s2_instantane" name="Relire users, referentiels, module_rights (instantané)">
+      <bpmn:documentation>Une fois par requête : server.js:124 ; src/instantane.js:75-81</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="s2_gw_compte" name="Compte trouvé et actif ?">
+      <bpmn:documentation>server.js:125-126. Écart : ni `locked` ni `mustChange` n'est regardé.</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_10</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S2_11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="s2_fin_compte" name="401 unauthenticated (compte)">
+      <bpmn:documentation>server.js:126</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="s2_gw_ecriture" name="Méthode d'écriture ?">
+      <bpmn:documentation>src/protections.js:127</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_12</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S2_13</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="s2_compter" name="Compter l'écriture du compte (fenêtre de 60 s)">
+      <bpmn:documentation>src/protections.js:131-139</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="s2_gw_plafond" name="Plafond maxWritesPerMinute dépassé ?">
+      <bpmn:documentation>600 par défaut, 0 le retire : src/protections.js:129-130, 140</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_15</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S2_16</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="s2_debit" name="Journaliser ECRITURE_DEBIT_DEPASSE (S1)">
+      <bpmn:documentation>src/protections.js:141-143</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_17</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="s2_fin_429" name="429 too_many_attempts">
+      <bpmn:documentation>src/protections.js:144</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="s2_fusion" name="">
+      <bpmn:incoming>Flow_S2_12</bpmn:incoming>
+      <bpmn:incoming>Flow_S2_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_S2_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="s2_fin_ok" name="Session valide (req.user posé)">
+      <bpmn:documentation>server.js:127-129, 135</bpmn:documentation>
+      <bpmn:incoming>Flow_S2_18</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_S2_1" sourceRef="s2_debut" targetRef="s2_cookie" />
+    <bpmn:sequenceFlow id="Flow_S2_2" sourceRef="s2_cookie" targetRef="s2_gw_connue" />
+    <bpmn:sequenceFlow id="Flow_S2_3" name="non" sourceRef="s2_gw_connue" targetRef="s2_fin_inconnue" />
+    <bpmn:sequenceFlow id="Flow_S2_4" name="oui" sourceRef="s2_gw_connue" targetRef="s2_gw_inactif" />
+    <bpmn:sequenceFlow id="Flow_S2_5" name="oui" sourceRef="s2_gw_inactif" targetRef="s2_retirer" />
+    <bpmn:sequenceFlow id="Flow_S2_6" sourceRef="s2_retirer" targetRef="s2_fin_expiree" />
+    <bpmn:sequenceFlow id="Flow_S2_7" name="non" sourceRef="s2_gw_inactif" targetRef="s2_activite" />
+    <bpmn:sequenceFlow id="Flow_S2_8" sourceRef="s2_activite" targetRef="s2_instantane" />
+    <bpmn:sequenceFlow id="Flow_S2_9" sourceRef="s2_instantane" targetRef="s2_gw_compte" />
+    <bpmn:sequenceFlow id="Flow_S2_10" name="non" sourceRef="s2_gw_compte" targetRef="s2_fin_compte" />
+    <bpmn:sequenceFlow id="Flow_S2_11" name="oui" sourceRef="s2_gw_compte" targetRef="s2_gw_ecriture" />
+    <bpmn:sequenceFlow id="Flow_S2_12" name="non (GET, HEAD)" sourceRef="s2_gw_ecriture" targetRef="s2_fusion" />
+    <bpmn:sequenceFlow id="Flow_S2_13" name="oui" sourceRef="s2_gw_ecriture" targetRef="s2_compter" />
+    <bpmn:sequenceFlow id="Flow_S2_14" sourceRef="s2_compter" targetRef="s2_gw_plafond" />
+    <bpmn:sequenceFlow id="Flow_S2_15" name="non" sourceRef="s2_gw_plafond" targetRef="s2_fusion" />
+    <bpmn:sequenceFlow id="Flow_S2_16" name="oui" sourceRef="s2_gw_plafond" targetRef="s2_debit" />
+    <bpmn:sequenceFlow id="Flow_S2_17" sourceRef="s2_debit" targetRef="s2_fin_429" />
+    <bpmn:sequenceFlow id="Flow_S2_18" sourceRef="s2_fusion" targetRef="s2_fin_ok" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_S2" name="S2 — Contrôler la session (requireAuth)">
+    <bpmndi:BPMNPlane id="Plane_S2" bpmnElement="Collab_S2">
+      <bpmndi:BPMNShape id="Part_S2_Oasis_di" bpmnElement="Part_S2_Oasis" isHorizontal="true"><dc:Bounds x="100" y="60" width="2090" height="480" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_S2_Serveur_di" bpmnElement="Lane_S2_Serveur" isHorizontal="true"><dc:Bounds x="130" y="60" width="2060" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_S2_Magasin_di" bpmnElement="Lane_S2_Magasin" isHorizontal="true"><dc:Bounds x="130" y="420" width="2060" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_debut_di" bpmnElement="s2_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_cookie_di" bpmnElement="s2_cookie"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_gw_connue_di" bpmnElement="s2_gw_connue" isMarkerVisible="true"><dc:Bounds x="525" y="95" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_fin_inconnue_di" bpmnElement="s2_fin_inconnue"><dc:Bounds x="532" y="222" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_gw_inactif_di" bpmnElement="s2_gw_inactif" isMarkerVisible="true"><dc:Bounds x="685" y="95" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_retirer_di" bpmnElement="s2_retirer"><dc:Bounds x="655" y="440" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_fin_expiree_di" bpmnElement="s2_fin_expiree"><dc:Bounds x="852" y="222" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_activite_di" bpmnElement="s2_activite"><dc:Bounds x="815" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_instantane_di" bpmnElement="s2_instantane"><dc:Bounds x="975" y="440" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_gw_compte_di" bpmnElement="s2_gw_compte" isMarkerVisible="true"><dc:Bounds x="1165" y="95" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_fin_compte_di" bpmnElement="s2_fin_compte"><dc:Bounds x="1172" y="222" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_gw_ecriture_di" bpmnElement="s2_gw_ecriture" isMarkerVisible="true"><dc:Bounds x="1325" y="95" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_compter_di" bpmnElement="s2_compter"><dc:Bounds x="1455" y="200" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_gw_plafond_di" bpmnElement="s2_gw_plafond" isMarkerVisible="true"><dc:Bounds x="1645" y="215" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_debit_di" bpmnElement="s2_debit"><dc:Bounds x="1615" y="320" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_fin_429_di" bpmnElement="s2_fin_429"><dc:Bounds x="1812" y="342" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_fusion_di" bpmnElement="s2_fusion" isMarkerVisible="true"><dc:Bounds x="1805" y="95" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s2_fin_ok_di" bpmnElement="s2_fin_ok"><dc:Bounds x="1972" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_S2_1_di" bpmnElement="Flow_S2_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_2_di" bpmnElement="Flow_S2_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="525" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_3_di" bpmnElement="Flow_S2_3">
+        <di:waypoint x="550" y="145" />
+        <di:waypoint x="550" y="222" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_4_di" bpmnElement="Flow_S2_4">
+        <di:waypoint x="575" y="120" />
+        <di:waypoint x="685" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_5_di" bpmnElement="Flow_S2_5">
+        <di:waypoint x="710" y="145" />
+        <di:waypoint x="710" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_6_di" bpmnElement="Flow_S2_6">
+        <di:waypoint x="765" y="480" />
+        <di:waypoint x="785" y="480" />
+        <di:waypoint x="785" y="240" />
+        <di:waypoint x="852" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_7_di" bpmnElement="Flow_S2_7">
+        <di:waypoint x="735" y="120" />
+        <di:waypoint x="815" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_8_di" bpmnElement="Flow_S2_8">
+        <di:waypoint x="925" y="120" />
+        <di:waypoint x="945" y="120" />
+        <di:waypoint x="945" y="480" />
+        <di:waypoint x="975" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_9_di" bpmnElement="Flow_S2_9">
+        <di:waypoint x="1085" y="480" />
+        <di:waypoint x="1105" y="480" />
+        <di:waypoint x="1105" y="120" />
+        <di:waypoint x="1165" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_10_di" bpmnElement="Flow_S2_10">
+        <di:waypoint x="1190" y="145" />
+        <di:waypoint x="1190" y="222" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_11_di" bpmnElement="Flow_S2_11">
+        <di:waypoint x="1215" y="120" />
+        <di:waypoint x="1325" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_12_di" bpmnElement="Flow_S2_12">
+        <di:waypoint x="1375" y="120" />
+        <di:waypoint x="1805" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_13_di" bpmnElement="Flow_S2_13">
+        <di:waypoint x="1350" y="145" />
+        <di:waypoint x="1350" y="240" />
+        <di:waypoint x="1455" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_14_di" bpmnElement="Flow_S2_14">
+        <di:waypoint x="1565" y="240" />
+        <di:waypoint x="1645" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_15_di" bpmnElement="Flow_S2_15">
+        <di:waypoint x="1695" y="240" />
+        <di:waypoint x="1830" y="240" />
+        <di:waypoint x="1830" y="145" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_16_di" bpmnElement="Flow_S2_16">
+        <di:waypoint x="1670" y="265" />
+        <di:waypoint x="1670" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_17_di" bpmnElement="Flow_S2_17">
+        <di:waypoint x="1725" y="360" />
+        <di:waypoint x="1812" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S2_18_di" bpmnElement="Flow_S2_18">
+        <di:waypoint x="1855" y="120" />
+        <di:waypoint x="1972" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

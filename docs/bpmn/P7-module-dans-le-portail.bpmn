@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_P7" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:collaboration id="Collab_P7">
+    <bpmn:documentation>Le portail héberge chaque module dans un iframe et l'écoute par window.message : frontend/portail/modules-hote.ts ; le module parle par parent.postMessage : frontend/socle/chrome.ts. Portail et module sont deux fenêtres, d'où deux pools.</bpmn:documentation>
+    <bpmn:participant id="Part_P7_Agent" name="Agent de l'AAC" processRef="Proc_P7_Agent"></bpmn:participant>
+    <bpmn:participant id="Part_P7_Portail" name="Portail (fenêtre de tête)" processRef="Proc_P7_Portail"></bpmn:participant>
+    <bpmn:participant id="Part_P7_Module" name="Module (iframe prFrame)" processRef="Proc_P7_Module"></bpmn:participant>
+    <bpmn:participant id="Part_P7_Serveur" name="Serveur (routes /api/modules/…, après S2)"><bpmn:documentation>server.js:420-439</bpmn:documentation></bpmn:participant>
+    <bpmn:messageFlow id="Msg_P7_1" name="clic" sourceRef="a_clic" targetRef="p_debut" />
+    <bpmn:messageFlow id="Msg_P7_2" name="GET super-menus, cartes" sourceRef="p_registre" targetRef="Part_P7_Serveur" />
+    <bpmn:messageFlow id="Msg_P7_3" name="registre ou 401" sourceRef="Part_P7_Serveur" targetRef="p_registre" />
+    <bpmn:messageFlow id="Msg_P7_4" name="src du module" sourceRef="p_cadre" targetRef="m_debut" />
+    <bpmn:messageFlow id="Msg_P7_5" name="GET super-menus?module=" sourceRef="m_supers" targetRef="Part_P7_Serveur" />
+    <bpmn:messageFlow id="Msg_P7_6" name="liste" sourceRef="Part_P7_Serveur" targetRef="m_supers" />
+    <bpmn:messageFlow id="Msg_P7_7" name="gestes" sourceRef="a_travailler" targetRef="m_travail" />
+    <bpmn:messageFlow id="Msg_P7_8" name="retour ou autre module" sourceRef="a_retour" targetRef="m_travail" />
+    <bpmn:messageFlow id="Msg_P7_9" name="oasis:back-portal" sourceRef="m_back" targetRef="p_ecoute" />
+    <bpmn:messageFlow id="Msg_P7_10" name="accueil" sourceRef="p_retour" targetRef="Part_P7_Agent" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_P7_Agent" name="Agent — utiliser un module" isExecutable="false">
+    <bpmn:startEvent id="a_debut" name="Ouvrir un module">
+      <bpmn:outgoing>Flow_P7_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="a_clic" name="Cliquer une carte ou un menu">
+      <bpmn:incoming>Flow_P7_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_travailler" name="Travailler dans le module">
+      <bpmn:incoming>Flow_P7_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_retour" name="« Retour au portail » ou autre module">
+      <bpmn:incoming>Flow_P7_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="a_fin" name="Revenu au portail">
+      <bpmn:incoming>Flow_P7_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P7_1" sourceRef="a_debut" targetRef="a_clic" />
+    <bpmn:sequenceFlow id="Flow_P7_2" sourceRef="a_clic" targetRef="a_travailler" />
+    <bpmn:sequenceFlow id="Flow_P7_3" sourceRef="a_travailler" targetRef="a_retour" />
+    <bpmn:sequenceFlow id="Flow_P7_4" sourceRef="a_retour" targetRef="a_fin" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P7_Portail" name="P7_Portail" isExecutable="false">
+    <bpmn:startEvent id="p_debut" name="Clic reçu">
+      <bpmn:documentation>Vue mod_&lt;code&gt; : modules-hote.ts:156-167 ; demarrage.ts:251-256</bpmn:documentation>
+      <bpmn:outgoing>Flow_P7_5</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="p_debut_def" />
+    </bpmn:startEvent>
+    <bpmn:task id="p_registre" name="Charger le registre une fois : super-menus et cartes">
+      <bpmn:documentation>modules-hote.ts:91-106. Une erreur autre que 401 donne un registre vide, sans le dire.</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="p_gw_reg" name="Réponse ?">
+      <bpmn:documentation>modules-hote.ts:69-78, 101-104</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_7</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P7_8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="p_fin_perdue" name="Session perdue : connexion (P2)">
+      <bpmn:documentation>sessionPerdue : modules-hote.ts:71-75</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="p_gw_trouve" name="Module dans le registre ?">
+      <bpmn:documentation>Par clé ou par code : modules-hote.ts:126-131</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_9</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P7_10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="p_fin_indispo" name="« Module indisponible. »">
+      <bpmn:documentation>modules-hote.ts:128-130</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="p_cadre" name="Plein écran ; poser l'iframe sur la src du manifeste">
+      <bpmn:documentation>modules-hote.ts:132-134. src vient du manifeste (src/modules/&lt;m&gt;/module.json), insérée sans échappement : source de confiance.</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:intermediateCatchEvent id="p_ecoute" name="Message reçu (window.message)">
+      <bpmn:documentation>Écoute posée une fois au démarrage : modules-hote.ts:170-178. Écart : ni ev.origin ni ev.source ne sont vérifiés — toute fenêtre peut l'émettre (portée : navigation seulement).</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_11</bpmn:incoming>
+      <bpmn:incoming>Flow_P7_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_12</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="p_ecoute_def" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="p_gw_type" name="Type du message ?">
+      <bpmn:documentation>modules-hote.ts:172-176</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_13</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P7_15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="p_retour" name="Défaire le plein écran ; naviguer vers l'accueil">
+      <bpmn:documentation>modules-hote.ts:138-144</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="p_fin" name="Accueil du portail">
+      <bpmn:incoming>Flow_P7_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="p_plein" name="Garder le plein écran (…:page) ; ignorer le reste">
+      <bpmn:documentation>mes:page, exec:page, pl:page, pr:page : modules-hote.ts:176 ; frontend/mesures/coquille.ts:184</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_16</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_P7_5" sourceRef="p_debut" targetRef="p_registre" />
+    <bpmn:sequenceFlow id="Flow_P7_6" sourceRef="p_registre" targetRef="p_gw_reg" />
+    <bpmn:sequenceFlow id="Flow_P7_7" name="401" sourceRef="p_gw_reg" targetRef="p_fin_perdue" />
+    <bpmn:sequenceFlow id="Flow_P7_8" name="registre lu (vide si erreur)" sourceRef="p_gw_reg" targetRef="p_gw_trouve" />
+    <bpmn:sequenceFlow id="Flow_P7_9" name="non" sourceRef="p_gw_trouve" targetRef="p_fin_indispo" />
+    <bpmn:sequenceFlow id="Flow_P7_10" name="oui" sourceRef="p_gw_trouve" targetRef="p_cadre" />
+    <bpmn:sequenceFlow id="Flow_P7_11" sourceRef="p_cadre" targetRef="p_ecoute" />
+    <bpmn:sequenceFlow id="Flow_P7_12" sourceRef="p_ecoute" targetRef="p_gw_type" />
+    <bpmn:sequenceFlow id="Flow_P7_13" name="oasis:back-portal" sourceRef="p_gw_type" targetRef="p_retour" />
+    <bpmn:sequenceFlow id="Flow_P7_14" sourceRef="p_retour" targetRef="p_fin" />
+    <bpmn:sequenceFlow id="Flow_P7_15" name="…:page ou autre" sourceRef="p_gw_type" targetRef="p_plein" />
+    <bpmn:sequenceFlow id="Flow_P7_16" sourceRef="p_plein" targetRef="p_ecoute" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P7_Module" name="P7_Module" isExecutable="false">
+    <bpmn:startEvent id="m_debut" name="Cadre chargé">
+      <bpmn:outgoing>Flow_P7_17</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="m_debut_def" />
+    </bpmn:startEvent>
+    <bpmn:task id="m_socle" name="Poser le socle : fetch enveloppé, langue, thème">
+      <bpmn:documentation>frontend/socle/requete.ts:64-69 ; commun.ts:439-441</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_18</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="m_supers" name="Lire les super-menus du module courant">
+      <bpmn:documentation>Filtrés par rôle puis par carte : chrome.ts:275-283 ; server.js:420-431</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_19</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="m_travail" name="Servir l'agent (P3, P8…)">
+      <bpmn:incoming>Flow_P7_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_20</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="m_gw" name="Que se passe-t-il ?">
+      <bpmn:incoming>Flow_P7_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_21</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P7_23</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P7_25</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="m_back" name="postMessage({ type: 'oasis:back-portal' }, '*')">
+      <bpmn:documentation>chrome.ts:268-270. Écart mineur : cible « * » plutôt que l'origine du portail.</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_22</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="m_fin_back" name="Cadre quitté">
+      <bpmn:incoming>Flow_P7_22</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="m_voisin" name="Naviguer le cadre vers le module voisin">
+      <bpmn:documentation>goSuper : chrome.ts:243-246</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_23</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_24</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="m_fin_voisin" name="Autre module dans le même cadre">
+      <bpmn:incoming>Flow_P7_24</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="m_perdue" name="Session perdue : window.top vers /login.html">
+      <bpmn:documentation>requete.ts:40-50 — voir P2</bpmn:documentation>
+      <bpmn:incoming>Flow_P7_25</bpmn:incoming>
+      <bpmn:outgoing>Flow_P7_26</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="m_fin_perdue" name="Portail entier à la connexion">
+      <bpmn:incoming>Flow_P7_26</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P7_17" sourceRef="m_debut" targetRef="m_socle" />
+    <bpmn:sequenceFlow id="Flow_P7_18" sourceRef="m_socle" targetRef="m_supers" />
+    <bpmn:sequenceFlow id="Flow_P7_19" sourceRef="m_supers" targetRef="m_travail" />
+    <bpmn:sequenceFlow id="Flow_P7_20" sourceRef="m_travail" targetRef="m_gw" />
+    <bpmn:sequenceFlow id="Flow_P7_21" name="retour demandé" sourceRef="m_gw" targetRef="m_back" />
+    <bpmn:sequenceFlow id="Flow_P7_22" sourceRef="m_back" targetRef="m_fin_back" />
+    <bpmn:sequenceFlow id="Flow_P7_23" name="autre module choisi" sourceRef="m_gw" targetRef="m_voisin" />
+    <bpmn:sequenceFlow id="Flow_P7_24" sourceRef="m_voisin" targetRef="m_fin_voisin" />
+    <bpmn:sequenceFlow id="Flow_P7_25" name="réponse 401" sourceRef="m_gw" targetRef="m_perdue" />
+    <bpmn:sequenceFlow id="Flow_P7_26" sourceRef="m_perdue" targetRef="m_fin_perdue" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P7" name="P7 — Ouverture d'un module dans le portail et dialogue par messages">
+    <bpmndi:BPMNPlane id="Plane_P7" bpmnElement="Collab_P7">
+      <bpmndi:BPMNShape id="Part_P7_Agent_di" bpmnElement="Part_P7_Agent" isHorizontal="true"><dc:Bounds x="100" y="60" width="2570" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P7_Portail_di" bpmnElement="Part_P7_Portail" isHorizontal="true"><dc:Bounds x="100" y="220" width="2570" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P7_Module_di" bpmnElement="Part_P7_Module" isHorizontal="true"><dc:Bounds x="100" y="500" width="2570" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P7_Serveur_di" bpmnElement="Part_P7_Serveur" isHorizontal="true"><dc:Bounds x="100" y="900" width="2570" height="60" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_debut_di" bpmnElement="a_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_clic_di" bpmnElement="a_clic"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_travailler_di" bpmnElement="a_travailler"><dc:Bounds x="1775" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_retour_di" bpmnElement="a_retour"><dc:Bounds x="1935" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_fin_di" bpmnElement="a_fin"><dc:Bounds x="2452" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_debut_di" bpmnElement="p_debut"><dc:Bounds x="532" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_registre_di" bpmnElement="p_registre"><dc:Bounds x="655" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_gw_reg_di" bpmnElement="p_gw_reg" isMarkerVisible="true"><dc:Bounds x="845" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_fin_perdue_di" bpmnElement="p_fin_perdue"><dc:Bounds x="852" y="382" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_gw_trouve_di" bpmnElement="p_gw_trouve" isMarkerVisible="true"><dc:Bounds x="1005" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_fin_indispo_di" bpmnElement="p_fin_indispo"><dc:Bounds x="1012" y="382" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_cadre_di" bpmnElement="p_cadre"><dc:Bounds x="1135" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_ecoute_di" bpmnElement="p_ecoute"><dc:Bounds x="1332" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_gw_type_di" bpmnElement="p_gw_type" isMarkerVisible="true"><dc:Bounds x="1485" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_retour_di" bpmnElement="p_retour"><dc:Bounds x="2095" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_fin_di" bpmnElement="p_fin"><dc:Bounds x="2292" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_plein_di" bpmnElement="p_plein"><dc:Bounds x="1775" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_debut_di" bpmnElement="m_debut"><dc:Bounds x="1172" y="542" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_socle_di" bpmnElement="m_socle"><dc:Bounds x="1295" y="520" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_supers_di" bpmnElement="m_supers"><dc:Bounds x="1455" y="520" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_travail_di" bpmnElement="m_travail"><dc:Bounds x="1615" y="520" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_gw_di" bpmnElement="m_gw" isMarkerVisible="true"><dc:Bounds x="1805" y="535" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_back_di" bpmnElement="m_back"><dc:Bounds x="1935" y="520" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_fin_back_di" bpmnElement="m_fin_back"><dc:Bounds x="2132" y="542" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_voisin_di" bpmnElement="m_voisin"><dc:Bounds x="1935" y="640" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_fin_voisin_di" bpmnElement="m_fin_voisin"><dc:Bounds x="2132" y="662" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_perdue_di" bpmnElement="m_perdue"><dc:Bounds x="1935" y="760" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_fin_perdue_di" bpmnElement="m_fin_perdue"><dc:Bounds x="2132" y="782" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P7_1_di" bpmnElement="Flow_P7_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_2_di" bpmnElement="Flow_P7_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="1775" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_3_di" bpmnElement="Flow_P7_3">
+        <di:waypoint x="1885" y="120" />
+        <di:waypoint x="1935" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_4_di" bpmnElement="Flow_P7_4">
+        <di:waypoint x="2045" y="120" />
+        <di:waypoint x="2452" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_5_di" bpmnElement="Flow_P7_5">
+        <di:waypoint x="568" y="280" />
+        <di:waypoint x="655" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_6_di" bpmnElement="Flow_P7_6">
+        <di:waypoint x="765" y="280" />
+        <di:waypoint x="845" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_7_di" bpmnElement="Flow_P7_7">
+        <di:waypoint x="870" y="305" />
+        <di:waypoint x="870" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_8_di" bpmnElement="Flow_P7_8">
+        <di:waypoint x="895" y="280" />
+        <di:waypoint x="1005" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_9_di" bpmnElement="Flow_P7_9">
+        <di:waypoint x="1030" y="305" />
+        <di:waypoint x="1030" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_10_di" bpmnElement="Flow_P7_10">
+        <di:waypoint x="1055" y="280" />
+        <di:waypoint x="1135" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_11_di" bpmnElement="Flow_P7_11">
+        <di:waypoint x="1245" y="280" />
+        <di:waypoint x="1332" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_12_di" bpmnElement="Flow_P7_12">
+        <di:waypoint x="1368" y="280" />
+        <di:waypoint x="1485" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_13_di" bpmnElement="Flow_P7_13">
+        <di:waypoint x="1535" y="280" />
+        <di:waypoint x="2095" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_14_di" bpmnElement="Flow_P7_14">
+        <di:waypoint x="2205" y="280" />
+        <di:waypoint x="2292" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_15_di" bpmnElement="Flow_P7_15">
+        <di:waypoint x="1510" y="305" />
+        <di:waypoint x="1510" y="400" />
+        <di:waypoint x="1775" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_16_di" bpmnElement="Flow_P7_16">
+        <di:waypoint x="1830" y="360" />
+        <di:waypoint x="1830" y="342" />
+        <di:waypoint x="1350" y="342" />
+        <di:waypoint x="1350" y="298" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_17_di" bpmnElement="Flow_P7_17">
+        <di:waypoint x="1208" y="560" />
+        <di:waypoint x="1295" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_18_di" bpmnElement="Flow_P7_18">
+        <di:waypoint x="1405" y="560" />
+        <di:waypoint x="1455" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_19_di" bpmnElement="Flow_P7_19">
+        <di:waypoint x="1565" y="560" />
+        <di:waypoint x="1615" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_20_di" bpmnElement="Flow_P7_20">
+        <di:waypoint x="1725" y="560" />
+        <di:waypoint x="1805" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_21_di" bpmnElement="Flow_P7_21">
+        <di:waypoint x="1855" y="560" />
+        <di:waypoint x="1935" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_22_di" bpmnElement="Flow_P7_22">
+        <di:waypoint x="2045" y="560" />
+        <di:waypoint x="2132" y="560" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_23_di" bpmnElement="Flow_P7_23">
+        <di:waypoint x="1830" y="585" />
+        <di:waypoint x="1830" y="680" />
+        <di:waypoint x="1935" y="680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_24_di" bpmnElement="Flow_P7_24">
+        <di:waypoint x="2045" y="680" />
+        <di:waypoint x="2132" y="680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_25_di" bpmnElement="Flow_P7_25">
+        <di:waypoint x="1830" y="585" />
+        <di:waypoint x="1830" y="800" />
+        <di:waypoint x="1935" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P7_26_di" bpmnElement="Flow_P7_26">
+        <di:waypoint x="2045" y="800" />
+        <di:waypoint x="2132" y="800" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_1_di" bpmnElement="Msg_P7_1">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="200" />
+        <di:waypoint x="550" y="200" />
+        <di:waypoint x="550" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_2_di" bpmnElement="Msg_P7_2">
+        <di:waypoint x="710" y="320" />
+        <di:waypoint x="710" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_3_di" bpmnElement="Msg_P7_3">
+        <di:waypoint x="790" y="900" />
+        <di:waypoint x="790" y="320" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_4_di" bpmnElement="Msg_P7_4">
+        <di:waypoint x="1190" y="320" />
+        <di:waypoint x="1190" y="542" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_5_di" bpmnElement="Msg_P7_5">
+        <di:waypoint x="1510" y="600" />
+        <di:waypoint x="1510" y="900" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_6_di" bpmnElement="Msg_P7_6">
+        <di:waypoint x="1590" y="900" />
+        <di:waypoint x="1590" y="600" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_7_di" bpmnElement="Msg_P7_7">
+        <di:waypoint x="1830" y="160" />
+        <di:waypoint x="1830" y="200" />
+        <di:waypoint x="1670" y="200" />
+        <di:waypoint x="1670" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_8_di" bpmnElement="Msg_P7_8">
+        <di:waypoint x="2070" y="160" />
+        <di:waypoint x="2070" y="200" />
+        <di:waypoint x="1750" y="200" />
+        <di:waypoint x="1750" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_9_di" bpmnElement="Msg_P7_9">
+        <di:waypoint x="1990" y="520" />
+        <di:waypoint x="1990" y="480" />
+        <di:waypoint x="1350" y="480" />
+        <di:waypoint x="1350" y="298" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P7_10_di" bpmnElement="Msg_P7_10">
+        <di:waypoint x="2150" y="240" />
+        <di:waypoint x="2150" y="180" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

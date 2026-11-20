@@ -4,9 +4,9 @@
 // Converti à la lettre depuis `pl-prestataires.js` : le balisage est rendu
 // caractère pour caractère, et la photographie de la page — vingt états, des
 // filtres à la fenêtre d'ajout — n'a pas d'écart. L'état et les libellés sont
-// lus sur la page (`partage.ts`) ; les aides des fichiers restés en
-// JavaScript, déclarées dans `restant.d.ts`, sont exigées au moment de
-// l'appel, comme l'ancien les lisait par leur nom.
+// lus sur la page (`partage.ts`) ; les aides des autres paquets, que leur sas
+// déclare, sont exigées au moment de l'appel, comme l'ancien les lisait par
+// leur nom.
 import { etat, requis, tp } from './partage';
 
 interface PrestRisque {

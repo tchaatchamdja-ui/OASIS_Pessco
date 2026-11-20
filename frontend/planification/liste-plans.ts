@@ -32,14 +32,10 @@ export type Activite = Rec & {
 };
 export interface Ref { id: string; code?: string; nom?: string; prenom?: string; libelle?: string; mode?: string; type_supervision?: string; sous_activite_id?: string; debut_cycle?: string; fin_cycle?: string }
 interface Tri { col: string; dir: string }
-export interface EtatPlans {
-  _keepPrefill?: boolean; prefillPrestataire?: string; selectedPlan?: Plan | null;
-  selectedPlanActivityRejet?: Set<string>; user?: { id?: string; username?: string } | null;
-}
 
 export const esc = (v: unknown): string => requis('_esc')(v);
 const escAttr = (v: unknown): string => requis('_escAttr')(v);
-export const E = (): EtatPlans => etat() as EtatPlans;
+export const E = etat;
 const tri = (): Tri => window._planTableSort as Tri;
 
 // ══════════════════════════════════════

@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_P2" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:collaboration id="Collab_P2">
+    <bpmn:documentation>Ce qui arrive quand l'agent revient après plus de sessionTimeoutMinutes d'inactivité. Le navigateur n'a pas de minuteur : l'expiration se découvre à la requête suivante.</bpmn:documentation>
+    <bpmn:participant id="Part_P2_Agent" name="Agent de l'AAC" processRef="Proc_P2_Agent"></bpmn:participant>
+    <bpmn:participant id="Part_P2_Oasis" name="OASIS" processRef="Proc_P2_Oasis"></bpmn:participant>
+    <bpmn:messageFlow id="Msg_P2_1" name="clic, saisie, retour du réseau" sourceRef="a_geste" targetRef="n_debut" />
+    <bpmn:messageFlow id="Msg_P2_2" name="page de connexion" sourceRef="n_redirect" targetRef="a_relogin" />
+    <bpmn:messageFlow id="Msg_P2_3" name="identifiants, code" sourceRef="a_relogin" targetRef="n_login" />
+    <bpmn:messageFlow id="Msg_P2_4" name="accueil du portail" sourceRef="n_accueil" targetRef="a_reprendre" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_P2_Agent" name="Agent — reprendre" isExecutable="false">
+    <bpmn:startEvent id="a_debut" name="Retour à l'écran après une absence">
+      <bpmn:outgoing>Flow_P2_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="a_geste" name="Agir : lire, enregistrer ; ou le réseau revient">
+      <bpmn:incoming>Flow_P2_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_relogin" name="Se reconnecter">
+      <bpmn:incoming>Flow_P2_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_reprendre" name="Retrouver la page ; refaire la saisie perdue">
+      <bpmn:incoming>Flow_P2_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="a_fin" name="Travail repris">
+      <bpmn:incoming>Flow_P2_4</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P2_1" sourceRef="a_debut" targetRef="a_geste" />
+    <bpmn:sequenceFlow id="Flow_P2_2" sourceRef="a_geste" targetRef="a_relogin" />
+    <bpmn:sequenceFlow id="Flow_P2_3" sourceRef="a_relogin" targetRef="a_reprendre" />
+    <bpmn:sequenceFlow id="Flow_P2_4" sourceRef="a_reprendre" targetRef="a_fin" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P2_Oasis" name="P2_SessionExpiree" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_P2_Oasis">
+      <bpmn:lane id="Lane_P2_Navigateur" name="Socle navigateur (portail ou module)">
+        <bpmn:flowNodeRef>n_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_fetch</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_fin_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_gw_origine</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_perdue</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_redirect</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_login</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_accueil</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_fin_reprise</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_echec</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_fin_echec</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P2_Serveur" name="Serveur">
+        <bpmn:flowNodeRef>sv_s2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_traiter</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_401</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="n_debut" name="Geste reçu">
+      <bpmn:documentation>Aucun minuteur d'inactivité côté navigateur : /api/politique-session n'est lu que par la page des cookies (frontend/portail/pages/cookies-page.ts:34).</bpmn:documentation>
+      <bpmn:outgoing>Flow_P2_5</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="n_debut_def" />
+    </bpmn:startEvent>
+    <bpmn:task id="n_fetch" name="fetch enveloppé : X-OASIS-Request ; écritures identiques fusionnées">
+      <bpmn:documentation>frontend/socle/requete.ts:71-129</bpmn:documentation>
+      <bpmn:incoming>Flow_P2_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:callActivity id="sv_s2" name="Contrôler la session (S2)" calledElement="Proc_S2_Oasis">
+      <bpmn:documentation>server.js:108-136 — voir S2</bpmn:documentation>
+      <bpmn:incoming>Flow_P2_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_7</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="sv_gw" name="Session valide ?">
+      <bpmn:incoming>Flow_P2_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P2_11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="sv_traiter" name="Traiter la requête (P3, P4, P5…)">
+      <bpmn:incoming>Flow_P2_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="n_ok" name="Afficher le résultat">
+      <bpmn:incoming>Flow_P2_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="n_fin_ok" name="Écran à jour">
+      <bpmn:incoming>Flow_P2_10</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="sv_401" name="Répondre 401 unauthenticated">
+      <bpmn:documentation>server.js:112, 126</bpmn:documentation>
+      <bpmn:incoming>Flow_P2_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="n_gw_origine" name="Qui a émis la requête ?">
+      <bpmn:incoming>Flow_P2_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_13</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P2_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="n_perdue" name="sessionPerdue() une seule fois : vider pr_user et pr_token">
+      <bpmn:documentation>frontend/socle/requete.ts:40-46 ; appelée par commun.ts:326-332, utils.ts:129 et chaque écran du portail. L'appelant reçoit quand même une erreur, qu'il affiche souvent.</bpmn:documentation>
+      <bpmn:incoming>Flow_P2_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_14</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="n_redirect" name="Envoyer la fenêtre de tête vers /login.html">
+      <bpmn:documentation>window.top : le module en cadre emmène le portail avec lui. requete.ts:47-49. La saisie en cours dans l'écran est perdue.</bpmn:documentation>
+      <bpmn:incoming>Flow_P2_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_15</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:callActivity id="n_login" name="Connexion (P1)" calledElement="Proc_P1_Oasis">
+      <bpmn:incoming>Flow_P2_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_16</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:task id="n_accueil" name="Ouvrir / : l'accueil, non la page quittée">
+      <bpmn:documentation>login-page.ts:132, 191. Écart : l'adresse quittée n'est pas retenue.</bpmn:documentation>
+      <bpmn:incoming>Flow_P2_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_17</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="n_fin_reprise" name="Session neuve ; page et saisie non restituées">
+      <bpmn:incoming>Flow_P2_17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="n_echec" name="Marquer l'entrée en échec (statut 401) ; la garder pour un humain">
+      <bpmn:documentation>frontend/socle/hors-ligne.ts:196-208</bpmn:documentation>
+      <bpmn:incoming>Flow_P2_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_P2_19</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="n_fin_echec" name="Saisie différée bloquée : non rejouée après reconnexion (écart)">
+      <bpmn:documentation>Le rejeu écarte les entrées en échec : hors-ligne.ts:180-182.</bpmn:documentation>
+      <bpmn:incoming>Flow_P2_19</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P2_5" sourceRef="n_debut" targetRef="n_fetch" />
+    <bpmn:sequenceFlow id="Flow_P2_6" sourceRef="n_fetch" targetRef="sv_s2" />
+    <bpmn:sequenceFlow id="Flow_P2_7" sourceRef="sv_s2" targetRef="sv_gw" />
+    <bpmn:sequenceFlow id="Flow_P2_8" name="oui" sourceRef="sv_gw" targetRef="sv_traiter" />
+    <bpmn:sequenceFlow id="Flow_P2_9" sourceRef="sv_traiter" targetRef="n_ok" />
+    <bpmn:sequenceFlow id="Flow_P2_10" sourceRef="n_ok" targetRef="n_fin_ok" />
+    <bpmn:sequenceFlow id="Flow_P2_11" name="non" sourceRef="sv_gw" targetRef="sv_401" />
+    <bpmn:sequenceFlow id="Flow_P2_12" sourceRef="sv_401" targetRef="n_gw_origine" />
+    <bpmn:sequenceFlow id="Flow_P2_13" name="un écran (json, appel)" sourceRef="n_gw_origine" targetRef="n_perdue" />
+    <bpmn:sequenceFlow id="Flow_P2_14" sourceRef="n_perdue" targetRef="n_redirect" />
+    <bpmn:sequenceFlow id="Flow_P2_15" sourceRef="n_redirect" targetRef="n_login" />
+    <bpmn:sequenceFlow id="Flow_P2_16" sourceRef="n_login" targetRef="n_accueil" />
+    <bpmn:sequenceFlow id="Flow_P2_17" sourceRef="n_accueil" targetRef="n_fin_reprise" />
+    <bpmn:sequenceFlow id="Flow_P2_18" name="le rejeu de la file hors ligne (RAMP, SURV)" sourceRef="n_gw_origine" targetRef="n_echec" />
+    <bpmn:sequenceFlow id="Flow_P2_19" sourceRef="n_echec" targetRef="n_fin_echec" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P2" name="P2 — Session expirée et reprise">
+    <bpmndi:BPMNPlane id="Plane_P2" bpmnElement="Collab_P2">
+      <bpmndi:BPMNShape id="Part_P2_Agent_di" bpmnElement="Part_P2_Agent" isHorizontal="true"><dc:Bounds x="100" y="60" width="2410" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P2_Oasis_di" bpmnElement="Part_P2_Oasis" isHorizontal="true"><dc:Bounds x="100" y="220" width="2410" height="600" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P2_Navigateur_di" bpmnElement="Lane_P2_Navigateur" isHorizontal="true"><dc:Bounds x="130" y="220" width="2380" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P2_Serveur_di" bpmnElement="Lane_P2_Serveur" isHorizontal="true"><dc:Bounds x="130" y="580" width="2380" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_debut_di" bpmnElement="a_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_geste_di" bpmnElement="a_geste"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_relogin_di" bpmnElement="a_relogin"><dc:Bounds x="1775" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_reprendre_di" bpmnElement="a_reprendre"><dc:Bounds x="2095" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_fin_di" bpmnElement="a_fin"><dc:Bounds x="2292" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_debut_di" bpmnElement="n_debut"><dc:Bounds x="532" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_fetch_di" bpmnElement="n_fetch"><dc:Bounds x="655" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s2_di" bpmnElement="sv_s2"><dc:Bounds x="815" y="600" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_di" bpmnElement="sv_gw" isMarkerVisible="true"><dc:Bounds x="1005" y="615" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_traiter_di" bpmnElement="sv_traiter"><dc:Bounds x="1135" y="600" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_ok_di" bpmnElement="n_ok"><dc:Bounds x="1295" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_fin_ok_di" bpmnElement="n_fin_ok"><dc:Bounds x="1492" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_401_di" bpmnElement="sv_401"><dc:Bounds x="975" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_gw_origine_di" bpmnElement="n_gw_origine" isMarkerVisible="true"><dc:Bounds x="1325" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_perdue_di" bpmnElement="n_perdue"><dc:Bounds x="1455" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_redirect_di" bpmnElement="n_redirect"><dc:Bounds x="1615" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_login_di" bpmnElement="n_login"><dc:Bounds x="1775" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_accueil_di" bpmnElement="n_accueil"><dc:Bounds x="1935" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_fin_reprise_di" bpmnElement="n_fin_reprise"><dc:Bounds x="2132" y="382" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_echec_di" bpmnElement="n_echec"><dc:Bounds x="1455" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_fin_echec_di" bpmnElement="n_fin_echec"><dc:Bounds x="1652" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P2_1_di" bpmnElement="Flow_P2_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_2_di" bpmnElement="Flow_P2_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="1775" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_3_di" bpmnElement="Flow_P2_3">
+        <di:waypoint x="1885" y="120" />
+        <di:waypoint x="2095" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_4_di" bpmnElement="Flow_P2_4">
+        <di:waypoint x="2205" y="120" />
+        <di:waypoint x="2292" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_5_di" bpmnElement="Flow_P2_5">
+        <di:waypoint x="568" y="280" />
+        <di:waypoint x="655" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_6_di" bpmnElement="Flow_P2_6">
+        <di:waypoint x="765" y="280" />
+        <di:waypoint x="785" y="280" />
+        <di:waypoint x="785" y="640" />
+        <di:waypoint x="815" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_7_di" bpmnElement="Flow_P2_7">
+        <di:waypoint x="925" y="640" />
+        <di:waypoint x="1005" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_8_di" bpmnElement="Flow_P2_8">
+        <di:waypoint x="1055" y="640" />
+        <di:waypoint x="1135" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_9_di" bpmnElement="Flow_P2_9">
+        <di:waypoint x="1245" y="640" />
+        <di:waypoint x="1265" y="640" />
+        <di:waypoint x="1265" y="280" />
+        <di:waypoint x="1295" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_10_di" bpmnElement="Flow_P2_10">
+        <di:waypoint x="1405" y="280" />
+        <di:waypoint x="1492" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_11_di" bpmnElement="Flow_P2_11">
+        <di:waypoint x="1030" y="665" />
+        <di:waypoint x="1030" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_12_di" bpmnElement="Flow_P2_12">
+        <di:waypoint x="1085" y="760" />
+        <di:waypoint x="1105" y="760" />
+        <di:waypoint x="1105" y="400" />
+        <di:waypoint x="1325" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_13_di" bpmnElement="Flow_P2_13">
+        <di:waypoint x="1375" y="400" />
+        <di:waypoint x="1455" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_14_di" bpmnElement="Flow_P2_14">
+        <di:waypoint x="1565" y="400" />
+        <di:waypoint x="1615" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_15_di" bpmnElement="Flow_P2_15">
+        <di:waypoint x="1725" y="400" />
+        <di:waypoint x="1775" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_16_di" bpmnElement="Flow_P2_16">
+        <di:waypoint x="1885" y="400" />
+        <di:waypoint x="1935" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_17_di" bpmnElement="Flow_P2_17">
+        <di:waypoint x="2045" y="400" />
+        <di:waypoint x="2132" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_18_di" bpmnElement="Flow_P2_18">
+        <di:waypoint x="1350" y="425" />
+        <di:waypoint x="1350" y="520" />
+        <di:waypoint x="1455" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P2_19_di" bpmnElement="Flow_P2_19">
+        <di:waypoint x="1565" y="520" />
+        <di:waypoint x="1652" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P2_1_di" bpmnElement="Msg_P2_1">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="200" />
+        <di:waypoint x="550" y="200" />
+        <di:waypoint x="550" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P2_2_di" bpmnElement="Msg_P2_2">
+        <di:waypoint x="1670" y="360" />
+        <di:waypoint x="1670" y="200" />
+        <di:waypoint x="1830" y="200" />
+        <di:waypoint x="1830" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P2_3_di" bpmnElement="Msg_P2_3">
+        <di:waypoint x="1910" y="160" />
+        <di:waypoint x="1910" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P2_4_di" bpmnElement="Msg_P2_4">
+        <di:waypoint x="1990" y="360" />
+        <di:waypoint x="1990" y="200" />
+        <di:waypoint x="2150" y="200" />
+        <di:waypoint x="2150" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

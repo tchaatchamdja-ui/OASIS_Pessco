@@ -30,8 +30,8 @@ export function tp(cle: string, ...args: unknown[]): string {
 }
 
 /**
- * Un nom qu'un fichier resté en JavaScript définit (voir `restant.d.ts`), exigé
- * au moment de l'appel. L'ancien code le lisait par son nom nu, et levait
+ * Un nom qu'un autre paquet de la page publie — son sas le déclare, optionnel —,
+ * exigé au moment de l'appel. L'ancien code le lisait par son nom nu, et levait
  * `ReferenceError` s'il manquait ; celui-ci lève une erreur qui dit lequel.
  */
 export function requis<K extends keyof Window>(nom: K): NonNullable<Window[K]> {

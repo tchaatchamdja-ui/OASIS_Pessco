@@ -183,13 +183,17 @@ ECRANS.execution = {
 // aucune couverture**. Le défaut implicite, lui, est supprimé : un écran sans
 // `suite` est désormais refusé plutôt que mesuré de travers.
 ECRANS.ramp = { ...ecranDeModule('ramp'), suite: 'ramp-navigateur' };
-ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: 'profil-risque-navigateur' };
+ECRANS.profil_risque = { ...ecranDeModule('profil_risque'), suite: ['profil-risque-navigateur', 'pr-gestes'] };
 // PLAN porte deux suites depuis le 14 novembre 2026 : la sienne, et celle des
 // gestes qu'elle ne pressait pas (ADR-003, n° 5.f.99).
 ECRANS.planification = {
   ...ecranDeModule('planification'), suite: ['planification-navigateur', 'plan-gestes'],
 };
-ECRANS.mesures = { ...ecranDeModule('mesures'), suite: 'mesures-navigateur' };
+// CARE de même depuis le 16 novembre 2026 : sa suite d'origine était pile à son
+// budget, et les gestes qui restaient sont partis dans une seconde.
+ECRANS.mesures = {
+  ...ecranDeModule('mesures'), suite: ['mesures-navigateur', 'mesures-gestes'],
+};
 ECRANS.droits = { ...ecranDeModule('droits'), suite: 'droits-navigateur' };
 
 // ── Nommer un gestionnaire JSX ──
@@ -1429,6 +1433,19 @@ async function principal() {
     const i = t.indexOf('=>');
     return nomDuGeste(i >= 0 ? t.slice(i + 2).trim() : t);
   }));
+  // ── Et par leur texte entier, mis en forme des deux côtés ──
+  //
+  // Le nom d'une action de barre est son corps, tel qu'écrit. C'est juste tant
+  // que la source et la page portent le **même** texte — vrai d'un fichier en
+  // JavaScript, faux d'un sas TypeScript, qu'esbuild réimprime : `'…'` devient
+  // `"…"`, le bloc se réindente. Le 17 novembre 2026, la conversion de
+  // `mes-instances` a fait passer « Gestion des Droits » de CARE pour non
+  // exercé, quand la ronde de la barre le presse (n° 5.f.117).
+  //
+  // Le nom n'est pas changé — les relevés figés des autres écrans restent
+  // vrais —, le rapprochement gagne une seconde clé : le texte entier, mis en
+  // forme par `formeDeFleche`, comme pour une propriété.
+  const barreFormes = new Set((exerces.barre || []).map((src) => formeDeFleche(String(src))).filter(Boolean));
   // Une propriété vue sans nom porte son texte : on le met en forme par la
   // fonction qui a nommé la source, et par elle seule.
   const proprietesVues = new Set((exerces.propriete || []).map((v) => (
@@ -1457,7 +1474,11 @@ async function principal() {
     if (g.forme === 'en ligne') { g.exerce = vues.has(g.nom); return; }
     if (g.forme === 'propriété') { g.exerce = proprietesVues.has(g.nom); return; }
     if (g.forme === 'propriété JSX') { g.exerce = jsxVus.has(g.nom); return; }
-    if (g.forme === 'action de barre') { g.exerce = barreVue.has(g.nom); return; }
+    if (g.forme === 'action de barre') {
+      g.exerce = barreVue.has(g.nom)
+        || barreFormes.has(formeDeFleche(g.source, /\.tsx?$/.test(g.fichier) ? 'ts' : 'js'));
+      return;
+    }
     // Un écouteur est identifié par sa cible et son événement. La cible relevée
     // dans la source est une expression ; celle vue au vol est l'élément. On
     // rapproche par l'identifiant quand la source en porte un, et l'on marque

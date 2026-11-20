@@ -2,7 +2,8 @@
 // pour les fichiers restés en JavaScript (ADR-003, 5.c — n° 5.f.105).
 //
 // `pl-validation.js` posait dix noms au premier niveau. Trois sont lus hors du
-// module : les deux pages par l'aiguillage de `pl-shell.js` et la façade `PL`,
+// module : les deux pages par l'aiguillage de `pl-shell.js` et la façade `PL`
+// — retirée depuis (n° 5.f.111) —,
 // et `_normalizeList` par `pl-actions.js`. Les sept autres — les champs
 // comparés et le calcul des écarts entre versions — quittent la portée globale.
 import { _normalizeList, planRenderHistory, planRenderWorkflow } from '../validation';

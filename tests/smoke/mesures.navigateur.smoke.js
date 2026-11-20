@@ -18,36 +18,51 @@ const puppeteer = require('puppeteer');
 const { demarrer, verifier, bilan, refusAttendus } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
-const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'mesures', 'js', 'mes-app.js');
+// Depuis la conversion de la coquille (ADR-003, n° 5.f.124), le menu se lit dans
+// `libelles.ts`, l'aiguillage dans `coquille.ts`, et les chemins vers une page
+// dans toute la source de CARE.
+const SOURCE = path.join(RACINE, 'frontend', 'mesures');
+const SOURCE_NAV = path.join(SOURCE, 'libelles.ts');
+const SOURCE_AIGUILLAGE = path.join(SOURCE, 'coquille.ts');
 const IDENTIFIANT = 'superadmin@anac.bj';
 const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';
 
 function pagesDeclarees() {
   const texte = fs.readFileSync(SOURCE_NAV, 'utf8');
-  const bloc = /const MES_NAV = \{([\s\S]*?)\n\};/.exec(texte);
+  const bloc = /export const MES_NAV\b[^=]*= \{([\s\S]*?)\n\};/.exec(texte);
   if (!bloc) {
-    throw new Error('refus : MES_NAV introuvable dans public/modules/mesures/js/mes-app.js —'
+    throw new Error('refus : MES_NAV introuvable dans frontend/mesures/libelles.ts —'
       + ' le contrôle ne sait plus quelles pages l’écran déclare.');
   }
-  const cles = [...bloc[1].matchAll(/^\s{4}([\w-]+):\s*\{/gm)].map((m) => m[1]);
+  const cles = [...bloc[1].matchAll(/^\s{2}([\w-]+):\s*\{/gm)].map((m) => m[1]);
   if (!cles.length) throw new Error('refus : MES_NAV ne se lit plus entrée par entrée.');
   return cles;
+}
+
+function sources(rep) {
+  return fs.readdirSync(rep, { withFileTypes: true }).flatMap((e) => {
+    const c = path.join(rep, e.name);
+    if (e.isDirectory()) return sources(c);
+    return /\.tsx?$/.test(e.name) ? [c] : [];
+  });
 }
 
 // L'aiguillage de CARE porte quatre cas **et un défaut** : le tableau de bord
 // n'a pas de `case`, il est ce que l'aiguillage rend quand il ne reconnaît rien.
 // Un contrôle qui exigerait un cas par entrée de menu le dénoncerait à tort.
+// Un cas rend une page importée (`mesRenderMesures()`) ou publiée par un autre
+// paquet (`requis('mesRenderEtats')()`) : les deux formes se lisent.
 function aiguillageEtChemins() {
-  const texte = fs.readFileSync(SOURCE_NAV, 'utf8');
-  const rendues = [...texte.matchAll(/^\s*case '([\w-]+)': corps = mes\w+\(\);/gm)].map((m) => m[1]);
+  const texte = fs.readFileSync(SOURCE_AIGUILLAGE, 'utf8');
+  const rendues = [...texte.matchAll(/^\s*case '([\w-]+)': corps = (?:mes\w+|requis\('mes\w+'\))\(\);/gm)]
+    .map((m) => m[1]);
   if (!rendues.length) {
-    throw new Error('refus : l’aiguillage de CARE ne se lit plus dans mes-app.js.');
+    throw new Error('refus : l’aiguillage de CARE ne se lit plus dans frontend/mesures/coquille.ts.');
   }
-  const js = path.join(RACINE, 'public', 'modules', 'mesures', 'js');
   const ouvrables = new Set();
-  fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => {
-    const t = fs.readFileSync(path.join(js, f), 'utf8');
-    for (const m of t.matchAll(/mesNavigateTo\(\s*'([\w-]+)'/g)) ouvrables.add(m[1]);
+  sources(SOURCE).forEach((f) => {
+    const t = fs.readFileSync(f, 'utf8');
+    for (const m of t.matchAll(/mesNavigateTo'?\)?\(\s*'([\w-]+)'/g)) ouvrables.add(m[1]);
     for (const m of t.matchAll(/currentPage\s*=\s*'([\w-]+)'/g)) ouvrables.add(m[1]);
   });
   return { rendues, ouvrables: [...ouvrables] };
@@ -615,11 +630,15 @@ module.exports = async function mesuresNavigateurSmoke(port) {
         // l'appelait et relevait une chaîne vide, qu'il prenait pour l'état de
         // l'écran. On relève donc ce que l'écran porte vraiment — l'étape
         // **regardée** reste vide, le fil s'ouvrant sur l'étape atteinte — et
-        // c'est `mesQualModifiable()`, elle exportée, qui atteste que l'étape
-        // courante est bien la qualification : elle est fausse dès que le rang
-        // atteint diffère.
+        // c'est la saisie ouverte qui atteste que l'étape courante est bien la
+        // qualification : `mesQualModifiable()` la ferme (`disabled`) dès que le
+        // rang atteint diffère. Le test lisait cette fonction sur `window` ; elle
+        // n'y est plus (n° 5.f.125), et l'écran dit la même chose.
         d.etapeVue = (S().etapeVue || '');
-        d.modifiable = window.mesQualModifiable ? window.mesQualModifiable() : null;
+        d.modifiable = (() => {
+          const c = document.getElementById('mesQualComite');
+          return c ? !c.disabled : null;
+        })();
         // Les sections de l'étape : la carence, le rapport, l'instance, la
         // qualification.
         d.instance = vu('#mesQualComite');

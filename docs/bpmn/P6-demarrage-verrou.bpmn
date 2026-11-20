@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_P6" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:error id="Error_P6_DEMARRAGE_REFUSE" name="DEMARRAGE_REFUSE" errorCode="DEMARRAGE_REFUSE" />
+  <bpmn:error id="Error_P6_AMORCAGE_INTERROMPU" name="AMORCAGE_INTERROMPU" errorCode="AMORCAGE_INTERROMPU" />
+  <bpmn:error id="Error_P6_EADDRINUSE" name="EADDRINUSE" errorCode="EADDRINUSE" />
+  <bpmn:collaboration id="Collab_P6">
+    <bpmn:documentation>Un processus par répertoire de données : src/verrou.js ; séquence d'amorçage server.js:1166-1323 ; conduite d'exploitation DEPLOYMENT.md:237-257.</bpmn:documentation>
+    <bpmn:participant id="Part_P6_Exploitant" name="Exploitant ou plateforme (npm start, conteneur, Render)" processRef="Proc_P6_Exploitant"></bpmn:participant>
+    <bpmn:participant id="Part_P6_Oasis" name="OASIS" processRef="Proc_P6_Oasis"></bpmn:participant>
+    <bpmn:messageFlow id="Msg_P6_1" name="variables : OASIS_DATA_DIR, OASIS_VERROU, PORT, DATABASE_URL" sourceRef="a_lancer" targetRef="s_debut" />
+    <bpmn:messageFlow id="Msg_P6_2" name="traces structurées" sourceRef="Part_P6_Oasis" targetRef="a_lire" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_P6_Exploitant" name="Exploitant — démarrer" isExecutable="false">
+    <bpmn:startEvent id="a_debut" name="Démarrer ou redémarrer le service">
+      <bpmn:outgoing>Flow_P6_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="a_lancer" name="Lancer node server.js">
+      <bpmn:incoming>Flow_P6_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_lire" name="Lire les traces ; agir si refus">
+      <bpmn:documentation>Conduites : ps -p &lt;pid&gt;, OASIS_DATA_DIR, effacer un verrou étranger resté, ou OASIS_VERROU=0 : src/verrou.js:66-85 ; DEPLOYMENT.md:244-255</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="a_fin" name="Service en ligne ou cause connue">
+      <bpmn:incoming>Flow_P6_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P6_1" sourceRef="a_debut" targetRef="a_lancer" />
+    <bpmn:sequenceFlow id="Flow_P6_2" sourceRef="a_lancer" targetRef="a_lire" />
+    <bpmn:sequenceFlow id="Flow_P6_3" sourceRef="a_lire" targetRef="a_fin" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P6_Oasis" name="P6_Demarrage" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_P6_Oasis">
+      <bpmn:lane id="Lane_P6_Serveur" name="Serveur (processus Node)">
+        <bpmn:flowNodeRef>s_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_charger</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_gw_leve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_alerte_leve</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_gw_cree</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_gw_etranger</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_gw_vivant</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_alerte_repris</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_refus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_fin_refus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_fus_verrou</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_tenir</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_seed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_mfa</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_reprise</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_modules</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_gw_amorce</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_fin_amorce</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_ecouter</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_gw_port</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_fin_port</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s_fin_ok</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P6_Disque" name="Système de fichiers (data/.verrou)">
+        <bpmn:flowNodeRef>fs_poser</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>fs_lire</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>fs_reprendre</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P6_Magasin" name="Magasin">
+        <bpmn:flowNodeRef>mg_preparer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>mg_sessions</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="s_debut" name="Processus lancé">
+      <bpmn:outgoing>Flow_P6_4</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="s_debut_def" />
+    </bpmn:startEvent>
+    <bpmn:task id="s_charger" name="Lire la configuration ; monter les modules et leurs gardes">
+      <bpmn:documentation>server.js:47-55, 1036 ; src/module_loader.js:43-87</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="s_gw_leve" name="OASIS_VERROU=0 ?">
+      <bpmn:documentation>src/verrou.js:45</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P6_8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="s_alerte_leve" name="Alerte : verrou levé par OASIS_VERROU=0">
+      <bpmn:documentation>server.js:1172</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="fs_poser" name="Créer .verrou en mode exclusif (wx) : pid, machine, début">
+      <bpmn:documentation>La création exclusive rend la prise atomique : src/verrou.js:46-59</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="s_gw_cree" name="Résultat de la création ?">
+      <bpmn:documentation>src/verrou.js:58-61</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_10</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P6_11</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P6_12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="fs_lire" name="Lire le verrou tenu">
+      <bpmn:documentation>src/verrou.js:26-28, 62-63 ; un fichier illisible donne null</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_13</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="s_gw_etranger" name="Lisible et posé par une autre machine ?">
+      <bpmn:documentation>src/verrou.js:76-86. Cas de deux conteneurs sur un volume — et aussi d'un conteneur recréé après un arrêt brutal, dont le nom de machine a changé (écart d'exploitation).</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_14</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P6_15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="s_gw_vivant" name="Lisible, de cette machine, et processus vivant ?">
+      <bpmn:documentation>Signal 0 : src/verrou.js:30-34, 65-74</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_16</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P6_17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="fs_reprendre" name="Effacer le verrou périmé ; reposer le sien">
+      <bpmn:documentation>src/verrou.js:88-91. Écart : effacer puis reposer n'est pas atomique — deux démarrages simultanés, ou un verrou lu vide pendant qu'un autre l'écrit (53-55), peuvent se croire seuls tous les deux.</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_18</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="s_alerte_repris" name="Alerte : verrou périmé repris">
+      <bpmn:documentation>server.js:1168-1171</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_19</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="s_refus" name="Tracer « démarrage refusé » et la conduite à tenir">
+      <bpmn:documentation>VERROU_TENU, VERROU_ETRANGER ou erreur de fichier : server.js:1173-1175</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_12</bpmn:incoming>
+      <bpmn:incoming>Flow_P6_14</bpmn:incoming>
+      <bpmn:incoming>Flow_P6_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_20</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="s_fin_refus" name="Démarrage refusé : exit(1)">
+      <bpmn:documentation>server.js:1175</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_20</bpmn:incoming>
+      <bpmn:errorEventDefinition id="s_fin_refus_def" errorRef="Error_P6_DEMARRAGE_REFUSE" />
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="s_fus_verrou" name="">
+      <bpmn:incoming>Flow_P6_7</bpmn:incoming>
+      <bpmn:incoming>Flow_P6_10</bpmn:incoming>
+      <bpmn:incoming>Flow_P6_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_21</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="s_tenir" name="Rendre le verrou à exit, SIGINT, SIGTERM, SIGHUP">
+      <bpmn:documentation>src/verrou.js:97-118. Un kill -9 n'y passe pas : d'où la reprise au démarrage suivant.</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_22</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="mg_preparer" name="Préparer le magasin (PostgreSQL si DATABASE_URL)">
+      <bpmn:documentation>server.js:1214 ; src/magasin.js:135-147. En parallèle, sans bloquer : sonde des sauvegardes (server.js:1225-1228, voir P9) et vérification de l'horloge (1230-1249).</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_23</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="mg_sessions" name="Recharger la table des sessions">
+      <bpmn:documentation>server.js:1291-1294 ; src/auth.js:28-33</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_23</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_24</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="s_seed" name="Amorcer comptes et référentiels (mots de passe affichés une fois)">
+      <bpmn:documentation>server.js:1296-1297 ; src/auth.js:128-189 ; src/referentiels.js:97</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_24</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_25</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="s_mfa" name="Contrôler la MFA en production ; alerter et journaliser">
+      <bpmn:documentation>MFA_DESACTIVEE_EN_PRODUCTION, MFA_SANS_MESSAGERIE : server.js:1182-1201, 1300</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_25</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_26</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="s_reprise" name="Reprendre les journaux d'audit hérités en lignes">
+      <bpmn:documentation>server.js:1305-1309 ; src/audit.js:44-52 ; src/module_audit.js:66-81</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_26</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_27</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="s_modules" name="Migration RAMP ; amorçage des modules">
+      <bpmn:documentation>server.js:1314-1315</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_27</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_28</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="s_gw_amorce" name="Amorçage abouti ?">
+      <bpmn:documentation>Toute étape qui lève finit dans le même catch : server.js:1317-1323</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_28</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_29</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P6_30</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="s_fin_amorce" name="Amorçage interrompu : exit(1)">
+      <bpmn:documentation>server.js:1318-1322</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_29</bpmn:incoming>
+      <bpmn:errorEventDefinition id="s_fin_amorce_def" errorRef="Error_P6_AMORCAGE_INTERROMPU" />
+    </bpmn:endEvent>
+    <bpmn:task id="s_ecouter" name="Écouter sur PORT (4750 par défaut)">
+      <bpmn:documentation>server.js:1178, 1262-1272</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_30</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_31</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="s_gw_port" name="Port libre ?">
+      <bpmn:documentation>server.js:1277-1284</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_31</bpmn:incoming>
+      <bpmn:outgoing>Flow_P6_32</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P6_33</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="s_fin_port" name="Port occupé : exit(1)">
+      <bpmn:documentation>server.js:1279-1283</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_32</bpmn:incoming>
+      <bpmn:errorEventDefinition id="s_fin_port_def" errorRef="Error_P6_EADDRINUSE" />
+    </bpmn:endEvent>
+    <bpmn:endEvent id="s_fin_ok" name="En service">
+      <bpmn:documentation>Trace « serveur démarré » : server.js:1267-1271</bpmn:documentation>
+      <bpmn:incoming>Flow_P6_33</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P6_4" sourceRef="s_debut" targetRef="s_charger" />
+    <bpmn:sequenceFlow id="Flow_P6_5" sourceRef="s_charger" targetRef="s_gw_leve" />
+    <bpmn:sequenceFlow id="Flow_P6_6" name="oui" sourceRef="s_gw_leve" targetRef="s_alerte_leve" />
+    <bpmn:sequenceFlow id="Flow_P6_7" sourceRef="s_alerte_leve" targetRef="s_fus_verrou" />
+    <bpmn:sequenceFlow id="Flow_P6_8" name="non" sourceRef="s_gw_leve" targetRef="fs_poser" />
+    <bpmn:sequenceFlow id="Flow_P6_9" sourceRef="fs_poser" targetRef="s_gw_cree" />
+    <bpmn:sequenceFlow id="Flow_P6_10" name="créé" sourceRef="s_gw_cree" targetRef="s_fus_verrou" />
+    <bpmn:sequenceFlow id="Flow_P6_11" name="existe déjà (EEXIST)" sourceRef="s_gw_cree" targetRef="fs_lire" />
+    <bpmn:sequenceFlow id="Flow_P6_12" name="autre erreur" sourceRef="s_gw_cree" targetRef="s_refus" />
+    <bpmn:sequenceFlow id="Flow_P6_13" sourceRef="fs_lire" targetRef="s_gw_etranger" />
+    <bpmn:sequenceFlow id="Flow_P6_14" name="oui : VERROU_ETRANGER" sourceRef="s_gw_etranger" targetRef="s_refus" />
+    <bpmn:sequenceFlow id="Flow_P6_15" name="non" sourceRef="s_gw_etranger" targetRef="s_gw_vivant" />
+    <bpmn:sequenceFlow id="Flow_P6_16" name="oui : VERROU_TENU" sourceRef="s_gw_vivant" targetRef="s_refus" />
+    <bpmn:sequenceFlow id="Flow_P6_17" name="non : illisible ou processus mort" sourceRef="s_gw_vivant" targetRef="fs_reprendre" />
+    <bpmn:sequenceFlow id="Flow_P6_18" sourceRef="fs_reprendre" targetRef="s_alerte_repris" />
+    <bpmn:sequenceFlow id="Flow_P6_19" sourceRef="s_alerte_repris" targetRef="s_fus_verrou" />
+    <bpmn:sequenceFlow id="Flow_P6_20" sourceRef="s_refus" targetRef="s_fin_refus" />
+    <bpmn:sequenceFlow id="Flow_P6_21" sourceRef="s_fus_verrou" targetRef="s_tenir" />
+    <bpmn:sequenceFlow id="Flow_P6_22" sourceRef="s_tenir" targetRef="mg_preparer" />
+    <bpmn:sequenceFlow id="Flow_P6_23" sourceRef="mg_preparer" targetRef="mg_sessions" />
+    <bpmn:sequenceFlow id="Flow_P6_24" sourceRef="mg_sessions" targetRef="s_seed" />
+    <bpmn:sequenceFlow id="Flow_P6_25" sourceRef="s_seed" targetRef="s_mfa" />
+    <bpmn:sequenceFlow id="Flow_P6_26" sourceRef="s_mfa" targetRef="s_reprise" />
+    <bpmn:sequenceFlow id="Flow_P6_27" sourceRef="s_reprise" targetRef="s_modules" />
+    <bpmn:sequenceFlow id="Flow_P6_28" sourceRef="s_modules" targetRef="s_gw_amorce" />
+    <bpmn:sequenceFlow id="Flow_P6_29" name="non" sourceRef="s_gw_amorce" targetRef="s_fin_amorce" />
+    <bpmn:sequenceFlow id="Flow_P6_30" name="oui" sourceRef="s_gw_amorce" targetRef="s_ecouter" />
+    <bpmn:sequenceFlow id="Flow_P6_31" sourceRef="s_ecouter" targetRef="s_gw_port" />
+    <bpmn:sequenceFlow id="Flow_P6_32" name="non" sourceRef="s_gw_port" targetRef="s_fin_port" />
+    <bpmn:sequenceFlow id="Flow_P6_33" name="oui" sourceRef="s_gw_port" targetRef="s_fin_ok" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P6" name="P6 — Démarrage du serveur et verrou du répertoire de données">
+    <bpmndi:BPMNPlane id="Plane_P6" bpmnElement="Collab_P6">
+      <bpmndi:BPMNShape id="Part_P6_Exploitant_di" bpmnElement="Part_P6_Exploitant" isHorizontal="true"><dc:Bounds x="100" y="60" width="4170" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P6_Oasis_di" bpmnElement="Part_P6_Oasis" isHorizontal="true"><dc:Bounds x="100" y="220" width="4170" height="720" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P6_Serveur_di" bpmnElement="Lane_P6_Serveur" isHorizontal="true"><dc:Bounds x="130" y="220" width="4140" height="480" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P6_Disque_di" bpmnElement="Lane_P6_Disque" isHorizontal="true"><dc:Bounds x="130" y="700" width="4140" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P6_Magasin_di" bpmnElement="Lane_P6_Magasin" isHorizontal="true"><dc:Bounds x="130" y="820" width="4140" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_debut_di" bpmnElement="a_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_lancer_di" bpmnElement="a_lancer"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_lire_di" bpmnElement="a_lire"><dc:Bounds x="3855" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_fin_di" bpmnElement="a_fin"><dc:Bounds x="4052" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_debut_di" bpmnElement="s_debut"><dc:Bounds x="532" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_charger_di" bpmnElement="s_charger"><dc:Bounds x="655" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_gw_leve_di" bpmnElement="s_gw_leve" isMarkerVisible="true"><dc:Bounds x="845" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_alerte_leve_di" bpmnElement="s_alerte_leve"><dc:Bounds x="975" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fs_poser_di" bpmnElement="fs_poser"><dc:Bounds x="815" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_gw_cree_di" bpmnElement="s_gw_cree" isMarkerVisible="true"><dc:Bounds x="1005" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fs_lire_di" bpmnElement="fs_lire"><dc:Bounds x="1135" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_gw_etranger_di" bpmnElement="s_gw_etranger" isMarkerVisible="true"><dc:Bounds x="1325" y="495" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_gw_vivant_di" bpmnElement="s_gw_vivant" isMarkerVisible="true"><dc:Bounds x="1485" y="495" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fs_reprendre_di" bpmnElement="fs_reprendre"><dc:Bounds x="1615" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_alerte_repris_di" bpmnElement="s_alerte_repris"><dc:Bounds x="1775" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_refus_di" bpmnElement="s_refus"><dc:Bounds x="2095" y="600" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fin_refus_di" bpmnElement="s_fin_refus"><dc:Bounds x="2292" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fus_verrou_di" bpmnElement="s_fus_verrou" isMarkerVisible="true"><dc:Bounds x="2285" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_tenir_di" bpmnElement="s_tenir"><dc:Bounds x="2415" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mg_preparer_di" bpmnElement="mg_preparer"><dc:Bounds x="2575" y="840" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mg_sessions_di" bpmnElement="mg_sessions"><dc:Bounds x="2735" y="840" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_seed_di" bpmnElement="s_seed"><dc:Bounds x="2895" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_mfa_di" bpmnElement="s_mfa"><dc:Bounds x="3055" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_reprise_di" bpmnElement="s_reprise"><dc:Bounds x="3215" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_modules_di" bpmnElement="s_modules"><dc:Bounds x="3375" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_gw_amorce_di" bpmnElement="s_gw_amorce" isMarkerVisible="true"><dc:Bounds x="3565" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fin_amorce_di" bpmnElement="s_fin_amorce"><dc:Bounds x="3572" y="382" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_ecouter_di" bpmnElement="s_ecouter"><dc:Bounds x="3695" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_gw_port_di" bpmnElement="s_gw_port" isMarkerVisible="true"><dc:Bounds x="3885" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fin_port_di" bpmnElement="s_fin_port"><dc:Bounds x="3892" y="382" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s_fin_ok_di" bpmnElement="s_fin_ok"><dc:Bounds x="4052" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P6_1_di" bpmnElement="Flow_P6_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_2_di" bpmnElement="Flow_P6_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="3855" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_3_di" bpmnElement="Flow_P6_3">
+        <di:waypoint x="3965" y="120" />
+        <di:waypoint x="4052" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_4_di" bpmnElement="Flow_P6_4">
+        <di:waypoint x="568" y="280" />
+        <di:waypoint x="655" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_5_di" bpmnElement="Flow_P6_5">
+        <di:waypoint x="765" y="280" />
+        <di:waypoint x="845" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_6_di" bpmnElement="Flow_P6_6">
+        <di:waypoint x="895" y="280" />
+        <di:waypoint x="975" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_7_di" bpmnElement="Flow_P6_7">
+        <di:waypoint x="1085" y="280" />
+        <di:waypoint x="2285" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_8_di" bpmnElement="Flow_P6_8">
+        <di:waypoint x="870" y="305" />
+        <di:waypoint x="870" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_9_di" bpmnElement="Flow_P6_9">
+        <di:waypoint x="925" y="760" />
+        <di:waypoint x="945" y="760" />
+        <di:waypoint x="945" y="400" />
+        <di:waypoint x="1005" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_10_di" bpmnElement="Flow_P6_10">
+        <di:waypoint x="1055" y="400" />
+        <di:waypoint x="2310" y="400" />
+        <di:waypoint x="2310" y="305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_11_di" bpmnElement="Flow_P6_11">
+        <di:waypoint x="1030" y="425" />
+        <di:waypoint x="1030" y="760" />
+        <di:waypoint x="1135" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_12_di" bpmnElement="Flow_P6_12">
+        <di:waypoint x="1030" y="425" />
+        <di:waypoint x="1030" y="640" />
+        <di:waypoint x="2095" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_13_di" bpmnElement="Flow_P6_13">
+        <di:waypoint x="1245" y="760" />
+        <di:waypoint x="1265" y="760" />
+        <di:waypoint x="1265" y="520" />
+        <di:waypoint x="1325" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_14_di" bpmnElement="Flow_P6_14">
+        <di:waypoint x="1350" y="545" />
+        <di:waypoint x="1350" y="640" />
+        <di:waypoint x="2095" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_15_di" bpmnElement="Flow_P6_15">
+        <di:waypoint x="1375" y="520" />
+        <di:waypoint x="1485" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_16_di" bpmnElement="Flow_P6_16">
+        <di:waypoint x="1510" y="545" />
+        <di:waypoint x="1510" y="640" />
+        <di:waypoint x="2095" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_17_di" bpmnElement="Flow_P6_17">
+        <di:waypoint x="1535" y="520" />
+        <di:waypoint x="1595" y="520" />
+        <di:waypoint x="1595" y="760" />
+        <di:waypoint x="1615" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_18_di" bpmnElement="Flow_P6_18">
+        <di:waypoint x="1725" y="760" />
+        <di:waypoint x="1745" y="760" />
+        <di:waypoint x="1745" y="520" />
+        <di:waypoint x="1775" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_19_di" bpmnElement="Flow_P6_19">
+        <di:waypoint x="1885" y="520" />
+        <di:waypoint x="2310" y="520" />
+        <di:waypoint x="2310" y="305" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_20_di" bpmnElement="Flow_P6_20">
+        <di:waypoint x="2205" y="640" />
+        <di:waypoint x="2292" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_21_di" bpmnElement="Flow_P6_21">
+        <di:waypoint x="2335" y="280" />
+        <di:waypoint x="2415" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_22_di" bpmnElement="Flow_P6_22">
+        <di:waypoint x="2525" y="280" />
+        <di:waypoint x="2545" y="280" />
+        <di:waypoint x="2545" y="880" />
+        <di:waypoint x="2575" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_23_di" bpmnElement="Flow_P6_23">
+        <di:waypoint x="2685" y="880" />
+        <di:waypoint x="2735" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_24_di" bpmnElement="Flow_P6_24">
+        <di:waypoint x="2845" y="880" />
+        <di:waypoint x="2865" y="880" />
+        <di:waypoint x="2865" y="280" />
+        <di:waypoint x="2895" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_25_di" bpmnElement="Flow_P6_25">
+        <di:waypoint x="3005" y="280" />
+        <di:waypoint x="3055" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_26_di" bpmnElement="Flow_P6_26">
+        <di:waypoint x="3165" y="280" />
+        <di:waypoint x="3215" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_27_di" bpmnElement="Flow_P6_27">
+        <di:waypoint x="3325" y="280" />
+        <di:waypoint x="3375" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_28_di" bpmnElement="Flow_P6_28">
+        <di:waypoint x="3485" y="280" />
+        <di:waypoint x="3565" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_29_di" bpmnElement="Flow_P6_29">
+        <di:waypoint x="3590" y="305" />
+        <di:waypoint x="3590" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_30_di" bpmnElement="Flow_P6_30">
+        <di:waypoint x="3615" y="280" />
+        <di:waypoint x="3695" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_31_di" bpmnElement="Flow_P6_31">
+        <di:waypoint x="3805" y="280" />
+        <di:waypoint x="3885" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_32_di" bpmnElement="Flow_P6_32">
+        <di:waypoint x="3910" y="305" />
+        <di:waypoint x="3910" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P6_33_di" bpmnElement="Flow_P6_33">
+        <di:waypoint x="3935" y="280" />
+        <di:waypoint x="4052" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P6_1_di" bpmnElement="Msg_P6_1">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="200" />
+        <di:waypoint x="550" y="200" />
+        <di:waypoint x="550" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P6_2_di" bpmnElement="Msg_P6_2">
+        <di:waypoint x="3830" y="220" />
+        <di:waypoint x="3830" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

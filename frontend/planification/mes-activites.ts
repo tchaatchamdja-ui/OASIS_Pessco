@@ -53,7 +53,7 @@ const esc = (v: unknown): string => requis('_esc')(v);
 
 // Le compte courant, retrouvé parmi les inspecteurs par son adresse.
 function _planMaMoi(): string {
-  const courriel = String(((etat().user || {}) as { username?: string }).username || '').trim().toLowerCase();
+  const courriel = String(etat().user?.username || '').trim().toLowerCase();
   if (!courriel) return '';
   const i = liste<Inspecteur>('inspecteurs')
     .find((x) => String(x.email || '').trim().toLowerCase() === courriel);

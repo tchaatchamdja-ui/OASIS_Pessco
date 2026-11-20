@@ -10,6 +10,7 @@
 // au chargement — l'écouteur `resize` et le drapeau qui le garde de se poser
 // deux fois — : il ne s'importe d'aucun autre paquet, il y serait évalué une
 // seconde fois. Le tableau de bord et le calendrier l'appellent sur la page.
+import type { FiltresPlan } from './etat';
 import { donnees, etat, requis, tp } from './partage';
 
 const PLAN_CAL_MOIS = ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin',
@@ -37,11 +38,10 @@ interface Options {
   annee?: number; titre?: string; prestataires?: Prestataire[]; filtre?: Filtre;
   couleur?: (l: Ligne) => string; clic?: (l: Ligne) => string; voirDetail?: boolean; compact?: boolean;
 }
-interface EtatCal { calendrierVolet?: boolean; calendarYear?: number | null; calFilters?: { annee: string } | null }
 
 const esc = (v: unknown): string => requis('_esc')(v);
 const escAttr = (v: unknown): string => requis('_escAttr')(v);
-const cal = (): EtatCal => etat() as EtatCal;
+const cal = etat;
 
 // Une activité qui reste à réaliser est à venir, en cours, ou en retard : sa
 // fin est passée et rien n'est venu la clore. Le module ne tient pas la
@@ -150,7 +150,7 @@ function _planCalRestreindre(duPerimetre: Prestataire[], lignes: Ligne[], filtre
 // Filtres de la barre du tableau de bord. L'année en est un ici : la barre
 // s'ouvre sur « toutes », et en choisir une restreint bien le périmètre — à la
 // différence du menu « Calendrier », qui porte toujours sur une année.
-const PLAN_BORD_FILTRES = ['domaine', 'secteur', 'prestataire', 'sousActivite', 'theme', 'statut', 'search', 'annee'];
+const PLAN_BORD_FILTRES: (keyof FiltresPlan)[] = ['domaine', 'secteur', 'prestataire', 'sousActivite', 'theme', 'statut', 'search', 'annee'];
 
 const _planCalFiltreDuBord = (): Filtre => ({
   prestataire: etat().filters.prestataire,

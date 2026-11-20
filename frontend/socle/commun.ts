@@ -85,7 +85,7 @@ declare global {
     oasisJson: (url: string, options?: RequestInit) => Promise<unknown>;
     oasisAppliquerTheme: (theme: string) => void;
     oasisSaisieDifferee: (
-      champ: HTMLInputElement | null, appliquer: () => void, delai?: number,
+      champ: HTMLInputElement | string | null, appliquer: () => void, delai?: number,
     ) => void;
     oasisCharger: (src: string) => Promise<string>;
     // Une navigation, non un clic fabriqué : voir `telecharger` plus bas. Le
@@ -354,11 +354,18 @@ export function appliquerTheme(theme: string): void {
   // frappe s'arrête, puis on rend le curseur là où il était — le redessin
   // recrée souvent le champ lui-même. Un minuteur par champ, pour que deux
   // recherches voisines ne s'annulent pas l'une l'autre.
+  //
+  // Le champ peut aussi n'être qu'une **clé** : RAMP et CARE passent une chaîne
+  // (`'ramp_recherche'`, `` `mes_${cle}` ``), et la fonction l'a toujours
+  // accueillie — elle tient lieu de clé du minuteur, sans curseur à rendre. La
+  // déclaration ne le disait pas ; la conversion de la coquille de CARE l'a vu
+  // (ADR-003, n° 5.f.124).
   const minuteurs = new Map<unknown, ReturnType<typeof setTimeout>>();
-export function saisieDifferee(champ: HTMLInputElement | null, appliquer: () => void, delai?: number): void {
-    const cle = (champ && (champ.id || champ.name)) || champ;
-    const id = champ && champ.id;
-    const pos = champ && champ.selectionStart;
+export function saisieDifferee(champ: HTMLInputElement | string | null, appliquer: () => void, delai?: number): void {
+    const element = typeof champ === 'string' ? null : champ;
+    const cle = (element && (element.id || element.name)) || champ;
+    const id = element && element.id;
+    const pos = element && element.selectionStart;
     clearTimeout(minuteurs.get(cle));
     minuteurs.set(cle, setTimeout(() => {
       minuteurs.delete(cle);

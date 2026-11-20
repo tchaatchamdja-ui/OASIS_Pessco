@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_S1" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:collaboration id="Collab_S1">
+    <bpmn:documentation>Sous-processus appelé par toute inscription d'audit : journal du socle (src/audit.js) et journaux des modules (src/module_audit.js). Atomique par file d'attente sur fichiers, par contrainte d'unicité en base.</bpmn:documentation>
+    <bpmn:participant id="Part_S1_Oasis" name="OASIS — socle serveur" processRef="Proc_S1_Oasis"></bpmn:participant>
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_S1_Oasis" name="S1_Inscrire" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_S1_Oasis">
+      <bpmn:lane id="Lane_S1_Serveur" name="Serveur">
+        <bpmn:flowNodeRef>s1_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s1_reprise</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s1_gw_base</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s1_construire</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s1_hacher</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s1_fusion</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s1_fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_S1_Magasin" name="Magasin">
+        <bpmn:flowNodeRef>s1_file</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s1_lire</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s1_ajouter</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>s1_pg</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="s1_debut" name="Acte à journaliser">
+      <bpmn:documentation>audit.log : src/audit.js:57 ; moduleAudit.log : src/module_audit.js:102</bpmn:documentation>
+      <bpmn:outgoing>Flow_S1_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="s1_reprise" name="Reprendre le journal hérité (première fois)">
+      <bpmn:documentation>Conversion du tableau JSON hérité en lignes, idempotente : src/audit.js:44-52 ; src/module_audit.js:66-81</bpmn:documentation>
+      <bpmn:incoming>Flow_S1_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_S1_2</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="s1_gw_base" name="Journal sur PostgreSQL ?">
+      <bpmn:documentation>src/magasin.js:240, 262</bpmn:documentation>
+      <bpmn:incoming>Flow_S1_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_S1_3</bpmn:outgoing>
+      <bpmn:outgoing>Flow_S1_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="s1_file" name="Mettre l'inscription en file (une file par journal)">
+      <bpmn:documentation>src/magasin.js:156-161, 265</bpmn:documentation>
+      <bpmn:incoming>Flow_S1_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_S1_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="s1_lire" name="Lire la chaîne (filtrée par module)">
+      <bpmn:documentation>src/magasin.js:266-267 ; src/journal.js:47-60</bpmn:documentation>
+      <bpmn:incoming>Flow_S1_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_S1_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="s1_construire" name="Construire l'entrée : id, ts, user, action, prevHash">
+      <bpmn:documentation>prevHash = empreinte de la dernière entrée, ou GENESIS : src/audit.js:62-71 ; src/module_audit.js:107-119</bpmn:documentation>
+      <bpmn:incoming>Flow_S1_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_S1_6</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="s1_hacher" name="Calculer l'empreinte SHA-256">
+      <bpmn:documentation>SHA-256(prevHash|ts|user|action|details) : src/audit.js:31-36, 72 ; src/module_audit.js:95-100, 120</bpmn:documentation>
+      <bpmn:incoming>Flow_S1_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_S1_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="s1_ajouter" name="Ajouter une ligne au .jsonl (ajout seul)">
+      <bpmn:documentation>appendFileSync, jamais de réécriture : src/journal.js:72-79</bpmn:documentation>
+      <bpmn:incoming>Flow_S1_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_S1_8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="s1_pg" name="Chaîner en base : construire, hacher, insérer ; rejouer si le rang est pris">
+      <bpmn:documentation>Unicité (nom, cle, rang), 20 essais : src/store_pg.js:262-275</bpmn:documentation>
+      <bpmn:incoming>Flow_S1_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_S1_10</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="s1_fusion" name="">
+      <bpmn:incoming>Flow_S1_8</bpmn:incoming>
+      <bpmn:incoming>Flow_S1_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_S1_11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="s1_fin" name="Entrée chaînée">
+      <bpmn:incoming>Flow_S1_11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_S1_1" sourceRef="s1_debut" targetRef="s1_reprise" />
+    <bpmn:sequenceFlow id="Flow_S1_2" sourceRef="s1_reprise" targetRef="s1_gw_base" />
+    <bpmn:sequenceFlow id="Flow_S1_3" name="non (fichiers)" sourceRef="s1_gw_base" targetRef="s1_file" />
+    <bpmn:sequenceFlow id="Flow_S1_4" sourceRef="s1_file" targetRef="s1_lire" />
+    <bpmn:sequenceFlow id="Flow_S1_5" sourceRef="s1_lire" targetRef="s1_construire" />
+    <bpmn:sequenceFlow id="Flow_S1_6" sourceRef="s1_construire" targetRef="s1_hacher" />
+    <bpmn:sequenceFlow id="Flow_S1_7" sourceRef="s1_hacher" targetRef="s1_ajouter" />
+    <bpmn:sequenceFlow id="Flow_S1_8" sourceRef="s1_ajouter" targetRef="s1_fusion" />
+    <bpmn:sequenceFlow id="Flow_S1_9" name="oui" sourceRef="s1_gw_base" targetRef="s1_pg" />
+    <bpmn:sequenceFlow id="Flow_S1_10" sourceRef="s1_pg" targetRef="s1_fusion" />
+    <bpmn:sequenceFlow id="Flow_S1_11" sourceRef="s1_fusion" targetRef="s1_fin" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_S1" name="S1 — Inscrire une entrée au journal chaîné">
+    <bpmndi:BPMNPlane id="Plane_S1" bpmnElement="Collab_S1">
+      <bpmndi:BPMNShape id="Part_S1_Oasis_di" bpmnElement="Part_S1_Oasis" isHorizontal="true"><dc:Bounds x="100" y="60" width="1770" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_S1_Serveur_di" bpmnElement="Lane_S1_Serveur" isHorizontal="true"><dc:Bounds x="130" y="60" width="1740" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_S1_Magasin_di" bpmnElement="Lane_S1_Magasin" isHorizontal="true"><dc:Bounds x="130" y="180" width="1740" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_debut_di" bpmnElement="s1_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_reprise_di" bpmnElement="s1_reprise"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_gw_base_di" bpmnElement="s1_gw_base" isMarkerVisible="true"><dc:Bounds x="525" y="95" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_file_di" bpmnElement="s1_file"><dc:Bounds x="655" y="200" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_lire_di" bpmnElement="s1_lire"><dc:Bounds x="815" y="200" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_construire_di" bpmnElement="s1_construire"><dc:Bounds x="975" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_hacher_di" bpmnElement="s1_hacher"><dc:Bounds x="1135" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_ajouter_di" bpmnElement="s1_ajouter"><dc:Bounds x="1295" y="200" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_pg_di" bpmnElement="s1_pg"><dc:Bounds x="815" y="320" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_fusion_di" bpmnElement="s1_fusion" isMarkerVisible="true"><dc:Bounds x="1485" y="95" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="s1_fin_di" bpmnElement="s1_fin"><dc:Bounds x="1652" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_S1_1_di" bpmnElement="Flow_S1_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_2_di" bpmnElement="Flow_S1_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="525" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_3_di" bpmnElement="Flow_S1_3">
+        <di:waypoint x="550" y="145" />
+        <di:waypoint x="550" y="240" />
+        <di:waypoint x="655" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_4_di" bpmnElement="Flow_S1_4">
+        <di:waypoint x="765" y="240" />
+        <di:waypoint x="815" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_5_di" bpmnElement="Flow_S1_5">
+        <di:waypoint x="925" y="240" />
+        <di:waypoint x="945" y="240" />
+        <di:waypoint x="945" y="120" />
+        <di:waypoint x="975" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_6_di" bpmnElement="Flow_S1_6">
+        <di:waypoint x="1085" y="120" />
+        <di:waypoint x="1135" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_7_di" bpmnElement="Flow_S1_7">
+        <di:waypoint x="1245" y="120" />
+        <di:waypoint x="1265" y="120" />
+        <di:waypoint x="1265" y="240" />
+        <di:waypoint x="1295" y="240" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_8_di" bpmnElement="Flow_S1_8">
+        <di:waypoint x="1405" y="240" />
+        <di:waypoint x="1425" y="240" />
+        <di:waypoint x="1425" y="120" />
+        <di:waypoint x="1485" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_9_di" bpmnElement="Flow_S1_9">
+        <di:waypoint x="550" y="145" />
+        <di:waypoint x="550" y="360" />
+        <di:waypoint x="815" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_10_di" bpmnElement="Flow_S1_10">
+        <di:waypoint x="925" y="360" />
+        <di:waypoint x="1510" y="360" />
+        <di:waypoint x="1510" y="145" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_S1_11_di" bpmnElement="Flow_S1_11">
+        <di:waypoint x="1535" y="120" />
+        <di:waypoint x="1652" y="120" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

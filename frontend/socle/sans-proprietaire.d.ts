@@ -25,6 +25,15 @@
 // un sas et contrôle que ce que son graphe lit du monde y existe vraiment.
 
 declare global {
+  /**
+   * L'état du shell d'un module, `window.APP_STATE` : sa part **partagée**. Une
+   * interface, non un type littéral, pour qu'un écran en cohabitation y ajoute
+   * ce que ses fichiers convertis lisent — PR y ajoute `instances`
+   * (`profil_risque/restant.d.ts`, ADR-003 n° 5.f.129) — sans redéclarer ce
+   * nom-ci.
+   */
+  interface EtatShellModule { lang?: string; sidebarCollapsed?: boolean }
+
   interface Window {
     // `oasisSessionPerdue` a quitté ce fichier le 6 octobre 2026 :
     // `socle/requete.ts` le définit désormais, et le déclare donc lui-même.
@@ -39,10 +48,19 @@ declare global {
      * y écrit `sidebarCollapsed`. Le premier le déclarait `{ lang?: string }` —
      * incomplet, et le second ne compilait donc pas.
      */
-    APP_STATE?: { lang?: string; sidebarCollapsed?: boolean };
+    APP_STATE?: EtatShellModule;
 
-    /** L'état partagé posé par le portail, dont la langue retenue. */
-    PESSCO?: { lang?: string };
+    /**
+     * L'état partagé posé par le portail en mode hébergé : la langue retenue,
+     * et, pour PLAN, le compte, le thème et les référentiels déjà chargés
+     * (`planification/coquille.ts`).
+     */
+    PESSCO?: {
+      lang?: string;
+      user?: unknown;
+      theme?: string;
+      sharedData?: Partial<Record<'domaines' | 'secteurs' | 'sousActivites' | 'prestataires' | 'aac', unknown>>;
+    };
     /**
      * Les libellés partagés du portail, que `pt()` de PLAN et `exec-i18n.js`
      * cherchent. **Aucun fichier du dépôt ne les définit** — mesuré le

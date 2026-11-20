@@ -217,20 +217,38 @@ module.exports = async function tailleSmoke() {
     const sansAncre = [];
     const avecGestionnaire = [];
     const avecFonction = [];
-    ecrans.forEach((e) => {
+    // Les sources d'un écran : ses fichiers restés en JavaScript, et ceux
+    // convertis en TypeScript (ADR-003) — PLAN n'a plus que les seconds.
+    const sourcesDe = (e) => {
+      const fichiers = [];
       const js = path.join(RACINE, 'public', 'modules', e, 'js');
-      if (!fs.existsSync(js)) { sansAncre.push(`${e} (pas de source)`); return; }
+      if (fs.existsSync(js)) {
+        fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => fichiers.push(path.join(js, f)));
+      }
+      const parcourir = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((x) => {
+        const c = path.join(d, x.name);
+        if (x.isDirectory()) parcourir(c);
+        else if (x.name.endsWith('.ts') && !x.name.endsWith('.d.ts')) fichiers.push(c);
+      });
+      const ts = path.join(RACINE, 'frontend', e);
+      if (fs.existsSync(ts)) parcourir(ts);
+      return fichiers;
+    };
+    ecrans.forEach((e) => {
+      const sources = sourcesDe(e);
+      if (!sources.length) { sansAncre.push(`${e} (pas de source)`); return; }
       let ancres = 0;
-      fs.readdirSync(js).filter((f) => f.endsWith('.js')).forEach((f) => {
-        const t = fs.readFileSync(path.join(js, f), 'utf8');
+      sources.forEach((chemin) => {
+        const f = path.relative(RACINE, chemin);
+        const t = fs.readFileSync(chemin, 'utf8');
         // L'ancre : un nœud de classe `btn-logout`, et rien d'autre dessus.
         for (const m of t.matchAll(/<button[^>]*class="btn-logout"[^>]*>/g)) {
           ancres += 1;
-          if (/\bon[a-z]+=/.test(m[0])) avecGestionnaire.push(`${e}/${f} : ${m[0].slice(0, 90)}`);
+          if (/\bon[a-z]+=/.test(m[0])) avecGestionnaire.push(`${f} : ${m[0].slice(0, 90)}`);
         }
         // Et la fonction : aucun écran de module n'en déclare plus.
-        for (const m of t.matchAll(/^(?:async\s+)?function\s+(\w*(?:[Ll]ogout|[Dd]econnexion)\w*)\s*\(/gm)) {
-          avecFonction.push(`${e}/${f} : ${m[1]}`);
+        for (const m of t.matchAll(/^(?:export\s+)?(?:async\s+)?function\s+(\w*(?:[Ll]ogout|[Dd]econnexion)\w*)\s*\(/gm)) {
+          avecFonction.push(`${f} : ${m[1]}`);
         }
       });
       if (!ancres) sansAncre.push(e);
@@ -2325,8 +2343,10 @@ module.exports = async function tailleSmoke() {
       // les 2 000 clés de l'autre, ou ne les aurait plus vues (n° 5.f.101).
       { nom: 'PLAN', table: 'PLAN_TR', dir: 'public/modules/planification/js', ts: 'frontend/planification', fn: ['pt', 'tp'] },
       { nom: 'RAMP', table: 'RAMP_TR', dir: 'public/modules/ramp/js', fn: ['tr', 'rt'] },
-      { nom: 'CARE', table: 'MES_TR', dir: 'public/modules/mesures/js', fn: ['tm', 'mt'] },
-      { nom: 'PR', table: 'TRANSLATIONS', dir: 'public/modules/profil_risque/js', fn: ['pt', 't'] },
+      // CARE de même depuis le 17 novembre 2026 (n° 5.f.116).
+      { nom: 'CARE', table: 'MES_TR', dir: 'public/modules/mesures/js', ts: 'frontend/mesures', fn: ['tm', 'mt'] },
+      // PR de même depuis le 19 novembre 2026 (n° 5.f.128).
+      { nom: 'PR', table: 'TRANSLATIONS', dir: 'public/modules/profil_risque/js', ts: 'frontend/profil_risque', fn: ['pt', 't'] },
     ];
     const orphelines = [];
     let demandees = 0;
@@ -2488,7 +2508,10 @@ module.exports = async function tailleSmoke() {
     // fichiers périmés à son premier passage. Cette suite grandit par contrôles
     // unitaires de règles : c'est son office, et elle n'a de chaîne à partager
     // avec personne.
-    'unitaires.smoke.js': 1997,
+    // 1 997 → 2 106 : les deux contrôles du nommeur qui reconnaît une action de
+    // barre sous la forme que la construction réimprime (n° 5.f.117). Sans eux,
+    // un geste pressé de CARE passait pour non exercé dès sa conversion.
+    'unitaires.smoke.js': 2106,
     'ramp.smoke.js': 1447,
     // Franchi le 11 novembre 2026, au tour suivant la pose de ce garde : la
     // ronde de portée des notifications l'a mené de 995 à 1 174 lignes, et le

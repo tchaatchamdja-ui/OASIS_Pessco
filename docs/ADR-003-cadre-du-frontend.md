@@ -865,9 +865,9 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            |---|---|---|
            | DROITS | — | **converti** (suite n° 1) ; dernier fichier passé le 6 octobre |
            | portail (`public/js`) | **0 — le dossier n'existe plus** | **86 gestes nommés, 68 exercés — le plafond atteignable —, 10 motivés, 8 indécidables** (le choix de l'instance dans la barre, invisible au relevé jusqu'au n° 5.f.98, est couvert) — relevé figé et gardé (5.c.0) ; schémas (5.d.0), CRUD des référentiels (5.d.1), exigences (5.d.2), organigramme (5.d.3), personnel et taxinomie (5.d.4), paramètres de l'instance (5.d.5) et le cycle de rendu (5.d.6) convertis — `app-config.js` supprimé ; le portail en **un** paquet (5.d.7) ; les libellés littéraux et la barre d'écran (5.e.0), l'écran des comptes (5.e.1), le profil (5.e.2), l'accueil et le journal d'audit (5.e.3), le téléphone et les aides (5.e.4) — **le portail est entièrement en TypeScript** ; pont de cohabitation déposé (5.e.5) — **135 noms de surface deviennent 72**, trois sas supprimés, les quatorze comparateurs faits pièces d'archive et remplacés par le relevé figé des 81 noms de la page ; le message de retour au portail corrigé et gardé des deux côtés (5.e.6) ; la construction ne produit plus que ce qu'une page charge — **4 484 Ko en 38 fichiers deviennent 1 224 en 8** (5.e.7) ; le contrat du socle avec le shell des modules écrit et gardé des deux côtés (5.e.8) ; les seize dettes de `window` rendues — **72 noms de surface deviennent 61** (5.e.9) ; la racine partagée des fenêtres a son module, et le dernier cycle non voulu est dissous (5.e.10) |
-           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **conversion en cours** — 12 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.108) ; reste `pl-shell.js` |
-           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 63 exercés**, 3 indécidables — idem, 4 novembre 2026 |
-           | PR (`profil_risque`) | 7 191 | **88 gestes nommés, 78 exercés**, 3 indécidables — idem, 5 novembre 2026 (n° 5.f.69 et 5.f.70) |
+           | PLAN (`planification`) | 5 955 | **93 gestes nommés, 87 exercés** — le plafond : le seul reste, la barre de sous-onglets, est inatteignable —, 5 indécidables — relevé figé et gardé, suite n° 0.b du 4 novembre 2026, repris le 12 novembre avec la correction du nommage (n° 5.f.83), mesuré par **deux** suites depuis le 14 novembre, `planification-navigateur` et `plan-gestes` (n° 5.f.99) ; l'approbation du directeur et la transmission rendues à l'écran (n° 5.f.100) ; **converti** — 13 fichiers sur 13 : les trois sans interface, puis « Mes activités », les profils de risque, le calendrier, le tableau de bord et sa carte calendrier, la validation et l'historique, la liste et le détail des plans, les fenêtres de saisie, les actes du circuit et les pastilles, la coquille (n° 5.f.101, 5.f.102, 5.f.104 à 5.f.109) ; plus aucun fichier en JavaScript ; l'état déclaré en un seul endroit, la façade `window.PL` retirée, une course des discussions corrigée (n° 5.f.110 à 5.f.112) |
+           | CARE (`mesures`) | 6 422 | **89 gestes nommés, 86 exercés** — le plafond : aucun reste non exercé —, 3 indécidables — idem, 4 novembre 2026, repris le 16 novembre et mesuré par **deux** suites, `mesures-navigateur` et `mesures-gestes` (n° 5.f.114, 5.f.115) ; **converti** — 9 fichiers sur 9 : les libellés, les instances, les Paramètres, les états et leur page, le suivi, le traitement, la qualification, la coquille (n° 5.f.116 à 5.f.124) ; plus aucun fichier en JavaScript, la frontière `restant.d.ts` retirée ; la façade retirée — 73 noms posés pour personne, 160 gardés, chacun avec un lecteur (n° 5.f.125) ; l'état et les formes de l'API déclarés une fois, sans signature d'index (n° 5.f.126) |
+           | PR (`profil_risque`) | 7 154 | **88 gestes nommés, 85 exercés** — le plafond : les trois restants sont des écouteurs indécidables, exercés par `pr-gestes` —, 3 indécidables — relevé du 5 novembre 2026 (n° 5.f.69 et 5.f.70), repris le 19 novembre et mesuré par **deux** suites, `profil-risque-navigateur` et `pr-gestes` (n° 5.f.127) ; **en conversion** — 7 fichiers sur 9 : les libellés et les indices, l'instance regardée, la bibliothèque, le tableau de bord, les Paramètres, les évaluations, les profils et les statistiques (n° 5.f.128 à 5.f.134) |
            | RAMP | 12 489 | **209 gestes nommés, 193 exercés** — idem, 3 novembre 2026 |
            | SURV (`execution`) | 24 162 | **323 gestes nommés, 320 exercés** (99 %) — tous les décidables —, 512 occurrences sur 518 dont 6 indécidables — mesuré par **treize** suites depuis le 13 novembre 2026, `surv`, `surv-pieces`, `surv-parametres`, `surv-coquille`, `surv-circuit`, `surv-plans`, `surv-processus`, `surv-documents`, `surv-dossiers`, `surv-barre`, `surv-constatations`, `surv-prestataire` et `surv-fenetres`, dont le relevé réunit les journaux (n° 5.f.81, 5.f.82, 5.f.84 à 5.f.98) ; le plus gros écran. Plus aucune de ses pages n'est sans chemin ; les comptes de l'organisme, le **plan d'actions correctives** et les **notifications** sont exercés en entier — 10 sur 10, 47 sur 47, 33 sur 33 —, la **coquille et sa barre de filtres** à 29 occurrences sur 30, le **paramétrage des checklists** à 60 sur 61 dont le seul reste est indécidable, le **remplisseur de checklist** en entier — 16 sur 16, ses quatre échanges de fichier compris —, les constatations à 59 sur 60, les activités à 66 sur 67 — leurs restes indécidables —, et le **formulaire de constatation** en entier — 18 occurrences sur 18, son tiroir, ses références, sa date due et sa preuve comprises. Plus aucun téléchargement de cet écran n’est sans ronde. **Plus aucun nom décidable n'est sans ronde.** `execViewFNC` et `execAccuserReception`, qu'on disait ici hors de portée — offerts au seul compte qui ne gouverne pas —, le sont en vue Prestataire, que la barre offre au super-administrateur (n° 5.f.97, qui corrige cette phrase). `exec-etats.js` est entier, 34 sur 34 — ses six occurrences d'hier étaient des indécidables, que le relevé sait désormais rapporter à leur geste (n° 5.f.89, qui corrige ce que le n° 5.f.88 en avait dit). La **page des plans** est entière à son tour, `exec-plans.js` 10 sur 10 — export, historique, réinitialisation et archivage (n° 5.f.90). La **configuration des processus** l'est aussi, `exec-processus-config.js` 17 sur 17 — ses deux filtres et le retrait d'un acteur (n° 5.f.91). Les **documents imprimables** sont éprouvés dans leur vraie fenêtre, le mouchard posé dedans — `exec-rapports.js` 6 sur 6, `exec-fiche.js` 10 sur 11 (n° 5.f.92). Les **tris des dossiers** en cours et archivés sont mesurés à deux lignes, `exec-prestataires.js` 8 sur 8 (n° 5.f.93). « Soumettre pour validation » depuis l'aperçu est exercé, `exec-fiche.js` 11 sur 11 — et un dossier supprimé que l'écran redemandait est corrigé (n° 5.f.94). La **barre du socle** est entière, `exec-adapters.js` 4 sur 4 — l'instance regardée et le renvoi vers la gestion des droits —, et un bouton des droits qui manquait quand le compte arrivait le dernier est corrigé (n° 5.f.95). La remise d'une constatation directe, l'œil des statistiques et le fond de la fenêtre de commentaire sont exercés, `exec-dashboard.js` 29 sur 29 (n° 5.f.96) ; l'accusé de réception et la consultation d'une constatation, du côté de l'organisme, le sont aussi — et le dernier « non exercé », `e`, était un paramètre que le relevé lisait comme un nom (n° 5.f.97). Les fonctions fléchées posées en propriété, que le relevé laissait dehors — seize, et non sept —, sont nommées par leur texte des deux côtés ; les cinq renoncements qu'aucune suite ne pressait le sont par `surv-fenetres` (n° 5.f.98). |
 
@@ -14151,3 +14151,1540 @@ Ce que l'ingénierie peut dire, et qui a été dit :
            | Reste | `pl-shell.js` — 581 lignes, et le minuteur des commentaires (n° 5.f.106) |
            | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences |
            | Campagne | **1 854, 33 suites** — inchangée |
+
+       5.f.109 [x] **PLAN en TypeScript : la coquille, le dernier fichier — un
+           minuteur corrigé, une phrase de ce registre démentie, et une page qui
+           enveloppe sa navigation** — fait le 15 novembre 2026. `pl-shell.js`
+           (581 lignes). PLAN n'a plus de fichier en JavaScript.
+
+           ── La photographie ──
+
+           La coquille porte ce que les autres pages supposent : le démarrage
+           et le chargement des données, la barre latérale et la barre
+           supérieure, le thème et la langue, l'aiguillage des pages, le volet
+           du calendrier, la fenêtre modale, la barre de filtres et les droits
+           du compte. Le scénario les joue par de vrais clics — chaque entrée de
+           menu, chaque pastille de thème, les trois langues, la barre repliée
+           et dépliée, le menu sur petit écran et son fond —, puis la barre de
+           filtres sous six jeux d'options et six états des filtres, la cascade
+           et la rangée des années, les droits sous huit accès et sept comptes,
+           le volet ouvert, redessiné et refermé de quatre façons, la fenêtre
+           modale sous ses trois tailles, le chargement des données réussi,
+           privé des droits, en échec, et nourri par l'hôte, le démarrage
+           hébergé. Elle enregistre aussi **les messages que la page envoie au
+           portail** à chaque changement de page. **141 états**, deux prises
+           avant sans écart.
+
+           Avant et après : **un écart, et c'est le correctif** — ci-dessous.
+
+           ── Le minuteur des discussions, et une phrase démentie ──
+
+           Le n° 5.f.106 l'avait relevé : après le rendu du détail, un minuteur
+           charge les commentaires du plan cent millisecondes plus tard, en
+           lisant le plan choisi **à ce moment-là**. Quitter le détail dans
+           l'intervalle lui faisait lire `null` et lever une exception — la
+           page n'en disait rien, la console seule. Le plan est désormais lu au
+           rendu, et le minuteur ne charge que si ce détail est encore celui
+           qu'on regarde.
+
+           Ce registre ajoutait : « ouvrir un autre plan dans l'intervalle
+           chargerait, lui, les commentaires du mauvais plan ». **La mesure le
+           dément.** Le minuteur lisant tard, il lit le plan qu'on regarde : il
+           chargeait donc les commentaires du bon plan — **deux fois**, le sien
+           et celui du rendu précédent. La photographie le montre : deux
+           lectures avant, une après ; c'est l'écart, et le seul. *J'avais
+           déduit un effet d'une lecture du code ; il fallait le mesurer avant
+           de l'écrire.*
+
+           Un contrôle de plus dans `plan-gestes` le tient : ouvrir le détail
+           puis le quitter aussitôt ne lève rien et ne lit rien ; y rester lit
+           une fois ; enchaîner deux plans lit le second, une fois. Le
+           contre-test qui rétablit l'ancien minuteur (BR) le fait rougir sur
+           l'exception et sur la double lecture.
+
+           ── Une photographie qui ne voyait pas la cascade ──
+
+           Le contre-test BV fausse la cascade : un domaine choisi ne restreint
+           plus les organismes, les sous-activités ni les thèmes. Il est resté
+           **vert**. Dans les données d'essai, tout ce que ces listes portent
+           relève du domaine que mon scénario choisissait : le restreindre ne
+           retirait rien. La photographie a reçu la barre sous chacun des
+           domaines, et la photographie avant a été reprise — deux prises sans
+           écart, 141 états. BV : **4 vues en écart**, une par domaine qui n'est
+           pas celui de l'essai. C'est le cas du n° 5.f.105, revenu sous une
+           autre forme : *une donnée d'essai trop uniforme rend une règle
+           invisible à la mesure.*
+
+           ── Une page qui enveloppe sa navigation ──
+
+           `index.html` remplace `window.planNavigateTo` après le premier rendu,
+           pour dire au portail quelle page est ouverte. Dans un script
+           classique, une fonction de premier niveau est une propriété de la
+           page : l'ancien fichier, en appelant `planNavigateTo` par son nom nu
+           — au changement de langue, au démarrage hébergé —, appelait
+           l'enveloppe. Un module appellerait sa propre fonction, et le portail
+           ne saurait plus rien. Ces appels passent donc par la page. Le
+           contre-test qui les rend directs (BS) fait diverger les messages au
+           portail sur les quatre changements de langue et au démarrage hébergé.
+
+           ── Quatre globales lexicales devenues des propriétés ──
+
+           `PLAN_ICONS`, `PL_VALIDE` et les deux listes de statuts étaient des
+           `const` de premier niveau : atteintes par leur nom nu, absentes de
+           `window`. Un paquet ne peut pas poser de globale lexicale ; le sas
+           les pose sur `window`, où le nom nu les atteint encore, et les autres
+           paquets les lisent comme avant. Les importer en aurait fait une copie
+           par paquet. Ma première photographie y a vu un écart : mon scénario
+           les cherchait sur `window`, où elles n'étaient pas avant. Il les lit
+           désormais par leur nom, et la photographie avant a été reprise.
+
+           ── Coupé en quatre ──
+
+           `coquille.ts` — le démarrage, la navigation, le rendu, le volet, la
+           fenêtre —, `filtres.ts`, `droits.ts`, `icones.ts`, dans un même
+           paquet. Vingt-sept noms sur trente-deux restent publiés ; la table de
+           la barre latérale, le privilège de contribution, la lecture des
+           droits, le libellé du rôle et le dessin du volet quittent la portée
+           globale. Les pages de l'aiguillage sont rendues par des paquets
+           chargés après celui-ci : il les lit sur la page au moment du rendu.
+
+           La suite `planification-navigateur` lisait `PLAN_NAV` et
+           l'aiguillage dans `pl-shell.js` ; elle les lit dans `coquille.ts`.
+
+           ── `restant.d.ts` retiré ──
+
+           Il déclarait ce que les fichiers restés en JavaScript définissaient ;
+           il n'en reste plus. Chaque nom est déclaré par le sas qui le publie.
+           L'état de l'hôte en mode hébergé, `window.PESSCO`, ne déclarait que
+           sa langue ; il déclare aussi le compte, le thème et les référentiels
+           que la coquille y lit.
+
+           ── Un garde qui ne cherchait que du JavaScript ──
+
+           La campagne a rougi sur un contrôle de `taille` que je n'avais pas
+           vu venir : celui qui tient, sur les cinq écrans, l'ancre que le
+           socle remplace par « Retour au portail », et l'absence de toute
+           déconnexion propre à un module. Il lisait les sources de chaque
+           écran dans `public/modules/<écran>/js` ; pour PLAN, ce répertoire
+           est vide, et le garde concluait « pas de source ». Il lit
+           désormais aussi les sources TypeScript de l'écran, et reconnaît
+           une fonction exportée. Deux contre-tests : un gestionnaire posé
+           sur l'ancre de la coquille (BW), l'ancre retirée (BX) — rouges
+           l'un et l'autre, et nommant le fichier.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Ce qui le voit |
+           |---|---|
+           | BR — le minuteur lit le plan à son déclenchement | `plan-gestes` : l'exception, et la double lecture |
+           | BS — la coquille navigue sans passer par la page | la photographie : les messages au portail, 5 vues |
+           | BT — le sas ne publie plus `planResetFilters` | la suite PLAN : la remise à zéro, l'exception, et onze contrôles qui la suivent |
+           | BU — le droit de contribuer confondu avec celui de valider | la photographie : les droits, secteur par secteur |
+           | BV — la cascade des filtres ignore le domaine | la photographie renforcée : la barre sous chacun des cinq domaines |
+           | BW — un gestionnaire sur l'ancre de déconnexion de la coquille | `taille` : le gestionnaire, et son fichier |
+           | BX — l'ancre retirée de la coquille | `taille` : l'ancre absente sur PLAN |
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **13 sur 13** — 5 958 lignes ; `public/modules/planification/js` est vide |
+           | Reste | resserrer le typage de l'état, et décider de la façade `window.PL`, qu'aucun fichier ne lit |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés, 137 occurrences ; seuls les fichiers et les lignes ont changé |
+           | Campagne | **1 855, 33 suites** — un contrôle de plus, le minuteur des discussions |
+
+       5.f.110 [x] **PLAN : l'état déclaré en un seul endroit — sept vues
+           locales retirées, et les gestes en ligne confrontés à la
+           déclaration** — fait le 15 novembre 2026.
+
+           `EtatPlan` portait une signature d'index du temps où des fichiers
+           en JavaScript ajoutaient des champs à l'état à la volée. Il n'en
+           reste plus, mais la signature restait, et elle en avait appelé
+           d'autres : chaque page déclarait sa part de l'état — `EtatCal`,
+           `EtatCalendrier`, `EtatBord`, `EtatSaisie`, `EtatPlans` — et la
+           lisait par une conversion de type. Rien ne confrontait ces vues
+           entre elles. Les retirer de `etat.ts` n'a fait rougir tsc que
+           **huit fois**, sur deux champs : c'est la mesure de ce que les
+           conversions cachaient.
+
+           `etat.ts` déclare désormais **tous** les champs, avec le compte, les
+           droits, et les clés des deux jeux de filtres. Les sept vues locales
+           et les conversions sont retirées ; chaque page lit `etat()` tel
+           quel.
+
+           ── Ce que tsc ne lit pas ──
+
+           Les gabarits écrivent l'état dans leurs gestes en ligne —
+           `PLAN_STATE.calendarView='week'`, `PLAN_STATE.filters.theme=''` —,
+           que tsc ne lit pas. Un contrôle de plus dans
+           `planification-navigateur` confronte chacune de ces écritures à la
+           déclaration : 47 écritures, et une remise à zéro dont il vérifie
+           les clés.
+
+           ── Rien ne change à l'exécution ──
+
+           Les paquets construits avant et après ne diffèrent, hors
+           commentaires, que de deux formes équivalentes : `() => etat()`
+           devenu `etat`, et `(user || {}).username` devenu `user?.username`.
+
+           ── Contre-tests ──
+
+           | Défaut réintroduit | Avant | Après |
+           |---|---|---|
+           | BY — un geste en ligne écrit `calendarVue` | — | le contrôle des gestes, et son fichier |
+           | BZ — un geste écrit `filters.sousActivites` | — | idem |
+           | CA — la remise à zéro du calendrier perd une clé | — | idem |
+           | CB — `etat().acces` au lieu de `access` | **tsc muet** | tsc refuse |
+           | CC — deux pages en désaccord sur le type de `calendrierVolet` | **tsc muet** | tsc refuse |
+
+           Un premier contre-test, `carteChoisi` pour `carteChoisie`, ne
+           départageait rien : la vue locale du tableau de bord l'attrapait
+           déjà. Je l'ai remplacé par deux cas qui distinguent avant et après.
+
+       5.f.111 [x] **PLAN : la façade `window.PL` retirée — un point d'entrée
+           sans lecteur, et qui aurait trompé le premier** — fait le
+           15 novembre 2026.
+
+           Le n° 5.f.102 l'avait convertie telle quelle, en écrivant qu'aucun
+           fichier ne la lisait, « pour qu'on la pèse le jour où PLAN n'aura
+           plus de JavaScript ». Ce jour est venu, et la mesure est la même :
+           aucun lecteur — ni dans le dépôt, ni par l'iframe, ni par un nom
+           calculé —, et cela depuis le commit d'origine.
+
+           Elle se présentait comme le seul point d'entrée du module pour le
+           portail. Or elle capturait `planNavigateTo` **avant** que la page ne
+           l'enveloppe pour prévenir le portail (n° 5.f.102, 5.f.109) : qui
+           l'aurait adoptée aurait navigué sans que le portail le sache. Le
+           contrat réel du module est ailleurs — le message `pl:page` à
+           chaque changement de page, et `initPlanificationModule` pour l'hôte.
+
+           Retirée : le sas, sa balise dans `index.html`. La photographie de
+           la coquille — 141 états, deux prises avant sans écart — n'en voit
+           **aucun** après.
+
+           `window.EXEC` et `window.PR` sont des façades du même modèle, sans
+           lecteur non plus ; elles ne relèvent pas de PLAN et restent en
+           place.
+
+       5.f.112 [x] **PLAN : les discussions d'un plan — une course supposée,
+           démentie, et une autre, réelle, corrigée** — fait le
+           15 novembre 2026.
+
+           Le n° 5.f.109 laissait une hypothèse : une réponse lente des
+           commentaires écrirait dans le détail d'un autre plan. La lecture du
+           code prédisait qu'elle était fausse — le conteneur est retenu avant
+           l'attente, et le rendu suivant le détache —, et la mesure l'a
+           confirmé : la réponse d'un plan quitté n'écrit nulle part où l'on
+           regarde.
+
+           La même mesure a trouvé l'autre course : **deux lectures du même
+           fil** — le minuteur du rendu, puis un commentaire ajouté ou retiré
+           aussitôt — revenaient dans le désordre, et la plus ancienne
+           écrasait la plus récente. Le commentaire qu'on venait d'écrire
+           disparaissait de la liste jusqu'à la lecture suivante. Seule la
+           dernière lecture lancée écrit désormais.
+
+           Un contrôle de plus dans `plan-gestes` retient chaque réponse et la
+           relâche dans l'ordre choisi, sur les deux cas. Le contre-test qui
+           retire la garde (CD) le fait rougir sur le second.
+
+           ── Où en est PLAN ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **13 sur 13** ; l'état déclaré en un seul endroit, sans signature d'index |
+           | Façade | retirée |
+           | Relevé des gestes | inchangé — 93 noms, 87 exercés ; seules les lignes ont changé, `index.html` ayant perdu une balise |
+           | Campagne | **1 857, 33 suites** — deux contrôles de plus : les gestes en ligne, et la réponse tardive des discussions |
+
+       5.f.113 [x] **SURV et PR : les deux façades restantes retirées** — fait
+           le 16 novembre 2026.
+
+           `window.EXEC` et `window.PR` étaient du modèle de `window.PL`
+           (n° 5.f.111) : posées au chargement, sans un lecteur — ni le
+           portail, ni le chrome partagé, ni un autre module, ni une suite ;
+           les seules mentions des deux noms sont des commentaires. Elles
+           avaient le même défaut : chacune capturait la navigation **avant**
+           que la page l'enveloppe pour prévenir le portail (`exec:page`,
+           `pr:page`). Qui s'y serait fié aurait changé de page sans que le
+           portail le sache.
+
+           Retirées : `exec-namespace.js`, `pr-namespace.js`, et leur balise.
+           Plus aucun écran ne publie de façade.
+
+           | | |
+           |---|---|
+           | Relevé des gestes | SURV et PR inchangés ; seule la date du relevé a changé |
+           | Campagne | **1 857, 33 suites**, 0 rouge |
+
+       5.f.114 [x] **CARE : trois poches de gestes couvertes avant la
+           conversion, dans une seconde suite** — fait le 16 novembre 2026.
+
+           CARE est le prochain écran à convertir, et la règle est de le
+           mesurer d'abord. Trois poches restaient non exercées :
+
+           - **le type de mesure** : sa fenêtre refuse un type sans catégorie
+             avant tout envoi, le rattache à la sienne, se rouvre garnie et se
+             renomme sans que le code bouge ; retirer la catégorie **emporte
+             ses types** en une écriture, et un type d'investigation que rien
+             n'emploie part ;
+           - **une carence saisie dans son volet** : sans objet, refusée sans
+             envoi ; le délai et l'échéance se déduisent l'un de l'autre, et
+             une ouverture déplacée repart du délai ; le serveur retient ce que
+             le volet montrait ; l'historique d'une carence neuve s'ouvre sur
+             un traitement en cours ; le retrait se confirme ;
+           - **les mesures d'une carence** : le volet en montre autant que la
+             liste en annonce, ouvre la table des Mesures sur elle seule,
+             « Suivi » rouvre le traitement à l'étape du suivi, le volet suit
+             la hauteur du bandeau tant qu'il est ouvert et plus après, et une
+             mesure se retire.
+
+           ── Une seconde suite, et non un budget relevé ──
+
+           Ces rondes auraient porté `mesures.navigateur.smoke.js` de 2 652 à
+           3 016 lignes ; le garde de taille l'a dit. Elles vivent dans
+           `mesures-gestes.smoke.js`, sur le socle commun, comme
+           `plan-gestes` pour PLAN (n° 5.f.99). Ce qu'elles empruntaient aux
+           rondes d'origine est **bâti par les routes** : une catégorie et un
+           type d'investigation, un dossier mené au suivi avec deux mesures au
+           registre, une carence nue. Le relevé réunit les deux journaux : 78
+           avant la coupe, 78 après — aucun geste perdu.
+
+           ── Ce que les contre-essais ont appris ──
+
+           | | Défaut réintroduit | Rouge |
+           |---|---|---|
+           | CE | l'échéance ne recalcule plus le délai | le délai et l'échéance |
+           | CF | l'échéance n'est pas envoyée au serveur | la carence au serveur |
+           | CG | retrait d'une carence sans confirmation | le retrait |
+           | CH | la table des Mesures ne filtre plus sur la carence | la table filtrée — **seulement grâce à la carence nue** |
+           | CI | « Suivi » n'ouvre pas l'étape du suivi | « Suivi » |
+           | CJ | le redimensionnement mesure aussi volet fermé | la hauteur du bandeau |
+           | CK | le serveur n'emporte plus les types d'une catégorie | le retrait d'une catégorie |
+           | CL | la fenêtre d'un type se rouvre vide | le type de mesure |
+
+           CE à CJ ont été joués avant la coupe, sur la suite d'origine ;
+           CH l'a été de nouveau après, avec CK et CL, sur la nouvelle.
+
+           CH est l'enseignement : un dossier qui porte **toutes** les mesures
+           du jeu rend « toutes les siennes y sont » vrai d'une table qui ne
+           filtre rien. *Des données trop uniformes cachent la règle* — seule
+           une carence sans mesure, ouverte de la même façon, montre que le
+           filtre écarte.
+
+           | | |
+           |---|---|
+           | Relevé des gestes | CARE **63 → 78 sur 89** ; restent les pièces jointes (six noms), l'instance, le lien vers DROITS, et 3 indécidables |
+           | Campagne | **1 875, 34 suites**, 0 rouge |
+
+       5.f.115 [x] **CARE : les pièces jointes et la barre — le relevé à son
+           plafond** — fait le 16 novembre 2026.
+
+           Les huit gestes nommés qui restaient, dans `mesures-gestes` :
+
+           - **les pièces jointes**, par le vrai sélecteur de fichiers du
+             navigateur, sur un seul dossier mené dans l'ordre de l'écran : la
+             pièce de décision en qualification, déposée puis retirée ; la
+             pièce de suivi, qui parvient au serveur à l'enregistrement et n'y
+             reste pas une fois retirée ; puis, après le recul par le geste du
+             suivi, les deux genres de pièces du recours — celles du recours et
+             celles de la décision de l'instance —, qui ne se mêlent pas ;
+           - **la barre** : reprendre l'instance regardée ne fait rien, une
+             autre est retenue et le module rechargé sur elle, le même geste
+             ramène l'origine ; « Gestion des Droits » ouvre DROITS réglé sur
+             CARE, qui ramène au module.
+
+           Une faute de ronde au premier passage : la ronde précédente avait
+           laissé la table des Mesures filtrée sur son propre dossier, et la
+           mesure du nouveau n'y paraissait pas. La table s'ouvre désormais
+           par le geste du volet, sur le bon dossier.
+
+           | | Défaut réintroduit | Rouge |
+           |---|---|---|
+           | CM | la pièce de qualification n'est pas versée à l'état | la pièce de décision |
+           | CN | retirer une pièce de suivi ne retire rien | la pièce de suivi |
+           | CO | le recours dépose toujours dans le même genre | les deux genres |
+           | CP | reprendre l'instance courante réécrit et recharge | l'instance reprise |
+           | CQ | DROITS ouvert sur le mauvais module | le renvoi, et le retour par cascade |
+
+           | | |
+           |---|---|
+           | Relevé des gestes | CARE **78 → 86 sur 89** — le plafond : les trois restants sont indécidables |
+           | Campagne | **1 882, 34 suites**, 0 rouge |
+
+       5.f.116 [x] **CARE en TypeScript, premier fichier : les libellés — un
+           état qui reste où il est** — fait le 17 novembre 2026. La conversion
+           de CARE commence (5.c) comme celle de PLAN (n° 5.f.101), par le
+           fichier sans interface : `mes-i18n.js`, 1 720 lignes, la table
+           `MES_TR` et sa lecture `mt`.
+
+           ── Ce qui est converti ──
+
+           | Source | Devient |
+           |---|---|
+           | la table `MES_TR`, trois volets de 515 clés | `traductions.fr.ts`, `.en.ts`, `.pt.ts` — le français définit les clés, les deux autres sont typés par lui |
+           | `mt` | `traductions.ts` |
+           | ce que la page lisait en globales | le sas `globales/mes-i18n.ts`, construit vers `modules/mesures/app/mes-i18n.js` |
+
+           Les volets sont le bloc de la table **transporté**, commentaires de
+           section compris, et non resérialisé : PLAN avait perdu les siens à
+           la génération. L'égalité est établie par la comparaison, non par la
+           recopie.
+
+           ── Un état qui reste où il est ──
+
+           PLAN portait son état dans le fichier des libellés, et la conversion
+           l'en a sorti (`etat.ts`). CARE le porte dans `mes-app.js`, sa
+           coquille : il n'a rien à faire dans cette étape. Mais `mt` en lit la
+           langue, et l'ancien la lisait en identifiant nu sur une globale
+           **lexicale** — qu'un module ne voit pas.
+
+           Mesuré dans la page avant d'écrire : `mes-app.js` **pose lui-même**
+           `MES_STATE` sur `window` (`Object.assign(window, { MES_STATE, … })`),
+           et c'est le même objet. `mt` l'y lit ; le nom est déclaré, optionnel,
+           à la frontière de la cohabitation (`restant.d.ts`), et en partira
+           avec la coquille. Une seule fenêtre où les deux lectures diffèrent :
+           le premier niveau de `mes-app.js`, entre la déclaration et la pose —
+           l'état y vaut `lang: 'fr'`, et le repli est le français.
+
+           ── La preuve d'équivalence ──
+
+           L'ancien fichier, pris dans `git`, et le paquet construit, chacun
+           dans un contexte isolé : **28 137 comparaisons, aucun écart** —
+           chaque clé et six clés pièges (`constructor`, `__proto__`…), sous six
+           jeux d'arguments, sans état puis sous huit langues dont une inconnue,
+           une vide, `null` et `__proto__` ; les exceptions comparées comme des
+           résultats (`mt('constructor', 'A')` lève, et lève encore).
+
+           Le banc a d'abord rendu **6 089 faux écarts** : V8, après des
+           milliers d'appels sans `MES_STATE`, optimise `typeof MES_STATE` et ne
+           revient pas sur sa lecture quand la globale lexicale paraît ensuite.
+           Un contexte neuf par scénario l'a levé. C'est un défaut du banc, et
+           un argument de plus pour la lecture sur `window`.
+
+           Contre-essayée cinq fois — `{0}` remplacé à sa première occurrence
+           seulement (180 écarts), la langue ignorée (6 089), une traduction
+           altérée (7), `MES_TR` non posé (l'exécution s'arrête), le repli sur
+           la clé remplacé par une chaîne vide (54) —, la comparaison a mordu
+           chaque fois.
+
+           ── Contre-tests ──
+
+           | | Défaut réintroduit | Ce qui rougit |
+           |---|---|---|
+           | CR | le sas ne pose plus `mt` | `mesures-navigateur` : l'écran ne se monte plus — 37 contrôles rouges, 4 verts |
+           | CS | la page demande encore l'ancien chemin | la construction elle-même : « un sas que rien n'atteint » |
+           | CT | `mt` ignore la langue de l'écran | `mesures-navigateur` : la langue change, les libellés de la barre ne suivent pas |
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **1 sur 9** — 1 720 lignes sur 6 422 |
+           | Restent | `mes-instances.js` (67), puis les sept qui portent l'interface |
+           | Contrôles de CARE | 84 HTTP, 40 + 21 de navigateur — inchangés, tous verts |
+           | Campagne | **1 882, 34 suites**, 0 rouge — inchangée : la conversion n’ajoute ni ne retire aucun contrôle |
+
+       5.f.117 [x] **CARE en TypeScript, deuxième fichier : la barre — et un
+           geste pressé que le relevé ne voyait plus** — fait le 17 novembre
+           2026. `mes-instances.js` (67 lignes) : l'instance regardée et la
+           gestion des droits, remises à la barre du socle.
+
+           ── Mesurer d'abord : une photographie de la page ──
+
+           Comme pour PLAN (n° 5.f.102), ce fichier ne se prouve pas par une
+           comparaison de valeurs : ce qu'il fait tient à la page. Elle a été
+           photographiée, connectée, avant puis après — les cinq noms du
+           fichier, lus nus et sur `window` ; la barre entière, son balisage,
+           la liste des instances et le bouton des droits ; la même chose en
+           anglais, puis revenue en français ; les exceptions de la page.
+
+           ── Un sas, et non un script de page ──
+
+           `pl-instances` ne publiait rien qu'on lût ailleurs. Ici, **un** nom
+           l'est : `mesDessinerActions`, appelé par `index.html` au démarrage
+           et par `mes-app.js` au changement de langue. Le fichier devient donc
+           un sas, qui pose ce seul nom ; les quatre autres —
+           `mesAppliquerInstance`, `mesVueRegionale`, `MES_DROITS_ICON`,
+           `mesPeutGererDroits` — quittent la portée globale, aucun fichier ne
+           les lisant. C'est la **seule** différence entre les deux
+           photographies, et elle est déclarée : la barre est identique au
+           caractère près, dans les deux langues.
+
+           Il lit l'état, `mt`, `mesApi` et `mesToast` **sur la page**, par
+           `partage.ts` — le pendant de celui de PLAN (n° 5.f.104) : importer
+           `traductions.ts` aurait emporté une seconde copie des trois volets,
+           88 Ko, dans un paquet qui en pèse 2,7. Les trois noms de
+           `mes-app.js` sont déclarés, optionnels, à la frontière de la
+           cohabitation, avec la part de l'état que la barre lit.
+
+           ── Ce que le relevé a dit, et ce qu'il fallait corriger ──
+
+           Refait, il rendait **85** gestes exercés pour 86 : « Gestion des
+           Droits » comptait pour non exercé, quand la ronde de la barre le
+           presse et que DROITS s'ouvre. Le nom d'une action de barre est son
+           corps tel qu'écrit, et esbuild le réimprime — `'…'` devient `"…"`, le
+           bloc se réindente. Juste pour un fichier en JavaScript ; faux pour un
+           sas. Le choix d'instance, lui, passait : `(v) =>
+           mesAppliquerInstance(v)` n'a ni guillemet ni bloc.
+
+           Le canal des propriétés avait connu la même faute (n° 5.f.98) et la
+           même réponse : les deux côtés passent par `formeDeFleche`. Le
+           rapprochement des actions de barre gagne cette seconde clé ; **le
+           nom n'est pas changé**, de sorte que les relevés figés des autres
+           écrans restent vrais. Deux contrôles unitaires la tiennent — la
+           même action écrite et servie a une seule clé, et les deux côtés
+           passent par la même fonction. Le relevé rend 86, et le fichier figé
+           ne change que par l'adresse des deux gestes.
+
+           ── Contre-tests ──
+
+           | | Défaut réintroduit | Ce qui rougit |
+           |---|---|---|
+           | CU | le sas ne pose plus `mesDessinerActions` | `mesures-gestes` : l'écran ne démarre plus — `index.html` appelle le nom au montage ; 18 contrôles rouges |
+           | CV | la page demande encore l'ancien chemin | la construction : « un sas que rien n'atteint » |
+           | CW | le rôle lu de travers : personne ne gère les droits | `mesures-gestes` : le bouton des droits absent, et le retour par cascade |
+           | CX | le relevé sans la seconde clé | le relevé : 85, « Gestion des Droits » non exercé — c'est le premier passage |
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **2 sur 9** — 1 787 lignes sur 6 422 |
+           | Restent | les sept qui portent l'interface, `mes-app.js` en dernier |
+           | Relevé des gestes | 86 sur 89, inchangé |
+           | Campagne | **1 884, 34 suites**, 0 rouge — deux contrôles unitaires de plus, ceux du nommeur ; le garde de taille a d'abord dit la suite unitaire hors budget (2 106 lignes pour 1 997 tolérées), budget relevé et motivé |
+
+       5.f.118 [x] **CARE en TypeScript, troisième fichier : les Paramètres —
+           et quatre aides qu'un module ne pouvait pas lire** — fait le 18
+           novembre 2026. `mes-parametres.js` (399 lignes) : catégories et
+           types de mesure, types d'investigation, comités, et leurs quatre
+           fenêtres. Premier fichier de l'interface de CARE ; il devient un
+           module, `parametres.ts`, et un sas qui le publie — la forme de PLAN
+           (n° 5.f.104).
+
+           ── La surface, mesurée ──
+
+           Le fichier posait dix-sept fonctions sur `window`. Une est lue
+           ailleurs — `mesRenderParametres`, par l'aiguillage de `mes-app.js` ;
+           quinze le sont par les `onclick` de son propre balisage ; la
+           dernière, `mesAfficherModal`, par personne. Le sas les pose toutes,
+           une à une, pour que chaque pose soit typée.
+
+           Il **lit** seize noms d'ailleurs. Onze étaient sur `window`
+           (fonctions, ou l'`Object.assign` de `mes-app.js`) ; **cinq ne
+           l'étaient pas** — des `const` du premier niveau, des globales
+           lexicales, invisibles à un module. C'est l'obstacle de
+           `CURRENT_LANG` (n° 5.c.1). Quatre sont les aides du paramétrage,
+           `mesCategories`, `mesTypes`, `mesTypesDe`, `mesLibelleCategorie` :
+           la réponse est la plus petite, `mes-app.js` les ajoute à son
+           `Object.assign` — une seule définition, que la coquille, convertie
+           en dernier, rendra importable. La cinquième, `_mesAttr`, n'était
+           comme `_mesEsc` qu'un autre nom d'`oasisEsc` : le module lit celui
+           du socle.
+
+           ── Mesurer : une comparaison, puis la page ──
+
+           | | |
+           |---|---|
+           | Scénarios comparés, ancien contre paquet | **536**, chacun dans un contexte neuf — **0 écart** |
+           | Ce qu'ils couvrent | le rendu (droits × données × sous-menu × bande × langue), la navigation, les huit ouvertures, les fenêtres seules et **par paires** — l'ordre de priorité —, les refus, les enregistrements réussis et refusés, avec et sans message, les suppressions confirmées ou non |
+           | Mutations du paquet | **8, toutes mordantes** — de 1 à 530 écarts |
+           | Photographie de la page connectée | **42 vues**, français et anglais : les quatre sous-menus, la bande repliée, chaque fenêtre neuve et rouverte, le refus d'un libellé vide — **identiques** |
+           | Différence entre les deux photographies | les quatre aides de `mes-app.js`, désormais **aussi** sur `window` — déclarée |
+
+           La comparaison a d'abord laissé passer une mutation : inverser la
+           priorité du comité et du type d'investigation ne changeait rien,
+           aucun scénario n'ouvrant les deux à la fois. Les paires ont été
+           ajoutées ; elle mord.
+
+           La conversion ne corrige rien. Les trois « Enregistrer » écrits en
+           français dans les fenêtres, la phrase du comité non traduite, les
+           exemples « ex. Mesure administrative » et « ex. Avertissement » sont
+           tels qu'ils étaient — un défaut de traduction se corrige par un
+           commit qui le dit, non dans une conversion qui le tairait.
+
+           ── Contre-tests ──
+
+           | | Défaut réintroduit | Ce qui rougit |
+           |---|---|---|
+           | CY | le sas ne pose plus `mesRenderParametres` | `mesures-gestes` : les deux rondes des Paramètres, et l'exception « mesRenderParametres is not defined » — 3 rouges |
+           | CZ | `mes-app.js` ne publie plus ses quatre aides | `mesures-gestes` : les mêmes, et l'erreur que `requis` nomme — « mesCategories manque » — 3 rouges |
+           | DA | la page demande encore l'ancien chemin | la construction : « un sas que rien n'atteint » |
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **3 sur 9** — 2 186 lignes sur 6 422 |
+           | Restent | traitement, qualification, suivi, états, page des états — `mes-app.js` en dernier |
+           | Relevé des gestes | **86 sur 89**, inchangé — seules les adresses des gestes changent |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
+           | Campagne | entière au terme des six conversions (n° 5.f.123) |
+
+       5.f.119 [x] **CARE en TypeScript, quatrième fichier : le menu « États »**
+           — fait le 18 novembre 2026. `mes-page-etats.js` (255 lignes) : les
+           quatre sous-menus qui disent où en est chaque carence.
+
+           ── La surface, mesurée ──
+
+           Quinze noms au premier niveau ; **onze** sur `window`, dont
+           `MES_ETATS`, l'état du menu, que le `ontoggle` de chaque volet
+           d'étape écrit par son nom. Le module tient l'objet, le sas le pose
+           une fois : c'est **le même objet** que le balisage écrit et que le
+           rendu relit. Les quatre aides de gabarit — `mesEtatsCarte`,
+           `mesEtatsActions`, `mesEtatsLigneCarence`, `mesEtatsReperes` —
+           étaient des `const` que personne d'autre ne lisait : elles quittent
+           la portée globale.
+
+           Trois `const` de `mes-app.js` y étaient lus — `mesJour`, `mesDate`,
+           `mesBadgeStatutCare` — et rejoignent son `Object.assign`, comme les
+           quatre aides du paramétrage (n° 5.f.118).
+
+           ── Mesurer ──
+
+           | | |
+           |---|---|
+           | Scénarios comparés | **151**, contexte neuf chacun — **0 écart** : cinq jeux de carences × deux langues × six sous-menus × volets dépliés ou non, trois jours de référence dont un invalide, treize délais, les tables vides et pleines |
+           | Mutations du paquet | **8, toutes mordantes** — de 3 à 151 écarts |
+           | Photographie de la page connectée | **14 vues**, deux langues, par les vrais onglets et les vrais volets — **identiques**, une fois les identifiants des carences normalisés |
+
+           Deux défauts de mes outils, trouvés en route et corrigés. Le
+           comparateur sortait par `process.exit` : sa sortie, longue, était
+           coupée dans un tube, et la mutation qui retire `MES_ETATS` de
+           `window` semblait ne rien dire — elle disait 151 écarts.
+           La première photographie ne montrait qu'une page **vide** : le jeu
+           de démarrage n'a pas de carence. Quatre ont été créées dans le
+           serveur isolé de la copie ; les lignes, les volets et les comptes
+           ont alors été vus. Les échéances, elles, ne l'ont pas été — le champ
+           du délai n'a pas pris —, et c'est la comparaison qui porte les
+           délais.
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **4 sur 9** — 2 441 lignes sur 6 422 |
+           | Relevé des gestes | **86 sur 89**, inchangé — seules les adresses des gestes changent |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
+           | Campagne | entière au terme des six conversions (n° 5.f.123) |
+
+       5.f.120 [x] **CARE en TypeScript, cinquième fichier : l'étape « Suivi
+           des Mesures »** — fait le 18 novembre 2026. `mes-suivi.js` (329
+           lignes) : le plan d'action mesure par mesure, les recours, les deux
+           issues de l'étape.
+
+           ── La surface, mesurée ──
+
+           Vingt noms ; **dix-neuf** sur `window` — neuf fonctions, dix `const`
+           que son `Object.assign` reposait. Le vingtième,
+           `mesSuiviRedessiner`, part. Le fichier lit sept `const` d'ailleurs,
+           invisibles à un module : quatre de `mes-app.js` (`mesPeutEcrire`,
+           `mesPeutDecider`, `_mesChemin`, `mesLibelleType`), qui rejoignent son
+           `Object.assign`, et un de `mes-traitement.js`, `mesSection`, que ce
+           fichier pose à son tour en attendant sa propre conversion.
+
+           ── Mesurer : un vrai navigateur ──
+
+           Ce fichier relève la saisie dans le document, et un contexte `vm`
+           n'a pas de document. Le comparateur devient une page : chaque
+           scénario s'ouvre dans un onglet neuf de Chromium, avec les mêmes
+           bouchons des deux côtés, puis le script, puis les gestes — taper
+           dans les champs, cocher, déposer de vrais `File`. On relève le
+           retour, le journal des bouchons, le **DOM entier**, l'état, la
+           surface. C'est l'outil des quatre fichiers suivants.
+
+           | | |
+           |---|---|
+           | Scénarios comparés | **51**, onglet neuf chacun — **0 écart** |
+           | Mutations du paquet | **8, toutes mordantes** — de 1 à 40 écarts |
+           | Différence de surface | `mesSuiviRedessiner`, seule, et déclarée |
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **5 sur 9** — 2 770 lignes sur 6 422 |
+           | Relevé des gestes | **86 sur 89**, inchangé — seules les adresses des gestes changent |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
+           | Campagne | entière au terme des six conversions (n° 5.f.123) |
+
+       5.f.121 [x] **CARE en TypeScript, sixième fichier : les états
+           exportables et l'historique — et le premier `any` refusé** — fait
+           le 18 novembre 2026. `mes-etats.js` (356 lignes).
+
+           ── La surface, mesurée ──
+
+           Douze noms ; **onze** sur `window`. Deux d'entre eux y sont lus
+           **par leur nom, sur `window`** : `mesUrlExport` y cherche les
+           fabriques de paramètres, `window[MES_EXPORTS[base]]`. Elles
+           doivent y rester, et la mutation qui en retire une le montre — cinq
+           écarts. `MES_HISTO_ETAPES` part. `MES_ICONES_ETAT`, que trois
+           fichiers lisent, quitte la frontière : c'est ce sas qui le déclare.
+           `mesLigneFiche`, un `const` de `mes-traitement.js`, y est posé à son
+           tour.
+
+           ── Un type lâche, refusé ──
+
+           Le premier jet typait le traitement `Record<string, any>`. Il n'y
+           a **aucun `any`** dans `frontend/` — mesuré —, et celui-ci aurait
+           été le premier. Le traitement a reçu ses interfaces, champ par
+           champ. Le typage strict a alors levé dix erreurs, sur huit lectures : là où une
+           garde par `&&` couvre un champ, `(inv.equipe || []).length &&
+           … inv.equipe.length`, ce que TypeScript ne voit pas à travers `||`.
+           Elles sont écrites en transtypages, sans rien changer au code
+           exécuté — la comparaison le vérifie.
+
+           Le garde de taille a refusé ce qui restait : la recherche de la
+           fabrique passait par `window as unknown as Record<string, unknown>`,
+           et `as unknown as` défait le typage autant qu'un `any` — le garde
+           le dit, `frontend/mesures/etats.ts:71`. `MES_EXPORTS` n'admet plus
+           que les deux noms de fabriques, que `window` déclare : la recherche
+           est typée, la comparaison rejouée — 0 écart —, et la mutation qui
+           l'annule mord.
+
+           | | |
+           |---|---|
+           | Scénarios comparés | **49**, onglet neuf — **0 écart** : les exports sous trois jeux de filtres, l'historique de sept traitements, à l'écran et en données, les mesures d'une carence |
+           | Mutations du paquet | **8, toutes mordantes** — l'une après qu'on eut ajouté une mesure de durée sans unité |
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **6 sur 9** — 3 126 lignes sur 6 422 |
+           | Relevé des gestes | **86 sur 89**, inchangé — seules les adresses des gestes changent |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
+           | Campagne | entière au terme des six conversions (n° 5.f.123) |
+
+       5.f.122 [x] **CARE en TypeScript, septième fichier : le traitement —
+           et cinq `const` qu'on lisait d'ailleurs par leur nom** — fait le
+           18 novembre 2026. `mes-traitement.js` (836 lignes) : le fil
+           d'avancement, l'étape « Suite à donner », l'étape « Investigations »,
+           la fenêtre qui confirme un passage d'étape.
+
+           ── La surface, et ce que la mesure a changé ──
+
+           Cinquante-sept noms ; quarante-deux sur `window`. Quinze `const`
+           n'y étaient pas, et **cinq sont lus ailleurs par leur nom nu** — ce
+           qu'un script classique permet à un autre script classique, et qu'un
+           module interdit : `mesRangAtteint` par la qualification,
+           `mesEtapeCourante` et `mesMajTraitement` par le volet de
+           `mes-app.js`, `mesSection` et `mesLigneFiche` par la
+           qualification, le suivi et les états. Le sas les pose — la leçon de
+           `CURRENT_LANG` (n° 5.c.1). Les deux poses provisoires des n° 5.f.120
+           et 5.f.121 disparaissent avec le fichier qui les portait.
+
+           Les dix autres partent, dont `MES_CONFIRMATION`, la promesse de la
+           fenêtre en attente : un `let` du module, que seules ses deux
+           fonctions lisent et écrivent.
+
+           Les `typeof mesActionsQualification === 'function'` deviennent des
+           lectures sur `window` : même réponse, puisque aucun `const` ne
+           masque le nom.
+
+           | | |
+           |---|---|
+           | Scénarios comparés | **74**, onglet neuf — **0 écart** : vingt états du traitement, la navigation dans le fil, onze gestes d'investigation, les dépôts, la fenêtre de confirmation ouverte, cochée, décochée, acceptée et refusée, les quatre décisions, les refus du serveur à chaque requête |
+           | Mutations du paquet | **10, toutes mordantes** — dont le focus posé sur la case de la fenêtre, que la comparaison ne relevait d'abord qu'après sa fermeture |
+           | Différence de surface | dix noms partis, cinq posés — déclarés |
+
+           ── Trois fichiers, et non un ──
+
+           Converti, le module faisait 879 lignes ; le garde de taille refuse un
+           fichier du frontend au-delà de 600. Il est partagé en trois, **sans
+           cycle** : `fil-commun.ts` (types, aides, étapes, section lettrée,
+           clôture, fenêtre de confirmation — 220 lignes), que les deux autres
+           importent ; `investigation.ts` (313), qui l'importe ;
+           `traitement.ts` (381 — le fil, la suite à donner, la barre), qui
+           importe les deux. Le code est déplacé, non réécrit : la comparaison
+           rejouée sur le paquet recomposé rend **0 écart**, à la même surface.
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **7 sur 9** — 3 962 lignes sur 6 422 |
+           | Relevé des gestes | **86 sur 89**, inchangé — seules les adresses des gestes changent |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
+           | Campagne | entière au terme des six conversions (n° 5.f.123) |
+
+       5.f.123 [x] **CARE en TypeScript, huitième fichier : la qualification —
+           et un `const` que le balisage appelait** — fait le 18 novembre
+           2026. `mes-qualification.js` (993 lignes) : l'instance, la
+           qualification de l'infraction, les mesures arrêtées, les recours.
+
+           ── Le nom que la recherche ne voyait pas ──
+
+           `onchange="oasisDatesBorner(mesDatesSanction(${i}))"` : la date de
+           sanction appelle un `const` **de son propre fichier**. Un
+           gestionnaire en ligne s'exécute dans la portée globale, qui voit les
+           `const` d'un script classique et ne voit pas ceux d'un module. Ma
+           recherche des lecteurs excluait le fichier qui déclare le nom : elle
+           ne pouvait pas le trouver. Le sas le pose, et la vérification a été
+           refaite pour les cinq fichiers déjà convertis — tout nom appelé par
+           un gestionnaire en ligne y est posé, aucun ne manquait.
+
+           Cinquante-six noms ; quarante-neuf sur `window`, cinquante après la
+           pose ; six partent. `mesActionsQualification` et `mesQualClose`
+           quittent la frontière.
+
+           | | |
+           |---|---|
+           | Scénarios comparés | **97**, onglet neuf — **0 écart** : dix-neuf états, les trois volets, la saisie relevée et conservée d'un volet à l'autre, vingt-cinq gestes, les dépôts, neuf durées dont le 31 janvier plus un mois et le 29 février plus un an, la durée vers le terme et le terme vers la durée, les quatre issues |
+           | Mutations du paquet | **10, toutes mordantes** — l'exclusivité des trois cases après qu'on eut ajouté un état où deux étaient cochées |
+
+           ── Quatre fichiers, et non un ──
+
+           Comme le traitement (n° 5.f.122), le module passait les 600 lignes.
+           Il est partagé en quatre, sans cycle : `qualification-commun.ts`
+           (types, aides, état de l'étape, relevé de la saisie — 224 lignes),
+           que les trois autres importent ; `recours.ts` (204) et
+           `mesures-arretees.ts` (300), qui l'importent ; `qualification.ts`
+           (356 — volets, sections B à D, bascules, issues), qui importe les
+           trois. Le relevé des recours vit dans le commun : c'est lui que le
+           relevé de l'étape appelle, et l'y laisser évite le seul cycle
+           possible. La comparaison, rejouée sur le paquet recomposé : **0
+           écart**, à la même surface.
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **8 sur 9** — 4 955 lignes sur 6 422 |
+           | Reste | `mes-app.js`, la coquille (1 467 lignes) — l'état de l'écran, l'aiguillage, les listes, le volet |
+           | Relevé des gestes | **86 sur 89**, inchangé — seules les adresses des gestes changent |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
+           | Campagne | n° 39 sur l'arbre portant les huit fichiers : 1 884 contrôles, aucun rouge, sortie 0 — elle vaut pour les n° 5.f.118 à 5.f.123 |
+
+       5.f.124 [x] **CARE en TypeScript, la coquille, le dernier fichier — et
+           une déclaration du socle plus étroite que sa fonction** — fait le
+           18 novembre 2026. `mes-app.js` (1 474 lignes) : l'état de l'écran,
+           les données, la barre latérale et la barre supérieure,
+           l'aiguillage des pages, le tableau de bord, les deux listes, le
+           volet du dossier, la saisie des carences propres au module. CARE
+           n'a plus de fichier en JavaScript.
+
+           ── La surface, mesurée ──
+
+           Quatre-vingt-dix noms au premier niveau. **Soixante-quinze** étaient
+           sur `window` : les cinquante fonctions, et les vingt-cinq `const`
+           que son `Object.assign` reposait — `mt` mis à part, que le sas des
+           libellés pose déjà. Le sas les pose tous, un à un : la page les
+           appelle au démarrage (`MES_STATE`, `mesLoadData`, `mesRenderApp`,
+           `mesNavigateTo`), le balisage aussi, et les sept autres paquets de
+           CARE les lisent sur `window`.
+
+           **Quinze** n'y étaient pas : `_mesAttr`, `_mesNorm`, `mesNavLabel`,
+           `MES_CLES_ORIGINE`, les trois tables de couleurs, `MES_STATUT_CARE`,
+           `mesRole`, `mesEstAdmin`, `mesEstSuperAdmin`, `MES_CLOS`,
+           `mesEnRetard`, `MES_LIBELLE_ETAPE`, `mesFiger`. La leçon du n°
+           5.f.123 appliquée d'emblée : la recherche des lecteurs a porté sur
+           le fichier lui-même, ses gestionnaires en ligne compris, et sur
+           l'`index.html`. Aucun ne les nomme, et plus aucun script classique
+           ne reste sur la page pour les lire par leur nom : ils quittent la
+           portée globale. C'est la différence déclarée, et la comparaison la
+           montre telle quelle — quinze noms, rien d'autre.
+
+           ── Six fichiers, sans cycle ──
+
+           | Fichier | Lignes | Ce qu'il porte |
+           |---|---|---|
+           | `etat.ts` | 311 | les types de l'état, `MES_STATE`, l'API, l'échappement, les droits, le paramétrage, le chargement |
+           | `libelles.ts` | 168 | les icônes, le menu, les statuts de la carence, de la mesure et du suivi |
+           | `tableau-de-bord.ts` | 322 | le tableau de bord et ses répartitions |
+           | `listes.ts` | 367 | les mesures et les carences, et les gestes qui en partent |
+           | `constats.ts` | 192 | le volet de saisie d'une carence |
+           | `coquille.ts` | 331 | la coquille, les filtres, l'aiguillage, le volet du dossier |
+
+           Les deux premiers sont les feuilles. La coquille importe les trois
+           pages ; les pages ne l'importent pas — redessiner, naviguer, ouvrir
+           le volet, elles le lisent sur la page au moment de l'appel, comme
+           l'ancien fichier lisait le nom nu. Le paquet reste sans cycle, et
+           la sémantique est celle d'avant : un nom remplacé sur `window`
+           serait celui qu'on appelle.
+
+           `restant.d.ts`, la frontière de la cohabitation, disparaît : plus
+           rien de CARE n'est en JavaScript. Ses types globaux passent dans
+           `etat.ts`, ses déclarations de `window` dans le sas. Les autres
+           paquets lisent toujours `EtatCare`, la forme lâche qu'ils
+           connaissaient ; la coquille écrit `EtatCoquille`, qui l'étend et
+           la nomme entière. Déclarer l'état en un seul endroit, comme PLAN au
+           n° 5.f.110, est la suite — non ce pas-ci.
+
+           ── Une déclaration du socle plus étroite que sa fonction ──
+
+           `tsc` a refusé une ligne : `oasisSaisieDifferee(\`mes_${cle}\`, …)`.
+           Le socle déclare `champ: HTMLInputElement | null` ; CARE lui passe
+           une **chaîne**, et RAMP aussi (`'ramp_recherche'`). La fonction l'a
+           toujours accueillie — `(champ && (champ.id || champ.name)) || champ`
+           fait d'une chaîne la clé du minuteur, sans curseur à rendre —, la
+           déclaration ne le disait pas. Elle le dit désormais
+           (`HTMLInputElement | string | null`), et l'implémentation sépare
+           l'élément de la clé sans rien changer à ce qu'elle fait. Ni
+           `as unknown as`, ni une copie de la fonction : c'était la
+           déclaration qui avait tort.
+
+           ── La comparaison ──
+
+           | | |
+           |---|---|
+           | Scénarios comparés | **191**, onglet neuf — **0 écart** : la coquille sous sept comptes et six pages, trois langues, repliée ; le chargement réussi, en échec, nul ; le tableau de bord sous neuf filtres et ses deux graphiques croisés ; les mesures sous dix filtres et cinq recherches, la recherche différée ; les carences sous huit filtres et cinq recherches ; les boutons du traitement sous trois comptes ; le volet du dossier à cinq étapes, redessiné, défilé, refermé, quitté par la navigation ; le suivi d'une mesure, ses quatre refus ; les suppressions, refusées, en échec ; la saisie d'une carence, gardée au redessin, enregistrée, refusée ; huit délais |
+           | Côté ancien | aucune exception dans aucun scénario, journaux peuplés — la comparaison porte sur un écran qui tourne |
+           | Mutations du paquet | **15, toutes mordantes** — de 1 à 163 scénarios en écart. Une seule ne mordait pas d'abord : le défilement du volet non repris (CJ). Mon scénario faisait défiler un corps que le redessin remplaçait par des sections trop courtes pour défiler — zéro des deux côtés. Un scénario aux sections hautes et au corps borné la fait mordre ; la comparaison rejouée reste à 0 écart |
+
+           ── Un contrôle qui lisait le fichier parti ──
+
+           `mesures-navigateur` lisait le menu et l'aiguillage dans le texte de
+           `mes-app.js` : deux contrôles rouges, `ENOENT`. Ils lisent désormais
+           `libelles.ts` et `coquille.ts`, et les chemins vers une page dans
+           toute la source de CARE. L'expression de l'aiguillage accepte les
+           deux formes d'un cas — une page importée, `mesRenderMesures()`, ou
+           publiée par un autre paquet, `requis('mesRenderEtats')()` : sans
+           cela elle n'aurait plus vu que deux cas sur quatre, et le contrôle
+           serait resté vert en regardant moitié moins. Lu sur la source, il
+           rend ce qu'il rendait : cinq pages déclarées, quatre aiguillées.
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **9 sur 9** — CARE n'a plus de fichier en JavaScript |
+           | Relevé des gestes | **86 sur 89**, inchangé — 144 occurrences, 3 indécidables ; seules les adresses changent |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
+           | Campagne | n° 40, sur l'arbre où CARE est entièrement en TypeScript : **1 884 contrôles, aucun rouge**, sortie 0 |
+
+       5.f.125 [x] **CARE : la façade retirée — soixante-treize noms posés
+           pour personne, et un module qui se relisait par la page** — fait
+           le 18 novembre 2026.
+
+           CARE n'avait pas de façade au sens de `window.PL` (n° 5.f.111) :
+           aucun objet ne se présentait comme point d'entrée. Sa façade était
+           diffuse : chaque fichier finissait par un `Object.assign(window,
+           { … })`, et chaque sas, pour ne rien retirer pendant la
+           conversion, en a reposé les noms un à un — **233** en tout. La
+           conversion achevée, la question se pose nom par nom : qui le lit
+           sur `window` ?
+
+           ── Trois mesures, et la première trompait ──
+
+           | Mesure | Ce qu'elle a rendu |
+           |---|---|
+           | Recherche par expressions sur la source | **85** noms sans lecteur — dont les deux fabriques des exports, que `mesUrlExport` cherche sur `window` par une chaîne. Une expression ne sépare pas un appel direct, qui n'a pas besoin de `window`, d'un nom écrit dans une chaîne, qui en a besoin |
+           | Lecture des chaînes et des gabarits, un petit lexeur à l'appui | **71** sans lecteur. Est lecteur : un nom dans le texte d'une chaîne ou d'un gabarit — gestionnaire en ligne, `requis('…')`, geste passé en chaîne —, un accès `window.X`, une déstructuration de `window`, une mention dans `index.html`. Les 86 noms du relevé des gestes y sont tous, et aucun code hors de CARE ne nomme les 71 |
+           | Un piège dans le navigateur | posé avant les scripts de la page, sur les 71 : un accesseur qui journalise toute lecture, en séparant celles de la page de celles d'un `page.evaluate` du test. `mesures-navigateur` et `mesures-gestes` rejouées dessus, l'écran chargé cinq fois : **aucune** lecture par la page ; deux par le test, de `mesQualModifiable` |
+
+           Le piège a d'abord été muet — et un piège muet ne prouve rien.
+           `puppeteer` est un module ESM : son espace de noms est figé, et
+           l'enveloppe posée sur `launch` n'y prenait pas, sans erreur. Un
+           essai sur une page à part, qui doit journaliser une lecture, a
+           précédé la mesure.
+
+           TypeScript 7 n'a plus d'API en JavaScript : le lexeur remplace
+           l'arbre syntaxique. Il ne lit que ce qu'il faut — les chaînes, les
+           gabarits et leurs `${…}` imbriqués, les commentaires à écarter.
+
+           ── Un module qui se relisait par la page ──
+
+           `MES_EXPORTS` nommait chaque fabrique de paramètres par une
+           **chaîne**, et `mesUrlExport` la cherchait sur `window` : les deux
+           fabriques n'y étaient posées que pour être relues par le module
+           qui les définit. La table porte désormais les fonctions. Deux noms
+           de plus quittent `window` : **73** retirés, **160** gardés.
+
+           | Sas | Retirés | Gardés |
+           |---|---|---|
+           | `mes-app` | 25 | 50 |
+           | `mes-qualification` | 18 | 32 |
+           | `mes-page-etats` | 8 | 3 |
+           | `mes-traitement` | 8 | 39 |
+           | `mes-suivi` | 7 | 12 |
+           | `mes-etats` | 5 | 6 |
+           | `mes-i18n` | 1 (`MES_TR`) | 1 |
+           | `mes-parametres` | 1 (`mesAfficherModal`) | 16 |
+           | `mes-instances` | 0 | 1 |
+
+           ── Ce qui change à l'exécution ──
+
+           Les paquets construits avant et après, commentaires écartés, ne
+           diffèrent que de **73 lignes `window.X = X`** — exactement la liste
+           mesurée — et de la table des exports. Aucun code n'est devenu mort.
+
+           La table, comparée dans un navigateur sur les 38 scénarios du
+           n° 5.f.121 qui ne nomment aucun nom retiré : **0 écart**. Deux
+           mutants la font mordre — les fabriques interverties (DA), la
+           requête toujours vide (DB) : un écart chacun.
+
+           ── Un test qui lisait l'intérieur ──
+
+           `mesures-navigateur` attestait l'étape courante par
+           `window.mesQualModifiable()`, avec un repli à `null` si la fonction
+           manquait. Retirée, le contrôle aurait rougi — `modifiable === true`
+           attendu —, non menti ; mais il lisait l'intérieur de l'écran. Il lit
+           désormais ce que la fonction commande : la liste des instances,
+           ouverte ou `disabled`. Contre-test : `mesQualModifiable` forcée à
+           `false` — le contrôle rougit, en relevant `"modifiable":false` à
+           l'écran.
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **9 sur 9** |
+           | Noms sur `window` | **160** — chacun avec un lecteur nommé |
+           | Relevé des gestes | **86 sur 89**, inchangé — 144 occurrences, 3 indécidables ; seules les adresses de `etats.ts` changent |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes |
+           | Campagne | n° 41, sur l'arbre sans la façade : **1 884 contrôles, aucun rouge**, sortie 0 |
+
+           Reste, pour CARE, l'état déclaré en un seul endroit (comme PLAN au
+           n° 5.f.110) : `EtatCare`, lâche, que lisent les autres paquets, et
+           `EtatCoquille`, qui l'étend.
+
+       5.f.126 [x] **CARE : l'état déclaré en un seul endroit — et le
+           traitement d'une carence, qui l'était cinq fois** — fait le
+           18 novembre 2026.
+
+           L'état de l'écran était déclaré deux fois. `EtatCare`, lâche et muni
+           d'une signature d'index, pour les sept paquets qui le lisent sur la
+           page ; `EtatCoquille`, qui l'étendait, pour la coquille qui l'écrit.
+           Un champ que la coquille ne déclarait pas — le volet de la
+           qualification, l'historique ouvert — passait par la signature, et
+           chaque lecteur le convertissait au type qu'il supposait.
+
+           La signature en avait appelé d'autres, comme chez PLAN (n° 5.f.110) :
+           le champ `traitement` étant `unknown`, chaque paquet déclarait sa vue
+           de ce que `/traitement` rend, et la lisait par une conversion.
+
+           | Forme | Déclarée | Par |
+           |---|---|---|
+           | Le traitement d'une carence | **5 fois** | l'état (`unknown`), le fil du traitement, la qualification, le suivi, l'historique |
+           | La carence | **4 fois**, et six conversions en ligne | l'état, le fil du traitement, la page des états, l'historique |
+           | La mesure du registre | **3 fois** | l'état, le suivi (avec une signature d'index), l'historique |
+           | La pièce jointe | **3 fois** | le fil du traitement, la qualification, le suivi |
+           | L'état de l'écran | **2 fois** | `EtatCare`, `EtatCoquille` |
+
+           Chacune l'est désormais **une fois**. Les formes que l'API rend
+           vivent dans `formes.ts`, un fichier de types seuls qu'esbuild efface ;
+           l'état, dans `etat.ts`, qui les porte. Les sept paquets en importent
+           le **type** — non la valeur, qui fabriquerait un second état
+           (n° 5.f.104) — et lisent `etat()` tel quel. Plus aucune signature
+           d'index dans CARE : il y en avait **sept**.
+
+           Trois champs étaient en désaccord d'une vue à l'autre — `classee`,
+           `traitement_clos`, `recours_intente` : `unknown` ici, booléen là. Le
+           serveur tranche : il les rend booléens (`routes-mesures.js`, `!!` et
+           `=== true`). La forme unique dit booléen.
+
+           ── Les conversions ──
+
+           **Dix-neuf** conversions vers une vue locale sont retirées. Douze
+           sont ajoutées, toutes au même endroit : là où la réponse de l'API
+           entre dans l'état (`await api(…/traitement) as TraitementCare`,
+           `as ConstatationCare[]`). Avant, la réponse y entrait sans type — le
+           champ était `unknown` —, et c'était chaque lecteur qui affirmait
+           une forme, chacun la sienne. L'affirmation est faite une fois, à
+           l'entrée, comme `mesLoadData` le faisait déjà.
+
+           ── Rien ne change à l'exécution ──
+
+           Les neuf paquets construits avant et après sont **identiques à
+           l'octet**. Le changement ne touche que des types : aucune
+           comparaison dans un navigateur n'aurait rien à départager.
+
+           Ce que `tsc` n'aurait pas lu, s'il y en avait : aucun geste en ligne
+           de CARE n'écrit l'état, à la différence de PLAN — seule la page de
+           démarrage y pose cinq champs, tous déclarés.
+
+           ── Contre-tests ──
+
+           Chacun appliqué à l'arbre d'avant et à celui d'après, `tsc` juge.
+
+           | Défaut réintroduit | Avant | Après |
+           |---|---|---|
+           | CE — l'historique écrit `histoOuvet` | **tsc muet** | tsc refuse |
+           | CF — le suivi écrit `suivi_statutt` sur une mesure | **tsc muet** | tsc refuse |
+           | CG — l'investigation replie la saisie sous `investigaton` | **tsc muet** | tsc refuse |
+           | CH — la qualification pose un nombre pour volet | **tsc muet** | tsc refuse |
+           | CJ — le suivi écrit le traitement sous `mesure` | **tsc muet** | tsc refuse |
+           | CI — la page des états lit `date_due_clotur` | tsc refuse | tsc refuse |
+
+           CI est un témoin : la vue locale de la page des états l'attrapait
+           déjà. Il ne départage rien, et il le dit — les cinq autres
+           départagent.
+
+           ── Où en est CARE ──
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **9 sur 9** ; l'état déclaré en un seul endroit, sans signature d'index |
+           | Façade | retirée (n° 5.f.125) |
+           | Relevé des gestes | **86 sur 89**, inchangé — 144 occurrences, 3 indécidables |
+           | Suites | `taille` 76, `unitaires` 181, `frontend` 13, `traductions` 24, `mesures` 84, `mesures-navigateur` 40, `mesures-gestes` 21 — toutes vertes ; le relevé ne change que de lignes |
+           | Campagne | n° 42, sur l'arbre où l'état est déclaré une fois : **1 884 contrôles, aucun rouge**, sortie 0 |
+
+       5.f.127 [x] **PR : les dix gestes restants couverts avant la
+           conversion — et un évaluateur désigné qui ne pouvait plus noter
+           depuis deux mois** — fait le 19 novembre 2026.
+
+           PR est le prochain écran à convertir, et la règle est de le mesurer
+           d'abord, comme PLAN (n° 5.f.99) et CARE (n° 5.f.114). Sur 88 noms,
+           sept restaient non exercés, et trois indécidables — des écouteurs
+           posés sur une variable locale, que le relevé ne sait pas rapprocher.
+           Les dix sont pressés par une seconde suite, `pr-gestes`, sur le socle
+           commun des suites de module :
+
+           - **une évaluation neuve** : sans organisme, refusée dans la
+             fenêtre avant tout envoi ; le choix de l'organisme règle son
+             secteur ; « Ajouter » fait au serveur un brouillon pour ce
+             couple ; le retrait se confirme, et un refus ne retire rien ;
+           - **les dates du cycle** d'une évaluation validée : le début
+             recalcule la fin — début + CSRBO mois — au serveur ; une fin
+             antérieure au début est refusée par la règle commune des dates,
+             sans envoi ; une fin valide se pose seule ;
+           - **le rapport**, en Word — le fichier reçu par le navigateur, et
+             lu — et en PDF — la fenêtre d'impression, et son document ;
+           - **les notes d'un évaluateur désigné** : incomplètes, refusées
+             sans confirmation ni envoi ; complètes, confirmées, publiées, le
+             brouillon vidé, la soumission plus offerte ;
+           - **trois écouteurs** : la zone de texte qui grandit, dans une
+             fenêtre et dans le volet ; le fond de la fenêtre et celui du
+             volet, qui referment — un clic dedans ne ferme rien ;
+           - **l'instance regardée**, avec la discipline de SURV, PLAN et
+             CARE.
+
+           Le compte de la suite est super-administrateur et gestionnaire ;
+           la soumission n'est offerte qu'à un évaluateur désigné qui n'est
+           pas validateur. Comme la ronde de la bibliothèque, la suite pose le
+           privilège Contributeur **dans l'état que la page lit**, puis relit
+           le vrai du serveur. Aucun compte n'est créé.
+
+           ── Le défaut que la ronde des notes a trouvé ──
+
+           La première exécution s'est arrêtée sur « La saisie n'est pas
+           valide ». Les notes d'un évaluateur désigné sont rangées **sous son
+           identifiant**, qui est son adresse électronique :
+           `notes_per_evaluator.perf[<adresse>]`. Or la garde commune des
+           corps de requête (`src/valider.js`, n° SEC/FONC-01) n'admettait
+           dans un nom de champ que lettres, chiffres, `_`, `.` et `-` :
+           « @ » refusé, `400 corps_invalide`.
+
+           Reproduit par le vrai geste de l'écran — un évaluateur désigné note
+           un indicateur et enregistre son brouillon —, et non par la route :
+           refus, toast d'échec, rien d'enregistré. La garde date du
+           10 septembre 2026 (`ed8a74d`) ; les notes publiées sous une adresse
+           que portent les données lui sont antérieures. Depuis, aucun
+           évaluateur désigné n'a pu enregistrer ni soumettre ses notes, et
+           `saveEvalScores` renvoyant `notes_per_evaluator` à chaque fois,
+           **une évaluation qui en portait ne s'enregistrait plus du tout**,
+           pas même par son validateur. Aucune suite ne le voyait : le jeu de
+           référence n'a pas de notes d'évaluateur sur une évaluation qu'on
+           modifie.
+
+           Décision de la maîtrise d'ouvrage : élargir la garde, plutôt que
+           changer la clé des notes et reprendre les données. Un nom de champ
+           admet désormais « @ » et « + », jusqu'à 254 caractères — la
+           longueur d'une adresse ; espaces, chevrons, guillemets restent
+           refusés. Les deux gardes, celle de la route et celle du préfixe de
+           module, lisent la même règle. Un contrôle unitaire l'éprouve au
+           caractère près, et `pr-gestes` porte la régression par l'écran.
+
+           ── Contre-essais ──
+
+           | | Défaut réintroduit | Rouge |
+           |---|---|---|
+           | DA | le choix de l'organisme ne règle plus le secteur | l'ajout, et le retrait qui en dépend |
+           | DB | l'ajout sans organisme n'est plus refusé | le refus, l'ajout |
+           | DC | le retrait sans confirmation | le retrait |
+           | DD | la fin n'est plus recalculée sur le CSRBO | les deux contrôles du cycle |
+           | DE | la règle commune des dates retirée | la fin antérieure |
+           | DF | le rapport composé vide | le rapport |
+           | DG | la complétude des notes non vérifiée | les notes incomplètes |
+           | DH | le brouillon non vidé à la soumission | la soumission |
+           | DI | le fond de la fenêtre ferme à tout clic | cinq contrôles — la fenêtre de création se ferme sous le geste |
+           | DJ | le fond du volet n'écoute plus | le volet |
+           | DK | reprendre l'instance regardée réécrit et recharge | l'instance reprise |
+           | DL | la zone ne grandit plus | les deux zones |
+           | DM | la garde rendue à son ancienne règle | le brouillon par l'écran, et ce qui suit |
+
+           DM a d'abord paru muet à mon relevé des contre-essais, qui ne lisait
+           que les contrôles rouges. La suite était rouge, mais par une
+           exception : la ronde levait sur la première écriture refusée et
+           s'arrêtait avant le contrôle qui nomme la régression. Elle relève
+           désormais l'erreur, et c'est ce contrôle qui rougit.
+
+           DI, DJ et DL disent aussi ce que le relevé ne peut pas dire : les
+           trois écouteurs qu'il classe indécidables sont **exercés** — leur
+           défaut fait rougir la suite.
+
+           | | |
+           |---|---|
+           | Relevé des gestes | PR **78 → 85 sur 88** — le plafond : les trois restants sont les écouteurs indécidables, exercés par `pr-gestes` (DI, DJ, DL) ; relevé figé le 19 novembre 2026 |
+           | Suites | `pr-gestes` 14, `unitaires` 182, `taille` 76 — vertes ; la table des suites en porte trente-cinq ; le registre des gestes non couverts déclare PR à 85 |
+           | Campagne | n° 43 : **1 892 contrôles, trois rouges**. `taille` : le registre des gestes non couverts déclarait encore PR à 78 — oubli, corrigé, 76/76. `surv-barre` et `surv-constatations` : deux exceptions du protocole du navigateur sous la charge de la campagne — cadre détaché, délai dépassé —, rejouées seules **vertes** (8 et 6). La campagne suivante, n° 44, porte sur l'arbre qui contient ce pas |
+
+       5.f.128 [x] **PR en TypeScript, premier fichier : les libellés et les
+           indices — et un contrôle d'accents muet sur trois tables** — fait le
+           19 novembre 2026. `pr-utils.js` (960 lignes) : la table des
+           libellés en trois langues, `t`, et les huit fonctions de taux et
+           d'indices qui font le profil de risque.
+
+           Il est la seule feuille de PR : il ne lit aucun autre fichier de
+           l'écran, et huit le lisent. C'est par lui que l'écran commence, comme
+           CARE par ses libellés (n° 5.f.116).
+
+           ── Cinq fichiers, un sas ──
+
+           | Fichier | Lignes | Ce qu'il porte |
+           |---|---|---|
+           | `traductions.fr.ts` | 271 | le volet français — il **définit** les clés |
+           | `traductions.en.ts`, `traductions.pt.ts` | 249 et 248 | les deux autres, typés par lui |
+           | `traductions.ts` | 43 | `TRANSLATIONS` et `t` |
+           | `indices.ts` | 215 | les taux, les indices de sécurité et de risque, le badge, l'intensité |
+           | `globales/pr-utils.ts` | 63 | le sas : il pose les dix noms sur `window` |
+
+           Les trois volets sont transportés **tels quels**, texte et
+           commentaires : 355 clés chacun, aucune en double — esbuild n'en
+           signale aucune —, les mêmes dans les trois. `indices.ts` est la
+           seconde moitié du fichier, seulement typée : pas un opérateur ne
+           change.
+
+           `t` garde ses deux règles, que la conversion ne corrige pas : une
+           traduction **vide** compte pour absente (`||`) ; chaque `{n}` n'est
+           remplacé qu'à sa **première** occurrence, par `replace`, où `$&` garde
+           son sens. Celle de PLAN, l'inverse de celle de CARE — trois écrans,
+           et chacun garde la sienne.
+
+           `window.t` était déjà déclaré par le portail, sous la même forme :
+           deux pages, deux définisseurs, une déclaration. Le sas ne la
+           redéclare pas.
+
+           ── La comparaison ──
+
+           | | |
+           |---|---|
+           | Scénarios comparés | **52 540** — chaque clé dans dix états de langue (l'état de l'écran, le navigateur, aucun, une langue inconnue, `constructor`, l'état et le navigateur en désaccord) et sept jeux d'arguments piégés (`$&`, `{1}`, `null`, une fonction) ; les clés `''`, `constructor`, `__proto__` ; les tables valeur par valeur ; quatre cents tirages des taux et des indices, puis leurs cas limites — **0 écart**, ancien fichier et paquet construit, chacun dans son contexte |
+           | Noms posés | les dix, du même type que l'ancien |
+           | Mutations | **7, toutes mordantes** — de 10 à 7 630 écarts : remplacer tous les `{n}`, lire la langue du navigateur d'abord, ôter le repli français, changer un dénominateur, un coefficient du CSRBO, l'ordre des badges, un accent portugais. La deuxième ne mordait sur aucun état d'abord : il en manquait un où l'écran et le navigateur portent deux langues différentes |
+
+           ── Un contrôle d'accents muet sur trois tables ──
+
+           Le contrôle des formes portugaises privées de leur accent
+           (`traductions`) choisit ses fichiers **par leur nom** : `i18n`,
+           `pr-utils`, et ceux du socle. Une table convertie s'appelle
+           `traductions.pt.ts`. Celles de PLAN et de CARE n'étaient donc lues
+           par personne depuis leur conversion, et celle de PR aurait cessé de
+           l'être aujourd'hui, sans un rouge. Trouvé en lisant le garde avant de
+           retirer `pr-utils.js`, non par un contre-essai.
+
+           Le filtre lit désormais `traductions`. Les trois tables passent :
+           aucune faute ne s'y était glissée. Contre-essai : « Codigo » posé
+           dans chacune — **vert** sous l'ancien filtre, **rouge** sous le
+           nouveau, pour PLAN, CARE et PR.
+
+           Troisième fois que ce contrôle se tait au changement de forme d'une
+           table. *Un garde qui choisit ses fichiers par leur nom se tait le
+           jour où le nom change — c'est-à-dire le jour de la conversion, qui
+           est celui où on en a besoin.*
+
+           ── Ce qui a suivi ──
+
+           - `construire.mjs` construit l'ensemble `profil_risque` vers
+             `public/modules/profil_risque/app/`, que `.gitignore` et
+             `.dockerignore` écartent — `taille` a relevé le second ;
+           - la page charge `app/pr-utils.js` à la place de `js/pr-utils.js`,
+             au même rang, avant `pr-shell.js` ;
+           - `taille` lit la table de PR dans `frontend/profil_risque` et ses
+             appels dans `public/`, comme pour PLAN et CARE.
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **1 sur 9** |
+           | Relevé des gestes | **85 sur 88**, inchangé — 167 occurrences, 3 indécidables ; rejoué sur le paquet converti |
+           | Suites | `taille` 76, `unitaires` 182, `frontend` 13, `traductions` 24, `profil-risque` 33, et `profil-risque-navigateur` et `pr-gestes` par le relevé — toutes vertes |
+           | Campagne | portée par le dernier des trois premiers fichiers de PR (voir plus bas) |
+
+       5.f.129 [x] **PR en TypeScript, deuxième fichier : l'instance regardée
+           — et un état du socle qu'un écran ne pouvait pas compléter** — fait
+           le 19 novembre 2026. `pr-instances.js` (53 lignes) : la liste
+           déroulante de la barre supérieure, et le changement d'instance.
+
+           ── La frontière, ouverte pour PR ──
+
+           Converti, le fichier lit ce que la coquille, encore en JavaScript,
+           définit : `window.APP_STATE.instances`, et `MODULE_API` — un `const`
+           de premier niveau, c'est-à-dire une globale **lexicale**, que l'on
+           atteint par son nom et qui n'est pas sur `window`. Le paquet est un
+           script classique : il la lit comme l'ancien, par son nom.
+           `profil_risque/restant.d.ts` la déclare, comme PLAN déclarait les
+           siennes (n° 5.f.102). `partage.ts` donne `t` et `requis` aux paquets
+           qui suivront, sans emporter la table des libellés.
+
+           `window.APP_STATE` était déclaré par le socle comme un type
+           littéral, `{ lang?, sidebarCollapsed? }` : un écran ne pouvait pas
+           y ajouter ce qu'il lit sans le redéclarer — ce qui ne compile pas.
+           Il devient une interface, `EtatShellModule`, que PR complète de
+           `instances`. Aucun paquet ne change pour cela : c'est un type.
+
+           ── La comparaison ──
+
+           L'ancien fichier et le paquet construit, chacun dans un contexte où
+           `window` est l'objet global et `MODULE_API` une `const` posée avant,
+           comme sur la page : neuf états de l'instance, huit mondes — barre,
+           mention ou toast absents, trois refus du serveur dont un `null` —,
+           six gestes, dont l'action de barre jouée par son `onChange`.
+
+           | | |
+           |---|---|
+           | Scénarios | **432, 0 écart** |
+           | Différence déclarée | `PR_VUE_REGIONALE` est posé sur `window` ; il n'y était pas — une `const` lexicale. Atteignable par son nom avant comme après |
+           | Mutations | **6, toutes mordantes**. Une ne mordait pas d'abord : la mention de l'AAC posée même quand la liste la nomme (IC). Aucun état n'était à la fois disponible **et** porteur d'une locale — des données trop uniformes cachent la règle, comme au n° 5.f.114. L'état ajouté la fait mordre, 12 écarts |
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **2 sur 9** |
+           | Relevé des gestes | **85 sur 88**, inchangé — `prAppliquerInstance`, action de barre du paquet, reste vu ; seules les adresses changent |
+           | Suites | `taille` 76, `unitaires` 182, `frontend` 13, `traductions` 24, `profil-risque` 33, et les deux suites de navigateur par le relevé — toutes vertes |
+           | Campagne | portée par le dernier des trois premiers fichiers de PR |
+
+       5.f.130 [x] **PR en TypeScript, troisième fichier : la bibliothèque
+           documentaire** — fait le 19 novembre 2026. `pr-bibliotheque.js`
+           (170 lignes) : la page, le choix d'un fichier, son envoi, le retrait
+           et le téléchargement d'un document.
+
+           Converti, il lit huit noms de la coquille et de `pr-parametres.js`,
+           encore en JavaScript — le privilège, la fenêtre, le rechargement, le
+           rendu, l'encodage en base64 — et une globale lexicale,
+           `PR_PRIV_CONTRIB`. La frontière (`restant.d.ts`) les déclare ; le
+           paquet les lit sur la page au moment de l'appel, comme l'ancien les
+           lisait par leur nom.
+
+           Il garde son `fetch` brut vers `/api/documents` : la page le reçoit
+           du socle, qui l'enveloppe, et le paquet l'appelle par le même nom,
+           au même moment.
+
+           ── La comparaison, dans un navigateur ──
+
+           Le comparateur des conversions de CARE, repris pour PR : chaque
+           scénario dans une page neuve, les mêmes bouchons des deux côtés — la
+           coquille, le socle, `fetch` —, puis le retour, le journal, le DOM
+           entier et l'état.
+
+           | | |
+           |---|---|
+           | Scénarios | **41, 0 écart** — la page sous six privilèges, avec et sans documents, des noms à guillemets et chevrons ; le sélecteur présent ou non ; six fichiers choisis, dont un au-delà de la borne et un **à** la borne ; dix envois — nom vide, sans fichier, réussi, `413`, trop volumineux, refus normalisé, réponse illisible, lecture du fichier impossible, sans bouton ; trois retraits ; le téléchargement |
+           | Côté ancien | aucune exception de page, journaux peuplés ; la seule levée est celle de l'état sans données, que l'ancien levait déjà |
+           | Différence déclarée | `DOC_MAX_BYTES` posé sur `window` — une `const` lexicale |
+           | Mutations | **8, toutes mordantes** — de 1 à 5 écarts : le retrait offert au contributeur, le nom du fichier non échappé, le `413` mal lu, la borne déplacée d'un octet, le fichier en attente gardé, le retrait sans confirmation, le bouton non rendu après un échec, le champ non vidé après un refus |
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **3 sur 9** |
+           | Relevé des gestes | **85 sur 88**, inchangé — les cinq gestes en ligne de la page restent vus ; seules les adresses changent |
+           | Suites | `taille` 76, `unitaires` 182, `frontend` 13, `traductions` 24, `profil-risque` 33, et les deux suites de navigateur par le relevé — dont le vrai dépôt d'un document par le sélecteur du navigateur — toutes vertes |
+           | Campagne | portée par le quatrième fichier (n° 5.f.131) |
+
+       5.f.131 [x] **PR en TypeScript, quatrième fichier : le tableau de bord
+           — et les formes de l'API déclarées une fois dès le départ** — fait
+           le 19 novembre 2026. `pr-dashboard.js` (304 lignes) : le niveau de
+           risque d'un profil, la fin de son cycle, les échéances proches, les
+           cartes d'indicateurs, la matrice et ses filtres.
+
+           ── La leçon de CARE, appliquée d'emblée ──
+
+           Le tableau de bord est le premier fichier converti qui lit les
+           évaluations, les organismes, les secteurs et les domaines. Plutôt
+           qu'une vue de plus — ce qui a fait cinq déclarations du traitement
+           de CARE (n° 5.f.126) —, leurs formes vivent dans `formes.ts`, un
+           fichier de types seuls ; la frontière les porte dans l'état de
+           l'écran, et chaque fichier converti à venir **complétera** ces
+           formes au lieu d'en écrire une à lui.
+
+           ── Ce que la conversion écrit autrement, et qui est le même ──
+
+           L'ancien comparait des dates par `>` et passait une date à `isNaN`.
+           TypeScript refuse l'un et l'autre ; `getTime()` rend la valeur
+           numérique que ces deux opérations lisaient, et c'est elle qui est
+           comparée. `renderStatistiques`, de `pr-profils.js`, se lit sur la
+           page au moment du rendu.
+
+           ── La comparaison, dans un navigateur, l'horloge figée ──
+
+           | | |
+           |---|---|
+           | Scénarios | **34, 0 écart** — quatre jeux de données (vide, sans évaluation, complet, sans référentiels) sous huit filtres ; les cinq fonctions sur vingt-trois évaluations et leurs cas limites — cases en minuscules, libellés en trois langues, dates invalides, fins de cycle à une heure près du moment figé ; les cartes sans contexte et avec ; les gestes en ligne des filtres joués tels qu'écrits |
+           | Un relevé qui ne relevait rien | la première version comparait les fins de cycle **telles que la page les rend** : une `Date` se sérialise en `{}` des deux côtés, et toutes étaient égales. Relevées en ISO, elles se comparent |
+           | Différence déclarée | `PR_NIVEAU_DE_CASE` posé sur `window` — une `const` lexicale |
+           | Mutations | **9, toutes mordantes** — de 1 à 13 écarts : le CSRBO non ajouté, l'horizon des échéances, le dernier profil d'un organisme pris à l'envers, les brouillons ou le parc non filtrés, la casse de la case, le seuil de complexité, la date de l'échéance tronquée, une fin de cycle invalide gardée |
+
+           ── Les quatre paquets, comparés une dernière fois ──
+
+           Construits ensemble, chacun contre son ancien fichier : `pr-utils`
+           52 540 scénarios, `pr-instances` 432, `pr-bibliotheque` 41,
+           `pr-dashboard` 34 — **0 écart**.
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **4 sur 9** — restent `pr-shell.js`, `pr-profils.js`, `pr-evaluations.js`, `pr-evaluation-fiche.js`, `pr-parametres.js` |
+           | Relevé des gestes | **85 sur 88**, inchangé — les quatre gestes en ligne des filtres restent vus ; seules les adresses changent |
+           | Suites | `taille` 76, `unitaires` 182, `frontend` 13, `traductions` 24, `profil-risque` 33, et les deux suites de navigateur par le relevé — toutes vertes |
+           | Campagne | n° 44, sur l'arbre qui porte la couverture de PR et ses quatre premiers fichiers convertis (n° 5.f.127 à 5.f.131) : **1 899 contrôles, aucun rouge**, sortie 0 |
+
+       5.f.132 [x] **PR en TypeScript, cinquième fichier : les Paramètres, en
+           trois parties** — fait le 19 novembre 2026. `pr-parametres.js` (822
+           lignes) : la page et sa bande latérale, la capacité des
+           inspecteurs, les archives, le barème des indicateurs et ses filtres,
+           l'export et l'import du barème, la fenêtre de saisie d'un élément,
+           les seuils des indices, et la cloche des notifications.
+
+           ── Trois fichiers, un sas ──
+
+           Converti en un seul, il dépassait les 600 lignes que le garde de
+           taille accorde à un fichier du frontend. Il est partagé selon ce
+           qu'il fait, sans cycle, et sous **un** sas — un seul paquet, comme
+           l'ancien était un seul script :
+
+           | Fichier | Lignes | Ce qu'il porte |
+           |---|---|---|
+           | `parametres.ts` | 434 | la page, la bande, la capacité, les archives, le barème et ses filtres ; les trois filtres posés au chargement, dans l'ordre de l'ancien |
+           | `parametres-saisie.ts` | 326 | l'export, l'encodage, l'import et son bandeau, la fenêtre de saisie, l'enregistrement, le retrait, les seuils |
+           | `notifications.ts` | 125 | les alertes, la pastille, le panneau |
+
+           La page importe la saisie — elle rend les seuils ; la saisie et la
+           cloche n'importent rien d'elle. Les formes qu'ils lisent — comptes,
+           sous-activités, indicateurs, seuils, plans, et l'élément de la
+           fenêtre de saisie — **complètent** `formes.ts`. La frontière y
+           gagne `NAV_CONFIG`, globale lexicale de la coquille ;
+           `fileToBase64` la quitte : son définisseur est converti, c'est son
+           sas qui le déclare.
+
+           Ce qui s'écrit autrement et reste le même : les dates comparées et
+           soustraites par `getTime` ; quatre `includes` d'un identifiant
+           facultatif, qui rend faux pour un absent ; la collection de la
+           fenêtre de saisie lue par son nom, sous ses deux graphies, comme
+           avant.
+
+           ── La comparaison, dans un navigateur, l'horloge figée ──
+
+           | | |
+           |---|---|
+           | Scénarios | **125, 0 écart** — la page sous six sous-vues, repliée ou non, administrateur ou non ; douze jeux de filtres du barème ; les gestes en ligne joués tels qu'écrits ; l'encodage d'un vrai fichier ; sept imports — sans fichier, réussi, détaillé avec six erreurs, illisible, refus JSON, HTML, sans type ; la fenêtre de saisie pour les sept sortes et une inconnue, neuve et existante, lue par la route ou refusée ; l'enregistrement de chacune, réussi et refusé ; cinq dates de certification d'un organisme ; trois retraits ; les seuils ; la cloche sur quatre jeux, la pastille à 99 et à 100 alertes, le panneau ouvert, gardé par un clic dedans et sur la cloche, fermé par un clic ailleurs |
+           | Côté ancien | aucune exception, journaux et rendus peuplés |
+           | Surface | **aucune différence** : les vingt et un noms étaient des `function`, déjà sur `window` |
+           | Mutations | **15, toutes mordantes** — de 1 à 7 écarts. Trois ne mordaient pas d'abord, et toutes pour la même raison : aucune donnée **à la borne**. Pas d'inspecteur à quatre ni à deux dossiers pour les deux seuils de charge, pas de cloche à 99 alertes pour la pastille. *Une borne qu'aucune donnée n'atteint n'est pas éprouvée* — la deuxième fois dans PR, après l'instance disponible et porteuse d'une locale (n° 5.f.129) |
+
+       5.f.133 [x] **PR en TypeScript, sixième fichier : les évaluations, en
+           quatre parties — et neuf `const` lexicales qui passent sur
+           `window`** — fait le 19 novembre 2026. `pr-evaluations.js` (883
+           lignes) : la dernière évaluation par organisme, la synthèse, le fil
+           d'avancement du circuit, les droits du module, les deux listes, le
+           rapport d'évaluation et ses exports, la fenêtre d'une nouvelle
+           évaluation, les évaluateurs éligibles.
+
+           ── Quatre fichiers, un sas ──
+
+           | Fichier | Lignes | Ce qu'il porte |
+           |---|---|---|
+           | `evaluations-commun.ts` | 311 | ce que les pages, le rapport et la fiche partagent : la dernière par organisme, la synthèse, les étapes, les icônes, les notes à montrer, les droits |
+           | `evaluations.ts` | 303 | les évaluations en cours et les validées, avec le cycle et ses rappels |
+           | `rapport.ts` | 199 | le rapport du profil de risque, et son export en Word ou en PDF |
+           | `nouvelle-evaluation.ts` | 133 | la fenêtre d'une nouvelle évaluation, les évaluateurs éligibles et leur libellé |
+
+           Sans cycle : les listes et la fenêtre importent le commun ; le
+           rapport importe la fenêtre, pour le libellé d'un évaluateur.
+
+           ── Des `const` lexicales que d'autres lisaient par leur nom ──
+
+           Neuf noms étaient des `const` de premier niveau : des globales
+           **lexicales**, atteignables par leur nom et absentes de `window`.
+           Les icônes `ICON_EXPAND`, `ICON_COLLAPSE`, `ICON_SEND` et
+           `ICON_SUBMIT` étaient lues ainsi par les profils et la fiche, encore
+           en JavaScript, et par le paquet des Paramètres, déjà converti. Le
+           sas les pose sur `window` : un nom qu'aucune déclaration lexicale ne
+           porte se lit sur l'objet global, et les scripts restés en
+           JavaScript les trouvent par leur nom comme avant. Le paquet des
+           Paramètres les lit désormais par `requis`, et la frontière ne les
+           déclare plus. La comparaison le montre tel quel : neuf noms passent
+           de « atteignable, hors de `window` » à « sur `window` », rien d'autre.
+
+           ── Un écouteur que le relevé doit pouvoir rattacher ──
+
+           Le relevé des gestes lit la cible d'un écouteur dans le texte qui
+           précède `.addEventListener`, et la rattache à son élément par son
+           identifiant. Typé, `document.getElementById('evalPrestId')` aurait
+           demandé une assertion — `!` ou `as` —, qui rend la cible illisible
+           et le geste indécidable. L'élément est posé dans une `const`, que le
+           relevé remonte jusqu'à son `getElementById` : le nom du geste
+           change, son rattachement demeure.
+
+           ── La comparaison, dans un navigateur, l'horloge figée ──
+
+           | | |
+           |---|---|
+           | Scénarios | **70, 0 écart** — les deux listes sous cinq jeux de droits et trois filtres ; les filtres posés au chargement ; les fonctions du circuit et des droits sur quatorze évaluations, dont une réévaluation et son origine ; la synthèse ; le rapport de six évaluations, sans référentiels et sur les référentiels bruts ; les exports en Word, en PDF, la fenêtre bloquée, une évaluation inconnue ; la fenêtre d'une nouvelle évaluation sous deux droits et sans organisme, l'organisme qui règle le secteur, l'ajout réussi, refusé et incomplet ; les évaluateurs éligibles, leur cache, leurs trois réponses, et le libellé d'un évaluateur ; les gestes en ligne des listes |
+           | Côté ancien | aucune exception, journaux et rendus peuplés |
+           | Différence déclarée | les neuf `const` lexicales posées sur `window` |
+           | Mutations | **14, toutes mordantes** — de 1 à 22 écarts. L'arrondi du CSRBO (EN) ne mordait pas d'abord : chaque évaluation portait un CSRBO, ou un produit déjà entier. Une évaluation sans CSRBO, 18 mois × 0,75, le fait mordre — la troisième borne de PR qu'aucune donnée n'atteignait |
+
+           ── La campagne n° 45, interrompue ──
+
+           Lancée sur les Paramètres seuls, elle a été interrompue avec la
+           session, et son journal perdu avec le répertoire de travail — les
+           outils de comparaison aussi, réécrits depuis. Ses gardes de source
+           avaient passé, vertes, avant que les fichiers des évaluations
+           n'existent. La n° 46 porte les deux fichiers ensemble.
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **6 sur 9** — restent la coquille, les profils et la fiche d'évaluation |
+           | Relevé des gestes | **85 sur 88**, inchangé — l'écouteur du choix de l'organisme reste rattaché et exercé ; seules les adresses changent |
+           | Suites | `taille` 76, `unitaires` 182, `frontend` 13, `traductions` 24, `profil-risque` 33, et les deux suites de navigateur par le relevé — toutes vertes |
+           | Campagne | n° 46, sur l'arbre où les Paramètres et les évaluations sont convertis : **1 899 contrôles, aucun rouge**, sortie 0 |
+
+       5.f.134 [x] **PR en TypeScript, septième fichier : les profils de
+           risque et les statistiques, en six parties** — fait le 19 novembre
+           2026. `pr-profils.js` (1 661 lignes) : les profils courants et
+           archivés, l'aperçu par domaine, secteur ou organisme, le profil
+           individuel, les volets d'un indicateur et d'un groupe comparés aux
+           pairs, la jauge, l'écran des statistiques, et l'impression.
+
+           ── Six fichiers, un sas ──
+
+           | Fichier | Lignes | Ce qu'il porte |
+           |---|---|---|
+           | `profils.ts` | 234 | la page, ses filtres, et les deux barres sélectionnables des statistiques |
+           | `profils-indicateur.ts` | 401 | les volets d'un indicateur et d'un groupe, comparés aux pairs du secteur |
+           | `profils-apercu.ts` | 429 | l'aperçu par domaine, secteur ou organisme, et le profil individuel |
+           | `profils-jauges.ts` | 71 | la jauge demi-cercle et les seuils des trois axes |
+           | `statistiques.ts` | 352 | la portée, les tendances, la répartition des risques, les sous-activités |
+           | `statistiques-indicateurs.ts` | 283 | l'analyse par indicateur, le graphe des taux, l'assemblage de l'écran, l'impression |
+
+           Sans cycle : la page importe l'aperçu et l'assemblage ; l'aperçu
+           importe les jauges ; l'assemblage, les statistiques. Les
+           statistiques et la page partagent avec le tableau de bord des états
+           posés sur `window` — le graphe des taux, celui des tendances, la vue
+           de l'aperçu — : ils sont déclarés une fois, dans `profils.ts`.
+           `renderStatistiques`, que le tableau de bord lit, quitte la
+           frontière : son définisseur le déclare.
+
+           Ce qui s'écrit autrement et reste le même : les dates comparées et
+           soustraites par `getTime` ; `parseInt` d'un nombre écrit
+           `parseInt(String(…))`, ce qu'il faisait déjà ; un filtre dont le
+           garde de type dit la même vérité que le test ; et, dans deux
+           fonctions déclarées que TypeScript ne voit pas protégées par la
+           vérification qui les précède, l'évaluation affirmée présente.
+
+           ── La comparaison, dans un navigateur, l'horloge figée ──
+
+           | | |
+           |---|---|
+           | Scénarios | **159, 0 écart** — la page sous cinq sous-vues et cinq filtres ; le profil individuel sous cinq vues et six filtres, dont un organisme inactif ; les vues et les retours ; les deux barres ; trente-deux volets d'indicateur, dix-huit de groupe ; les jauges sur huit taux ; les statistiques sous six états des tendances et sept du graphe des taux, puis quatre filtres du tableau de bord ; les fabriques une à une ; l'impression, et un départ absent |
+           | Côté ancien | aucune exception, journaux et rendus peuplés |
+           | Différence déclarée | `APERCU_VUES` et `APERCU_AXES` posés sur `window` — deux `const` lexicales |
+           | Mutations | **14, toutes mordantes** — de 1 à 70 écarts. Deux ne mordaient pas d'abord, encore faute de données à la borne. Le seuil « stable » de la tendance d'un groupe (FG) : avec deux ou trois indicateurs, un point de note vaut plus de dix pour cent, et aucun écart ne tombe sous cinq — huit indicateurs de performance le ramènent à 4,17. La fin de période des tendances (FK) : aucune évaluation n'était validée le dernier jour, après minuit |
+
+           | | |
+           |---|---|
+           | Fichiers convertis | **7 sur 9** — restent la coquille et la fiche d'évaluation |
+           | Relevé des gestes | **85 sur 88**, inchangé — les gestes en ligne des profils et des statistiques restent vus ; seules les adresses changent |
+           | Suites | `taille` 76, `unitaires` 182, `frontend` 13, `traductions` 24, `profil-risque` 33, et les deux suites de navigateur par le relevé — toutes vertes |
+           | Campagne | n° 47 : **1 899 contrôles, aucun rouge**, sortie 0 |

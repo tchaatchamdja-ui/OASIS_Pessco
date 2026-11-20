@@ -26,7 +26,9 @@ const {
 } = require('./harness');
 
 const RACINE = path.join(__dirname, '..', '..');
-const SOURCE_NAV = path.join(RACINE, 'public', 'modules', 'planification', 'js', 'pl-shell.js');
+// La coquille de l'écran, en TypeScript depuis le 15 novembre 2026 (ADR-003,
+// n° 5.f.109) : `PLAN_NAV` et l'aiguillage de `planRenderPage` y sont lus.
+const SOURCE_NAV = path.join(RACINE, 'frontend', 'planification', 'coquille.ts');
 
 const IDENTIFIANT = 'superadmin@anac.bj';
 const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
@@ -35,12 +37,12 @@ const MOT_DE_PASSE = 'Aerosup@2026!Uemoa';      // posé par le harnais
 // et le contrôle aurait mesuré sa propre liste.
 function pagesDeclarees() {
   const texte = fs.readFileSync(SOURCE_NAV, 'utf8');
-  const bloc = /const PLAN_NAV = \{([\s\S]*?)\n\};/.exec(texte);
+  const bloc = /const PLAN_NAV(?:: [^=]+)? = \{([\s\S]*?)\n\};/.exec(texte);
   if (!bloc) {
-    throw new Error('refus : PLAN_NAV introuvable dans public/modules/planification/js/pl-shell.js —'
+    throw new Error('refus : PLAN_NAV introuvable dans frontend/planification/coquille.ts —'
       + ' le contrôle ne sait plus quelles pages l’écran déclare.');
   }
-  const cles = [...bloc[1].matchAll(/^\s{4}'?([\w-]+)'?:\s*\{/gm)].map((m) => m[1]);
+  const cles = [...bloc[1].matchAll(/^\s+'?([\w-]+)'?:\s*\{/gm)].map((m) => m[1]);
   if (!cles.length) throw new Error('refus : PLAN_NAV ne se lit plus entrée par entrée.');
   return cles;
 }
@@ -48,9 +50,9 @@ function pagesDeclarees() {
 // Les cas de l'aiguillage, et ce qui peut les ouvrir.
 function aiguillageEtChemins() {
   const texte = fs.readFileSync(SOURCE_NAV, 'utf8');
-  const rendues = [...texte.matchAll(/^\s*case '([\w-]+)': content = plan\w+\(\);/gm)].map((m) => m[1]);
+  const rendues = [...texte.matchAll(/^\s*case '([\w-]+)': content = (?:rendre\('plan\w+'\)|plan\w+\(\));/gm)].map((m) => m[1]);
   if (!rendues.length) {
-    throw new Error('refus : l’aiguillage de planRenderPage ne se lit plus dans pl-shell.js.');
+    throw new Error('refus : l’aiguillage de planRenderPage ne se lit plus dans coquille.ts.');
   }
   // Une page sans entrée de menu peut rester atteignable : « plan-detail » est
   // ouverte en posant `currentPage`, depuis la table des plans. On lit donc les
@@ -82,6 +84,52 @@ function aiguillageEtChemins() {
     });
   }(path.join(RACINE, 'frontend', 'planification')));
   return { rendues, ouvrables: [...ouvrables] };
+}
+
+// ── Ce que les gestes en ligne écrivent dans l'état ──
+//
+// Les gabarits de PLAN écrivent leurs gestes en texte — `PLAN_STATE.calendarYear--`,
+// `PLAN_STATE.filters.domaine=this.value` —, que tsc ne lit pas. L'état est
+// déclaré, champ par champ, dans `frontend/planification/etat.ts` (n° 5.f.110) :
+// un geste qui écrirait un champ mal nommé poserait en silence une donnée que
+// personne ne lit. Ce contrôle confronte chaque nom écrit à la déclaration, et
+// chaque remise à zéro d'un jeu de filtres à la liste de ses clés.
+const SOURCE_ETAT = path.join(RACINE, 'frontend', 'planification', 'etat.ts');
+
+function etatDeclare() {
+  const texte = fs.readFileSync(SOURCE_ETAT, 'utf8');
+  const bloc = /export interface EtatPlan \{([\s\S]*?)\n\}/.exec(texte);
+  if (!bloc) throw new Error('refus : EtatPlan introuvable dans frontend/planification/etat.ts.');
+  const champs = [...bloc[1].matchAll(/^\s+(\w+)\??:/gm)].map((m) => m[1]);
+  const cles = (nom) => {
+    const t = new RegExp(`export type ${nom} = Record<([^>]*?), string>;`).exec(texte);
+    if (!t) throw new Error(`refus : ${nom} introuvable dans frontend/planification/etat.ts.`);
+    return [...t[1].matchAll(/'(\w+)'/g)].map((m) => m[1]);
+  };
+  if (champs.length < 10) throw new Error('refus : EtatPlan ne se lit plus champ par champ.');
+  return { champs, filters: cles('FiltresPlan'), calFilters: cles('FiltresCal') };
+}
+
+function ecrituresEnLigne() {
+  const fichiers = [path.join(RACINE, 'public', 'modules', 'planification', 'index.html')];
+  (function parcourir(rep) {
+    fs.readdirSync(rep, { withFileTypes: true }).forEach((e) => {
+      const c = path.join(rep, e.name);
+      if (e.isDirectory()) parcourir(c);
+      else if (/\.ts$/.test(e.name) && !/\.d\.ts$/.test(e.name)) fichiers.push(c);
+    });
+  }(path.join(RACINE, 'frontend', 'planification')));
+  const chemins = [];
+  const remises = [];
+  fichiers.forEach((f) => {
+    const t = fs.readFileSync(f, 'utf8');
+    const ou = path.relative(RACINE, f);
+    for (const m of t.matchAll(/PLAN_STATE\.(\w+)(?:\.(\w+))?/g)) chemins.push({ ou, champ: m[1], cle: m[2] });
+    for (const m of t.matchAll(/PLAN_STATE\.(filters|calFilters)\s*=\s*\{([^}]*)\}/g)) {
+      remises.push({ ou, jeu: m[1], cles: [...m[2].matchAll(/(\w+)\s*:/g)].map((x) => x[1]) });
+    }
+  });
+  return { chemins, remises };
 }
 
 module.exports = async function planificationNavigateurSmoke(port) {
@@ -209,6 +257,28 @@ module.exports = async function planificationNavigateurSmoke(port) {
         sansChemin.length === 0,
         sansChemin.length ? `sans chemin : ${sansChemin.join(', ')}`
           : `${aiguillage.rendues.length} cas rendus, ${aiguillage.ouvrables.length} ouvrable(s)`);
+    }
+
+    {
+      let refusEtat = null;
+      let declare = null;
+      let lus = { chemins: [], remises: [] };
+      try { declare = etatDeclare(); lus = ecrituresEnLigne(); } catch (e) { refusEtat = e.message; }
+      const inconnus = [];
+      if (declare) {
+        lus.chemins.forEach(({ ou, champ, cle }) => {
+          if (!declare.champs.includes(champ)) inconnus.push(`${ou} : PLAN_STATE.${champ}`);
+          else if (cle && declare[champ] && !declare[champ].includes(cle)) inconnus.push(`${ou} : PLAN_STATE.${champ}.${cle}`);
+        });
+        lus.remises.forEach(({ ou, jeu, cles }) => {
+          const attendu = [...declare[jeu]].sort().join(',');
+          if ([...cles].sort().join(',') !== attendu) inconnus.push(`${ou} : PLAN_STATE.${jeu} remis à {${cles.join(', ')}}`);
+        });
+      }
+      verifier('les gestes en ligne de PLAN n’écrivent que des champs que l’état déclare',
+        !refusEtat && lus.chemins.length > 0 && inconnus.length === 0,
+        refusEtat || (inconnus.length ? inconnus.join(' ; ')
+          : `${lus.chemins.length} écritures, ${lus.remises.length} remise(s) à zéro, ${declare.champs.length} champs déclarés`));
     }
 
     // ── Les six pages, par de vrais clics ──

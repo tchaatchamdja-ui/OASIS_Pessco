@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_P5" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:collaboration id="Collab_P5">
+    <bpmn:documentation>Route PUT /api/m/droits/:module/users/:username : src/module_rights.js:307-341. L'écran DROITS gère un module à la fois (window.DR_MODULE, PLAN par défaut : frontend/droits/i18n.ts:457).</bpmn:documentation>
+    <bpmn:participant id="Part_P5_Admin" name="Administrateur (SUPERADMIN ou ADMIN)" processRef="Proc_P5_Admin"></bpmn:participant>
+    <bpmn:participant id="Part_P5_Oasis" name="OASIS" processRef="Proc_P5_Oasis"></bpmn:participant>
+    <bpmn:messageFlow id="Msg_P5_1" name="privilège, portées" sourceRef="a_editer" targetRef="d_debut" />
+    <bpmn:messageFlow id="Msg_P5_2" name="liste relue" sourceRef="d_relire" targetRef="a_lire" />
+    <bpmn:messageFlow id="Msg_P5_3" name="refus affiché dans la fenêtre" sourceRef="Part_P5_Oasis" targetRef="a_lire" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_P5_Admin" name="Administrateur — attribuer" isExecutable="false">
+    <bpmn:startEvent id="a_debut" name="Ajuster les droits d'un compte">
+      <bpmn:outgoing>Flow_P5_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="a_editer" name="Choisir le privilège et les portées">
+      <bpmn:documentation>Portées : domaine (et secteur) ; organismes pour PRESTATAIRE. frontend/droits/Fenetre.tsx</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_lire" name="Lire la liste relue ou l'erreur">
+      <bpmn:incoming>Flow_P5_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="a_fin" name="Droits ajustés ou refus lu">
+      <bpmn:incoming>Flow_P5_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P5_1" sourceRef="a_debut" targetRef="a_editer" />
+    <bpmn:sequenceFlow id="Flow_P5_2" sourceRef="a_editer" targetRef="a_lire" />
+    <bpmn:sequenceFlow id="Flow_P5_3" sourceRef="a_lire" targetRef="a_fin" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P5_Oasis" name="P5_AttribuerPrivilege" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_P5_Oasis">
+      <bpmn:lane id="Lane_P5_Droits" name="Module DROITS (écran)">
+        <bpmn:flowNodeRef>d_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>d_put</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>d_relire</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>d_fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P5_Serveur" name="Serveur">
+        <bpmn:flowNodeRef>sv_gw_origine</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_origine</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_forme</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_forme</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_s2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_session</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_401</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_role</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_role</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_compte</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_compte</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_module</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_module</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_gere</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_gere</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_priv</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_priv</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_norm</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_defaut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_s1a</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_valeur</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_s1b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_rep</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_par</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_journal_module</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_journal</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P5_Magasin" name="Magasin (module_rights)">
+        <bpmn:flowNodeRef>mg_retirer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>mg_poser</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="d_debut" name="Enregistrer">
+      <bpmn:documentation>frontend/droits/Fenetre.tsx:62 ; App.tsx:154</bpmn:documentation>
+      <bpmn:outgoing>Flow_P5_4</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="d_debut_def" />
+    </bpmn:startEvent>
+    <bpmn:task id="d_put" name="PUT /api/m/droits/&lt;module&gt;/users/&lt;compte&gt;">
+      <bpmn:documentation>frontend/droits/api.ts:115-122</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_5</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_gw_origine" name="En-tête X-OASIS-Request présent ?">
+      <bpmn:documentation>src/protections.js:197-205</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_6</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_origine" name="403 origine_non_reconnue">
+      <bpmn:incoming>Flow_P5_6</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_forme" name="Corps de forme acceptable ?">
+      <bpmn:documentation>/api/m/droits est un préfixe de module : src/module_loader.js:64-66 ; src/valider.js:210-219</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_8</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_forme" name="400 corps_invalide">
+      <bpmn:incoming>Flow_P5_8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="sv_s2" name="Contrôler la session (S2)" calledElement="Proc_S2_Oasis">
+      <bpmn:incoming>Flow_P5_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_10</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="sv_gw_session" name="Session valide ?">
+      <bpmn:incoming>Flow_P5_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_11</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_401" name="401 ou 429">
+      <bpmn:incoming>Flow_P5_11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_role" name="Rôle SUPERADMIN ou ADMIN ?">
+      <bpmn:documentation>src/module_rights.js:167, 307. Le privilège GESTIONNAIRE d'un module ne donne pas ce droit : c'est le rôle qui décide.</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_13</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_role" name="403 forbidden">
+      <bpmn:incoming>Flow_P5_13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_compte" name="Compte visé connu ?">
+      <bpmn:documentation>src/module_rights.js:310-311. Écart : aucune vérification que le compte appartient à l'instance de l'administrateur, alors que la liste est filtrée (module_rights.js:282-283).</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_15</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_16</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_compte" name="404 unknown_user">
+      <bpmn:incoming>Flow_P5_15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_module" name="Le module est-il dans ses modules ?">
+      <bpmn:documentation>src/module_rights.js:312-314. Écart : can() lit l'absence de liste comme « tout accès » (module_rights.js:99), /me et /my-access comme « aucun » (218, 255).</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_17</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_module" name="400 no_module_access">
+      <bpmn:incoming>Flow_P5_17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_gere" name="Rôle géré pour ce module ?">
+      <bpmn:documentation>SUPERADMIN, ADMIN, AAC ; plus ADMIN_PRESTATAIRE pour SURV et RAMP : src/module_rights.js:37-44, 317-319. Question : un ADMIN peut modifier les droits d'un SUPERADMIN.</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_19</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_20</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_gere" name="400 role_hors_perimetre">
+      <bpmn:incoming>Flow_P5_19</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_priv" name="Privilège connu pour ce module ?">
+      <bpmn:documentation>LECTEUR par défaut si absent ; PRESTATAIRE pour SURV et RAMP : src/module_rights.js:17-31, 321-322</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_21</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_22</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_priv" name="400 unknown_privilege">
+      <bpmn:incoming>Flow_P5_21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="sv_norm" name="Normaliser les portées : domaine exigé, doublons ôtés ; organismes connus seulement">
+      <bpmn:documentation>src/module_rights.js:133-155, 326-328. Une portée invalide est ôtée sans être signalée.</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_23</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_gw_defaut" name="LECTEUR sans aucune portée ?">
+      <bpmn:documentation>src/module_rights.js:331</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_23</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_24</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_27</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="mg_retirer" name="Retirer l'entrée du compte : retour au défaut">
+      <bpmn:documentation>setRights(…, null) : src/module_rights.js:68-76 ; src/instantane.js:104-109</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_24</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_25</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:callActivity id="sv_s1a" name="Journaliser DROITS_MODULE_DEFAUT (S1)" calledElement="Proc_S1_Oasis">
+      <bpmn:documentation>src/module_rights.js:333. Après l'écriture : un échec du journal laisse l'écriture faite.</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_25</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_26</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:task id="sv_valeur" name="Composer { privilege, scopes, updatedAt, updatedBy }">
+      <bpmn:documentation>src/module_rights.js:337</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_27</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_28</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="mg_poser" name="Écrire atomiquement les droits du compte">
+      <bpmn:documentation>src/module_rights.js:68-76, 338 ; src/instantane.js:104-109 ; src/magasin.js:206-215</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_28</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_29</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:callActivity id="sv_s1b" name="Journaliser DROITS_MODULE_MODIFIES (S1)" calledElement="Proc_S1_Oasis">
+      <bpmn:documentation>src/module_rights.js:339</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_29</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_30</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="sv_fus" name="">
+      <bpmn:incoming>Flow_P5_26</bpmn:incoming>
+      <bpmn:incoming>Flow_P5_30</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_31</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="sv_rep" name="Répondre { ok, privilege, scopes, isDefault }">
+      <bpmn:documentation>src/module_rights.js:334, 340</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_31</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_32</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:parallelGateway id="sv_par" name="Réponse partie">
+      <bpmn:incoming>Flow_P5_32</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_33</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P5_35</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:task id="d_relire" name="Relire la liste des comptes ; fermer la fenêtre">
+      <bpmn:documentation>frontend/droits/App.tsx:154-163 ; en cas de refus, le message reste dans la fenêtre</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_33</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_34</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="d_fin" name="Liste à jour">
+      <bpmn:incoming>Flow_P5_34</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="sv_journal_module" name="Journal du module PLAN (S1), quel que soit le module visé" calledElement="Proc_S1_Oasis">
+      <bpmn:documentation>Le manifeste de DROITS déclare auditModule PLAN : src/modules/droits/module.json ; action DROITS : src/module_audit.js:55. Écart : un droit SURV s'inscrit dans la chaîne de PLAN.</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_35</bpmn:incoming>
+      <bpmn:outgoing>Flow_P5_36</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:endEvent id="sv_fin_journal" name="Entrée au journal de PLAN (ou trace seule)">
+      <bpmn:documentation>src/module_audit.js:214-227</bpmn:documentation>
+      <bpmn:incoming>Flow_P5_36</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P5_4" sourceRef="d_debut" targetRef="d_put" />
+    <bpmn:sequenceFlow id="Flow_P5_5" sourceRef="d_put" targetRef="sv_gw_origine" />
+    <bpmn:sequenceFlow id="Flow_P5_6" name="non" sourceRef="sv_gw_origine" targetRef="sv_fin_origine" />
+    <bpmn:sequenceFlow id="Flow_P5_7" name="oui" sourceRef="sv_gw_origine" targetRef="sv_gw_forme" />
+    <bpmn:sequenceFlow id="Flow_P5_8" name="non" sourceRef="sv_gw_forme" targetRef="sv_fin_forme" />
+    <bpmn:sequenceFlow id="Flow_P5_9" name="oui" sourceRef="sv_gw_forme" targetRef="sv_s2" />
+    <bpmn:sequenceFlow id="Flow_P5_10" sourceRef="sv_s2" targetRef="sv_gw_session" />
+    <bpmn:sequenceFlow id="Flow_P5_11" name="non" sourceRef="sv_gw_session" targetRef="sv_fin_401" />
+    <bpmn:sequenceFlow id="Flow_P5_12" name="oui" sourceRef="sv_gw_session" targetRef="sv_gw_role" />
+    <bpmn:sequenceFlow id="Flow_P5_13" name="non" sourceRef="sv_gw_role" targetRef="sv_fin_role" />
+    <bpmn:sequenceFlow id="Flow_P5_14" name="oui" sourceRef="sv_gw_role" targetRef="sv_gw_compte" />
+    <bpmn:sequenceFlow id="Flow_P5_15" name="non" sourceRef="sv_gw_compte" targetRef="sv_fin_compte" />
+    <bpmn:sequenceFlow id="Flow_P5_16" name="oui" sourceRef="sv_gw_compte" targetRef="sv_gw_module" />
+    <bpmn:sequenceFlow id="Flow_P5_17" name="non" sourceRef="sv_gw_module" targetRef="sv_fin_module" />
+    <bpmn:sequenceFlow id="Flow_P5_18" name="oui" sourceRef="sv_gw_module" targetRef="sv_gw_gere" />
+    <bpmn:sequenceFlow id="Flow_P5_19" name="non" sourceRef="sv_gw_gere" targetRef="sv_fin_gere" />
+    <bpmn:sequenceFlow id="Flow_P5_20" name="oui" sourceRef="sv_gw_gere" targetRef="sv_gw_priv" />
+    <bpmn:sequenceFlow id="Flow_P5_21" name="non" sourceRef="sv_gw_priv" targetRef="sv_fin_priv" />
+    <bpmn:sequenceFlow id="Flow_P5_22" name="oui" sourceRef="sv_gw_priv" targetRef="sv_norm" />
+    <bpmn:sequenceFlow id="Flow_P5_23" sourceRef="sv_norm" targetRef="sv_gw_defaut" />
+    <bpmn:sequenceFlow id="Flow_P5_24" name="oui" sourceRef="sv_gw_defaut" targetRef="mg_retirer" />
+    <bpmn:sequenceFlow id="Flow_P5_25" sourceRef="mg_retirer" targetRef="sv_s1a" />
+    <bpmn:sequenceFlow id="Flow_P5_26" sourceRef="sv_s1a" targetRef="sv_fus" />
+    <bpmn:sequenceFlow id="Flow_P5_27" name="non" sourceRef="sv_gw_defaut" targetRef="sv_valeur" />
+    <bpmn:sequenceFlow id="Flow_P5_28" sourceRef="sv_valeur" targetRef="mg_poser" />
+    <bpmn:sequenceFlow id="Flow_P5_29" sourceRef="mg_poser" targetRef="sv_s1b" />
+    <bpmn:sequenceFlow id="Flow_P5_30" sourceRef="sv_s1b" targetRef="sv_fus" />
+    <bpmn:sequenceFlow id="Flow_P5_31" sourceRef="sv_fus" targetRef="sv_rep" />
+    <bpmn:sequenceFlow id="Flow_P5_32" sourceRef="sv_rep" targetRef="sv_par" />
+    <bpmn:sequenceFlow id="Flow_P5_33" sourceRef="sv_par" targetRef="d_relire" />
+    <bpmn:sequenceFlow id="Flow_P5_34" sourceRef="d_relire" targetRef="d_fin" />
+    <bpmn:sequenceFlow id="Flow_P5_35" sourceRef="sv_par" targetRef="sv_journal_module" />
+    <bpmn:sequenceFlow id="Flow_P5_36" sourceRef="sv_journal_module" targetRef="sv_fin_journal" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P5" name="P5 — Attribution d'un privilège (Gestion des Droits)">
+    <bpmndi:BPMNPlane id="Plane_P5" bpmnElement="Collab_P5">
+      <bpmndi:BPMNShape id="Part_P5_Admin_di" bpmnElement="Part_P5_Admin" isHorizontal="true"><dc:Bounds x="100" y="60" width="3850" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P5_Oasis_di" bpmnElement="Part_P5_Oasis" isHorizontal="true"><dc:Bounds x="100" y="220" width="3850" height="600" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P5_Droits_di" bpmnElement="Lane_P5_Droits" isHorizontal="true"><dc:Bounds x="130" y="220" width="3820" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P5_Serveur_di" bpmnElement="Lane_P5_Serveur" isHorizontal="true"><dc:Bounds x="130" y="340" width="3820" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P5_Magasin_di" bpmnElement="Lane_P5_Magasin" isHorizontal="true"><dc:Bounds x="130" y="700" width="3820" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_debut_di" bpmnElement="a_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_editer_di" bpmnElement="a_editer"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_lire_di" bpmnElement="a_lire"><dc:Bounds x="3535" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_fin_di" bpmnElement="a_fin"><dc:Bounds x="3732" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="d_debut_di" bpmnElement="d_debut"><dc:Bounds x="532" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="d_put_di" bpmnElement="d_put"><dc:Bounds x="655" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_origine_di" bpmnElement="sv_gw_origine" isMarkerVisible="true"><dc:Bounds x="845" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_origine_di" bpmnElement="sv_fin_origine"><dc:Bounds x="852" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_forme_di" bpmnElement="sv_gw_forme" isMarkerVisible="true"><dc:Bounds x="1005" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_forme_di" bpmnElement="sv_fin_forme"><dc:Bounds x="1012" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s2_di" bpmnElement="sv_s2"><dc:Bounds x="1135" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_session_di" bpmnElement="sv_gw_session" isMarkerVisible="true"><dc:Bounds x="1325" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_401_di" bpmnElement="sv_fin_401"><dc:Bounds x="1332" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_role_di" bpmnElement="sv_gw_role" isMarkerVisible="true"><dc:Bounds x="1485" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_role_di" bpmnElement="sv_fin_role"><dc:Bounds x="1492" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_compte_di" bpmnElement="sv_gw_compte" isMarkerVisible="true"><dc:Bounds x="1645" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_compte_di" bpmnElement="sv_fin_compte"><dc:Bounds x="1652" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_module_di" bpmnElement="sv_gw_module" isMarkerVisible="true"><dc:Bounds x="1805" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_module_di" bpmnElement="sv_fin_module"><dc:Bounds x="1812" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_gere_di" bpmnElement="sv_gw_gere" isMarkerVisible="true"><dc:Bounds x="1965" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_gere_di" bpmnElement="sv_fin_gere"><dc:Bounds x="1972" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_priv_di" bpmnElement="sv_gw_priv" isMarkerVisible="true"><dc:Bounds x="2125" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_priv_di" bpmnElement="sv_fin_priv"><dc:Bounds x="2132" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_norm_di" bpmnElement="sv_norm"><dc:Bounds x="2255" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_defaut_di" bpmnElement="sv_gw_defaut" isMarkerVisible="true"><dc:Bounds x="2445" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mg_retirer_di" bpmnElement="mg_retirer"><dc:Bounds x="2575" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s1a_di" bpmnElement="sv_s1a"><dc:Bounds x="2575" y="600" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_valeur_di" bpmnElement="sv_valeur"><dc:Bounds x="2575" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mg_poser_di" bpmnElement="mg_poser"><dc:Bounds x="2735" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s1b_di" bpmnElement="sv_s1b"><dc:Bounds x="2895" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fus_di" bpmnElement="sv_fus" isMarkerVisible="true"><dc:Bounds x="3085" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_rep_di" bpmnElement="sv_rep"><dc:Bounds x="3215" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_par_di" bpmnElement="sv_par"><dc:Bounds x="3405" y="375" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="d_relire_di" bpmnElement="d_relire"><dc:Bounds x="3535" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="d_fin_di" bpmnElement="d_fin"><dc:Bounds x="3732" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_journal_module_di" bpmnElement="sv_journal_module"><dc:Bounds x="3535" y="600" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_journal_di" bpmnElement="sv_fin_journal"><dc:Bounds x="3732" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P5_1_di" bpmnElement="Flow_P5_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_2_di" bpmnElement="Flow_P5_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="3535" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_3_di" bpmnElement="Flow_P5_3">
+        <di:waypoint x="3645" y="120" />
+        <di:waypoint x="3732" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_4_di" bpmnElement="Flow_P5_4">
+        <di:waypoint x="568" y="280" />
+        <di:waypoint x="655" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_5_di" bpmnElement="Flow_P5_5">
+        <di:waypoint x="765" y="280" />
+        <di:waypoint x="785" y="280" />
+        <di:waypoint x="785" y="400" />
+        <di:waypoint x="845" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_6_di" bpmnElement="Flow_P5_6">
+        <di:waypoint x="870" y="425" />
+        <di:waypoint x="870" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_7_di" bpmnElement="Flow_P5_7">
+        <di:waypoint x="895" y="400" />
+        <di:waypoint x="1005" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_8_di" bpmnElement="Flow_P5_8">
+        <di:waypoint x="1030" y="425" />
+        <di:waypoint x="1030" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_9_di" bpmnElement="Flow_P5_9">
+        <di:waypoint x="1055" y="400" />
+        <di:waypoint x="1135" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_10_di" bpmnElement="Flow_P5_10">
+        <di:waypoint x="1245" y="400" />
+        <di:waypoint x="1325" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_11_di" bpmnElement="Flow_P5_11">
+        <di:waypoint x="1350" y="425" />
+        <di:waypoint x="1350" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_12_di" bpmnElement="Flow_P5_12">
+        <di:waypoint x="1375" y="400" />
+        <di:waypoint x="1485" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_13_di" bpmnElement="Flow_P5_13">
+        <di:waypoint x="1510" y="425" />
+        <di:waypoint x="1510" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_14_di" bpmnElement="Flow_P5_14">
+        <di:waypoint x="1535" y="400" />
+        <di:waypoint x="1645" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_15_di" bpmnElement="Flow_P5_15">
+        <di:waypoint x="1670" y="425" />
+        <di:waypoint x="1670" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_16_di" bpmnElement="Flow_P5_16">
+        <di:waypoint x="1695" y="400" />
+        <di:waypoint x="1805" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_17_di" bpmnElement="Flow_P5_17">
+        <di:waypoint x="1830" y="425" />
+        <di:waypoint x="1830" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_18_di" bpmnElement="Flow_P5_18">
+        <di:waypoint x="1855" y="400" />
+        <di:waypoint x="1965" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_19_di" bpmnElement="Flow_P5_19">
+        <di:waypoint x="1990" y="425" />
+        <di:waypoint x="1990" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_20_di" bpmnElement="Flow_P5_20">
+        <di:waypoint x="2015" y="400" />
+        <di:waypoint x="2125" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_21_di" bpmnElement="Flow_P5_21">
+        <di:waypoint x="2150" y="425" />
+        <di:waypoint x="2150" y="502" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_22_di" bpmnElement="Flow_P5_22">
+        <di:waypoint x="2175" y="400" />
+        <di:waypoint x="2255" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_23_di" bpmnElement="Flow_P5_23">
+        <di:waypoint x="2365" y="400" />
+        <di:waypoint x="2445" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_24_di" bpmnElement="Flow_P5_24">
+        <di:waypoint x="2470" y="425" />
+        <di:waypoint x="2470" y="760" />
+        <di:waypoint x="2575" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_25_di" bpmnElement="Flow_P5_25">
+        <di:waypoint x="2630" y="720" />
+        <di:waypoint x="2630" y="680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_26_di" bpmnElement="Flow_P5_26">
+        <di:waypoint x="2685" y="640" />
+        <di:waypoint x="3110" y="640" />
+        <di:waypoint x="3110" y="425" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_27_di" bpmnElement="Flow_P5_27">
+        <di:waypoint x="2495" y="400" />
+        <di:waypoint x="2575" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_28_di" bpmnElement="Flow_P5_28">
+        <di:waypoint x="2685" y="400" />
+        <di:waypoint x="2705" y="400" />
+        <di:waypoint x="2705" y="760" />
+        <di:waypoint x="2735" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_29_di" bpmnElement="Flow_P5_29">
+        <di:waypoint x="2845" y="760" />
+        <di:waypoint x="2865" y="760" />
+        <di:waypoint x="2865" y="400" />
+        <di:waypoint x="2895" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_30_di" bpmnElement="Flow_P5_30">
+        <di:waypoint x="3005" y="400" />
+        <di:waypoint x="3085" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_31_di" bpmnElement="Flow_P5_31">
+        <di:waypoint x="3135" y="400" />
+        <di:waypoint x="3215" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_32_di" bpmnElement="Flow_P5_32">
+        <di:waypoint x="3325" y="400" />
+        <di:waypoint x="3405" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_33_di" bpmnElement="Flow_P5_33">
+        <di:waypoint x="3430" y="375" />
+        <di:waypoint x="3430" y="280" />
+        <di:waypoint x="3535" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_34_di" bpmnElement="Flow_P5_34">
+        <di:waypoint x="3645" y="280" />
+        <di:waypoint x="3732" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_35_di" bpmnElement="Flow_P5_35">
+        <di:waypoint x="3430" y="425" />
+        <di:waypoint x="3430" y="640" />
+        <di:waypoint x="3535" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P5_36_di" bpmnElement="Flow_P5_36">
+        <di:waypoint x="3645" y="640" />
+        <di:waypoint x="3732" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P5_1_di" bpmnElement="Msg_P5_1">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="200" />
+        <di:waypoint x="550" y="200" />
+        <di:waypoint x="550" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P5_2_di" bpmnElement="Msg_P5_2">
+        <di:waypoint x="3590" y="240" />
+        <di:waypoint x="3590" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P5_3_di" bpmnElement="Msg_P5_3">
+        <di:waypoint x="3510" y="220" />
+        <di:waypoint x="3510" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -35,6 +35,10 @@ ENV NODE_ENV=production
 COPY package*.json ./
 RUN npm ci --include=dev --ignore-scripts
 COPY frontend ./frontend
+# Les pages aussi : la construction déduit ce qu'elle produit des balises
+# `<script>` des pages de `public/` (`frontend/construire.mjs`, `pagesServies`).
+# Sans elles, elle s'arrête sur `ENOENT … /app/public`.
+COPY public ./public
 RUN npm run build
 
 FROM node:22-alpine
@@ -53,8 +57,10 @@ COPY config ./config
 # l'écran reste blanc — la réponse HTTP est 200, et c'est bien le problème.
 #
 # On copie `public/` **entier**, et non `public/modules` : l'étage de
-# construction ne porte que ce qu'il a produit — il ne reçoit que `frontend/` —
-# donc ce répertoire ne contient rien d'autre, et la copie fusionne. Nommer les
+# construction y porte ce qu'il a produit, plus les sources de `public/` qu'il a
+# reçues pour lire les pages — les mêmes octets que la ligne `COPY public`
+# ci-dessus, puisque `.dockerignore` écarte les paquets déjà construits. La copie
+# fusionne donc sans rien changer aux sources. Nommer les
 # sous-répertoires un par un a coûté le défaut suivant, trouvé par le contrôle
 # d'image de la CI : le socle commun passé en TypeScript se construit vers
 # `public/shared/app/`, qui n'était pas dans la liste. L'image servait alors un

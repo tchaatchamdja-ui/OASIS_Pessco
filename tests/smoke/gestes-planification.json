@@ -6,219 +6,6 @@
  "indecidables": 5,
  "gestes": [
   {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 287,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planNavigateTo('${key}')",
-   "nom": "planNavigateTo",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 306,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planSetTheme('${th}')",
-   "nom": "planSetTheme",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 311,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planSetLang('${l.toLowerCase()}')",
-   "nom": "planSetLang",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 315,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planToggleSidebar()",
-   "nom": "planToggleSidebar",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 319,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planToggleMobileSidebar()",
-   "nom": "planToggleMobileSidebar",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 323,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planToggleMobileSidebar()",
-   "nom": "planToggleMobileSidebar",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 333,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planToggleNotifPanel()",
-   "nom": "planToggleNotifPanel",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 363,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "PLAN_STATE.currentSub='${s.id}';planRenderPage();",
-   "nom": "PLAN_STATE.currentSub",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 442,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planFermerCalendrier()",
-   "nom": "planFermerCalendrier",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 445,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planFermerCalendrier()",
-   "nom": "planFermerCalendrier",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 464,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planCloseModal()",
-   "nom": "planCloseModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 514,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.domaine=this.value;PLAN_STATE.filters.secteur='';PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.domaine",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 517,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.secteur=this.value;PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.secteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 522,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.prestataire=this.value;${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.prestataire",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 527,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.sousActivite=this.value;PLAN_STATE.filters.theme='';${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.sousActivite",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 530,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.theme=this.value;${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.theme",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 536,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "PLAN_STATE.filters.statut=this.value;${onchangeFunc}",
-   "nom": "PLAN_STATE.filters.statut",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 547,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeF",
-   "nom": "_pesSearchInput",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 548,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "planResetFilters()",
-   "nom": "planResetFilters",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 578,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${geste('')}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 579,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "${geste(a)}",
-   "nom": "${}",
-   "indecidable": true,
-   "raison": "composé au rendu",
-   "exerce": null
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 434,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "fond:click",
-   "source": "fond.addEventListener('click', planFermerCalendrier);",
-   "id": "planVoletFond",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/planification/js/pl-shell.js",
-   "ligne": 469,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "div:click",
-   "source": "div.addEventListener('click', (e) => { if (e.target === div) planCloseModal(); });",
-   "id": null,
-   "exerce": null
-  },
-  {
    "fichier": "frontend/planification/affichage.ts",
    "ligne": 323,
    "forme": "en ligne",
@@ -304,7 +91,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 94,
+   "ligne": 84,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.calendarYear--;planRenderPage();",
@@ -313,7 +100,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 96,
+   "ligne": 86,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.calendarYear++;planRenderPage();",
@@ -322,7 +109,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 102,
+   "ligne": 92,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.calendarView='month';planRenderPage();",
@@ -331,7 +118,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 103,
+   "ligne": 93,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.calendarView='week';planRenderPage();",
@@ -340,7 +127,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 203,
+   "ligne": 193,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.domaine=this.value;PLAN_STATE.calFilters.secteur='';PLAN_STATE.calFilters.prestataire='';planRende",
@@ -349,7 +136,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 207,
+   "ligne": 197,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.secteur=this.value;PLAN_STATE.calFilters.prestataire='';planRenderPage();",
@@ -358,7 +145,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 211,
+   "ligne": 201,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.prestataire=this.value;planRenderPage();",
@@ -367,7 +154,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 215,
+   "ligne": 205,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.trimestre=this.value;planRenderPage();",
@@ -376,7 +163,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 222,
+   "ligne": 212,
    "forme": "en ligne",
    "evenement": "change",
    "source": "PLAN_STATE.calFilters.responsable=this.value;planRenderPage();",
@@ -385,7 +172,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 226,
+   "ligne": 216,
    "forme": "en ligne",
    "evenement": "input",
    "source": "_pesSearchInput(this, () => { PLAN_STATE.calFilters.search=document.getElementById('plan-cal-search').value; planRenderP",
@@ -394,7 +181,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 227,
+   "ligne": 217,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.calFilters={domaine:'',secteur:'',prestataire:'',annee:'',trimestre:'',responsable:'',search:''};planRenderPa",
@@ -403,7 +190,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 304,
+   "ligne": 294,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
@@ -412,7 +199,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 306,
+   "ligne": 296,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
@@ -421,7 +208,7 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 399,
+   "ligne": 389,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.max(0,PLAN_STATE.calendarMonth-1);planRenderPage();",
@@ -430,12 +217,131 @@
   },
   {
    "fichier": "frontend/planification/calendrier.ts",
-   "ligne": 401,
+   "ligne": 391,
    "forme": "en ligne",
    "evenement": "click",
    "source": "PLAN_STATE.calendarMonth=Math.min(11,PLAN_STATE.calendarMonth+1);planRenderPage();",
    "nom": "PLAN_STATE.calendarMonth",
    "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 220,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planNavigateTo('${key}')",
+   "nom": "planNavigateTo",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 240,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planSetTheme('${th}')",
+   "nom": "planSetTheme",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 245,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planSetLang('${l.toLowerCase()}')",
+   "nom": "planSetLang",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 249,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planToggleSidebar()",
+   "nom": "planToggleSidebar",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 253,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planToggleMobileSidebar()",
+   "nom": "planToggleMobileSidebar",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 257,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planToggleMobileSidebar()",
+   "nom": "planToggleMobileSidebar",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 267,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planToggleNotifPanel()",
+   "nom": "planToggleNotifPanel",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 303,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "PLAN_STATE.currentSub='${s.id}';planRenderPage();",
+   "nom": "PLAN_STATE.currentSub",
+   "exerce": false
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 393,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planFermerCalendrier()",
+   "nom": "planFermerCalendrier",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 396,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planFermerCalendrier()",
+   "nom": "planFermerCalendrier",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 415,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planCloseModal()",
+   "nom": "planCloseModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 385,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "fond:click",
+   "source": "fond.addEventListener('click', planFermerCalendrier);",
+   "id": "planVoletFond",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/coquille.ts",
+   "ligne": 420,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "div:click",
+   "source": "div.addEventListener('click', (e) => { if (e.target === div) planCloseModal(); });",
+   "id": null,
+   "exerce": null
   },
   {
    "fichier": "frontend/planification/decisions.ts",
@@ -484,7 +390,7 @@
   },
   {
    "fichier": "frontend/planification/decisions.ts",
-   "ligne": 285,
+   "ligne": 294,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planDeleteComment('${it.id}','${planId}')",
@@ -493,7 +399,7 @@
   },
   {
    "fichier": "frontend/planification/decisions.ts",
-   "ligne": 303,
+   "ligne": 313,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planCloseModal()",
@@ -502,7 +408,7 @@
   },
   {
    "fichier": "frontend/planification/decisions.ts",
-   "ligne": 304,
+   "ligne": 314,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planCreateComment('${planId}')",
@@ -637,6 +543,100 @@
    "exerce": true
   },
   {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 73,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.domaine=this.value;PLAN_STATE.filters.secteur='';PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.domaine",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 76,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.secteur=this.value;PLAN_STATE.filters.sousActivite='';${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.secteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 81,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.prestataire=this.value;${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.prestataire",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 86,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.sousActivite=this.value;PLAN_STATE.filters.theme='';${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.sousActivite",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 89,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.theme=this.value;${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.theme",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 95,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "PLAN_STATE.filters.statut=this.value;${onchangeFunc}",
+   "nom": "PLAN_STATE.filters.statut",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 106,
+   "forme": "en ligne",
+   "evenement": "input",
+   "source": "_pesSearchInput(this, () => { PLAN_STATE.filters.search=document.getElementById('plan-filter-search').value; ${onchangeF",
+   "nom": "_pesSearchInput",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 107,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "planResetFilters()",
+   "nom": "planResetFilters",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 139,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${geste('')}",
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
+  },
+  {
+   "fichier": "frontend/planification/filtres.ts",
+   "ligne": 140,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "${geste(a)}",
+   "nom": "${}",
+   "indecidable": true,
+   "raison": "composé au rendu",
+   "exerce": null
+  },
+  {
    "fichier": "frontend/planification/globales/pl-calendrier-bord.ts",
    "ligne": 53,
    "forme": "écouteur",
@@ -648,7 +648,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 62,
+   "ligne": 58,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planShowCreateModal('planifiees')",
@@ -657,7 +657,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 91,
+   "ligne": 87,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planAccBasculer(this)",
@@ -666,7 +666,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 91,
+   "ligne": 87,
    "forme": "en ligne",
    "evenement": "keydown",
    "source": "planAccClavier(event, this)",
@@ -675,7 +675,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 199,
+   "ligne": 195,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planDeletePlan('${p.id}')",
@@ -684,7 +684,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 220,
+   "ligne": 216,
    "forme": "en ligne",
    "evenement": "click",
    "source": "_planSortBy('${col}')",
@@ -693,7 +693,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 249,
+   "ligne": 245,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planTogglePrestRow('${p.id}',this)",
@@ -702,7 +702,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 249,
+   "ligne": 245,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planOpenDetail('${p.id}');return false;",
@@ -711,7 +711,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 256,
+   "ligne": 252,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planOpenDetail('${p.id}')",
@@ -720,7 +720,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 257,
+   "ligne": 253,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planShowEditModal('${p.id}')",
@@ -729,7 +729,7 @@
   },
   {
    "fichier": "frontend/planification/liste-plans.ts",
-   "ligne": 258,
+   "ligne": 254,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planArchivePlan('${p.id}')",
@@ -1026,7 +1026,7 @@
   },
   {
    "fichier": "frontend/planification/saisie-plan.ts",
-   "ligne": 84,
+   "ligne": 83,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planCloseModal()",
@@ -1035,7 +1035,7 @@
   },
   {
    "fichier": "frontend/planification/saisie-plan.ts",
-   "ligne": 85,
+   "ligne": 84,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planCreatePlan()",
@@ -1044,7 +1044,7 @@
   },
   {
    "fichier": "frontend/planification/saisie-plan.ts",
-   "ligne": 145,
+   "ligne": 144,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planSortThemeTable(this,${col})",
@@ -1053,7 +1053,7 @@
   },
   {
    "fichier": "frontend/planification/saisie-plan.ts",
-   "ligne": 156,
+   "ligne": 155,
    "forme": "en ligne",
    "evenement": "click",
    "source": "event.stopPropagation();event.preventDefault();planOpenDetailForPrestataire('${plan.id}','${p.id}')",
@@ -1062,7 +1062,7 @@
   },
   {
    "fichier": "frontend/planification/saisie-plan.ts",
-   "ligne": 281,
+   "ligne": 280,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planCloseModal()",
@@ -1071,7 +1071,7 @@
   },
   {
    "fichier": "frontend/planification/saisie-plan.ts",
-   "ligne": 282,
+   "ligne": 281,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planUpdatePlan('${planId}')",
@@ -1080,7 +1080,7 @@
   },
   {
    "fichier": "frontend/planification/saisie-plan.ts",
-   "ligne": 398,
+   "ligne": 397,
    "forme": "en ligne",
    "evenement": "change",
    "source": "document.querySelectorAll('.sync-check:not([disabled])').forEach(cb=>cb.checked=this.checked);",
@@ -1089,7 +1089,7 @@
   },
   {
    "fichier": "frontend/planification/saisie-plan.ts",
-   "ligne": 411,
+   "ligne": 410,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planApplySyncSelection('${planId}')",
@@ -1098,7 +1098,7 @@
   },
   {
    "fichier": "frontend/planification/saisie-plan.ts",
-   "ligne": 412,
+   "ligne": 411,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planCloseModal()",
@@ -1107,7 +1107,7 @@
   },
   {
    "fichier": "frontend/planification/tableau-de-bord.ts",
-   "ligne": 216,
+   "ligne": 215,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planOpenDetail('${p.id}');return false;",
@@ -1116,7 +1116,7 @@
   },
   {
    "fichier": "frontend/planification/tableau-de-bord.ts",
-   "ligne": 221,
+   "ligne": 220,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planOpenDetail('${p.id}')",
@@ -1125,7 +1125,7 @@
   },
   {
    "fichier": "frontend/planification/tableau-de-bord.ts",
-   "ligne": 240,
+   "ligne": 239,
    "forme": "en ligne",
    "evenement": "click",
    "source": "planOpenDetail('${a.plan_id}');return false;",

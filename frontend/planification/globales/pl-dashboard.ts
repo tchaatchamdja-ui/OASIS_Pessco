@@ -3,7 +3,7 @@
 //
 // `pl-dashboard.js` posait onze noms au premier niveau. Trois sont lus hors du
 // module : `planRenderDashboard` par l'aiguillage de `pl-shell.js` et la façade
-// `PL`, `_applyPlanFilters` par `pl-plans.js` et la page de validation, et
+// `PL` — retirée depuis (n° 5.f.111) —, `_applyPlanFilters` par `pl-plans.js` et la page de validation, et
 // `planChoisirCarte` par le `onClick` que chaque carte d'indicateur porte. Ce
 // sas pose ces trois-là ; les huit autres quittent la portée globale.
 import { _applyPlanFilters, planChoisirCarte, planRenderDashboard } from '../tableau-de-bord';

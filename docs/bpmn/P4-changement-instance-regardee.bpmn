@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_P4" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:collaboration id="Collab_P4">
+    <bpmn:documentation>Le super-administrateur régional prend le poste d'un État membre, ou la vue régionale (instance vide). Le choix vaut pour le portail et tous les modules : src/instances.js:13-18.</bpmn:documentation>
+    <bpmn:participant id="Part_P4_SuperAdmin" name="Super-administrateur régional" processRef="Proc_P4_SuperAdmin"></bpmn:participant>
+    <bpmn:participant id="Part_P4_Oasis" name="OASIS" processRef="Proc_P4_Oasis"></bpmn:participant>
+    <bpmn:messageFlow id="Msg_P4_1" name="instance ou vue régionale" sourceRef="a_choisir" targetRef="p_debut" />
+    <bpmn:messageFlow id="Msg_P4_2" name="portail rechargé" sourceRef="p_recharger" targetRef="a_travailler" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_P4_SuperAdmin" name="Super-administrateur — changer d'instance" isExecutable="false">
+    <bpmn:startEvent id="a_debut" name="Regarder une autre instance">
+      <bpmn:outgoing>Flow_P4_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="a_choisir" name="Choisir dans la liste du bandeau">
+      <bpmn:documentation>La liste n'est offerte qu'au régional, et ne porte que les instances actives : src/instances.js:331-342 ; frontend/portail/instances.ts:180-186</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_travailler" name="Travailler dans l'instance choisie">
+      <bpmn:incoming>Flow_P4_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="a_fin" name="Périmètre changé">
+      <bpmn:incoming>Flow_P4_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P4_1" sourceRef="a_debut" targetRef="a_choisir" />
+    <bpmn:sequenceFlow id="Flow_P4_2" sourceRef="a_choisir" targetRef="a_travailler" />
+    <bpmn:sequenceFlow id="Flow_P4_3" sourceRef="a_travailler" targetRef="a_fin" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P4_Oasis" name="P4_ChangerInstance" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_P4_Oasis">
+      <bpmn:lane id="Lane_P4_Portail" name="Portail — barre supérieure">
+        <bpmn:flowNodeRef>p_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_gw_nouv</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_fin_nouv</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_gw_meme</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_fin_meme</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_put</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_recharger</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>p_fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P4_Serveur" name="Serveur">
+        <bpmn:flowNodeRef>sv_s2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_session</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_401</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_role</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_role</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_portee</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_portee</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_nom</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_nom</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_active</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_active</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_s1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_ok</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P4_Magasin" name="Magasin (data/instances.json)">
+        <bpmn:flowNodeRef>mg_choix</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="p_debut" name="Choix fait">
+      <bpmn:documentation>instances.ts:186</bpmn:documentation>
+      <bpmn:outgoing>Flow_P4_4</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="p_debut_def" />
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="p_gw_nouv" name="« Nouvelle instance… » ?">
+      <bpmn:documentation>instances.ts:191</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P4_6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="p_fin_nouv" name="Ouverture d'une instance (autre geste, POST /api/instances)">
+      <bpmn:documentation>instances.ts:212-230 ; server.js:356-362</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="p_gw_meme" name="Même instance que la courante ?">
+      <bpmn:documentation>instances.ts:192</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_7</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P4_8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="p_fin_meme" name="Rien à faire">
+      <bpmn:incoming>Flow_P4_7</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="p_put" name="PUT /api/instance { instance }">
+      <bpmn:documentation>instances.ts:193-197</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:callActivity id="sv_s2" name="Contrôler la session (S2)" calledElement="Proc_S2_Oasis">
+      <bpmn:documentation>Précédé de la garde d'origine X-OASIS-Request (src/protections.js:197-205), comme toute écriture</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_10</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="sv_gw_session" name="Session valide ?">
+      <bpmn:incoming>Flow_P4_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_11</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P4_12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_401" name="401 ou 429">
+      <bpmn:incoming>Flow_P4_11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_role" name="Rôle SUPERADMIN ?">
+      <bpmn:documentation>server.js:364 ; requireRole server.js:138-143</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_13</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P4_14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_role" name="403 forbidden">
+      <bpmn:incoming>Flow_P4_13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_portee" name="Portée régionale ?">
+      <bpmn:documentation>server.js:367 ; src/instances.js:126-134</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_15</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P4_16</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_portee" name="403 portee_nationale">
+      <bpmn:incoming>Flow_P4_15</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_nom" name="Vue régionale (vide) ou instance déclarée ?">
+      <bpmn:documentation>server.js:370-373 ; liste : src/instances.js:55-66</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_17</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P4_18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_nom" name="400 instance_inconnue">
+      <bpmn:incoming>Flow_P4_17</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="sv_gw_active" name="Instance active ?">
+      <bpmn:documentation>server.js:374-376 ; src/instances.js:72-75</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_18</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_19</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P4_20</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_active" name="400 instance_desactivee">
+      <bpmn:incoming>Flow_P4_19</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="mg_choix" name="Retenir le choix du compte (instances.choix)">
+      <bpmn:documentation>Par compte, non par session ; lecture puis écriture directes sur fichier, hors de magasin.modifier, et hors PostgreSQL ('instances' n'est pas migrée) : src/instances.js:146-155 ; src/magasin.js:115-129</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_21</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:callActivity id="sv_s1" name="Journaliser INSTANCE_CHANGEE (S1)" calledElement="Proc_S1_Oasis">
+      <bpmn:documentation>server.js:378</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_22</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:task id="sv_ok" name="Répondre { ok, instance }">
+      <bpmn:documentation>server.js:379</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_22</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_23</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="p_recharger" name="Recharger le portail entier">
+      <bpmn:documentation>Un refus donne un avis et redessine le bandeau (instances.ts:198-202) ; un succès recharge tout (instances.ts:203-205). Chaque route filtre ensuite par instances.courante() : src/instances.js:142-144.</bpmn:documentation>
+      <bpmn:incoming>Flow_P4_23</bpmn:incoming>
+      <bpmn:outgoing>Flow_P4_24</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="p_fin" name="Écrans servis dans l'instance choisie">
+      <bpmn:incoming>Flow_P4_24</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P4_4" sourceRef="p_debut" targetRef="p_gw_nouv" />
+    <bpmn:sequenceFlow id="Flow_P4_5" name="oui" sourceRef="p_gw_nouv" targetRef="p_fin_nouv" />
+    <bpmn:sequenceFlow id="Flow_P4_6" name="non" sourceRef="p_gw_nouv" targetRef="p_gw_meme" />
+    <bpmn:sequenceFlow id="Flow_P4_7" name="oui" sourceRef="p_gw_meme" targetRef="p_fin_meme" />
+    <bpmn:sequenceFlow id="Flow_P4_8" name="non" sourceRef="p_gw_meme" targetRef="p_put" />
+    <bpmn:sequenceFlow id="Flow_P4_9" sourceRef="p_put" targetRef="sv_s2" />
+    <bpmn:sequenceFlow id="Flow_P4_10" sourceRef="sv_s2" targetRef="sv_gw_session" />
+    <bpmn:sequenceFlow id="Flow_P4_11" name="non" sourceRef="sv_gw_session" targetRef="sv_fin_401" />
+    <bpmn:sequenceFlow id="Flow_P4_12" name="oui" sourceRef="sv_gw_session" targetRef="sv_gw_role" />
+    <bpmn:sequenceFlow id="Flow_P4_13" name="non" sourceRef="sv_gw_role" targetRef="sv_fin_role" />
+    <bpmn:sequenceFlow id="Flow_P4_14" name="oui" sourceRef="sv_gw_role" targetRef="sv_gw_portee" />
+    <bpmn:sequenceFlow id="Flow_P4_15" name="non (nationale)" sourceRef="sv_gw_portee" targetRef="sv_fin_portee" />
+    <bpmn:sequenceFlow id="Flow_P4_16" name="oui" sourceRef="sv_gw_portee" targetRef="sv_gw_nom" />
+    <bpmn:sequenceFlow id="Flow_P4_17" name="non" sourceRef="sv_gw_nom" targetRef="sv_fin_nom" />
+    <bpmn:sequenceFlow id="Flow_P4_18" name="oui" sourceRef="sv_gw_nom" targetRef="sv_gw_active" />
+    <bpmn:sequenceFlow id="Flow_P4_19" name="non" sourceRef="sv_gw_active" targetRef="sv_fin_active" />
+    <bpmn:sequenceFlow id="Flow_P4_20" name="oui" sourceRef="sv_gw_active" targetRef="mg_choix" />
+    <bpmn:sequenceFlow id="Flow_P4_21" sourceRef="mg_choix" targetRef="sv_s1" />
+    <bpmn:sequenceFlow id="Flow_P4_22" sourceRef="sv_s1" targetRef="sv_ok" />
+    <bpmn:sequenceFlow id="Flow_P4_23" sourceRef="sv_ok" targetRef="p_recharger" />
+    <bpmn:sequenceFlow id="Flow_P4_24" sourceRef="p_recharger" targetRef="p_fin" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P4" name="P4 — Changement d'instance regardée">
+    <bpmndi:BPMNPlane id="Plane_P4" bpmnElement="Collab_P4">
+      <bpmndi:BPMNShape id="Part_P4_SuperAdmin_di" bpmnElement="Part_P4_SuperAdmin" isHorizontal="true"><dc:Bounds x="100" y="60" width="3050" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P4_Oasis_di" bpmnElement="Part_P4_Oasis" isHorizontal="true"><dc:Bounds x="100" y="220" width="3050" height="600" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P4_Portail_di" bpmnElement="Lane_P4_Portail" isHorizontal="true"><dc:Bounds x="130" y="220" width="3020" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P4_Serveur_di" bpmnElement="Lane_P4_Serveur" isHorizontal="true"><dc:Bounds x="130" y="460" width="3020" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P4_Magasin_di" bpmnElement="Lane_P4_Magasin" isHorizontal="true"><dc:Bounds x="130" y="700" width="3020" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_debut_di" bpmnElement="a_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_choisir_di" bpmnElement="a_choisir"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_travailler_di" bpmnElement="a_travailler"><dc:Bounds x="2735" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_fin_di" bpmnElement="a_fin"><dc:Bounds x="2932" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_debut_di" bpmnElement="p_debut"><dc:Bounds x="532" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_gw_nouv_di" bpmnElement="p_gw_nouv" isMarkerVisible="true"><dc:Bounds x="685" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_fin_nouv_di" bpmnElement="p_fin_nouv"><dc:Bounds x="692" y="382" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_gw_meme_di" bpmnElement="p_gw_meme" isMarkerVisible="true"><dc:Bounds x="845" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_fin_meme_di" bpmnElement="p_fin_meme"><dc:Bounds x="852" y="382" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_put_di" bpmnElement="p_put"><dc:Bounds x="975" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s2_di" bpmnElement="sv_s2"><dc:Bounds x="1135" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_session_di" bpmnElement="sv_gw_session" isMarkerVisible="true"><dc:Bounds x="1325" y="495" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_401_di" bpmnElement="sv_fin_401"><dc:Bounds x="1332" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_role_di" bpmnElement="sv_gw_role" isMarkerVisible="true"><dc:Bounds x="1485" y="495" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_role_di" bpmnElement="sv_fin_role"><dc:Bounds x="1492" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_portee_di" bpmnElement="sv_gw_portee" isMarkerVisible="true"><dc:Bounds x="1645" y="495" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_portee_di" bpmnElement="sv_fin_portee"><dc:Bounds x="1652" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_nom_di" bpmnElement="sv_gw_nom" isMarkerVisible="true"><dc:Bounds x="1805" y="495" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_nom_di" bpmnElement="sv_fin_nom"><dc:Bounds x="1812" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_active_di" bpmnElement="sv_gw_active" isMarkerVisible="true"><dc:Bounds x="1965" y="495" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_active_di" bpmnElement="sv_fin_active"><dc:Bounds x="1972" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="mg_choix_di" bpmnElement="mg_choix"><dc:Bounds x="2095" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s1_di" bpmnElement="sv_s1"><dc:Bounds x="2255" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_ok_di" bpmnElement="sv_ok"><dc:Bounds x="2415" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_recharger_di" bpmnElement="p_recharger"><dc:Bounds x="2575" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="p_fin_di" bpmnElement="p_fin"><dc:Bounds x="2772" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P4_1_di" bpmnElement="Flow_P4_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_2_di" bpmnElement="Flow_P4_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="2735" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_3_di" bpmnElement="Flow_P4_3">
+        <di:waypoint x="2845" y="120" />
+        <di:waypoint x="2932" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_4_di" bpmnElement="Flow_P4_4">
+        <di:waypoint x="568" y="280" />
+        <di:waypoint x="685" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_5_di" bpmnElement="Flow_P4_5">
+        <di:waypoint x="710" y="305" />
+        <di:waypoint x="710" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_6_di" bpmnElement="Flow_P4_6">
+        <di:waypoint x="735" y="280" />
+        <di:waypoint x="845" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_7_di" bpmnElement="Flow_P4_7">
+        <di:waypoint x="870" y="305" />
+        <di:waypoint x="870" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_8_di" bpmnElement="Flow_P4_8">
+        <di:waypoint x="895" y="280" />
+        <di:waypoint x="975" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_9_di" bpmnElement="Flow_P4_9">
+        <di:waypoint x="1085" y="280" />
+        <di:waypoint x="1105" y="280" />
+        <di:waypoint x="1105" y="520" />
+        <di:waypoint x="1135" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_10_di" bpmnElement="Flow_P4_10">
+        <di:waypoint x="1245" y="520" />
+        <di:waypoint x="1325" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_11_di" bpmnElement="Flow_P4_11">
+        <di:waypoint x="1350" y="545" />
+        <di:waypoint x="1350" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_12_di" bpmnElement="Flow_P4_12">
+        <di:waypoint x="1375" y="520" />
+        <di:waypoint x="1485" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_13_di" bpmnElement="Flow_P4_13">
+        <di:waypoint x="1510" y="545" />
+        <di:waypoint x="1510" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_14_di" bpmnElement="Flow_P4_14">
+        <di:waypoint x="1535" y="520" />
+        <di:waypoint x="1645" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_15_di" bpmnElement="Flow_P4_15">
+        <di:waypoint x="1670" y="545" />
+        <di:waypoint x="1670" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_16_di" bpmnElement="Flow_P4_16">
+        <di:waypoint x="1695" y="520" />
+        <di:waypoint x="1805" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_17_di" bpmnElement="Flow_P4_17">
+        <di:waypoint x="1830" y="545" />
+        <di:waypoint x="1830" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_18_di" bpmnElement="Flow_P4_18">
+        <di:waypoint x="1855" y="520" />
+        <di:waypoint x="1965" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_19_di" bpmnElement="Flow_P4_19">
+        <di:waypoint x="1990" y="545" />
+        <di:waypoint x="1990" y="622" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_20_di" bpmnElement="Flow_P4_20">
+        <di:waypoint x="2015" y="520" />
+        <di:waypoint x="2075" y="520" />
+        <di:waypoint x="2075" y="760" />
+        <di:waypoint x="2095" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_21_di" bpmnElement="Flow_P4_21">
+        <di:waypoint x="2205" y="760" />
+        <di:waypoint x="2225" y="760" />
+        <di:waypoint x="2225" y="520" />
+        <di:waypoint x="2255" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_22_di" bpmnElement="Flow_P4_22">
+        <di:waypoint x="2365" y="520" />
+        <di:waypoint x="2415" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_23_di" bpmnElement="Flow_P4_23">
+        <di:waypoint x="2525" y="520" />
+        <di:waypoint x="2545" y="520" />
+        <di:waypoint x="2545" y="280" />
+        <di:waypoint x="2575" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P4_24_di" bpmnElement="Flow_P4_24">
+        <di:waypoint x="2685" y="280" />
+        <di:waypoint x="2772" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P4_1_di" bpmnElement="Msg_P4_1">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="200" />
+        <di:waypoint x="550" y="200" />
+        <di:waypoint x="550" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P4_2_di" bpmnElement="Msg_P4_2">
+        <di:waypoint x="2630" y="240" />
+        <di:waypoint x="2630" y="200" />
+        <di:waypoint x="2790" y="200" />
+        <di:waypoint x="2790" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -22,10 +22,9 @@ interface Activite {
 }
 interface Nomme { id: string; nom?: string; code?: string; titre?: string; secteur_id?: string }
 interface Stats { [cle: string]: number | string | undefined }
-interface EtatBord { carteChoisie?: string; _dashboardInitialized?: boolean }
 
 const esc = (v: unknown): string => requis('_esc')(v);
-const bord = (): EtatBord => etat() as EtatBord;
+const bord = etat;
 
 // ── Indicateurs du tableau de bord ───────────────────────────────
 // Deux groupes : où en sont les plans, et ce qu'ils programment. Les

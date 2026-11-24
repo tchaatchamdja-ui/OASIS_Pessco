@@ -117,7 +117,7 @@ export function _prestataireColor(prestataireId: string | null | undefined): str
 // Export PDF : le document est composé ici puis remis à la fenêtre
 // d'impression du navigateur (aucun générateur PDF côté serveur).
 export function planExportPDF(planId: string): void {
-  const S = etat() as { selectedPlan?: Plan | null };
+  const S = etat();
   const plan = (S.selectedPlan && S.selectedPlan.id === planId)
     ? S.selectedPlan
     : donnees<Plan>('plans').find((p) => p.id === planId);

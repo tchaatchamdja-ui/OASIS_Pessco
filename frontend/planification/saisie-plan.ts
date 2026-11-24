@@ -24,11 +24,10 @@ interface Changement {
   current?: { risk_label?: string; csrbo?: number | string };
   avant?: { risk_label?: string; csrbo?: number | string }; apres?: { risk_label?: string; csrbo?: number | string };
 }
-interface EtatSaisie { prefillPrestataire?: string; _keepPrefill?: boolean; selectedPlan?: Plan | null }
 
 export const esc = (v: unknown): string => requis('_esc')(v);
 export const toast = (m: unknown, t: string): unknown => requis('oasisToast')(m, t);
-export const E = (): EtatSaisie => etat() as EtatSaisie;
+export const E = etat;
 const valeur = (id: string): string => (document.getElementById(id) as HTMLInputElement | null)?.value || '';
 const API = (): string => window.PLAN_MODULE_API;
 

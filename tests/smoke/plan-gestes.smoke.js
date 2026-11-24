@@ -400,6 +400,118 @@ module.exports = async function planGestesSmoke(port) {
         verifier('« Tout sélectionner » décoche puis recoche toutes les lignes à synchroniser',
           !!synchro && synchro.tout && synchro.cases > 0 && synchro.decochees && synchro.recochees,
           JSON.stringify(synchro));
+
+        // ── 4.e Les discussions d'un plan, chargées après son rendu ──
+        //
+        // Le détail charge ses commentaires cent millisecondes après le rendu.
+        // L'ancien minuteur lisait le plan choisi **à ce moment-là** : quitter
+        // le détail dans l'intervalle levait une exception — la page n'en
+        // disait rien, la console seule —, et ouvrir un autre plan chargeait
+        // ses commentaires deux fois (ADR-003, n° 5.f.106 et 5.f.109).
+        const minuteur = (bati.plan && bati.amendement) ? await page.evaluate(async ({ a, b }) => {
+          const attendre = (ms) => new Promise((ok) => setTimeout(ok, ms));
+          const erreurs = [];
+          const garde = (e) => erreurs.push(String(e.message || e.error));
+          const lectures = [];
+          const vrai = window.api;
+          window.addEventListener('error', garde);
+          window.api = (chemin, o) => {
+            const m = /\/plans\/([^/]+)\/commentaires$/.exec(chemin);
+            if (m) lectures.push(m[1] === a ? 'a' : (m[1] === b ? 'b' : m[1]));
+            return vrai(chemin, o);
+          };
+          const r = {};
+          try {
+            await planOpenDetail(a);
+            planNavigateTo('plans');
+            await attendre(500);
+            r.quitte = { erreurs: erreurs.splice(0), lectures: lectures.splice(0) };
+            await planOpenDetail(a);
+            await attendre(500);
+            r.reste = { erreurs: erreurs.splice(0), lectures: lectures.splice(0) };
+            await planOpenDetail(a);
+            await planOpenDetail(b);
+            await attendre(500);
+            r.enchaine = { erreurs: erreurs.splice(0), lectures: lectures.splice(0) };
+          } finally {
+            window.api = vrai;
+            window.removeEventListener('error', garde);
+            planNavigateTo('dashboard');
+          }
+          return r;
+        }, { a: bati.plan, b: bati.amendement }) : null;
+        verifier('le détail charge les discussions du plan qu’il montre, une fois — et rien s’il a été quitté entre-temps',
+          !!minuteur
+          && !minuteur.quitte.erreurs.length && !minuteur.quitte.lectures.length
+          && !minuteur.reste.erreurs.length && minuteur.reste.lectures.join() === 'a'
+          && !minuteur.enchaine.erreurs.length && minuteur.enchaine.lectures.join() === 'b',
+          JSON.stringify({ bati, minuteur }));
+
+        // ── 4.f Une réponse tardive des discussions ──
+        //
+        // `planLoadComments` retient son conteneur avant d'attendre le serveur.
+        // Deux courses sont possibles : la réponse d'un plan quitté arrive
+        // quand un autre est ouvert, et deux lectures du même plan reviennent
+        // dans le désordre. Chaque réponse est ici retenue, puis relâchée dans
+        // l'ordre choisi ; les discussions rendues sont factices, et nommées.
+        const tardive = (bati.plan && bati.amendement) ? await page.evaluate(async ({ a, b }) => {
+          const attendre = (ms) => new Promise((ok) => setTimeout(ok, ms));
+          const vrai = window.api;
+          const retenues = [];
+          const fil = (texte) => [{ id: texte, timeline_type: 'commentaire', contenu: texte, auteur: 'sonde' }];
+          window.api = (chemin, o) => {
+            const m = /\/plans\/([^/]+)\/commentaires$/.exec(chemin);
+            if (!m) return vrai(chemin, o);
+            return new Promise((ok) => retenues.push({ plan: m[1], ok }));
+          };
+          const lu = () => {
+            const c = document.getElementById('planCommentsContainer');
+            return c ? c.textContent.replace(/\s+/g, ' ').trim() : '(pas de conteneur)';
+          };
+          const r = {};
+          try {
+            // Le plan quitté : A est retenu, B s'ouvre, B répond, puis A.
+            await planOpenDetail(a);
+            await attendre(300);
+            const deA = retenues.splice(0);
+            await planOpenDetail(b);
+            await attendre(300);
+            const deB = retenues.splice(0);
+            deB.forEach((x) => x.ok(fil('discussion-de-B')));
+            await attendre(100);
+            r.avantA = lu();
+            deA.forEach((x) => x.ok(fil('discussion-de-A')));
+            await attendre(100);
+            r.apresA = lu();
+            r.plans = { a: deA.map((x) => x.plan === a), b: deB.map((x) => x.plan === b) };
+            // Le même plan, deux lectures : la seconde répond la première.
+            planLoadComments(b);
+            planLoadComments(b);
+            await attendre(50);
+            const deux = retenues.splice(0);
+            r.lectures = deux.length;
+            if (deux[1]) deux[1].ok(fil('lecture-recente'));
+            await attendre(50);
+            if (deux[0]) deux[0].ok(fil('lecture-ancienne'));
+            await attendre(100);
+            r.desordre = lu();
+          } finally {
+            window.api = vrai;
+            retenues.splice(0).forEach((x) => x.ok([]));
+            planNavigateTo('dashboard');
+          }
+          return r;
+        }, { a: bati.plan, b: bati.amendement }) : null;
+        // Mesuré le 15 novembre 2026, avant correction : la réponse d'un plan
+        // quitté n'écrit nulle part où l'on regarde — son conteneur est
+        // détaché par le rendu suivant —, mais deux lectures du même fil
+        // laissaient la plus ancienne écraser la plus récente (n° 5.f.112).
+        verifier('une réponse tardive des discussions n’écrase ni le plan ouvert ni une lecture plus récente',
+          !!tardive && tardive.plans.a.join() === 'true' && tardive.plans.b.join() === 'true'
+          && /discussion-de-B/.test(tardive.avantA) && /discussion-de-B/.test(tardive.apresA)
+          && !/discussion-de-A/.test(tardive.apresA)
+          && tardive.lectures === 2 && /lecture-recente/.test(tardive.desordre),
+          JSON.stringify(tardive));
       } finally {
         // ── Le ménage : l'amendement d'abord, puis le plan ──
         await page.evaluate(async ({ api, ids }) => {

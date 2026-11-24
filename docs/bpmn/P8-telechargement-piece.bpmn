@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_P8" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:collaboration id="Collab_P8">
+    <bpmn:documentation>Le téléchargement passe par une navigation de premier niveau, jamais par fetch + ancre cliquée (frontend/socle/commun.ts:400-437). Deux voies : GET direct, ou POST qui prépare la pièce sous un jeton puis GET du jeton (src/telechargement.js:141-191).</bpmn:documentation>
+    <bpmn:participant id="Part_P8_Agent" name="Agent de l'AAC" processRef="Proc_P8_Agent"></bpmn:participant>
+    <bpmn:participant id="Part_P8_Oasis" name="OASIS" processRef="Proc_P8_Oasis"></bpmn:participant>
+    <bpmn:messageFlow id="Msg_P8_1" name="clic" sourceRef="a_clic" targetRef="m_debut" />
+    <bpmn:messageFlow id="Msg_P8_2" name="fichier" sourceRef="n_enreg" targetRef="a_lire" />
+    <bpmn:messageFlow id="Msg_P8_3" name="page de refus, ou JSON brut" sourceRef="Part_P8_Oasis" targetRef="a_lire" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_P8_Agent" name="Agent — exporter" isExecutable="false">
+    <bpmn:startEvent id="a_debut" name="Exporter une pièce">
+      <bpmn:outgoing>Flow_P8_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="a_clic" name="« Exporter » ou « Télécharger »">
+      <bpmn:incoming>Flow_P8_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_lire" name="Ouvrir le fichier, ou lire le refus">
+      <bpmn:incoming>Flow_P8_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="a_fin" name="Pièce obtenue ou refus compris">
+      <bpmn:incoming>Flow_P8_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P8_1" sourceRef="a_debut" targetRef="a_clic" />
+    <bpmn:sequenceFlow id="Flow_P8_2" sourceRef="a_clic" targetRef="a_lire" />
+    <bpmn:sequenceFlow id="Flow_P8_3" sourceRef="a_lire" targetRef="a_fin" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P8_Oasis" name="P8_Telecharger" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_P8_Oasis">
+      <bpmn:lane id="Lane_P8_Module" name="Module (écran)">
+        <bpmn:flowNodeRef>m_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_gw</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_nav</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_post</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>m_nav2</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P8_Navigateur" name="Navigateur (navigation de premier niveau)">
+        <bpmn:flowNodeRef>n_get</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_fin_json</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_enreg</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>n_fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P8_Serveur" name="Serveur">
+        <bpmn:flowNodeRef>sv_s2b</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_preparer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_s2</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_session</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_page</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_route</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_droit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_403</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_produire</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw_jeton</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin_404</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_servir_jeton</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_piece</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="m_debut" name="Export demandé">
+      <bpmn:outgoing>Flow_P8_4</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="m_debut_def" />
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="m_gw" name="La demande tient-elle dans une adresse ?">
+      <bpmn:documentation>src/modules/execution/routes-dossiers.js:608-627</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P8_6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="m_nav" name="telecharger(url) : window.location.href = url">
+      <bpmn:documentation>frontend/socle/commun.ts:435-437</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_5</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_10</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="m_post" name="POST de préparation avec la sélection (X-OASIS-Request)">
+      <bpmn:documentation>Un refus revient en JSON et s'affiche traduit à l'écran (commun.ts:333-336)</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_7</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:callActivity id="sv_s2b" name="Garde d'origine et session (S2)" calledElement="Proc_S2_Oasis">
+      <bpmn:documentation>src/protections.js:197-205 ; server.js:108-136</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_8</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:task id="sv_preparer" name="Produire la pièce ; la déposer sous un jeton (5 min, lié au compte, usage unique)">
+      <bpmn:documentation>En mémoire du processus : perdue au redémarrage. src/telechargement.js:167-177 ; routes-dossiers.js:622-627</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_9</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="m_nav2" name="telecharger(adresse du jeton)">
+      <bpmn:documentation>commun.ts:435-437</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_9</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="n_get" name="GET de navigation, sans X-OASIS-Request">
+      <bpmn:documentation>C'est l'absence de l'en-tête qui marque une navigation : src/telechargement.js:75</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_10</bpmn:incoming>
+      <bpmn:incoming>Flow_P8_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_12</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:callActivity id="sv_s2" name="Contrôler la session (S2)" calledElement="Proc_S2_Oasis">
+      <bpmn:documentation>requireAuth est monté avant pageDeRefus sur chaque route : ex. routes-partage.js:161, routes-dossiers.js:633, routes-excel.js:152</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_12</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_13</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="sv_gw_session" name="Session valide ?">
+      <bpmn:incoming>Flow_P8_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_14</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P8_15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="n_fin_json" name="401 en JSON brut, affiché tel quel (écart)">
+      <bpmn:documentation>requireAuth répond (server.js:112) avant que pageDeRefus n'enveloppe res.json : la phrase « Votre session a expiré » (src/telechargement.js:95) n'est jamais servie. Le contrôle tests/smoke/unitaires.smoke.js:1995-2031 éprouve le middleware isolé.</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_14</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="sv_page" name="Poser pageDeRefus : un refus ≥ 400 devient une page HTML">
+      <bpmn:documentation>src/telechargement.js:103-140</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_16</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_gw_route" name="Pièce préparée (jeton) ?">
+      <bpmn:incoming>Flow_P8_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_17</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P8_21</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="sv_gw_droit" name="Droit de lecture sur la pièce ?">
+      <bpmn:documentation>Propre à chaque route (ex. lecture : routes-partage.js:161)</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_18</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P8_19</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_403" name="Page HTML « Téléchargement refusé » (403)">
+      <bpmn:documentation>src/telechargement.js:96, 106-126</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_18</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="sv_produire" name="Produire la pièce (XLSX, PDF, document)">
+      <bpmn:incoming>Flow_P8_19</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_20</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_gw_jeton" name="Jeton connu, non expiré, du même compte ?">
+      <bpmn:documentation>src/telechargement.js:181-188 ; routes-dossiers.js:633-637</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_21</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_22</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P8_23</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin_404" name="Page HTML 404 piece_expiree">
+      <bpmn:documentation>routes-dossiers.js:636</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_22</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:task id="sv_servir_jeton" name="Retirer le jeton (usage unique)">
+      <bpmn:documentation>src/telechargement.js:188</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_23</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_24</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_fus" name="">
+      <bpmn:incoming>Flow_P8_20</bpmn:incoming>
+      <bpmn:incoming>Flow_P8_24</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_25</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="sv_piece" name="Servir : Content-Type, Content-Disposition attachment, nom RFC 6266">
+      <bpmn:documentation>Un seul endroit pose l'en-tête : src/telechargement.js:53-71</bpmn:documentation>
+      <bpmn:incoming>Flow_P8_25</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_26</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="n_enreg" name="Enregistrer le fichier sans quitter la page">
+      <bpmn:incoming>Flow_P8_26</bpmn:incoming>
+      <bpmn:outgoing>Flow_P8_27</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:endEvent id="n_fin" name="Fichier enregistré">
+      <bpmn:incoming>Flow_P8_27</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P8_4" sourceRef="m_debut" targetRef="m_gw" />
+    <bpmn:sequenceFlow id="Flow_P8_5" name="oui : GET" sourceRef="m_gw" targetRef="m_nav" />
+    <bpmn:sequenceFlow id="Flow_P8_6" name="non : POST" sourceRef="m_gw" targetRef="m_post" />
+    <bpmn:sequenceFlow id="Flow_P8_7" sourceRef="m_post" targetRef="sv_s2b" />
+    <bpmn:sequenceFlow id="Flow_P8_8" sourceRef="sv_s2b" targetRef="sv_preparer" />
+    <bpmn:sequenceFlow id="Flow_P8_9" sourceRef="sv_preparer" targetRef="m_nav2" />
+    <bpmn:sequenceFlow id="Flow_P8_10" sourceRef="m_nav" targetRef="n_get" />
+    <bpmn:sequenceFlow id="Flow_P8_11" sourceRef="m_nav2" targetRef="n_get" />
+    <bpmn:sequenceFlow id="Flow_P8_12" sourceRef="n_get" targetRef="sv_s2" />
+    <bpmn:sequenceFlow id="Flow_P8_13" sourceRef="sv_s2" targetRef="sv_gw_session" />
+    <bpmn:sequenceFlow id="Flow_P8_14" name="non" sourceRef="sv_gw_session" targetRef="n_fin_json" />
+    <bpmn:sequenceFlow id="Flow_P8_15" name="oui" sourceRef="sv_gw_session" targetRef="sv_page" />
+    <bpmn:sequenceFlow id="Flow_P8_16" sourceRef="sv_page" targetRef="sv_gw_route" />
+    <bpmn:sequenceFlow id="Flow_P8_17" name="non : GET direct" sourceRef="sv_gw_route" targetRef="sv_gw_droit" />
+    <bpmn:sequenceFlow id="Flow_P8_18" name="non" sourceRef="sv_gw_droit" targetRef="sv_fin_403" />
+    <bpmn:sequenceFlow id="Flow_P8_19" name="oui" sourceRef="sv_gw_droit" targetRef="sv_produire" />
+    <bpmn:sequenceFlow id="Flow_P8_20" sourceRef="sv_produire" targetRef="sv_fus" />
+    <bpmn:sequenceFlow id="Flow_P8_21" name="oui" sourceRef="sv_gw_route" targetRef="sv_gw_jeton" />
+    <bpmn:sequenceFlow id="Flow_P8_22" name="non" sourceRef="sv_gw_jeton" targetRef="sv_fin_404" />
+    <bpmn:sequenceFlow id="Flow_P8_23" name="oui" sourceRef="sv_gw_jeton" targetRef="sv_servir_jeton" />
+    <bpmn:sequenceFlow id="Flow_P8_24" sourceRef="sv_servir_jeton" targetRef="sv_fus" />
+    <bpmn:sequenceFlow id="Flow_P8_25" sourceRef="sv_fus" targetRef="sv_piece" />
+    <bpmn:sequenceFlow id="Flow_P8_26" sourceRef="sv_piece" targetRef="n_enreg" />
+    <bpmn:sequenceFlow id="Flow_P8_27" sourceRef="n_enreg" targetRef="n_fin" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P8" name="P8 — Téléchargement d'une pièce">
+    <bpmndi:BPMNPlane id="Plane_P8" bpmnElement="Collab_P8">
+      <bpmndi:BPMNShape id="Part_P8_Agent_di" bpmnElement="Part_P8_Agent" isHorizontal="true"><dc:Bounds x="100" y="60" width="3210" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P8_Oasis_di" bpmnElement="Part_P8_Oasis" isHorizontal="true"><dc:Bounds x="100" y="220" width="3210" height="960" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P8_Module_di" bpmnElement="Lane_P8_Module" isHorizontal="true"><dc:Bounds x="130" y="220" width="3180" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P8_Navigateur_di" bpmnElement="Lane_P8_Navigateur" isHorizontal="true"><dc:Bounds x="130" y="460" width="3180" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P8_Serveur_di" bpmnElement="Lane_P8_Serveur" isHorizontal="true"><dc:Bounds x="130" y="700" width="3180" height="480" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_debut_di" bpmnElement="a_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_clic_di" bpmnElement="a_clic"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_lire_di" bpmnElement="a_lire"><dc:Bounds x="2895" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_fin_di" bpmnElement="a_fin"><dc:Bounds x="3092" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_debut_di" bpmnElement="m_debut"><dc:Bounds x="532" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_gw_di" bpmnElement="m_gw" isMarkerVisible="true"><dc:Bounds x="685" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_nav_di" bpmnElement="m_nav"><dc:Bounds x="815" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_post_di" bpmnElement="m_post"><dc:Bounds x="815" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s2b_di" bpmnElement="sv_s2b"><dc:Bounds x="975" y="960" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_preparer_di" bpmnElement="sv_preparer"><dc:Bounds x="1135" y="960" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="m_nav2_di" bpmnElement="m_nav2"><dc:Bounds x="1295" y="360" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_get_di" bpmnElement="n_get"><dc:Bounds x="1455" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_s2_di" bpmnElement="sv_s2"><dc:Bounds x="1615" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_session_di" bpmnElement="sv_gw_session" isMarkerVisible="true"><dc:Bounds x="1805" y="735" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_fin_json_di" bpmnElement="n_fin_json"><dc:Bounds x="1812" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_page_di" bpmnElement="sv_page"><dc:Bounds x="1935" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_route_di" bpmnElement="sv_gw_route" isMarkerVisible="true"><dc:Bounds x="2125" y="735" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_droit_di" bpmnElement="sv_gw_droit" isMarkerVisible="true"><dc:Bounds x="2285" y="735" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_403_di" bpmnElement="sv_fin_403"><dc:Bounds x="2292" y="862" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_produire_di" bpmnElement="sv_produire"><dc:Bounds x="2415" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_jeton_di" bpmnElement="sv_gw_jeton" isMarkerVisible="true"><dc:Bounds x="2285" y="975" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_404_di" bpmnElement="sv_fin_404"><dc:Bounds x="2292" y="1102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_servir_jeton_di" bpmnElement="sv_servir_jeton"><dc:Bounds x="2415" y="960" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fus_di" bpmnElement="sv_fus" isMarkerVisible="true"><dc:Bounds x="2605" y="735" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_piece_di" bpmnElement="sv_piece"><dc:Bounds x="2735" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_enreg_di" bpmnElement="n_enreg"><dc:Bounds x="2895" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="n_fin_di" bpmnElement="n_fin"><dc:Bounds x="3092" y="502" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P8_1_di" bpmnElement="Flow_P8_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_2_di" bpmnElement="Flow_P8_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="2895" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_3_di" bpmnElement="Flow_P8_3">
+        <di:waypoint x="3005" y="120" />
+        <di:waypoint x="3092" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_4_di" bpmnElement="Flow_P8_4">
+        <di:waypoint x="568" y="280" />
+        <di:waypoint x="685" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_5_di" bpmnElement="Flow_P8_5">
+        <di:waypoint x="735" y="280" />
+        <di:waypoint x="815" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_6_di" bpmnElement="Flow_P8_6">
+        <di:waypoint x="710" y="305" />
+        <di:waypoint x="710" y="400" />
+        <di:waypoint x="815" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_7_di" bpmnElement="Flow_P8_7">
+        <di:waypoint x="925" y="400" />
+        <di:waypoint x="945" y="400" />
+        <di:waypoint x="945" y="1000" />
+        <di:waypoint x="975" y="1000" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_8_di" bpmnElement="Flow_P8_8">
+        <di:waypoint x="1085" y="1000" />
+        <di:waypoint x="1135" y="1000" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_9_di" bpmnElement="Flow_P8_9">
+        <di:waypoint x="1245" y="1000" />
+        <di:waypoint x="1265" y="1000" />
+        <di:waypoint x="1265" y="400" />
+        <di:waypoint x="1295" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_10_di" bpmnElement="Flow_P8_10">
+        <di:waypoint x="925" y="280" />
+        <di:waypoint x="1435" y="280" />
+        <di:waypoint x="1435" y="520" />
+        <di:waypoint x="1455" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_11_di" bpmnElement="Flow_P8_11">
+        <di:waypoint x="1405" y="400" />
+        <di:waypoint x="1435" y="400" />
+        <di:waypoint x="1435" y="520" />
+        <di:waypoint x="1455" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_12_di" bpmnElement="Flow_P8_12">
+        <di:waypoint x="1565" y="520" />
+        <di:waypoint x="1585" y="520" />
+        <di:waypoint x="1585" y="760" />
+        <di:waypoint x="1615" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_13_di" bpmnElement="Flow_P8_13">
+        <di:waypoint x="1725" y="760" />
+        <di:waypoint x="1805" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_14_di" bpmnElement="Flow_P8_14">
+        <di:waypoint x="1830" y="735" />
+        <di:waypoint x="1830" y="658" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_15_di" bpmnElement="Flow_P8_15">
+        <di:waypoint x="1855" y="760" />
+        <di:waypoint x="1935" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_16_di" bpmnElement="Flow_P8_16">
+        <di:waypoint x="2045" y="760" />
+        <di:waypoint x="2125" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_17_di" bpmnElement="Flow_P8_17">
+        <di:waypoint x="2175" y="760" />
+        <di:waypoint x="2285" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_18_di" bpmnElement="Flow_P8_18">
+        <di:waypoint x="2310" y="785" />
+        <di:waypoint x="2310" y="862" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_19_di" bpmnElement="Flow_P8_19">
+        <di:waypoint x="2335" y="760" />
+        <di:waypoint x="2415" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_20_di" bpmnElement="Flow_P8_20">
+        <di:waypoint x="2525" y="760" />
+        <di:waypoint x="2605" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_21_di" bpmnElement="Flow_P8_21">
+        <di:waypoint x="2150" y="785" />
+        <di:waypoint x="2150" y="1000" />
+        <di:waypoint x="2285" y="1000" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_22_di" bpmnElement="Flow_P8_22">
+        <di:waypoint x="2310" y="1025" />
+        <di:waypoint x="2310" y="1102" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_23_di" bpmnElement="Flow_P8_23">
+        <di:waypoint x="2335" y="1000" />
+        <di:waypoint x="2415" y="1000" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_24_di" bpmnElement="Flow_P8_24">
+        <di:waypoint x="2525" y="1000" />
+        <di:waypoint x="2630" y="1000" />
+        <di:waypoint x="2630" y="785" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_25_di" bpmnElement="Flow_P8_25">
+        <di:waypoint x="2655" y="760" />
+        <di:waypoint x="2735" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_26_di" bpmnElement="Flow_P8_26">
+        <di:waypoint x="2845" y="760" />
+        <di:waypoint x="2865" y="760" />
+        <di:waypoint x="2865" y="520" />
+        <di:waypoint x="2895" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P8_27_di" bpmnElement="Flow_P8_27">
+        <di:waypoint x="3005" y="520" />
+        <di:waypoint x="3092" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P8_1_di" bpmnElement="Msg_P8_1">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="200" />
+        <di:waypoint x="550" y="200" />
+        <di:waypoint x="550" y="262" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P8_2_di" bpmnElement="Msg_P8_2">
+        <di:waypoint x="2950" y="480" />
+        <di:waypoint x="2950" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P8_3_di" bpmnElement="Msg_P8_3">
+        <di:waypoint x="2870" y="220" />
+        <di:waypoint x="2870" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

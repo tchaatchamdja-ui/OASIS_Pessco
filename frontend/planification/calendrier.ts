@@ -11,13 +11,11 @@
 // planRenderPage();` — et les écriront ainsi jusqu'à ce que l'aiguillage de
 // `pl-shell.js` soit converti : ils s'évaluent dans la portée de la page, où
 // `PLAN_STATE` et `planRenderPage` vivent.
-import type { EtatPlan } from './etat';
+import type { EtatPlan, FiltresCal } from './etat';
 import { etat, requis, tp } from './partage';
 
 const PLAN_CAL_MOIS_LONGS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
-type CleFiltre = 'domaine' | 'secteur' | 'prestataire' | 'annee' | 'trimestre' | 'responsable' | 'search';
-type FiltresCal = Record<CleFiltre, string>;
 
 interface Domaine { id: string; code: string; nom: string }
 interface Secteur { id: string; code: string; nom: string; domaine_id?: string }
@@ -29,14 +27,6 @@ interface Activite {
 }
 interface Plan { id: string; statut?: string; parent_plan_id?: string; annee?: number }
 
-/** Ce que l'état de la page porte pour le calendrier, posé à la première vue. */
-interface EtatCalendrier extends EtatPlan {
-  calendarYear?: number | null;
-  calendarView?: string;
-  calendarMonth?: number | null;
-  calendarWeek?: number;
-  calFilters?: FiltresCal | null;
-}
 
 interface Referentiels {
   domaines: Domaine[]; secteurs: Secteur[]; prestataires: Prestataire[]; inspecteurs: Inspecteur[];
@@ -51,10 +41,10 @@ function liste<T>(nom: string): T[] {
   return (etat().data[nom] || []) as T[];
 }
 
-const S = (): EtatCalendrier => etat() as EtatCalendrier;
+const S = etat;
 const esc = (v: unknown): string => requis('_esc')(v);
 const couleur = (id: string | undefined): string => requis('_prestataireColor')(id);
-const mois = (S_: EtatCalendrier): number => S_.calendarMonth ?? 0;
+const mois = (S_: EtatPlan): number => S_.calendarMonth ?? 0;
 
 export function planRenderCalendar(): string {
   const E = S();
@@ -236,7 +226,7 @@ function _planCalBarreFiltres(CF: FiltresCal, refs: Referentiels): string {
 // L'année n'en est pas : le diagramme porte toujours sur une année, et celle
 // par défaut se lit sans qu'aucun bouton ait été touché. La compter ferait
 // dépendre la liste d'un clic qui ne change rien au périmètre.
-const PLAN_CAL_FILTRES_PERIMETRE: CleFiltre[] = ['domaine', 'secteur', 'prestataire', 'trimestre', 'responsable', 'search'];
+const PLAN_CAL_FILTRES_PERIMETRE: (keyof FiltresCal)[] = ['domaine', 'secteur', 'prestataire', 'trimestre', 'responsable', 'search'];
 
 // Activités des plans validés qui touchent l'année, filtres du calendrier appliqués.
 function _planCalActivites(CF: FiltresCal, year: number, refs: Referentiels): Activite[] {

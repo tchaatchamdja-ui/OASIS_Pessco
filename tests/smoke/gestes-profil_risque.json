@@ -1,109 +1,10 @@
 {
- "releve": "2026-11-12",
+ "releve": "2026-11-19",
  "gestesNommes": 88,
  "occurrences": 167,
- "exerces": 78,
+ "exerces": 85,
  "indecidables": 3,
  "gestes": [
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 46,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "triggerFileUpload()",
-   "nom": "triggerFileUpload",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 47,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "handleDocFileSelected(event)",
-   "nom": "handleDocFileSelected",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 57,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "downloadDoc('${d.id}')",
-   "nom": "downloadDoc",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 58,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "deleteDoc('${d.id}')",
-   "nom": "deleteDoc",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 93,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "closeModal()",
-   "nom": "closeModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-bibliotheque.js",
-   "ligne": 94,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "uploadDocWithFile()",
-   "nom": "uploadDocWithFile",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 254,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashFilters.domaine=this.value;renderPage();",
-   "nom": "window._dashFilters.domaine",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 259,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashFilters.secteur=this.value;renderPage();",
-   "nom": "window._dashFilters.secteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 264,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashFilters.prestataire=this.value;renderPage();",
-   "nom": "window._dashFilters.prestataire",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 268,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "window._dashFilters={domaine:'',secteur:'',prestataire:''};renderPage();",
-   "nom": "window._dashFilters",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-dashboard.js",
-   "ligne": 275,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('dashPrintStart')",
-   "nom": "printPage",
-   "exerce": true
-  },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
    "ligne": 161,
@@ -282,7 +183,7 @@
    "evenement": "click",
    "source": "soumettreMesNotes('${evalId}')",
    "nom": "soumettreMesNotes",
-   "exerce": false
+   "exerce": true
   },
   {
    "fichier": "public/modules/profil_risque/js/pr-evaluation-fiche.js",
@@ -429,953 +330,6 @@
    "exerce": true
   },
   {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 88,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${gId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 95,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${sId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 334,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._evalFilters.domaine=this.value;renderPage();",
-   "nom": "window._evalFilters.domaine",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 341,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._evalFilters.secteur=this.value;renderPage();",
-   "nom": "window._evalFilters.secteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 348,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); ",
-   "nom": "_pesSearchInput",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 351,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "window._evalFilters={domaine:'',secteur:'',statut:'',search:''};renderPage();",
-   "nom": "window._evalFilters",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 424,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openEvalDetail('${ev.id}')",
-   "nom": "openEvalDetail",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 426,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "deleteEval('${ev.id}')",
-   "nom": "deleteEval",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 427,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${accId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 437,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('printStart_eval')",
-   "nom": "printPage",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 438,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openNewEvalModal()",
-   "nom": "openNewEvalModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 439,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('evalContainer',true)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 440,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('evalContainer',false)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 469,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._evalFilters.domaine=this.value;renderPage();",
-   "nom": "window._evalFilters.domaine",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 476,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._evalFilters.secteur=this.value;renderPage();",
-   "nom": "window._evalFilters.secteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 483,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); ",
-   "nom": "_pesSearchInput",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 486,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "window._evalFilters={domaine:'',secteur:'',statut:'',search:''};renderPage();",
-   "nom": "window._evalFilters",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 542,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openEvalDetail('${ev.id}')",
-   "nom": "openEvalDetail",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 543,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "exportEvalReport('${ev.id}','word')",
-   "nom": "exportEvalReport",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 544,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "exportEvalReport('${ev.id}','pdf')",
-   "nom": "exportEvalReport",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 545,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "deleteEval('${ev.id}')",
-   "nom": "deleteEval",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 546,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${accId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 553,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "updateCycleDate('${ev.id}','debut',this.value,${csrbo || 0},this)",
-   "nom": "updateCycleDate",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 559,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "updateCycleDate('${ev.id}','fin',this.value,${csrbo || 0},this)",
-   "nom": "updateCycleDate",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 563,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "reevaluerEval('${ev.id}')",
-   "nom": "reevaluerEval",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 575,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('printStart_results')",
-   "nom": "printPage",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 576,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('resultsContainer',true)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 577,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('resultsContainer',false)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 808,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "closeModal()",
-   "nom": "closeModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 809,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "createEval()",
-   "nom": "createEval",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-evaluations.js",
-   "ligne": 811,
-   "forme": "écouteur",
-   "evenement": "change",
-   "nom": "document.getElementById('evalPrestId'):change",
-   "source": "document.getElementById('evalPrestId').addEventListener('change', function() {",
-   "id": "evalPrestId",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-instances.js",
-   "ligne": 41,
-   "forme": "action de barre",
-   "evenement": "change",
-   "nom": "prAppliquerInstance",
-   "source": "(v) => prAppliquerInstance(v)",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 25,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "APP_STATE.currentSub='${o.id}';renderPage();",
-   "nom": "APP_STATE.currentSub",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 33,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "basculerBarreParam()",
-   "nom": "basculerBarreParam",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 142,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('printStart_indicateurs')",
-   "nom": "printPage",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 143,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "exportIndicateursExcel()",
-   "nom": "exportIndicateursExcel",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 144,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "document.getElementById('indImportFile').click();",
-   "nom": "document.getElementById",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 145,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "importIndicateursExcel(event)",
-   "nom": "importIndicateursExcel",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 147,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openEntityModal('indicateurs_conf')",
-   "nom": "openEntityModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 148,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openEntityModal('indicateurs_perf')",
-   "nom": "openEntityModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 149,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openEntityModal('indicateurs_complex')",
-   "nom": "openEntityModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 151,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('indAccordion',true)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 152,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('indAccordion',false)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 168,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._indFilters.type=this.value;renderPage();",
-   "nom": "window._indFilters.type",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 177,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._indFilters.domaine=this.value;renderPage();",
-   "nom": "window._indFilters.domaine",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 184,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._indFilters.secteur=this.value;renderPage();",
-   "nom": "window._indFilters.secteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 191,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._indFilters.sa=this.value;renderPage();",
-   "nom": "window._indFilters.sa",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 198,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "_pesSearchInput(this, () => { window._indFilters.search=document.getElementById('pr-ind-search').value; renderPage(); })",
-   "nom": "_pesSearchInput",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 201,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "window._indFilters={type:'',domaine:'',secteur:'',sa:'',search:''};renderPage();",
-   "nom": "window._indFilters",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 233,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${secAccId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 244,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openEntityModal('indicateurs_conf','${i.id}')",
-   "nom": "openEntityModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 259,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${confId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 280,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${perfId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 291,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openEntityModal('indicateurs_perf','${i.id}')",
-   "nom": "openEntityModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 352,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${saAccId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 363,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openEntityModal('indicateurs_complex','${i.id}')",
-   "nom": "openEntityModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 377,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${secAccId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 389,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${compId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 497,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "this.parentNode.remove()",
-   "nom": "this.parentNode.remove",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 595,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "closeModal()",
-   "nom": "closeModal",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 596,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "deleteEntity('${collection}','${itemId}')",
-   "nom": "deleteEntity",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 597,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "saveEntity('${collection}','${itemId||''}')",
-   "nom": "saveEntity",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 690,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "saveIndices()",
-   "nom": "saveIndices",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 788,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "document.getElementById('prNotifPanel')?.remove()",
-   "nom": "document.getElementById",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-parametres.js",
-   "ligne": 820,
-   "forme": "écouteur",
-   "evenement": "click",
-   "nom": "document:click",
-   "source": "document.addEventListener('click', handler);",
-   "id": null,
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 32,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._profilFilters.domaine=this.value;renderPage();",
-   "nom": "window._profilFilters.domaine",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 37,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._profilFilters.secteur=this.value;renderPage();",
-   "nom": "window._profilFilters.secteur",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 42,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._profilFilters.prestataire=this.value;renderPage();",
-   "nom": "window._profilFilters.prestataire",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 47,
-   "forme": "en ligne",
-   "evenement": "input",
-   "source": "_pesSearchInput(this, () => { window._profilFilters.search=document.getElementById('pr-profil-search').value; renderPage",
-   "nom": "_pesSearchInput",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 49,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "window._profilFilters={domaine:'',secteur:'',prestataire:'',search:''};renderPage();",
-   "nom": "window._profilFilters",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 90,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "exportEvalReport('${ev.id}','word')",
-   "nom": "exportEvalReport",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 91,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "exportEvalReport('${ev.id}','pdf')",
-   "nom": "exportEvalReport",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 92,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "deleteEval('${ev.id}')",
-   "nom": "deleteEval",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 100,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('printStart_profils')",
-   "nom": "printPage",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 101,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('profilsContainer',true)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 102,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('profilsContainer',false)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 150,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "exportEvalReport('${ev.id}','pdf')",
-   "nom": "exportEvalReport",
-   "exerce": false
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 156,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${grpAccId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 169,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('printStart_archives')",
-   "nom": "printPage",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 170,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('archivesContainer',true)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 171,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('archivesContainer',false)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 724,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "ouvrirProfilPrestataire('${en.id}')",
-   "nom": "ouvrirProfilPrestataire",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 742,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "ouvrirProfilPrestataire('${en.id}')",
-   "nom": "ouvrirProfilPrestataire",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 781,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "setVueApercu('${v.id}')",
-   "nom": "setVueApercu",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 787,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "retourVuePrestataires()",
-   "nom": "retourVuePrestataires",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 793,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "printPage('printStart_indiv')",
-   "nom": "printPage",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 916,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openIndividualIndicator('${ev.id}','${type}','${ind.id}'${_saAttr})",
-   "nom": "openIndividualIndicator",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 929,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${aId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 933,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "event.stopPropagation();openIndividualGroup('${ev.id}','${type}','${sa.id}')",
-   "nom": "openIndividualGroup",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 944,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "toggleAccordion('${aId}')",
-   "nom": "toggleAccordion",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 974,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "openIndividualGroup('${ev.id}','perf','')",
-   "nom": "openIndividualGroup",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 997,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('indivContainer',true)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 998,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "expandCollapseAll('indivContainer',false)",
-   "nom": "expandCollapseAll",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1240,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "window._dashTrend={mode:'prestataire',metric:'conf',start:'',end:''};renderPage();",
-   "nom": "window._dashTrend",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1246,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashTrend.mode=this.value;renderPage();",
-   "nom": "window._dashTrend.mode",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1252,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashTrend.metric=this.value;renderPage();",
-   "nom": "window._dashTrend.metric",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1259,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashTrend.start=this.value;renderPage();",
-   "nom": "window._dashTrend.start",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1262,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashTrend.end=this.value;renderPage();",
-   "nom": "window._dashTrend.end",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1358,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "setSABarSelection('${safeSaId}')",
-   "nom": "setSABarSelection",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1359,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "setSABarSelection('${safeSaId}')",
-   "nom": "setSABarSelection",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1550,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "setTauxBarSelection('${safeGid}')",
-   "nom": "setTauxBarSelection",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1553,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "setTauxBarSelection('${safeGid}')",
-   "nom": "setTauxBarSelection",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1570,
-   "forme": "en ligne",
-   "evenement": "click",
-   "source": "window._dashBarChart={mode:'secteur',metric:'conf',secteur:'',prestataire:'',selected:''};renderPage();",
-   "nom": "window._dashBarChart",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1576,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashBarChart.mode=this.value;window._dashBarChart.selected='';renderPage();",
-   "nom": "window._dashBarChart.mode",
-   "exerce": true
-  },
-  {
-   "fichier": "public/modules/profil_risque/js/pr-profils.js",
-   "ligne": 1582,
-   "forme": "en ligne",
-   "evenement": "change",
-   "source": "window._dashBarChart.metric=this.value;renderPage();",
-   "nom": "window._dashBarChart.metric",
-   "exerce": true
-  },
-  {
    "fichier": "public/modules/profil_risque/js/pr-shell.js",
    "ligne": 241,
    "forme": "en ligne",
@@ -1513,6 +467,1052 @@
    "source": "ta.addEventListener('input', grow);",
    "id": null,
    "exerce": null
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 52,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "triggerFileUpload()",
+   "nom": "triggerFileUpload",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 53,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "handleDocFileSelected(event)",
+   "nom": "handleDocFileSelected",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 63,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "downloadDoc('${d.id}')",
+   "nom": "downloadDoc",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 64,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "deleteDoc('${d.id}')",
+   "nom": "deleteDoc",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 100,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "closeModal()",
+   "nom": "closeModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/bibliotheque.ts",
+   "ligne": 101,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "uploadDocWithFile()",
+   "nom": "uploadDocWithFile",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations-commun.ts",
+   "ligne": 106,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${gId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations-commun.ts",
+   "ligne": 113,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${sId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 52,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._evalFilters.domaine=this.value;renderPage();",
+   "nom": "window._evalFilters.domaine",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 59,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._evalFilters.secteur=this.value;renderPage();",
+   "nom": "window._evalFilters.secteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 66,
+   "forme": "en ligne",
+   "evenement": "input",
+   "source": "_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); ",
+   "nom": "_pesSearchInput",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 69,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window._evalFilters={domaine:'',secteur:'',statut:'',search:''};renderPage();",
+   "nom": "window._evalFilters",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 143,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openEvalDetail('${ev.id}')",
+   "nom": "openEvalDetail",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 145,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "deleteEval('${ev.id}')",
+   "nom": "deleteEval",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 146,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${accId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 156,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "printPage('printStart_eval')",
+   "nom": "printPage",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 157,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openNewEvalModal()",
+   "nom": "openNewEvalModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 158,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('evalContainer',true)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 159,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('evalContainer',false)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 188,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._evalFilters.domaine=this.value;renderPage();",
+   "nom": "window._evalFilters.domaine",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 195,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._evalFilters.secteur=this.value;renderPage();",
+   "nom": "window._evalFilters.secteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 202,
+   "forme": "en ligne",
+   "evenement": "input",
+   "source": "_pesSearchInput(this, () => { window._evalFilters.search=document.getElementById('pr-eval-search').value; renderPage(); ",
+   "nom": "_pesSearchInput",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 205,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window._evalFilters={domaine:'',secteur:'',statut:'',search:''};renderPage();",
+   "nom": "window._evalFilters",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 262,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openEvalDetail('${ev.id}')",
+   "nom": "openEvalDetail",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 263,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "exportEvalReport('${ev.id}','word')",
+   "nom": "exportEvalReport",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 264,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "exportEvalReport('${ev.id}','pdf')",
+   "nom": "exportEvalReport",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 265,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "deleteEval('${ev.id}')",
+   "nom": "deleteEval",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 266,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${accId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 273,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "updateCycleDate('${ev.id}','debut',this.value,${csrbo || 0},this)",
+   "nom": "updateCycleDate",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 279,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "updateCycleDate('${ev.id}','fin',this.value,${csrbo || 0},this)",
+   "nom": "updateCycleDate",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 283,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "reevaluerEval('${ev.id}')",
+   "nom": "reevaluerEval",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 295,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "printPage('printStart_results')",
+   "nom": "printPage",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 296,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('resultsContainer',true)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/evaluations.ts",
+   "ligne": 297,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('resultsContainer',false)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/instances.ts",
+   "ligne": 49,
+   "forme": "action de barre",
+   "evenement": "change",
+   "nom": "prAppliquerInstance",
+   "source": "(v) => prAppliquerInstance(v)",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/notifications.ts",
+   "ligne": 90,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "document.getElementById('prNotifPanel')?.remove()",
+   "nom": "document.getElementById",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/notifications.ts",
+   "ligne": 123,
+   "forme": "écouteur",
+   "evenement": "click",
+   "nom": "document:click",
+   "source": "document.addEventListener('click', handler);",
+   "id": null,
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/nouvelle-evaluation.ts",
+   "ligne": 55,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "closeModal()",
+   "nom": "closeModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/nouvelle-evaluation.ts",
+   "ligne": 56,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "createEval()",
+   "nom": "createEval",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/nouvelle-evaluation.ts",
+   "ligne": 60,
+   "forme": "écouteur",
+   "evenement": "change",
+   "nom": "champPrest:change",
+   "source": "champPrest.addEventListener('change', function (this: HTMLSelectElement) {",
+   "id": "evalPrestId",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres-saisie.ts",
+   "ligne": 120,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "this.parentNode.remove()",
+   "nom": "this.parentNode.remove",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres-saisie.ts",
+   "ligne": 213,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "closeModal()",
+   "nom": "closeModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres-saisie.ts",
+   "ligne": 214,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "deleteEntity('${collection}','${itemId}')",
+   "nom": "deleteEntity",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres-saisie.ts",
+   "ligne": 215,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "saveEntity('${collection}','${itemId||''}')",
+   "nom": "saveEntity",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres-saisie.ts",
+   "ligne": 308,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "saveIndices()",
+   "nom": "saveIndices",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 51,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "APP_STATE.currentSub='${o.id}';renderPage();",
+   "nom": "APP_STATE.currentSub",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 59,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "basculerBarreParam()",
+   "nom": "basculerBarreParam",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 171,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "printPage('printStart_indicateurs')",
+   "nom": "printPage",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 172,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "exportIndicateursExcel()",
+   "nom": "exportIndicateursExcel",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 173,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "document.getElementById('indImportFile').click();",
+   "nom": "document.getElementById",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 174,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "importIndicateursExcel(event)",
+   "nom": "importIndicateursExcel",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 176,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openEntityModal('indicateurs_conf')",
+   "nom": "openEntityModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 177,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openEntityModal('indicateurs_perf')",
+   "nom": "openEntityModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 178,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openEntityModal('indicateurs_complex')",
+   "nom": "openEntityModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 180,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('indAccordion',true)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 181,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('indAccordion',false)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 197,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._indFilters.type=this.value;renderPage();",
+   "nom": "window._indFilters.type",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 206,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._indFilters.domaine=this.value;renderPage();",
+   "nom": "window._indFilters.domaine",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 213,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._indFilters.secteur=this.value;renderPage();",
+   "nom": "window._indFilters.secteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 220,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._indFilters.sa=this.value;renderPage();",
+   "nom": "window._indFilters.sa",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 227,
+   "forme": "en ligne",
+   "evenement": "input",
+   "source": "_pesSearchInput(this, () => { window._indFilters.search=document.getElementById('pr-ind-search').value; renderPage(); })",
+   "nom": "_pesSearchInput",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 230,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window._indFilters={type:'',domaine:'',secteur:'',sa:'',search:''};renderPage();",
+   "nom": "window._indFilters",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 262,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${secAccId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 273,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openEntityModal('indicateurs_conf','${i.id}')",
+   "nom": "openEntityModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 288,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${confId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 309,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${perfId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 320,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openEntityModal('indicateurs_perf','${i.id}')",
+   "nom": "openEntityModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 381,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${saAccId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 392,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openEntityModal('indicateurs_complex','${i.id}')",
+   "nom": "openEntityModal",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 406,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${secAccId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/parametres.ts",
+   "ligne": 418,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${compId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 143,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "ouvrirProfilPrestataire('${en.id}')",
+   "nom": "ouvrirProfilPrestataire",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 161,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "ouvrirProfilPrestataire('${en.id}')",
+   "nom": "ouvrirProfilPrestataire",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 200,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "setVueApercu('${v.id}')",
+   "nom": "setVueApercu",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 206,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "retourVuePrestataires()",
+   "nom": "retourVuePrestataires",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 212,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "printPage('printStart_indiv')",
+   "nom": "printPage",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 337,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openIndividualIndicator('${(ev as EvaluationPr).id}','${type}','${ind.id}'${_saAttr})",
+   "nom": "openIndividualIndicator",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 350,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${aId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 354,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "event.stopPropagation();openIndividualGroup('${(ev as EvaluationPr).id}','${type}','${sa.id}')",
+   "nom": "openIndividualGroup",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 365,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${aId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 395,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "openIndividualGroup('${ev.id}','perf','')",
+   "nom": "openIndividualGroup",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 418,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('indivContainer',true)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils-apercu.ts",
+   "ligne": 419,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('indivContainer',false)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 52,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._profilFilters.domaine=this.value;renderPage();",
+   "nom": "window._profilFilters.domaine",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 57,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._profilFilters.secteur=this.value;renderPage();",
+   "nom": "window._profilFilters.secteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 62,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._profilFilters.prestataire=this.value;renderPage();",
+   "nom": "window._profilFilters.prestataire",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 67,
+   "forme": "en ligne",
+   "evenement": "input",
+   "source": "_pesSearchInput(this, () => { window._profilFilters.search=document.getElementById('pr-profil-search').value; renderPage",
+   "nom": "_pesSearchInput",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 69,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window._profilFilters={domaine:'',secteur:'',prestataire:'',search:''};renderPage();",
+   "nom": "window._profilFilters",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 112,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "exportEvalReport('${ev.id}','word')",
+   "nom": "exportEvalReport",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 113,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "exportEvalReport('${ev.id}','pdf')",
+   "nom": "exportEvalReport",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 114,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "deleteEval('${ev.id}')",
+   "nom": "deleteEval",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 122,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "printPage('printStart_profils')",
+   "nom": "printPage",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 123,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('profilsContainer',true)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 124,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('profilsContainer',false)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 174,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "exportEvalReport('${ev.id}','pdf')",
+   "nom": "exportEvalReport",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 180,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "toggleAccordion('${grpAccId}')",
+   "nom": "toggleAccordion",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 193,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "printPage('printStart_archives')",
+   "nom": "printPage",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 194,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('archivesContainer',true)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/profils.ts",
+   "ligne": 195,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "expandCollapseAll('archivesContainer',false)",
+   "nom": "expandCollapseAll",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques-indicateurs.ts",
+   "ligne": 172,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "setTauxBarSelection('${safeGid}')",
+   "nom": "setTauxBarSelection",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques-indicateurs.ts",
+   "ligne": 175,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "setTauxBarSelection('${safeGid}')",
+   "nom": "setTauxBarSelection",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques-indicateurs.ts",
+   "ligne": 192,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window._dashBarChart={mode:'secteur',metric:'conf',secteur:'',prestataire:'',selected:''};renderPage();",
+   "nom": "window._dashBarChart",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques-indicateurs.ts",
+   "ligne": 198,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashBarChart.mode=this.value;window._dashBarChart.selected='';renderPage();",
+   "nom": "window._dashBarChart.mode",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques-indicateurs.ts",
+   "ligne": 204,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashBarChart.metric=this.value;renderPage();",
+   "nom": "window._dashBarChart.metric",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques.ts",
+   "ligne": 197,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window._dashTrend={mode:'prestataire',metric:'conf',start:'',end:''};renderPage();",
+   "nom": "window._dashTrend",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques.ts",
+   "ligne": 203,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashTrend.mode=this.value;renderPage();",
+   "nom": "window._dashTrend.mode",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques.ts",
+   "ligne": 209,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashTrend.metric=this.value;renderPage();",
+   "nom": "window._dashTrend.metric",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques.ts",
+   "ligne": 216,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashTrend.start=this.value;renderPage();",
+   "nom": "window._dashTrend.start",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques.ts",
+   "ligne": 219,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashTrend.end=this.value;renderPage();",
+   "nom": "window._dashTrend.end",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques.ts",
+   "ligne": 316,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "setSABarSelection('${safeSaId}')",
+   "nom": "setSABarSelection",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/statistiques.ts",
+   "ligne": 317,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "setSABarSelection('${safeSaId}')",
+   "nom": "setSABarSelection",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 291,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashFilters.domaine=this.value;renderPage();",
+   "nom": "window._dashFilters.domaine",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 296,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashFilters.secteur=this.value;renderPage();",
+   "nom": "window._dashFilters.secteur",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 301,
+   "forme": "en ligne",
+   "evenement": "change",
+   "source": "window._dashFilters.prestataire=this.value;renderPage();",
+   "nom": "window._dashFilters.prestataire",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 305,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "window._dashFilters={domaine:'',secteur:'',prestataire:''};renderPage();",
+   "nom": "window._dashFilters",
+   "exerce": true
+  },
+  {
+   "fichier": "frontend/profil_risque/tableau-de-bord.ts",
+   "ligne": 312,
+   "forme": "en ligne",
+   "evenement": "click",
+   "source": "printPage('dashPrintStart')",
+   "nom": "printPage",
+   "exerce": true
   }
  ]
 }

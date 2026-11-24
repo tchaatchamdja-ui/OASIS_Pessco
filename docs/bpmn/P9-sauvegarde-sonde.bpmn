@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Defs_P9" targetNamespace="urn:oasis:socle:bpmn" exporter="OASIS docs/bpmn (généré)" exporterVersion="1">
+  <bpmn:error id="Error_P9_DONNEES_INTROUVABLES" name="DONNEES_INTROUVABLES" errorCode="DONNEES_INTROUVABLES" />
+  <bpmn:error id="Error_P9_ARCHIVE_INTERROMPUE" name="ARCHIVE_INTERROMPUE" errorCode="ARCHIVE_INTERROMPUE" />
+  <bpmn:collaboration id="Collab_P9">
+    <bpmn:documentation>Deux déclencheurs indépendants : la tâche planifiée qui archive (scripts/sauvegarde.sh) et la sonde du serveur qui dit si les archives existent (src/sauvegardes.js ; server.js:1225-1228). Conduite d'exploitation : DEPLOYMENT.md:271-317, 350-358.</bpmn:documentation>
+    <bpmn:participant id="Part_P9_Exploitant" name="Exploitant" processRef="Proc_P9_Exploitant"></bpmn:participant>
+    <bpmn:participant id="Part_P9_Oasis" name="OASIS" processRef="Proc_P9_Oasis"></bpmn:participant>
+    <bpmn:messageFlow id="Msg_P9_1" name="crontab, OASIS_SAUVEGARDES_DIR" sourceRef="a_planifier" targetRef="Part_P9_Oasis" />
+    <bpmn:messageFlow id="Msg_P9_2" name="traces du verdict" sourceRef="Part_P9_Oasis" targetRef="a_surveiller" />
+  </bpmn:collaboration>
+  <bpmn:process id="Proc_P9_Exploitant" name="Exploitant — protéger les données" isExecutable="false">
+    <bpmn:startEvent id="a_debut" name="Mise en service">
+      <bpmn:outgoing>Flow_P9_1</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="a_planifier" name="Planifier le script (crontab) ; poser OASIS_SAUVEGARDES_DIR">
+      <bpmn:documentation>DEPLOYMENT.md:283-293</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_1</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_2</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="a_surveiller" name="Surveiller les traces de niveau erreur ; rétablir">
+      <bpmn:documentation>Aucune procédure de restauration n'est écrite (écart) ; une archive restaurée n'emporte pas de verrou (DEPLOYMENT.md:256-257).</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="a_fin" name="Données protégées, ou défaut connu">
+      <bpmn:incoming>Flow_P9_3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P9_1" sourceRef="a_debut" targetRef="a_planifier" />
+    <bpmn:sequenceFlow id="Flow_P9_2" sourceRef="a_planifier" targetRef="a_surveiller" />
+    <bpmn:sequenceFlow id="Flow_P9_3" sourceRef="a_surveiller" targetRef="a_fin" />
+  </bpmn:process>
+  <bpmn:process id="Proc_P9_Oasis" name="P9_Sauvegarde" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_P9_Oasis">
+      <bpmn:lane id="Lane_P9_Script" name="Script scripts/sauvegarde.sh">
+        <bpmn:flowNodeRef>sc_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sc_gw_source</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sc_fin_source</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sc_tar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sc_gw_tar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sc_fin_tar</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sc_annonce</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sc_fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P9_Disque" name="Système de fichiers">
+        <bpmn:flowNodeRef>fs_dest</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>fs_retention</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>fs_lister</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_P9_Serveur" name="Serveur — sonde">
+        <bpmn:flowNodeRef>sv_debut</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_gw</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_info</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_alerte</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_erreur</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>sv_fin</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="sc_debut" name="Chaque jour à 2 h (cron)">
+      <bpmn:documentation>DEPLOYMENT.md:285-287 ; scripts/sauvegarde.sh:3-5</bpmn:documentation>
+      <bpmn:outgoing>Flow_P9_4</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="sc_debut_def"><bpmn:timeCycle xsi:type="bpmn:tFormalExpression">0 2 * * *</bpmn:timeCycle></bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:exclusiveGateway id="sc_gw_source" name="Répertoire de données trouvé ?">
+      <bpmn:documentation>OASIS_DATA_DIR ou data/ : scripts/sauvegarde.sh:9, 15</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_5</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P9_6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sc_fin_source" name="exit 1 : données introuvables">
+      <bpmn:documentation>scripts/sauvegarde.sh:15</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_5</bpmn:incoming>
+      <bpmn:errorEventDefinition id="sc_fin_source_def" errorRef="Error_P9_DONNEES_INTROUVABLES" />
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="fs_dest" name="Créer le répertoire de destination">
+      <bpmn:documentation>scripts/sauvegarde.sh:10, 16</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_6</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_7</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:task id="sc_tar" name="tar czf vers le nom final, sans .verrou ni .sonde">
+      <bpmn:documentation>scripts/sauvegarde.sh:23-24. Écarts : seul le répertoire de données est archivé — ni config/ (contrairement au README), ni les collections en PostgreSQL ; prise à chaud, les journaux .jsonl en cours d'ajout ne sont pas couverts par le commentaire des lignes 17-18.</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_7</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_8</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sc_gw_tar" name="tar a-t-il abouti ?">
+      <bpmn:documentation>set -eu : scripts/sauvegarde.sh:6</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_8</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_9</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P9_10</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sc_fin_tar" name="Arrêt : archive partielle laissée sous son nom final (écart)">
+      <bpmn:documentation>Aucun nettoyage ; la sonde ne la voit « tronquée » que sous 10 Kio (src/sauvegardes.js:49, 122).</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_9</bpmn:incoming>
+      <bpmn:errorEventDefinition id="sc_fin_tar_def" errorRef="Error_P9_ARCHIVE_INTERROMPUE" />
+    </bpmn:endEvent>
+    <bpmn:task id="sc_annonce" name="Annoncer l'archive et sa taille">
+      <bpmn:documentation>scripts/sauvegarde.sh:25</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_10</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_11</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:serviceTask id="fs_retention" name="Effacer les archives de plus de N jours (30)">
+      <bpmn:documentation>scripts/sauvegarde.sh:11, 28. Écart : par l'âge seul, sans regarder si les archives restantes sont valides.</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_11</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="sc_fin" name="Archive écrite ; nombre conservé annoncé">
+      <bpmn:documentation>scripts/sauvegarde.sh:29</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:startEvent id="sv_debut" name="Au démarrage, puis toutes les 24 h">
+      <bpmn:documentation>Sauf OASIS_SONDE_SAUVEGARDES=0 : server.js:1225-1228</bpmn:documentation>
+      <bpmn:outgoing>Flow_P9_13</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="sv_debut_def"><bpmn:timeCycle xsi:type="bpmn:tFormalExpression">R/PT24H</bpmn:timeCycle></bpmn:timerEventDefinition>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="fs_lister" name="Lister les oasis-data-AAAAMMJJ-HHMMSS.tgz">
+      <bpmn:documentation>OASIS_SAUVEGARDES_DIR ou ./sauvegardes : src/sauvegardes.js:36, 51-52, 88-105</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_13</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_14</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="sv_gw" name="Verdict ?">
+      <bpmn:documentation>src/sauvegardes.js:78-125 ; seuil 26 h (41, 54-57), plancher 10 Kio (49)</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_14</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_15</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P9_16</bpmn:outgoing>
+      <bpmn:outgoing>Flow_P9_17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:task id="sv_info" name="Tracer « ok » (info)">
+      <bpmn:documentation>src/sauvegardes.js:146-169</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_15</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_18</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="sv_alerte" name="Tracer « non_configure » (alerte)">
+      <bpmn:documentation>La sonde ne sait pas : src/sauvegardes.js:91-93, 130-132, 147</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_19</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:task id="sv_erreur" name="Tracer « aucune », « tronquee » ou « perimee » (erreur)">
+      <bpmn:documentation>src/sauvegardes.js:107, 122-123, 133-137, 147</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_17</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_20</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:exclusiveGateway id="sv_fus" name="">
+      <bpmn:incoming>Flow_P9_18</bpmn:incoming>
+      <bpmn:incoming>Flow_P9_19</bpmn:incoming>
+      <bpmn:incoming>Flow_P9_20</bpmn:incoming>
+      <bpmn:outgoing>Flow_P9_21</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="sv_fin" name="Verdict tracé ; /api/health le rend aussi">
+      <bpmn:documentation>Le statut global de /api/health ne passe pas à « degrade » pour une sauvegarde manquante : DEPLOYMENT.md:312-315.</bpmn:documentation>
+      <bpmn:incoming>Flow_P9_21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_P9_4" sourceRef="sc_debut" targetRef="sc_gw_source" />
+    <bpmn:sequenceFlow id="Flow_P9_5" name="non" sourceRef="sc_gw_source" targetRef="sc_fin_source" />
+    <bpmn:sequenceFlow id="Flow_P9_6" name="oui" sourceRef="sc_gw_source" targetRef="fs_dest" />
+    <bpmn:sequenceFlow id="Flow_P9_7" sourceRef="fs_dest" targetRef="sc_tar" />
+    <bpmn:sequenceFlow id="Flow_P9_8" sourceRef="sc_tar" targetRef="sc_gw_tar" />
+    <bpmn:sequenceFlow id="Flow_P9_9" name="non" sourceRef="sc_gw_tar" targetRef="sc_fin_tar" />
+    <bpmn:sequenceFlow id="Flow_P9_10" name="oui" sourceRef="sc_gw_tar" targetRef="sc_annonce" />
+    <bpmn:sequenceFlow id="Flow_P9_11" sourceRef="sc_annonce" targetRef="fs_retention" />
+    <bpmn:sequenceFlow id="Flow_P9_12" sourceRef="fs_retention" targetRef="sc_fin" />
+    <bpmn:sequenceFlow id="Flow_P9_13" sourceRef="sv_debut" targetRef="fs_lister" />
+    <bpmn:sequenceFlow id="Flow_P9_14" sourceRef="fs_lister" targetRef="sv_gw" />
+    <bpmn:sequenceFlow id="Flow_P9_15" name="archive plausible dans le seuil" sourceRef="sv_gw" targetRef="sv_info" />
+    <bpmn:sequenceFlow id="Flow_P9_16" name="répertoire introuvable" sourceRef="sv_gw" targetRef="sv_alerte" />
+    <bpmn:sequenceFlow id="Flow_P9_17" name="vide, trop petite ou trop vieille" sourceRef="sv_gw" targetRef="sv_erreur" />
+    <bpmn:sequenceFlow id="Flow_P9_18" sourceRef="sv_info" targetRef="sv_fus" />
+    <bpmn:sequenceFlow id="Flow_P9_19" sourceRef="sv_alerte" targetRef="sv_fus" />
+    <bpmn:sequenceFlow id="Flow_P9_20" sourceRef="sv_erreur" targetRef="sv_fus" />
+    <bpmn:sequenceFlow id="Flow_P9_21" sourceRef="sv_fus" targetRef="sv_fin" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="Diagram_P9" name="P9 — Sauvegarde et sonde des sauvegardes">
+    <bpmndi:BPMNPlane id="Plane_P9" bpmnElement="Collab_P9">
+      <bpmndi:BPMNShape id="Part_P9_Exploitant_di" bpmnElement="Part_P9_Exploitant" isHorizontal="true"><dc:Bounds x="100" y="60" width="1610" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Part_P9_Oasis_di" bpmnElement="Part_P9_Oasis" isHorizontal="true"><dc:Bounds x="100" y="220" width="1610" height="720" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P9_Script_di" bpmnElement="Lane_P9_Script" isHorizontal="true"><dc:Bounds x="130" y="220" width="1580" height="240" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P9_Disque_di" bpmnElement="Lane_P9_Disque" isHorizontal="true"><dc:Bounds x="130" y="460" width="1580" height="120" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_P9_Serveur_di" bpmnElement="Lane_P9_Serveur" isHorizontal="true"><dc:Bounds x="130" y="580" width="1580" height="360" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_debut_di" bpmnElement="a_debut"><dc:Bounds x="212" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_planifier_di" bpmnElement="a_planifier"><dc:Bounds x="335" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_surveiller_di" bpmnElement="a_surveiller"><dc:Bounds x="1135" y="80" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="a_fin_di" bpmnElement="a_fin"><dc:Bounds x="1492" y="102" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sc_debut_di" bpmnElement="sc_debut"><dc:Bounds x="212" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sc_gw_source_di" bpmnElement="sc_gw_source" isMarkerVisible="true"><dc:Bounds x="365" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sc_fin_source_di" bpmnElement="sc_fin_source"><dc:Bounds x="372" y="382" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fs_dest_di" bpmnElement="fs_dest"><dc:Bounds x="495" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sc_tar_di" bpmnElement="sc_tar"><dc:Bounds x="655" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sc_gw_tar_di" bpmnElement="sc_gw_tar" isMarkerVisible="true"><dc:Bounds x="845" y="255" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sc_fin_tar_di" bpmnElement="sc_fin_tar"><dc:Bounds x="852" y="382" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sc_annonce_di" bpmnElement="sc_annonce"><dc:Bounds x="975" y="240" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fs_retention_di" bpmnElement="fs_retention"><dc:Bounds x="1135" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sc_fin_di" bpmnElement="sc_fin"><dc:Bounds x="1332" y="262" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_debut_di" bpmnElement="sv_debut"><dc:Bounds x="212" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="fs_lister_di" bpmnElement="fs_lister"><dc:Bounds x="335" y="480" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_gw_di" bpmnElement="sv_gw" isMarkerVisible="true"><dc:Bounds x="525" y="615" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_info_di" bpmnElement="sv_info"><dc:Bounds x="655" y="600" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_alerte_di" bpmnElement="sv_alerte"><dc:Bounds x="655" y="720" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_erreur_di" bpmnElement="sv_erreur"><dc:Bounds x="655" y="840" width="110" height="80" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fus_di" bpmnElement="sv_fus" isMarkerVisible="true"><dc:Bounds x="845" y="615" width="50" height="50" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sv_fin_di" bpmnElement="sv_fin"><dc:Bounds x="1012" y="622" width="36" height="36" /></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_P9_1_di" bpmnElement="Flow_P9_1">
+        <di:waypoint x="248" y="120" />
+        <di:waypoint x="335" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_2_di" bpmnElement="Flow_P9_2">
+        <di:waypoint x="445" y="120" />
+        <di:waypoint x="1135" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_3_di" bpmnElement="Flow_P9_3">
+        <di:waypoint x="1245" y="120" />
+        <di:waypoint x="1492" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_4_di" bpmnElement="Flow_P9_4">
+        <di:waypoint x="248" y="280" />
+        <di:waypoint x="365" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_5_di" bpmnElement="Flow_P9_5">
+        <di:waypoint x="390" y="305" />
+        <di:waypoint x="390" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_6_di" bpmnElement="Flow_P9_6">
+        <di:waypoint x="415" y="280" />
+        <di:waypoint x="475" y="280" />
+        <di:waypoint x="475" y="520" />
+        <di:waypoint x="495" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_7_di" bpmnElement="Flow_P9_7">
+        <di:waypoint x="605" y="520" />
+        <di:waypoint x="625" y="520" />
+        <di:waypoint x="625" y="280" />
+        <di:waypoint x="655" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_8_di" bpmnElement="Flow_P9_8">
+        <di:waypoint x="765" y="280" />
+        <di:waypoint x="845" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_9_di" bpmnElement="Flow_P9_9">
+        <di:waypoint x="870" y="305" />
+        <di:waypoint x="870" y="382" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_10_di" bpmnElement="Flow_P9_10">
+        <di:waypoint x="895" y="280" />
+        <di:waypoint x="975" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_11_di" bpmnElement="Flow_P9_11">
+        <di:waypoint x="1085" y="280" />
+        <di:waypoint x="1105" y="280" />
+        <di:waypoint x="1105" y="520" />
+        <di:waypoint x="1135" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_12_di" bpmnElement="Flow_P9_12">
+        <di:waypoint x="1245" y="520" />
+        <di:waypoint x="1265" y="520" />
+        <di:waypoint x="1265" y="280" />
+        <di:waypoint x="1332" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_13_di" bpmnElement="Flow_P9_13">
+        <di:waypoint x="248" y="640" />
+        <di:waypoint x="268" y="640" />
+        <di:waypoint x="268" y="520" />
+        <di:waypoint x="335" y="520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_14_di" bpmnElement="Flow_P9_14">
+        <di:waypoint x="445" y="520" />
+        <di:waypoint x="465" y="520" />
+        <di:waypoint x="465" y="640" />
+        <di:waypoint x="525" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_15_di" bpmnElement="Flow_P9_15">
+        <di:waypoint x="575" y="640" />
+        <di:waypoint x="655" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_16_di" bpmnElement="Flow_P9_16">
+        <di:waypoint x="550" y="665" />
+        <di:waypoint x="550" y="760" />
+        <di:waypoint x="655" y="760" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_17_di" bpmnElement="Flow_P9_17">
+        <di:waypoint x="550" y="665" />
+        <di:waypoint x="550" y="880" />
+        <di:waypoint x="655" y="880" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_18_di" bpmnElement="Flow_P9_18">
+        <di:waypoint x="765" y="640" />
+        <di:waypoint x="845" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_19_di" bpmnElement="Flow_P9_19">
+        <di:waypoint x="765" y="760" />
+        <di:waypoint x="870" y="760" />
+        <di:waypoint x="870" y="665" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_20_di" bpmnElement="Flow_P9_20">
+        <di:waypoint x="765" y="880" />
+        <di:waypoint x="870" y="880" />
+        <di:waypoint x="870" y="665" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_P9_21_di" bpmnElement="Flow_P9_21">
+        <di:waypoint x="895" y="640" />
+        <di:waypoint x="1012" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P9_1_di" bpmnElement="Msg_P9_1">
+        <di:waypoint x="390" y="160" />
+        <di:waypoint x="390" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Msg_P9_2_di" bpmnElement="Msg_P9_2">
+        <di:waypoint x="1190" y="220" />
+        <di:waypoint x="1190" y="160" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
